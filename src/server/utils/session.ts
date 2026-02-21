@@ -1,23 +1,17 @@
-// src/services/session.server.ts
+// server only
 import { useSession } from '@tanstack/react-start/server'
-import type { User } from '../database/schemas'
+import type { DbUser } from '../database/schemas'
+import { env } from '../config'
 
 type SessionUser = {
-  userEmail: User['email']
+  userEmail: DbUser['email']
+  userRole: DbUser['role']
+  userName: DbUser['name']
+  lastUpdated: number
 }
 
 export function useAppSession() {
-  const secret = process.env.SESSION_SECRET
-  
-  if (!secret) {
-    throw new Error('SESSION_SECRET environment variable is required')
-  }
-  
-  if (secret.length < 32) {
-    throw new Error('SESSION_SECRET must be at least 32 characters long')
-  }
-  
   return useSession<SessionUser>({
-    password: secret
+    password: env.SESSION_SECRET
   })
 }

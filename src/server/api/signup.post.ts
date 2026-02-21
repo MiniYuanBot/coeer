@@ -1,6 +1,6 @@
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { verifyPassword, hashPassword } from '~/utils/auth'
+import { verifyPassword, hashPassword } from '~/utils/password'
 import { useAppSession } from '~/utils/session'
 import { userQueries } from '~/database/queries'
 

@@ -1,32 +1,36 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
-import { useMutation } from 'src/app/hooks/useMutation'
-import { signupFn } from '~/api'
-import { Auth } from 'src/app/components/Auth'
+import { useAuthMutations } from '../hooks'
+import { Auth } from 'src/app/components'
 
 export const Route = createFileRoute('/signup')({
   component: SignupComp,
 })
 
 function SignupComp() {
-  const signupMutation = useMutation({
-    fn: useServerFn(signupFn),
-  })
+  const { signupMutation } = useAuthMutations()
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault() // prevent refresh
+
+    const formData = new FormData(e.currentTarget) // use currentTarget rather than target
+    const email = formData.get('email')
+    const password = formData.get('password')
+
+    // console.log('Form data:', { email, password })
+
+    signupMutation.mutate({
+      data: {
+        email: email as string,
+        password: password as string,
+      },
+    })
+  }
 
   return (
     <Auth
       actionText="Sign Up"
       status={signupMutation.status}
-      onSubmit={(e) => {
-        const formData = new FormData(e.target as HTMLFormElement)
-
-        signupMutation.mutate({
-          data: {
-            email: formData.get('email') as string,
-            password: formData.get('password') as string,
-          },
-        })
-      }}
+      onSubmit={handleSubmit}
       afterSubmit={
         signupMutation.data?.error ? (
           <>

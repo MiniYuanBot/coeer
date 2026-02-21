@@ -9,8 +9,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { createServerFn } from '@tanstack/react-start'
 import * as React from 'react'
-import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary.js'
-import { NotFound } from 'src/app/components/NotFound.js'
+import { DefaultCatchBoundary, NotFound } from '@/components'
 import appCss from '@/styles/app.css?url'
 import { seo } from '~/utils/seo.js'
 import { useAppSession } from '~/utils/session.js'
@@ -25,6 +24,9 @@ const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
 
   return {
     email: session.data.userEmail,
+    role: session.data.userRole,
+    name: session.data.userName,
+    lastUpdated: session.data.lastUpdated,
   }
 })
 
