@@ -1,16 +1,12 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import * as schema from './schemas'
-import { config } from 'dotenv'
-import { resolve } from 'path'
-
-config({ path: resolve(process.cwd(), '.env') })
+import { env } from '../config'
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: env.DATABASE_URL,
+    min: env.DB_POOL_MIN,
+    max: env.DB_POOL_MAX,
 })
 
 export const db = drizzle(pool, { schema })
-
-// export the connection pool
-export { pool }

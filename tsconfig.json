@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/app/*"],
-      "~/*": ["src/server/*"]
+      "~/*": ["src/server/*"],
+      "@shared/*": ["src/shared/*"]
     },
     "noEmit": true
   }

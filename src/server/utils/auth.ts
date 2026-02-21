@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-// bigger is safer (12 is about 250-500ms)
+// The bigger, the safer (12 is about 250-500ms)
 const SALT_ROUNDS = 12;
 
 export async function hashPassword(password: string): Promise<string> {

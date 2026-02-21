@@ -17,7 +17,7 @@ export function useMutation<TVariables, TData, TError = Error>(opts: {
       setStatus('pending')
       setSubmittedAt(Date.now())
       setVariables(variables)
-      //
+
       try {
         const data = await opts.fn(variables)
         await opts.onSuccess?.({ data })
