@@ -1,6 +1,6 @@
 // src/services/session.server.ts
 import { useSession } from '@tanstack/react-start/server'
-import type { User } from '@prisma/client'
+import type { User } from '../database/schemas'
 
 type SessionUser = {
   userEmail: User['email']
@@ -8,6 +8,6 @@ type SessionUser = {
 
 export function useAppSession() {
   return useSession<SessionUser>({
-    password: 'ChangeThisBeforeShippingToProdOrYouWillBeFired',
+    password: process.env.SESSION_SECRET || 'ChangeThisBeforeShippingToProdOrYouWillBeFired',
   })
 }

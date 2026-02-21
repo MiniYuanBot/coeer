@@ -1,17 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { hashPassword, prismaClient } from '~/utils/prisma'
-import { Login } from '~/components/Login'
-import { useAppSession } from '~/utils/session'
+import { eq } from 'drizzle-orm'
+import { db } from 'src/server/utils/drizzle'
+import { users } from 'src/server/database/schemas/users'
+import { verifyPassword } from 'src/server/utils/auth'
+import { Login } from 'src/app/components/Login'
+import { useAppSession } from 'src/server/utils/session'
 
 export const loginFn = createServerFn({ method: 'POST' })
   .inputValidator((d: { email: string; password: string }) => d)
   .handler(async ({ data }) => {
-    // Find the user
-    const user = await prismaClient.user.findUnique({
-      where: {
-        email: data.email,
-      },
+    // Find the user using Drizzle
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, data.email),
     })
 
     // Check if the user exists
@@ -23,10 +24,10 @@ export const loginFn = createServerFn({ method: 'POST' })
       }
     }
 
-    // Check if the password is correct
-    const hashedPassword = await hashPassword(data.password)
+    // Check if the password is correct using the verify function
+    const isPasswordValid = await verifyPassword(data.password, user.password)
 
-    if (user.password !== hashedPassword) {
+    if (!isPasswordValid) {
       return {
         error: true,
         message: 'Incorrect password',

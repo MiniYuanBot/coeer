@@ -2,7 +2,7 @@ node_modules
 package-lock.json
 yarn.lock
 
-!.env
+.env
 .DS_Store
 .cache
 .vercel
@@ -17,4 +17,4 @@ yarn.lock
 /blob-report/
 /playwright/.cache/
 
-tmp
+scripts

@@ -3,7 +3,7 @@ import { useServerFn } from '@tanstack/react-start'
 import { useMutation } from '../hooks/useMutation'
 import { loginFn } from '../routes/_authed'
 import { Auth } from './Auth'
-import { signupFn } from '~/routes/signup'
+import { signupFn } from 'src/app/routes/signup'
 
 export function Login() {
   const router = useRouter()

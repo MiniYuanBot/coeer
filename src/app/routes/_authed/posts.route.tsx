@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute } from '@tanstack/react-router'
-import { fetchPosts } from '~/utils/posts.js'
+import { fetchPosts } from 'src/server/utils/posts.js'
 
 export const Route = createFileRoute('/_authed/posts')({
   loader: () => fetchPosts(),
