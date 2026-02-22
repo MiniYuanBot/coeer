@@ -7,32 +7,15 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { createServerFn } from '@tanstack/react-start'
 import * as React from 'react'
-import { DefaultCatchBoundary, NotFound } from '@/components'
+import { DefaultCatchBoundary, NotFound, NavBar } from '@/components/basic'
 import appCss from '@/styles/app.css?url'
 import { seo } from '~/utils/seo.js'
-import { useAppSession } from '~/utils/session.js'
-
-const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
-  // We need to auth on the server so we have access to secure cookies
-  const session = await useAppSession()
-
-  if (!session.data.userEmail) {
-    return null
-  }
-
-  return {
-    email: session.data.userEmail,
-    role: session.data.userRole,
-    name: session.data.userName,
-    lastUpdated: session.data.lastUpdated,
-  }
-})
+import { fetchUserFn } from '../../server/functions'
 
 export const Route = createRootRoute({
   beforeLoad: async () => {
-    const user = await fetchUser()
+    const user = await fetchUserFn()
 
     return {
       user,
@@ -84,10 +67,10 @@ export const Route = createRootRoute({
     )
   },
   notFoundComponent: () => <NotFound />,
-  component: RootComponent,
+  component: RootLayout,
 })
 
-function RootComponent() {
+function RootLayout() {
   return (
     <RootDocument>
       <Outlet />
@@ -104,35 +87,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <div className="p-2 flex gap-2 text-lg">
-          <Link
-            to="/"
-            activeProps={{
-              className: 'font-bold',
-            }}
-            activeOptions={{ exact: true }}
-          >
-            Home
-          </Link>{' '}
-          <Link
-            to="/posts"
-            activeProps={{
-              className: 'font-bold',
-            }}
-          >
-            Posts
-          </Link>
-          <div className="ml-auto">
-            {user ? (
-              <>
-                <span className="mr-2">{user.email}</span>
-                <Link to="/logout">Logout</Link>
-              </>
-            ) : (
-              <Link to="/login">Login</Link>
-            )}
-          </div>
-        </div>
+        <NavBar user={user} />
         <hr />
         {children}
         <TanStackRouterDevtools position="bottom-right" />

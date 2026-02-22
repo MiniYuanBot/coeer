@@ -19,7 +19,7 @@ export const userQueries = {
     //     return user
     // },
 
-    create: async (data: NewDbUser): Promise<User> => {
+    create: async (data: NewDbUser): Promise<DbUser> => {
         const [user] = await db.insert(users).values(data).returning()
         return user
     },

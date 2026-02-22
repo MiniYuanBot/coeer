@@ -14,9 +14,14 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedProfileRouteRouteImport } from './routes/_authed/profile/route'
 import { Route as AuthedPostsRouteRouteImport } from './routes/_authed/posts.route'
-import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile.index'
+import { Route as AuthedFeedbacksRouteRouteImport } from './routes/_authed/feedbacks/route'
+import { Route as AuthedAdminRouteRouteImport } from './routes/_authed/admin/route'
+import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
 import { Route as AuthedPostsIndexRouteImport } from './routes/_authed/posts.index'
+import { Route as AuthedFeedbacksIndexRouteImport } from './routes/_authed/feedbacks/index'
+import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
 import { Route as AuthedPostsPostIdRouteImport } from './routes/_authed/posts.$postId'
 
 const SignupRoute = SignupRouteImport.update({
@@ -43,20 +48,45 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedProfileRouteRoute = AuthedProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedPostsRouteRoute = AuthedPostsRouteRouteImport.update({
   id: '/posts',
   path: '/posts',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
-  id: '/profile/',
-  path: '/profile/',
+const AuthedFeedbacksRouteRoute = AuthedFeedbacksRouteRouteImport.update({
+  id: '/feedbacks',
+  path: '/feedbacks',
   getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminRouteRoute = AuthedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedProfileRouteRoute,
 } as any)
 const AuthedPostsIndexRoute = AuthedPostsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedPostsRouteRoute,
+} as any)
+const AuthedFeedbacksIndexRoute = AuthedFeedbacksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedFeedbacksRouteRoute,
+} as any)
+const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
 const AuthedPostsPostIdRoute = AuthedPostsPostIdRouteImport.update({
   id: '/$postId',
@@ -69,8 +99,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/admin': typeof AuthedAdminRouteRouteWithChildren
+  '/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/posts': typeof AuthedPostsRouteRouteWithChildren
+  '/profile': typeof AuthedProfileRouteRouteWithChildren
   '/posts/$postId': typeof AuthedPostsPostIdRoute
+  '/admin/': typeof AuthedAdminIndexRoute
+  '/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/posts/': typeof AuthedPostsIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
 }
@@ -80,6 +115,8 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/posts/$postId': typeof AuthedPostsPostIdRoute
+  '/admin': typeof AuthedAdminIndexRoute
+  '/feedbacks': typeof AuthedFeedbacksIndexRoute
   '/posts': typeof AuthedPostsIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
 }
@@ -90,8 +127,13 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/_authed/admin': typeof AuthedAdminRouteRouteWithChildren
+  '/_authed/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/_authed/posts': typeof AuthedPostsRouteRouteWithChildren
+  '/_authed/profile': typeof AuthedProfileRouteRouteWithChildren
   '/_authed/posts/$postId': typeof AuthedPostsPostIdRoute
+  '/_authed/admin/': typeof AuthedAdminIndexRoute
+  '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/_authed/posts/': typeof AuthedPostsIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
 }
@@ -102,8 +144,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/admin'
+    | '/feedbacks'
     | '/posts'
+    | '/profile'
     | '/posts/$postId'
+    | '/admin/'
+    | '/feedbacks/'
     | '/posts/'
     | '/profile/'
   fileRoutesByTo: FileRoutesByTo
@@ -113,6 +160,8 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/posts/$postId'
+    | '/admin'
+    | '/feedbacks'
     | '/posts'
     | '/profile'
   id:
@@ -122,8 +171,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/_authed/admin'
+    | '/_authed/feedbacks'
     | '/_authed/posts'
+    | '/_authed/profile'
     | '/_authed/posts/$postId'
+    | '/_authed/admin/'
+    | '/_authed/feedbacks/'
     | '/_authed/posts/'
     | '/_authed/profile/'
   fileRoutesById: FileRoutesById
@@ -173,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/profile': {
+      id: '/_authed/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthedProfileRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/posts': {
       id: '/_authed/posts'
       path: '/posts'
@@ -180,12 +241,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedPostsRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/feedbacks': {
+      id: '/_authed/feedbacks'
+      path: '/feedbacks'
+      fullPath: '/feedbacks'
+      preLoaderRoute: typeof AuthedFeedbacksRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin': {
+      id: '/_authed/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthedAdminRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/profile/': {
       id: '/_authed/profile/'
-      path: '/profile'
+      path: '/'
       fullPath: '/profile/'
       preLoaderRoute: typeof AuthedProfileIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedProfileRouteRoute
     }
     '/_authed/posts/': {
       id: '/_authed/posts/'
@@ -193,6 +268,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/posts/'
       preLoaderRoute: typeof AuthedPostsIndexRouteImport
       parentRoute: typeof AuthedPostsRouteRoute
+    }
+    '/_authed/feedbacks/': {
+      id: '/_authed/feedbacks/'
+      path: '/'
+      fullPath: '/feedbacks/'
+      preLoaderRoute: typeof AuthedFeedbacksIndexRouteImport
+      parentRoute: typeof AuthedFeedbacksRouteRoute
+    }
+    '/_authed/admin/': {
+      id: '/_authed/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthedAdminIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/posts/$postId': {
       id: '/_authed/posts/$postId'
@@ -203,6 +292,28 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthedAdminRouteRouteChildren {
+  AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
+}
+
+const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
+  AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+}
+
+const AuthedAdminRouteRouteWithChildren =
+  AuthedAdminRouteRoute._addFileChildren(AuthedAdminRouteRouteChildren)
+
+interface AuthedFeedbacksRouteRouteChildren {
+  AuthedFeedbacksIndexRoute: typeof AuthedFeedbacksIndexRoute
+}
+
+const AuthedFeedbacksRouteRouteChildren: AuthedFeedbacksRouteRouteChildren = {
+  AuthedFeedbacksIndexRoute: AuthedFeedbacksIndexRoute,
+}
+
+const AuthedFeedbacksRouteRouteWithChildren =
+  AuthedFeedbacksRouteRoute._addFileChildren(AuthedFeedbacksRouteRouteChildren)
 
 interface AuthedPostsRouteRouteChildren {
   AuthedPostsPostIdRoute: typeof AuthedPostsPostIdRoute
@@ -217,14 +328,29 @@ const AuthedPostsRouteRouteChildren: AuthedPostsRouteRouteChildren = {
 const AuthedPostsRouteRouteWithChildren =
   AuthedPostsRouteRoute._addFileChildren(AuthedPostsRouteRouteChildren)
 
-interface AuthedRouteChildren {
-  AuthedPostsRouteRoute: typeof AuthedPostsRouteRouteWithChildren
+interface AuthedProfileRouteRouteChildren {
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
 }
 
-const AuthedRouteChildren: AuthedRouteChildren = {
-  AuthedPostsRouteRoute: AuthedPostsRouteRouteWithChildren,
+const AuthedProfileRouteRouteChildren: AuthedProfileRouteRouteChildren = {
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
+}
+
+const AuthedProfileRouteRouteWithChildren =
+  AuthedProfileRouteRoute._addFileChildren(AuthedProfileRouteRouteChildren)
+
+interface AuthedRouteChildren {
+  AuthedAdminRouteRoute: typeof AuthedAdminRouteRouteWithChildren
+  AuthedFeedbacksRouteRoute: typeof AuthedFeedbacksRouteRouteWithChildren
+  AuthedPostsRouteRoute: typeof AuthedPostsRouteRouteWithChildren
+  AuthedProfileRouteRoute: typeof AuthedProfileRouteRouteWithChildren
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdminRouteRoute: AuthedAdminRouteRouteWithChildren,
+  AuthedFeedbacksRouteRoute: AuthedFeedbacksRouteRouteWithChildren,
+  AuthedPostsRouteRoute: AuthedPostsRouteRouteWithChildren,
+  AuthedProfileRouteRoute: AuthedProfileRouteRouteWithChildren,
 }
 
 const AuthedRouteWithChildren =

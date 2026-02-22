@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authed/profile/')({
-    component: ProfileComponent,
+    component: ProfileIndexComponent,
     beforeLoad: ({ context }) => {
         if (!context.user) {
             throw redirect({ href: '/login' })
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/_authed/profile/')({
     },
 })
 
-function ProfileComponent() {
+function ProfileIndexComponent() {
     const { user } = Route.useRouteContext()
 
     if (!user) {
@@ -44,15 +44,6 @@ function ProfileComponent() {
                             : '未知'}
                     </span>
                 </div>
-            </div>
-
-            <div className="mt-6 flex gap-4">
-                <a
-                    href="/logout"
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                >
-                    退出登录
-                </a>
             </div>
         </div>
     )

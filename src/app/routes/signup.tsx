@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuthMutations } from '../hooks'
-import { Auth } from 'src/app/components'
+import { AuthForm } from 'src/app/components/ui'
 
 export const Route = createFileRoute('/signup')({
   component: SignupComp,
@@ -27,16 +27,16 @@ function SignupComp() {
   }
 
   return (
-    <Auth
+    <AuthForm
       actionText="Sign Up"
       status={signupMutation.status}
       onSubmit={handleSubmit}
       afterSubmit={
-        signupMutation.data?.error ? (
+        !signupMutation.data?.success ? null : (
           <>
             <div className="text-red-400">{signupMutation.data.message}</div>
           </>
-        ) : null
+        )
       }
     />
   )

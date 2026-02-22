@@ -1,7 +1,7 @@
 import { useRouter } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { useMutation } from './useMutation'
-import { loginFn, signupFn } from '~/api'
+import { loginFn, signupFn } from '../../server/functions'
 
 export function useAuthMutations() {
   const router = useRouter()
@@ -9,7 +9,7 @@ export function useAuthMutations() {
   const loginMutation = useMutation({
     fn: loginFn,
     onSuccess: async (ctx) => {
-      if (!ctx.data?.error) {
+      if (ctx.data?.success) {
         await router.invalidate()
         router.navigate({ to: '/' })
         return

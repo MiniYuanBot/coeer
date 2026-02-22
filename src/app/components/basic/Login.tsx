@@ -1,5 +1,5 @@
-import { useAuthMutations } from '../hooks'
-import { Auth } from './Auth'
+import { useAuthMutations } from '../../hooks'
+import { AuthForm } from '../ui/AuthForm'
 
 export function Login() {
   const { loginMutation, signupMutation } = useAuthMutations()
@@ -43,7 +43,7 @@ export function Login() {
   }
 
   return (
-    <Auth
+    <AuthForm
       actionText="Login"
       status={loginMutation.status}
       onSubmit={handleSubmit}
@@ -51,7 +51,7 @@ export function Login() {
         loginMutation.data ? (
           <>
             <div className="text-red-400">{loginMutation.data.message}</div>
-            {loginMutation.data.userNotFound ? (
+            {loginMutation.data.message === 'User not found' ? (
               <div>
                 <button
                   className="text-blue-500"
