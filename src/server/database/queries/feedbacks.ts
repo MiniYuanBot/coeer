@@ -1,7 +1,39 @@
 import { db } from '../client'
 import { feedbacks } from '../schemas'
-import { eq, desc, and, inArray, ilike, or, count, asc } from 'drizzle-orm'
-import type { NewFeedback, Feedback, FeedbackStatus } from '../schemas'
+import { eq, desc, and, inArray, ilike, or, count, asc, SQL } from 'drizzle-orm'
+import type { NewFeedback, Feedback } from '../schemas'
+import { FeedbackWithAuthor } from '@shared/contracts'
+import { FeedbackStatuses, FeedbackTargetTypes } from '@shared/constants'
+
+// private query condition builder
+function buildWhereClause(params: {
+    status?: FeedbackStatuses
+    search?: string
+    authorId?: string
+}): SQL | undefined {
+    const { status, search, authorId } = params
+    const conditions: SQL[] = []
+
+    if (authorId) {
+        conditions.push(eq(feedbacks.authorId, authorId))
+    }
+
+    if (status) {
+        conditions.push(eq(feedbacks.status, status))
+    }
+
+    if (search) {
+        const searchCondition = or(
+            ilike(feedbacks.title, `%${search}%`),
+            ilike(feedbacks.content, `%${search}%`)
+        )
+        if (searchCondition) {
+            conditions.push(searchCondition)
+        }
+    }
+
+    return conditions.length > 0 ? and(...conditions) : undefined
+}
 
 export const feedbackQueries = {
     async create(data: NewFeedback): Promise<Feedback> {
@@ -9,12 +41,11 @@ export const feedbackQueries = {
         return feedback
     },
 
-    async delete(id: string) {
+    async delete(id: string): Promise<Feedback> {
         const [deleted] = await db
             .delete(feedbacks)
             .where(eq(feedbacks.id, id))
             .returning()
-
         return deleted
     },
 
@@ -23,131 +54,68 @@ export const feedbackQueries = {
         return feedback
     },
 
-    async findByIdWithAuthor(id: string) {
-        const result = await db.query.feedbacks.findFirst({
+    async findByIdWithAuthor(id: string): Promise<FeedbackWithAuthor | undefined> {
+        return db.query.feedbacks.findFirst({
             where: eq(feedbacks.id, id),
             with: {
                 author: {
-                    columns: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
+                    columns: { id: true, name: true, email: true },
                 },
             },
         })
-        return result
     },
 
-    async findByAuthorId(authorId: string, params: {
-        status?: FeedbackStatus
-        search?: string
-        limit?: number
-        offset?: number
-    }) {
-        const { status, search, limit = 20, offset = 0 } = params
-
-        const conditions: any[] = [eq(feedbacks.authorId, authorId)]
-
-        if (status) {
-            conditions.push(eq(feedbacks.status, status))
+    async findByAuthorId(
+        authorId: string,
+        params: {
+            status?: FeedbackStatuses
+            search?: string
+            limit?: number
+            offset?: number
         }
+    ): Promise<FeedbackWithAuthor[]> {
+        const { search, status, limit = 20, offset = 0 } = params
 
-        if (search) {
-            conditions.push(
-                or(
-                    ilike(feedbacks.title, `%${search}%`),
-                    ilike(feedbacks.content, `%${search}%`)
-                )
-            )
-        }
-
-        const feedbacksList = await db.query.feedbacks.findMany({
-            where: and(...conditions),
+        return db.query.feedbacks.findMany({
+            where: buildWhereClause({ authorId, status, search }),
             with: {
                 author: {
-                    columns: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
+                    columns: { id: true, name: true, email: true },
                 },
             },
             orderBy: [desc(feedbacks.createdAt)],
             limit,
             offset,
         })
-
-        return feedbacksList
     },
 
     async findAll(params: {
-        status?: FeedbackStatus
+        status?: FeedbackStatuses
         search?: string
         limit?: number
         offset?: number
-    }) {
+    }): Promise<FeedbackWithAuthor[]> {
         const { status, search, limit = 20, offset = 0 } = params
 
-        const conditions: any[] = []
-
-        if (status) {
-            conditions.push(eq(feedbacks.status, status))
-        }
-
-        if (search) {
-            conditions.push(
-                or(
-                    ilike(feedbacks.title, `%${search}%`),
-                    ilike(feedbacks.content, `%${search}%`)
-                )
-            )
-        }
-
-        const whereClause = conditions.length > 0 ? and(...conditions) : undefined
-
-        const feedbacksList = await db.query.feedbacks.findMany({
-            where: whereClause,
+        return db.query.feedbacks.findMany({
+            where: buildWhereClause({ status, search }),
             with: {
                 author: {
-                    columns: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
+                    columns: { id: true, name: true, email: true },
                 },
             },
             orderBy: [desc(feedbacks.createdAt)],
             limit,
             offset,
         })
-
-        return feedbacksList
     },
 
-    async count(params: { status?: FeedbackStatus; search?: string; authorId?: string }) {
-        const { status, search, authorId } = params
-
-        const conditions: any[] = []
-
-        if (authorId) {
-            conditions.push(eq(feedbacks.authorId, authorId))
-        }
-
-        if (status) {
-            conditions.push(eq(feedbacks.status, status))
-        }
-
-        if (search) {
-            conditions.push(
-                or(
-                    ilike(feedbacks.title, `%${search}%`),
-                    ilike(feedbacks.content, `%${search}%`)
-                )
-            )
-        }
-
-        const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+    async count(params: {
+        status?: FeedbackStatuses
+        search?: string
+        authorId?: string
+    }): Promise<number> {
+        const whereClause = buildWhereClause(params)
 
         const [result] = await db
             .select({ value: count() })

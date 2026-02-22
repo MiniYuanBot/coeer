@@ -1,20 +1,22 @@
 import { db } from '../database/client'
-import { Feedback, FeedbackStatus } from '../database/schemas'
+import { Feedback } from '../database/schemas'
 import type {
     CreateFeedbackData,
     FeedbackWithAuthor,
+    FeedbackList,
     FeedbackResponse,
-    FeedbackListResponse,
-} from '@shared/types'
+} from '@shared/contracts'
+import { FeedbackStatuses } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { feedbackQueries } from '../database/queries'
 
 export class FeedbackService {
     static async create(data: CreateFeedbackData): Promise<FeedbackResponse<Feedback>> {
         try {
-            const user = await AuthService.getCurrentUser()
-            if (!user) {
-                return { success: false, message: 'UNAUTHORIZED' }
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, status: 'UNAUTHORIZED', message: 'Unauthorized user' }
             }
 
             const result = await db.transaction(async (tx) => {
@@ -41,11 +43,12 @@ export class FeedbackService {
             return {
                 success: true,
                 data: result,
-                message: 'CREATE_SUCCESS'
+                status: 'CREATE_SUCCESS',
+                message: 'Create feedback successful'
             }
         } catch (err) {
             console.error('Create feedback error:', err)
-            return { success: false, message: 'SERVER_ERROR' }
+            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
         }
     }
 
@@ -53,16 +56,16 @@ export class FeedbackService {
         try {
             const user = await AuthService.getCurrentUser()
             if (!user) {
-                return { success: false, message: 'UNAUTHORIZED' }
+                return { success: false, status: 'UNAUTHORIZED',  message: 'Unauthorized user'}
             }
 
             const feedback = await feedbackQueries.findByIdWithAuthor(id)
 
             if (!feedback) {
-                return { success: false, message: 'FEEDBACK_NOT_FOUND' }
+                return { success: false, status: 'FEEDBACK_NOT_FOUND',  message: 'Feedback not found'}
             }
 
-            // TODO: feedback visibility logic
+            // feedback visibility logic
             // const isAdmin = await this.isAdmin()
             // if (!isAdmin && feedback.authorId !== user.id) {
             //     return { success: false, message: 'FORBIDDEN' }
@@ -70,24 +73,27 @@ export class FeedbackService {
 
             return {
                 success: true,
-                data: feedback as FeedbackWithAuthor
+                data: feedback as FeedbackWithAuthor,
+                status: 'GET_SUCCESS',
+                message: 'Get feedbacks by id successful'
             }
         } catch (err) {
             console.error('Get feedback error:', err)
-            return { success: false, message: 'SERVER_ERROR' }
+            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
         }
     }
 
     static async list(params: {
-        status?: FeedbackStatus
+        status?: FeedbackStatuses
         search?: string
         page?: number
         limit?: number
-    }): Promise<FeedbackResponse<FeedbackListResponse>> {
+    }): Promise<FeedbackResponse<FeedbackList>> {
         try {
-            const user = await AuthService.getCurrentUser()
-            if (!user) {
-                return { success: false, message: 'UNAUTHORIZED' }
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, status: 'UNAUTHORIZED', message: 'Unauthorized user' }
             }
 
             // const isAdmin = await this.isAdmin()
@@ -98,7 +104,6 @@ export class FeedbackService {
             let total: number
 
             // if (isAdmin) {
-            //     // 管理员看所有反馈
             //     feedbacks = await feedbackQueries.findAll({
             //         status,
             //         search,
@@ -108,7 +113,6 @@ export class FeedbackService {
 
             //     total = await feedbackQueries.count({ status, search })
             // } else {
-            // 普通用户只看自己的反馈
             feedbacks = await feedbackQueries.findByAuthorId(user.id, {
                 status,
                 search,
@@ -128,11 +132,13 @@ export class FeedbackService {
                 data: {
                     feedbacks,
                     total
-                }
+                },
+                status: 'GET_SUCCESS',
+                message: 'List feedbacks successful'
             }
         } catch (err) {
             console.error('List feedbacks error:', err)
-            return { success: false, message: 'SERVER_ERROR' }
+            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
         }
     }
 

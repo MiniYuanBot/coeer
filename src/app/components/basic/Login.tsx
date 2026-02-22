@@ -51,7 +51,7 @@ export function Login() {
         loginMutation.data ? (
           <>
             <div className="text-red-400">{loginMutation.data.message}</div>
-            {loginMutation.data.message === 'User not found' ? (
+            {loginMutation.data.status === 'USER_NOT_FOUND' ? (
               <div>
                 <button
                   className="text-blue-500"

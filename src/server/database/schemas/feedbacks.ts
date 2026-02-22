@@ -1,13 +1,11 @@
 import { pgTable, varchar, text, timestamp, boolean, uuid, json, pgEnum } from 'drizzle-orm/pg-core'
 import { users } from './users';
+import { FEEDBACK_TARGET_TYPES_ARRAY, FeedbackTargetTypes, FEEDBACK_STATUSES_ARRAY, FeedbackStatuses } from '@shared/constants'
 
-export const FEEDBACK_STATUSES = ['pending', 'processing', 'resolved', 'invalid'] as const;
-export type FeedbackStatus = typeof FEEDBACK_STATUSES[number];
-export const feedbackStatusEnum = pgEnum('feedback_status', FEEDBACK_STATUSES);
 
-export const TARGET_TYPES = ['academic', 'office', 'general'] as const;
-export type TargetType = typeof TARGET_TYPES[number];
-export const targetTypeEnum = pgEnum('target_type', TARGET_TYPES);
+export const feedbackStatusEnum = pgEnum('feedback_status', FEEDBACK_STATUSES_ARRAY);
+
+export const targetTypeEnum = pgEnum('target_type', FEEDBACK_TARGET_TYPES_ARRAY);
 
 export const feedbacks = pgTable('feedbacks', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -54,8 +52,8 @@ export const feedbacks = pgTable('feedbacks', {
 //     lastViewedAt: timestamp('last_viewed_at'),
 // });
 
-export type Feedback = typeof feedbacks.$inferSelect;
-export type NewFeedback = typeof feedbacks.$inferInsert;
+export type Feedback = typeof feedbacks.$inferSelect & { targetType: FeedbackTargetTypes, status: FeedbackStatuses };
+export type NewFeedback = typeof feedbacks.$inferInsert & { targetType: FeedbackTargetTypes, status: FeedbackStatuses };
 
 // export type FeedbackStatusLog = typeof feedbackStatusLogs.$inferSelect;
 // export type NewFeedbackStatusLog = typeof feedbackStatusLogs.$inferInsert;

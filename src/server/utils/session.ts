@@ -1,15 +1,7 @@
 // server only
 import { useSession } from '@tanstack/react-start/server'
-import type { DbUser } from '../database/schemas'
+import { SessionUser } from '@shared/contracts'
 import { env } from '../config'
-
-export type SessionUser = {
-  userId: DbUser['id']
-  userEmail: DbUser['email']
-  userRole: DbUser['role']
-  userName: DbUser['name']
-  lastUpdated: number
-}
 
 export function useAppSession() {
   return useSession<SessionUser>({

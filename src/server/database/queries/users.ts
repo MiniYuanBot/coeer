@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../client'
 import { type DbUser, type NewDbUser, users } from '../schemas'
-import type { User } from '@shared/types'
 
 export const userQueries = {
     // Return DB User with sensitive info

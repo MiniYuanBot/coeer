@@ -28,6 +28,6 @@ export const userProfiles = pgTable('user_profiles', {
 });
 
 export type DbUser = typeof users.$inferSelect & { role: UserRole }
-export type NewDbUser = typeof users.$inferInsert
+export type NewDbUser = typeof users.$inferInsert & { role: UserRole }
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type NewUserProfile = typeof userProfiles.$inferInsert;
