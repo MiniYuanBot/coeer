@@ -26,22 +26,22 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 // export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 
-export type LoginStatus =
+export type LoginResponseStatus =
     | 'USER_NOT_FOUND'
     | 'INVALID_PASSWORD'
     | 'LOGIN_SUCCESS'
     | 'SERVER_ERROR'
 
-export type SignupStatus =
+export type SignupResponseStatus =
     | 'EMAIL_EXISTS'
     | 'AUTO_LOGIN'
     | 'SIGNUP_SUCCESS'
     | 'SERVER_ERROR'
 
-export type LogoutStatus =
+export type LogoutResponseStatus =
     | 'LOGOUT_SUCCESS'
     | 'SERVER_ERROR'
 
-export type LoginResponse<T> = ActionResponse<T, LoginStatus>
-export type SignupResponse<T> = ActionResponse<T, SignupStatus>
-export type LogoutResponse<T> = ActionResponse<T, LogoutStatus>
+export type LoginResponse<T> = ActionResponse<T, LoginResponseStatus>
+export type SignupResponse<T> = ActionResponse<T, SignupResponseStatus>
+export type LogoutResponse<T> = ActionResponse<T, LogoutResponseStatus>

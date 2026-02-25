@@ -1,5 +1,5 @@
 import { pgTable, varchar, text, timestamp, boolean, uuid, pgEnum } from 'drizzle-orm/pg-core'
-import { USER_ROLES_ARRAY, UserRole } from '@shared/constants';
+import { USER_ROLES_ARRAY, UserRoles } from '@shared/constants';
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES_ARRAY);
 
@@ -27,7 +27,7 @@ export const userProfiles = pgTable('user_profiles', {
     // cardsCount: integer('cards_count').notNull().default(0)
 });
 
-export type DbUser = typeof users.$inferSelect & { role: UserRole }
-export type NewDbUser = typeof users.$inferInsert & { role: UserRole }
+export type DbUser = typeof users.$inferSelect & { role: UserRoles }
+export type NewDbUser = typeof users.$inferInsert & { role: UserRoles }
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type NewUserProfile = typeof userProfiles.$inferInsert;

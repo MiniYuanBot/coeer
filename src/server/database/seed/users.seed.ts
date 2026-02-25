@@ -1,6 +1,6 @@
 import { db } from '../client'
 import { users } from '../schemas/users'
-import { UserRole } from '@shared/constants'
+import { UserRoles } from '@shared/constants'
 import { eq } from 'drizzle-orm'
 import { hashPassword } from '~/utils/password'
 
@@ -36,21 +36,21 @@ async function seed() {
                 email: 'test@example.com',
                 name: 'Test User',
                 passwordHash: await hashPassword('test123'),
-                role: 'student' as UserRole,
+                role: 'student' as UserRoles,
                 isActive: true,
             },
             {
                 email: 'admin@example.com',
                 name: 'Admin User',
                 passwordHash: await hashPassword('admin123'),
-                role: 'admin' as UserRole,
+                role: 'admin' as UserRoles,
                 isActive: true,
             },
             {
                 email: 'demo@example.com',
                 name: 'Demo User',
                 passwordHash: await hashPassword('demo123'),
-                role: 'moderator' as UserRole,
+                role: 'moderator' as UserRoles,
                 isActive: true,
             }
         ]

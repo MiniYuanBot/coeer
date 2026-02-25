@@ -3,20 +3,21 @@ import { Feedback } from '../database/schemas'
 import type {
     CreateFeedbackData,
     FeedbackWithAuthor,
-    FeedbackList,
     FeedbackResponse,
+    PaginatedFeedbackResponse,
 } from '@shared/contracts'
-import { FeedbackStatuses } from '@shared/constants'
+import { FeedbackStatuses, FEEDBACK } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { feedbackQueries } from '../database/queries'
 
 export class FeedbackService {
+    // Create a feedback
     static async create(data: CreateFeedbackData): Promise<FeedbackResponse<Feedback>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {
-                return { success: false, status: 'UNAUTHORIZED', message: 'Unauthorized user' }
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
             const result = await db.transaction(async (tx) => {
@@ -43,26 +44,26 @@ export class FeedbackService {
             return {
                 success: true,
                 data: result,
-                status: 'CREATE_SUCCESS',
-                message: 'Create feedback successful'
+                state: FEEDBACK.CREATE_SUCCESS,
             }
         } catch (err) {
             console.error('Create feedback error:', err)
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
         }
     }
 
+    // Get a feedback with author by its ID
     static async getById(id: string): Promise<FeedbackResponse<FeedbackWithAuthor>> {
         try {
             const user = await AuthService.getCurrentUser()
             if (!user) {
-                return { success: false, status: 'UNAUTHORIZED',  message: 'Unauthorized user'}
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
             const feedback = await feedbackQueries.findByIdWithAuthor(id)
 
             if (!feedback) {
-                return { success: false, status: 'FEEDBACK_NOT_FOUND',  message: 'Feedback not found'}
+                return { success: false, state: FEEDBACK.NOT_FOUND }
             }
 
             // feedback visibility logic
@@ -74,31 +75,31 @@ export class FeedbackService {
             return {
                 success: true,
                 data: feedback as FeedbackWithAuthor,
-                status: 'GET_SUCCESS',
-                message: 'Get feedbacks by id successful'
+                state: FEEDBACK.GET_SUCCESS,
             }
         } catch (err) {
             console.error('Get feedback error:', err)
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
         }
     }
 
+    // List all feedbacks with optional filters
     static async list(params: {
         status?: FeedbackStatuses
         search?: string
         page?: number
-        limit?: number
-    }): Promise<FeedbackResponse<FeedbackList>> {
+        pageSize?: number
+    }): Promise<PaginatedFeedbackResponse<Feedback>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {
-                return { success: false, status: 'UNAUTHORIZED', message: 'Unauthorized user' }
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
             // const isAdmin = await this.isAdmin()
-            const { status, search, page = 1, limit = 20 } = params
-            const offset = (page - 1) * limit
+            const { status, search, page = 1, pageSize = 20 } = params
+            const offset = (page - 1) * pageSize
 
             let feedbacks: FeedbackWithAuthor[]
             let total: number
@@ -107,7 +108,7 @@ export class FeedbackService {
             //     feedbacks = await feedbackQueries.findAll({
             //         status,
             //         search,
-            //         limit,
+            //         limit: pageSize,
             //         offset
             //     }) as FeedbackWithAuthor[]
 
@@ -116,7 +117,7 @@ export class FeedbackService {
             feedbacks = await feedbackQueries.findByAuthorId(user.id, {
                 status,
                 search,
-                limit,
+                limit: pageSize,
                 offset
             }) as FeedbackWithAuthor[]
 
@@ -130,15 +131,16 @@ export class FeedbackService {
             return {
                 success: true,
                 data: {
-                    feedbacks,
-                    total
+                    items: feedbacks,
+                    total: total,
+                    page,
+                    pageSize
                 },
-                status: 'GET_SUCCESS',
-                message: 'List feedbacks successful'
+                state: FEEDBACK.GET_SUCCESS,
             }
         } catch (err) {
             console.error('List feedbacks error:', err)
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
         }
     }
 

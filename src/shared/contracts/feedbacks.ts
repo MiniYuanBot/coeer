@@ -1,6 +1,6 @@
 import type { DbUser, Feedback, NewFeedback } from '~/database/schemas'
-import { FeedbackTargetTypes } from '../constants'
-import { ActionResponse } from './action'
+import { FeedbackTargetTypes, FeedbackCode } from '../constants'
+import { ActionResponse, PaginatedActionResponse } from './action'
 
 export type FeedbackWithAuthor = Feedback & {
     author: Pick<DbUser, 'id' | 'name' | 'email'> | null
@@ -28,21 +28,10 @@ export type CreateFeedbackData = {
 //     reply: string
 // }
 
-export type FeedbackList = {
-    feedbacks: FeedbackWithAuthor[]
-    total: number
-}
+// export type FeedbackList = {
+//     feedbacks: FeedbackWithAuthor[]
+//     total: number
+// }
 
-export type FeedbackStatus =
-    | 'FEEDBACK_NOT_FOUND'
-    | 'UNAUTHORIZED'
-    | 'FORBIDDEN'
-    | 'GET_SUCCESS'
-    | 'SERVER_ERROR'
-    | 'CREATE_SUCCESS'
-    | 'UPDATE_SUCCESS'
-    | 'DELETE_SUCCESS'
-// | 'REPLY_SUCCESS'
-// | 'STATUS_UPDATE_SUCCESS'
-
-export type FeedbackResponse<T> = ActionResponse<T, FeedbackStatus>
+export type FeedbackResponse<T> = ActionResponse<T, FeedbackCode>
+export type PaginatedFeedbackResponse<T> = PaginatedActionResponse<T, FeedbackCode>

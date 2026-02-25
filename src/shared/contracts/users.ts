@@ -1,4 +1,4 @@
-// import { UserRole } from '@shared/constants';
+// import { UserRoles } from '@shared/constants';
 // import { ActionResponse } from './action';
 
 // // Basic user type (without sensitive info)
@@ -6,7 +6,7 @@
 //     id: string;
 //     email: string;
 //     name: string | null;
-//     role: UserRole;
+//     role: UserRoles;
 //     isActive: boolean;
 //     createdAt: Date;
 // }
@@ -15,7 +15,7 @@
 // export interface UserPublic {
 //     id: number;
 //     name: string | null;
-//     role: UserRole;
+//     role: UserRoles;
 //     isActive: boolean;
 //     createdAt: Date;
 // }

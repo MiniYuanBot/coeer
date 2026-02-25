@@ -5,11 +5,11 @@ import type { NewFeedback, Feedback } from '../schemas'
 import { FeedbackWithAuthor } from '@shared/contracts'
 import { FeedbackStatuses, FeedbackTargetTypes } from '@shared/constants'
 
-// private query condition builder
+// Private query condition builder
 function buildWhereClause(params: {
-    status?: FeedbackStatuses
-    search?: string
     authorId?: string
+    status?: FeedbackStatuses | FeedbackStatuses[]
+    search?: string
 }): SQL | undefined {
     const { status, search, authorId } = params
     const conditions: SQL[] = []
@@ -19,7 +19,11 @@ function buildWhereClause(params: {
     }
 
     if (status) {
-        conditions.push(eq(feedbacks.status, status))
+        if (Array.isArray(status)) {
+            conditions.push(inArray(feedbacks.status, status))
+        } else {
+            conditions.push(eq(feedbacks.status, status))
+        }
     }
 
     if (search) {
@@ -36,24 +40,24 @@ function buildWhereClause(params: {
 }
 
 export const feedbackQueries = {
+    // Create a feedback
     async create(data: NewFeedback): Promise<Feedback> {
         const [feedback] = await db.insert(feedbacks).values(data).returning()
         return feedback
     },
 
-    async delete(id: string): Promise<Feedback> {
-        const [deleted] = await db
-            .delete(feedbacks)
-            .where(eq(feedbacks.id, id))
-            .returning()
-        return deleted
+    // Delete a feedback
+    async delete(id: string): Promise<void> {
+        await db.delete(feedbacks).where(eq(feedbacks.id, id))
     },
 
+    // Find a feedback by its ID
     async findById(id: string): Promise<Feedback | undefined> {
         const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id))
         return feedback
     },
 
+    // Find a feedback with author info by its ID
     async findByIdWithAuthor(id: string): Promise<FeedbackWithAuthor | undefined> {
         return db.query.feedbacks.findFirst({
             where: eq(feedbacks.id, id),
@@ -65,6 +69,7 @@ export const feedbackQueries = {
         })
     },
 
+    // Find all feedbacks by author ID with optional filters
     async findByAuthorId(
         authorId: string,
         params: {
@@ -89,6 +94,7 @@ export const feedbackQueries = {
         })
     },
 
+    // Find all feedbacks with optional filters
     async findAll(params: {
         status?: FeedbackStatuses
         search?: string
@@ -110,6 +116,7 @@ export const feedbackQueries = {
         })
     },
 
+    // Count all feedbacks with optional filters
     async count(params: {
         status?: FeedbackStatuses
         search?: string
@@ -124,25 +131,6 @@ export const feedbackQueries = {
 
         return result?.value ?? 0
     },
-
-    // // 查询待处理的反馈（管理员用）
-    // async findPendingFeedbacks() {
-    //     const pendingFeedbacks = await db.query.feedbacks.findMany({
-    //         where: inArray(feedbacks.status, ['pending', 'processing', 'forwarded']),
-    //         with: {
-    //             author: {
-    //                 columns: {
-    //                     id: true,
-    //                     name: true,
-    //                     email: true,
-    //                 },
-    //             },
-    //         },
-    //         orderBy: [asc(feedbacks.createdAt)],
-    //     })
-
-    //     return pendingFeedbacks
-    // },
 
     // // 更新反馈状态
     // async updateStatus(id: string, status: string, resolvedAt?: Date) {

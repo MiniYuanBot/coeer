@@ -1,3 +1,8 @@
+export type ActionState<S extends string = string> = {
+    code: S
+    message?: string // user friendly message
+}
+
 // Define the response for server actions,
 // like createServerFn / form action / etc
 // Status is given string key
@@ -5,16 +10,17 @@
 export type ActionResponse<T = void, S extends string = string> = {
     success: boolean
     data?: T
-    status: S
-    message?: string // user frindly message
+    state: ActionState<S>
 }
 
 // Response for paginated actions
 export type PaginatedActionResponse<T, S extends string = string> = {
-    items: T[]
-    total: number
-    page?: number
-    pageSize?: number
-    status: S
-    message?: string
+    success: boolean
+    data?: {
+        items?: T[] // returning items
+        total?: number // total items in the database
+        page?: number // now page
+        pageSize?: number // size per page
+    }
+    state: ActionState<S>
 }

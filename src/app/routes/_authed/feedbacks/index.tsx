@@ -4,8 +4,8 @@ import { getFeedbacksFn } from '~/functions'
 export const Route = createFileRoute('/_authed/feedbacks/')({
   component: FeedbacksIndexComponent,
   loader: async () => {
-    const data = await getFeedbacksFn({ data: {} })
-    return { feedbacks: data?.feedbacks ?? [], total: data?.total ?? 0 }
+    const data = await getFeedbacksFn({ data: { page: 1, pageSize: 10 } })
+    return { feedbacks: data?.items ?? [], total: data?.total ?? 0 }
   },
 })
 
@@ -25,7 +25,8 @@ function FeedbacksIndexComponent() {
           <p className="text-sm text-gray-600 mt-2">{feedback.targetDesc}</p>
           <p className="mt-2">{feedback.content.substring(0, 100)}...</p>
           <div className="mt-2 text-xs text-gray-400">
-            {feedback.isAnonymous ? '匿名用户' : feedback.author?.name} · {new Date(feedback.createdAt).toLocaleString()}
+            {feedback.isAnonymous ? '匿名用户' : '菠萝吹雪'} · {new Date(feedback.createdAt).toLocaleString()}
+            {/* {feedback.isAnonymous ? '匿名用户' : feedback.author?.name} · {new Date(feedback.createdAt).toLocaleString()} */}
           </div>
         </div>
       ))}

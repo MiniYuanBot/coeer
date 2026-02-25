@@ -33,7 +33,7 @@ export class AuthService {
 
     static async login(data: LoginInput): Promise<LoginResponse<void>> {
         try {
-            const user = await userQueries.findByEmailInternal(data.email)
+            const user = await userQueries.findByEmail(data.email)
 
             if (!user) {
                 return { success: false, status: 'USER_NOT_FOUND', message: 'User not found' }
@@ -64,7 +64,7 @@ export class AuthService {
 
     static async signup(data: SignupInput): Promise<SignupResponse<void>> {
         try {
-            const existing = await userQueries.findByEmailInternal(data.email)
+            const existing = await userQueries.findByEmail(data.email)
 
             if (existing) {
                 const isValid = await verifyPassword(data.password, existing.passwordHash)

@@ -1,19 +1,24 @@
 import { createServerFn } from '@tanstack/react-start'
 import { FeedbackService } from '../services'
-import { FeedbackStatus } from '../database/schemas'
+import { FeedbackStatuses } from '@shared/constants'
 
 export const getFeedbacksFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: { status?: FeedbackStatus; search?: string; page?: number }) => data)
+    .inputValidator((data: {
+        status?: FeedbackStatuses;
+        search?: string;
+        page?: number;
+        pageSize?: number;
+    }) => data)
     .handler(async ({ data }) => {
         const result = await FeedbackService.list({
             status: data.status,
             search: data.search,
             page: data.page || 1,
-            limit: 50,
+            pageSize: data.pageSize || 50,
         })
 
         if (!result.success) {
-            throw new Error(result.message)
+            throw new Error(result.state.message)
         }
 
         return result.data

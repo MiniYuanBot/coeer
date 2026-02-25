@@ -1,10 +1,10 @@
-import { UserRole } from '../constants'
+import { UserRoles } from '../constants'
 import { ActionResponse } from './action'
 
 export type SessionUser = {
     id: string
     email: string
-    role: UserRole
+    role: UserRoles
     name: string | null
     lastUpdated: number
 }

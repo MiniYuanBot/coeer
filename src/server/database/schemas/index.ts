@@ -1,3 +1,5 @@
 export * from './users'
 export * from './feedbacks'
+export * from './groups'
+export * from './groupMembers'
 export * from './relations'

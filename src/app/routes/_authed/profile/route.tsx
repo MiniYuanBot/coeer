@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authed/profile')({
-    component: ProfileComponent,
+    component: ProfileLayout,
 })
 
-function ProfileComponent() {
+function ProfileLayout() {
     return (
         <div className="profile-layout">
             <nav className="profile-nav">

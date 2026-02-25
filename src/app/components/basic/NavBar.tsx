@@ -43,6 +43,14 @@ export function NavBar({ user }: NavBarProps) {
             >
                 Feedbacks
             </Link>
+            <Link
+                to="/groups"
+                activeProps={{
+                    className: 'font-bold',
+                }}
+            >
+                Groups
+            </Link>
             <div className="ml-auto">
                 {user ? (
                     <>

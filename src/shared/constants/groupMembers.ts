@@ -1,0 +1,40 @@
+export const GROUP_MEMBER_ROLES = {
+    MEMBER: 'member',
+    ADMIN: 'admin',
+} as const;
+
+export type GroupMemberRoles = typeof GROUP_MEMBER_ROLES[keyof typeof GROUP_MEMBER_ROLES];
+
+export const GROUP_MEMBER_ROLES_ARRAY = ['member', 'admin'] as const;
+
+export const GROUP_MEMBER_STATUSES = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+} as const;
+
+export type GroupMemberStatuses = typeof GROUP_MEMBER_STATUSES[keyof typeof GROUP_MEMBER_STATUSES];
+
+export const GROUP_MEMBER_STATUSES_ARRAY = ['pending', 'approved', 'rejected'] as const;
+
+export const GROUP_MEMBER = {
+    GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,
+    JOIN_SUCCESS: { code: 'JOIN_SUCCESS', message: 'Join successful' } as const,
+    LEAVE_SUCCESS: { code: 'LEAVE_SUCCESS', message: 'Leave successful' } as const,
+    // DELETE_SUCCESS: { code: 'DELETE_SUCCESS', message: 'Delete successful' } as const,
+    
+    GROUP_NOT_FOUND: { code: 'GROUP_NOT_FOUND', message: 'Group not found' } as const,
+    NOT_FOUND: { code: 'MEMBER_NOT_FOUND', message: 'Group member not found' } as const,
+    UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Unauthorized user' } as const,
+    LAST_ADMIN: { code: 'LAST_ADMIN', message: 'You are the last admin' } as const,
+    FORBIDDEN: { code: 'FORBIDDEN', message: 'You do not have permission' } as const,
+    ALREADY_EXISTS: { code: 'ALREADY_EXISTS', message: 'Group member already exists' } as const,
+    ALREADY_SUBMIT: { code: 'ALREADY_SUBMIT', message: 'Your request is already submited' } as const,
+    SERVER_ERROR: { code: 'SERVER_ERROR', message: 'Server error, please try again' } as const,
+} as const;
+
+export type GroupMemberCode = typeof GROUP_MEMBER[keyof typeof GROUP_MEMBER]['code'];
+export type GroupMemberState = {
+    code: GroupMemberCode;
+    message: string;
+};
