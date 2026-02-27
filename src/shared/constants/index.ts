@@ -1,4 +1,6 @@
 export * from './users'
+export * from './auth'
 export * from './feedbacks'
 export * from './groups'
 export * from './groupMembers'
+export * from './groupPosts'

@@ -2,17 +2,18 @@ import { useAppSession } from '../utils/session'
 import { userQueries } from '../database/queries/users'
 import { verifyPassword, hashPassword } from '../utils/password'
 import type {
-    LoginInput, SignupInput, LoginResponse, SignupResponse, LogoutResponse, SessionUserResponse
+    LoginInput, SignupInput, LoginResponse, SignupResponse, LogoutResponse, SessionUserResponse, SessionUser
 } from '@shared/contracts'
+import { AUTH } from '@shared/constants'
 
 
 export class AuthService {
-    static async getCurrentUser(): Promise<SessionUserResponse> {
+    static async getCurrentUser(): Promise<SessionUserResponse<SessionUser>> {
         try {
             const session = await useAppSession()
 
             if (!session.data?.id || !session.data?.email || !session.data?.role || !session.data?.lastUpdated) {
-                return { success: false, status: 'GET_ERROR' }
+                return { success: false, state: AUTH.UNAUTHORIZED }
             }
 
             return {
@@ -24,10 +25,10 @@ export class AuthService {
                     role: session.data.role,
                     lastUpdated: session.data.lastUpdated
                 },
-                status: 'GET_SUCCESS'
+                state: AUTH.GET_SUCCESS
             }
         } catch (err) {
-            return { success: false, status: 'SERVER_ERROR' }
+            return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
 
@@ -36,13 +37,13 @@ export class AuthService {
             const user = await userQueries.findByEmail(data.email)
 
             if (!user) {
-                return { success: false, status: 'USER_NOT_FOUND', message: 'User not found' }
+                return { success: false, state: AUTH.NOT_FOUND }
             }
 
             const isValid = await verifyPassword(data.password, user.passwordHash)
 
             if (!isValid) {
-                return { success: false, status: 'INVALID_PASSWORD', message: 'Incorrect password' }
+                return { success: false, state: AUTH.INVALID_PASSWORD }
             }
 
             const session = await useAppSession()
@@ -54,11 +55,9 @@ export class AuthService {
                 lastUpdated: Date.now()
             })
 
-            return {
-                success: true, status: 'LOGIN_SUCCESS', message: 'Login successful'
-            }
+            return { success: true, state: AUTH.LOGIN_SUCCESS }
         } catch (err) {
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
 
@@ -70,7 +69,7 @@ export class AuthService {
                 const isValid = await verifyPassword(data.password, existing.passwordHash)
 
                 if (!isValid) {
-                    return { success: false, status: 'EMAIL_EXISTS', message: 'User already exists' }
+                    return { success: false, state: AUTH.ALREADY_EXISTS }
                 }
 
                 // If password matched, login automatically
@@ -85,8 +84,7 @@ export class AuthService {
 
                 return {
                     success: true,
-                    status: 'AUTO_LOGIN',
-                    message: 'Password correct, login automatically'
+                    state: { ...AUTH.LOGIN_SUCCESS, message: 'Password correct, login automatically' },
                 }
             }
 
@@ -107,13 +105,9 @@ export class AuthService {
                 lastUpdated: Date.now()
             })
 
-            return {
-                success: true,
-                status: 'SIGNUP_SUCCESS',
-                message: 'Signup successful'
-            }
+            return { success: true, state: AUTH.SIGNUP_SUCCESS }
         } catch (err) {
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
 
@@ -121,9 +115,9 @@ export class AuthService {
         try {
             const session = await useAppSession()
             await session.clear()
-            return { success: true, status: 'LOGOUT_SUCCESS', message: 'Logout successful' }
+            return { success: true, state: AUTH.LOGOUT_SUCCESS }
         } catch (err) {
-            return { success: false, status: 'SERVER_ERROR', message: 'Server error, please try again' }
+            return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
 }

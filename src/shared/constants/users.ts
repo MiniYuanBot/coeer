@@ -1,9 +1,9 @@
-export const USER_ROLES = {
+export const USER_ROLE = {
     STUDENT: 'student',
     MODERATOR: 'moderator',
     ADMIN: 'admin'
 } as const;
 
-export type UserRoles = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type UserRole = typeof USER_ROLE[keyof typeof USER_ROLE];
 
-export const USER_ROLES_ARRAY = ['student', 'moderator', 'admin'] as const;
+export const USER_ROLE_ARRAY = ['student', 'moderator', 'admin'] as const;

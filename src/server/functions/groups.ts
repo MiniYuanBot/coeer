@@ -1,4 +1,3 @@
-// server/fns/groups.ts
 import { createServerFn } from '@tanstack/react-start'
 import { GroupService } from '../services/GroupService'
 import {
@@ -8,7 +7,7 @@ import {
     JoinGroupSchema,
     UpdateGroupMemberRoleSchema
 } from '@shared/contracts'
-import { GroupCategory, GroupMemberRoles, GroupMemberStatuses } from '@shared/constants'
+import { GroupCategory, GroupMemberRole, GroupMemberStatus } from '@shared/constants'
 import { z } from 'zod'
 
 // Create group
@@ -95,7 +94,7 @@ export const listApprovedGroupsFn = createServerFn({ method: 'GET' })
 // List my groups
 export const listMyGroupsFn = createServerFn({ method: 'GET' })
     .inputValidator((data: {
-        status?: GroupMemberStatuses;
+        status?: GroupMemberStatus;
         page?: number;
         pageSize?: number
     }) => data)
@@ -173,8 +172,8 @@ export const leaveGroupFn = createServerFn({ method: 'POST' })
 export const getGroupMembersFn = createServerFn({ method: 'GET' })
     .inputValidator((data: {
         groupId: string;
-        status?: GroupMemberStatuses;
-        role?: GroupMemberRoles;
+        status?: GroupMemberStatus;
+        role?: GroupMemberRole;
         page?: number;
         pageSize?: number
     }) => data)
@@ -195,7 +194,7 @@ export const getGroupMembersFn = createServerFn({ method: 'GET' })
 
 // Judge admin or not
 export const isRoleFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: { groupId: string, userId: string, role: GroupMemberRoles }) => data)
+    .inputValidator((data: { groupId: string, userId: string, role: GroupMemberRole }) => data)
     .handler(async ({ data }) => {
         return GroupService.isRole(data.groupId, data.userId, data.role)
     })

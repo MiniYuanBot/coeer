@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { getGroupMembersFn, approveMemberFn, removeMemberFn, updateMemberRoleFn } from '~/functions'
 import { useState } from 'react'
-import { GroupMemberRoles } from '@shared/constants'
+import { GroupMemberRole } from '@shared/constants'
 
 const searchSchema = z.object({
     status: z.string().optional(),
@@ -72,7 +72,7 @@ function GroupMembersPage() {
         setProcessingId(memberId)
         try {
             await updateMemberRoleFn({
-                data: { memberId, role: role as GroupMemberRoles },
+                data: { memberId, role: role as GroupMemberRole },
             })
             navigate({
                 to: '/groups/$slug/members',

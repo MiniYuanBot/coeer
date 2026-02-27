@@ -1,17 +1,21 @@
 import { db } from '../database/client'
-import { Feedback } from '../database/schemas'
+import { Feedback, feedbacks, feedbackStatusLogs } from '../database/schemas'
 import type {
     CreateFeedbackData,
     FeedbackWithAuthor,
     FeedbackResponse,
     PaginatedFeedbackResponse,
+    UpdateFeedbackStatusData,
+    FeedbackStatusLogWithUser,
+    FeedbackStats
 } from '@shared/contracts'
-import { FeedbackStatuses, FEEDBACK } from '@shared/constants'
+import { FeedbackStatus, FEEDBACK } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { feedbackQueries } from '../database/queries'
+import { eq, desc, count, and, gte, lte } from 'drizzle-orm'
 
 export class FeedbackService {
-    // Create a feedback
+    // Create a feedback (records initial status log)
     static async create(data: CreateFeedbackData): Promise<FeedbackResponse<Feedback>> {
         try {
             const payload = await AuthService.getCurrentUser()
@@ -27,16 +31,19 @@ export class FeedbackService {
                     targetDesc: data.targetDesc,
                     title: data.title,
                     content: data.content,
-                    isAnonymous: data.isAnonymous,
+                    isAnonymous: data.isAnonymous ?? false,
                     status: 'pending',
+                    // images: data.images,
                 })
 
-                // await tx.insert(feedbackStatusLogs).values({
-                //     feedbackId: feedback.id,
-                //     status: 'pending',
-                //     changedBy: user.id,
-                //     note: '初始提交',
-                // })
+                // Record initial status log
+                await tx.insert(feedbackStatusLogs).values({
+                    feedbackId: feedback.id,
+                    status: 'pending',
+                    changedBy: user.id,
+                    note: 'Initial submission',
+                    createdAt: new Date(),
+                })
 
                 return feedback
             })
@@ -52,11 +59,12 @@ export class FeedbackService {
         }
     }
 
-    // Get a feedback with author by its ID
+    // Get feedback details by its id
     static async getById(id: string): Promise<FeedbackResponse<FeedbackWithAuthor>> {
         try {
-            const user = await AuthService.getCurrentUser()
-            if (!user) {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
@@ -66,10 +74,18 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.NOT_FOUND }
             }
 
-            // feedback visibility logic
-            // const isAdmin = await this.isAdmin()
-            // if (!isAdmin && feedback.authorId !== user.id) {
-            //     return { success: false, message: 'FORBIDDEN' }
+            const isAdmin = user.role === 'admin'
+            const isAuthor = feedback.authorId === user.id
+
+            // Permission check: only author or admin can view
+            if (!isAdmin && !isAuthor) {
+                return { success: false, state: FEEDBACK.FORBIDDEN }
+            }
+
+            // // Hide author info for anonymous feedback when viewed by non-admins
+            // if (feedback.isAnonymous && !isAdmin) {
+            //     feedback.author = undefined
+            //     feedback.authorId = undefined
             // }
 
             return {
@@ -83,13 +99,13 @@ export class FeedbackService {
         }
     }
 
-    // List all feedbacks with optional filters
+    // List feedbacks with filters
     static async list(params: {
-        status?: FeedbackStatuses
+        status?: FeedbackStatus
         search?: string
         page?: number
         pageSize?: number
-    }): Promise<PaginatedFeedbackResponse<Feedback>> {
+    }): Promise<PaginatedFeedbackResponse<FeedbackWithAuthor>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -97,42 +113,44 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
-            // const isAdmin = await this.isAdmin()
+            const isAdmin = user.role === 'admin'
             const { status, search, page = 1, pageSize = 20 } = params
             const offset = (page - 1) * pageSize
 
-            let feedbacks: FeedbackWithAuthor[]
+            let items: FeedbackWithAuthor[]
             let total: number
 
-            // if (isAdmin) {
-            //     feedbacks = await feedbackQueries.findAll({
-            //         status,
-            //         search,
-            //         limit: pageSize,
-            //         offset
-            //     }) as FeedbackWithAuthor[]
+            if (isAdmin) {
+                // Admin sees all feedbacks
+                items = await feedbackQueries.findAll({
+                    status,
+                    search,
+                    limit: pageSize,
+                    offset
+                }) as FeedbackWithAuthor[]
 
-            //     total = await feedbackQueries.count({ status, search })
-            // } else {
-            feedbacks = await feedbackQueries.findByAuthorId(user.id, {
-                status,
-                search,
-                limit: pageSize,
-                offset
-            }) as FeedbackWithAuthor[]
+                total = await feedbackQueries.count({ status, search })
+            } else {
+                // Regular user sees only their own feedbacks
+                items = await feedbackQueries.findByAuthorId(user.id, {
+                    status,
+                    search,
+                    limit: pageSize,
+                    offset
+                }) as FeedbackWithAuthor[]
 
-            total = await feedbackQueries.count({
-                status,
-                search,
-                authorId: user.id
-            })
-            // }
+                total = await feedbackQueries.count({
+                    status,
+                    search,
+                    authorId: user.id
+                })
+            }
 
             return {
                 success: true,
                 data: {
-                    items: feedbacks,
-                    total: total,
+                    items,
+                    total,
                     page,
                     pageSize
                 },
@@ -144,244 +162,275 @@ export class FeedbackService {
         }
     }
 
-    // // 获取待处理反馈（管理员专用）
-    // static async getPendingFeedbacks(): Promise<FeedbackResponse<FeedbackWithAuthor[]>> {
-    //     try {
-    //         const isAdmin = await this.isAdmin()
-    //         if (!isAdmin) {
-    //             return { success: false, message: 'FORBIDDEN' }
-    //         }
+    // Update feedback status (admin only)
+    static async updateStatus(
+        id: string,
+        data: UpdateFeedbackStatusData
+    ): Promise<FeedbackResponse<void>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
+            }
 
-    //         const pendingFeedbacks = await db.query.feedbacks.findMany({
-    //             where: inArray(feedbacks.status, ['pending', 'processing', 'forwarded']),
-    //             with: {
-    //                 author: {
-    //                     columns: {
-    //                         id: true,
-    //                         name: true,
-    //                         email: true,
-    //                     },
-    //                 },
-    //             },
-    //             orderBy: [asc(feedbacks.createdAt)],
-    //         })
+            // Check admin role
+            const isAdmin = user.role === 'admin'
+            if (!isAdmin) {
+                return { success: false, state: FEEDBACK.FORBIDDEN }
+            }
 
-    //         return {
-    //             success: true,
-    //             data: pendingFeedbacks as FeedbackWithAuthor[]
-    //         }
-    //     } catch (err) {
-    //         console.error('Get pending feedbacks error:', err)
-    //         return { success: false, message: 'SERVER_ERROR' }
-    //     }
-    // }
+            const feedback = await feedbackQueries.findById(id)
+            if (!feedback) {
+                return { success: false, state: FEEDBACK.NOT_FOUND }
+            }
 
-    // // 更新反馈状态（管理员专用）
-    // static async updateStatus(
-    //     feedbackId: string, 
-    //     data: UpdateStatusData
-    // ): Promise<FeedbackResponse<DbFeedback>> {
-    //     try {
-    //         const user = await this.getCurrentUser()
-    //         if (!user) {
-    //             return { success: false, message: 'UNAUTHORIZED' }
-    //         }
+            await db.transaction(async (tx) => {
+                // Update feedback status
+                await feedbackQueries.updateStatus(id, data.status)
 
-    //         const isAdmin = await this.isAdmin()
-    //         if (!isAdmin) {
-    //             return { success: false, message: 'FORBIDDEN' }
-    //         }
+                // Record status change log
+                await tx.insert(feedbackStatusLogs).values({
+                    feedbackId: id,
+                    status: data.status,
+                    changedBy: user.id,
+                    note: data.note,
+                    createdAt: new Date()
+                })
+            })
 
-    //         const feedback = await db.query.feedbacks.findFirst({
-    //             where: eq(feedbacks.id, feedbackId),
-    //         })
+            return {
+                success: true,
+                data: undefined,
+                state: FEEDBACK.UPDATE_SUCCESS
+            }
+        } catch (err) {
+            console.error('Update status error:', err)
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
+        }
+    }
 
-    //         if (!feedback) {
-    //             return { success: false, message: 'FEEDBACK_NOT_FOUND' }
-    //         }
+    // Delete a feedback (author or admin only)
+    static async delete(id: string): Promise<FeedbackResponse<void>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
+            }
 
-    //         const result = await db.transaction(async (tx) => {
-    //             // 更新反馈状态
-    //             const [updated] = await tx
-    //                 .update(feedbacks)
-    //                 .set({ 
-    //                     status: data.status,
-    //                     ...(data.status === 'resolved' ? { resolvedAt: new Date() } : {}),
-    //                     updatedAt: new Date(),
-    //                 })
-    //                 .where(eq(feedbacks.id, feedbackId))
-    //                 .returning()
+            const feedback = await feedbackQueries.findById(id)
+            if (!feedback) {
+                return { success: false, state: FEEDBACK.NOT_FOUND }
+            }
 
-    //             // 记录状态变更
-    //             await tx.insert(feedbackStatusLogs).values({
-    //                 feedbackId,
-    //                 status: data.status,
-    //                 changedBy: user.id,
-    //                 note: data.note,
-    //             })
+            const isAdmin = user.role === 'admin'
+            const isAuthor = feedback.authorId === user.id
 
-    //             return updated
-    //         })
+            // Permission check: only author or admin can delete
+            if (!isAdmin && !isAuthor) {
+                return { success: false, state: FEEDBACK.FORBIDDEN }
+            }
 
-    //         return {
-    //             success: true,
-    //             data: result,
-    //             message: 'STATUS_UPDATE_SUCCESS'
-    //         }
-    //     } catch (err) {
-    //         console.error('Update status error:', err)
-    //         return { success: false, message: 'SERVER_ERROR' }
-    //     }
-    // }
+            await feedbackQueries.delete(id)
 
-    // // 管理员回复
-    // static async addReply(
-    //     feedbackId: string, 
-    //     data: AddReplyData
-    // ): Promise<FeedbackResponse<DbFeedback>> {
-    //     try {
-    //         const user = await this.getCurrentUser()
-    //         if (!user) {
-    //             return { success: false, message: 'UNAUTHORIZED' }
-    //         }
+            return {
+                success: true,
+                data: undefined,
+                state: FEEDBACK.DELETE_SUCCESS
+            }
+        } catch (err) {
+            console.error('Delete feedback error:', err)
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
+        }
+    }
 
-    //         const isAdmin = await this.isAdmin()
-    //         if (!isAdmin) {
-    //             return { success: false, message: 'FORBIDDEN' }
-    //         }
+    // Get status change logs for a feedback
+    static async getStatusLogs(
+        feedbackId: string,
+        params: {
+            page?: number
+            pageSize?: number
+        }
+    ): Promise<PaginatedFeedbackResponse<FeedbackStatusLogWithUser>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
+            }
 
-    //         const feedback = await db.query.feedbacks.findFirst({
-    //             where: eq(feedbacks.id, feedbackId),
-    //         })
+            const feedback = await feedbackQueries.findById(feedbackId)
+            if (!feedback) {
+                return { success: false, state: FEEDBACK.NOT_FOUND }
+            }
 
-    //         if (!feedback) {
-    //             return { success: false, message: 'FEEDBACK_NOT_FOUND' }
-    //         }
+            const isAdmin = user.role === 'admin'
+            const isAuthor = feedback.authorId === user.id
 
-    //         const result = await db.transaction(async (tx) => {
-    //             // 更新反馈（添加回复并标记为已解决）
-    //             const [updated] = await tx
-    //                 .update(feedbacks)
-    //                 .set({ 
-    //                     adminReply: data.reply,
-    //                     resolvedAt: new Date(),
-    //                     status: 'resolved',
-    //                     updatedAt: new Date(),
-    //                 })
-    //                 .where(eq(feedbacks.id, feedbackId))
-    //                 .returning()
+            // Permission check: only author or admin can view logs
+            if (!isAdmin && !isAuthor) {
+                return { success: false, state: FEEDBACK.FORBIDDEN }
+            }
 
-    //             // 记录回复操作
-    //             await tx.insert(feedbackStatusLogs).values({
-    //                 feedbackId,
-    //                 status: 'resolved',
-    //                 changedBy: user.id,
-    //                 note: '管理员回复',
-    //             })
+            const { page = 1, pageSize = 20 } = params
+            const offset = (page - 1) * pageSize
 
-    //             return updated
-    //         })
+            // Build query with pagination
+            const logsQuery = db.query.feedbackStatusLogs.findMany({
+                where: eq(feedbackStatusLogs.feedbackId, feedbackId),
+                with: isAdmin ? {
+                    // Admin sees operator details
+                    changedBy: {
+                        columns: {
+                            id: true,
+                            name: true,
+                            // avatar: true,
+                        },
+                    },
+                } : undefined,
+                orderBy: [desc(feedbackStatusLogs.createdAt)],
+                limit: pageSize,
+                offset: offset,
+            })
 
-    //         return {
-    //             success: true,
-    //             data: result,
-    //             message: 'REPLY_SUCCESS'
-    //         }
-    //     } catch (err) {
-    //         console.error('Add reply error:', err)
-    //         return { success: false, message: 'SERVER_ERROR' }
-    //     }
-    // }
+            const countQuery = db.select({ count: count() })
+                .from(feedbackStatusLogs)
+                .where(eq(feedbackStatusLogs.feedbackId, feedbackId))
 
-    // // 获取反馈状态变更日志
-    // static async getStatusLogs(feedbackId: string): Promise<FeedbackResponse<FeedbackStatusLogWithUser[]>> {
-    //     try {
-    //         const user = await this.getCurrentUser()
-    //         if (!user) {
-    //             return { success: false, message: 'UNAUTHORIZED' }
-    //         }
+            const [logs, [{ count: total }]] = await Promise.all([logsQuery, countQuery])
 
-    //         const feedback = await db.query.feedbacks.findFirst({
-    //             where: eq(feedbacks.id, feedbackId),
-    //         })
+            // For non-admins, hide operator details
+            const sanitizedLogs: FeedbackStatusLogWithUser[] = logs.map(log => {
+                if (isAdmin && 'changedBy' in log && log.changedBy) {
+                    // admin
+                    return {
+                        id: log.id,
+                        createdAt: log.createdAt,
+                        status: log.status,
+                        feedbackId: log.feedbackId,
+                        changedBy: log.changedBy as any,
+                        note: log.note
+                    }
+                } else {
+                    // non-admin
+                    return {
+                        id: log.id,
+                        createdAt: log.createdAt,
+                        status: log.status,
+                        feedbackId: log.feedbackId,
+                        changedBy: undefined,
+                        note: log.note
+                    }
+                }
+            })
 
-    //         if (!feedback) {
-    //             return { success: false, message: 'FEEDBACK_NOT_FOUND' }
-    //         }
+            return {
+                success: true,
+                data: {
+                    items: sanitizedLogs,
+                    total: total,
+                    page,
+                    pageSize
+                },
+                state: FEEDBACK.GET_SUCCESS
+            }
+        } catch (err) {
+            console.error('Get status logs error:', err)
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
+        }
+    }
 
-    //         // 非管理员只能看自己的反馈日志
-    //         const isAdmin = await this.isAdmin()
-    //         if (!isAdmin && feedback.authorId !== user.id) {
-    //             return { success: false, message: 'FORBIDDEN' }
-    //         }
+    // Get feedback statistics for admin dashboard
+    static async getStats(params: {
+        startDate?: string
+        endDate?: string
+    }): Promise<FeedbackResponse<FeedbackStats>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: FEEDBACK.UNAUTHORIZED }
+            }
 
-    //         const logs = await db.query.feedbackStatusLogs.findMany({
-    //             where: eq(feedbackStatusLogs.feedbackId, feedbackId),
-    //             with: {
-    //                 changedBy: {
-    //                     columns: {
-    //                         id: true,
-    //                         name: true,
-    //                     },
-    //                 },
-    //             },
-    //             orderBy: [desc(feedbackStatusLogs.createdAt)],
-    //         })
+            // Only admin can view statistics
+            const isAdmin = user.role === 'admin'
+            if (!isAdmin) {
+                return { success: false, state: FEEDBACK.FORBIDDEN }
+            }
 
-    //         return {
-    //             success: true,
-    //             data: logs as FeedbackStatusLogWithUser[]
-    //         }
-    //     } catch (err) {
-    //         console.error('Get status logs error:', err)
-    //         return { success: false, message: 'SERVER_ERROR' }
-    //     }
-    // }
+            const { startDate, endDate } = params
 
-    // // 获取统计信息（管理员专用）
-    // static async getStats(): Promise<FeedbackResponse<{
-    //     total: number
-    //     pending: number
-    //     processing: number
-    //     resolved: number
-    //     invalid: number
-    //     avgResponseTime?: number
-    // }>> {
-    //     try {
-    //         const isAdmin = await this.isAdmin()
-    //         if (!isAdmin) {
-    //             return { success: false, message: 'FORBIDDEN' }
-    //         }
+            // Build date filter conditions
+            const conditions = []
+            if (startDate) {
+                conditions.push(gte(feedbacks.createdAt, new Date(startDate)))
+            }
+            if (endDate) {
+                conditions.push(lte(feedbacks.createdAt, new Date(endDate)))
+            }
 
-    //         const stats = await db
-    //             .select({
-    //                 status: feedbacks.status,
-    //                 count: count(),
-    //             })
-    //             .from(feedbacks)
-    //             .groupBy(feedbacks.status)
+            const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-    //         const result = {
-    //             total: 0,
-    //             pending: 0,
-    //             processing: 0,
-    //             forwarded: 0,
-    //             resolved: 0,
-    //             invalid: 0,
-    //         }
+            // Get status distribution
+            const statusStats = await db
+                .select({
+                    status: feedbacks.status,
+                    count: count(),
+                })
+                .from(feedbacks)
+                .where(whereClause)
+                .groupBy(feedbacks.status)
 
-    //         stats.forEach(stat => {
-    //             result.total += stat.count
-    //             result[stat.status as keyof typeof result] = stat.count
-    //         })
+            // Calculate totals
+            const result: FeedbackStats = {
+                total: 0,
+                pending: 0,
+                processing: 0,
+                resolved: 0,
+                invalid: 0,
+                avgResolveTime: 0,
+            }
 
-    //         return {
-    //             success: true,
-    //             data: result
-    //         }
-    //     } catch (err) {
-    //         console.error('Get stats error:', err)
-    //         return { success: false, message: 'SERVER_ERROR' }
-    //     }
-    // }
+            statusStats.forEach(stat => {
+                result.total += Number(stat.count)
+                if (stat.status in result) {
+                    result[stat.status as keyof Omit<FeedbackStats, 'avgResponseTime'>] = Number(stat.count)
+                }
+            })
+
+            // Calculate average response time (resolved feedbacks only)
+            // Average time from creation to resolution
+            const resolvedFeedbacks = await db.query.feedbacks.findMany({
+                where: and(
+                    eq(feedbacks.status, 'resolved'),
+                    whereClause
+                ),
+                columns: {
+                    createdAt: true,
+                    updatedAt: true,
+                }
+            })
+
+            if (resolvedFeedbacks.length > 0) {
+                const totalResponseTime = resolvedFeedbacks.reduce((sum, fb) => {
+                    const created = new Date(fb.createdAt).getTime()
+                    const resolved = new Date(fb.updatedAt).getTime()
+                    return sum + (resolved - created)
+                }, 0)
+
+                // Average in hours
+                result.avgResolveTime = Math.round(totalResponseTime / resolvedFeedbacks.length / (1000 * 60 * 60))
+            }
+
+            return {
+                success: true,
+                data: result,
+                state: FEEDBACK.GET_SUCCESS
+            }
+        } catch (err) {
+            console.error('Get stats error:', err)
+            return { success: false, state: FEEDBACK.SERVER_ERROR }
+        }
+    }
 }

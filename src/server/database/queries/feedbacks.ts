@@ -3,12 +3,12 @@ import { feedbacks } from '../schemas'
 import { eq, desc, and, inArray, ilike, or, count, asc, SQL } from 'drizzle-orm'
 import type { NewFeedback, Feedback } from '../schemas'
 import { FeedbackWithAuthor } from '@shared/contracts'
-import { FeedbackStatuses, FeedbackTargetTypes } from '@shared/constants'
+import { FeedbackStatus } from '@shared/constants'
 
 // Private query condition builder
 function buildWhereClause(params: {
     authorId?: string
-    status?: FeedbackStatuses | FeedbackStatuses[]
+    status?: FeedbackStatus | FeedbackStatus[]
     search?: string
 }): SQL | undefined {
     const { status, search, authorId } = params
@@ -73,7 +73,7 @@ export const feedbackQueries = {
     async findByAuthorId(
         authorId: string,
         params: {
-            status?: FeedbackStatuses
+            status?: FeedbackStatus
             search?: string
             limit?: number
             offset?: number
@@ -96,7 +96,7 @@ export const feedbackQueries = {
 
     // Find all feedbacks with optional filters
     async findAll(params: {
-        status?: FeedbackStatuses
+        status?: FeedbackStatus
         search?: string
         limit?: number
         offset?: number
@@ -118,7 +118,7 @@ export const feedbackQueries = {
 
     // Count all feedbacks with optional filters
     async count(params: {
-        status?: FeedbackStatuses
+        status?: FeedbackStatus
         search?: string
         authorId?: string
     }): Promise<number> {
@@ -132,39 +132,19 @@ export const feedbackQueries = {
         return result?.value ?? 0
     },
 
-    // // 更新反馈状态
-    // async updateStatus(id: string, status: string, resolvedAt?: Date) {
-    //     const [updated] = await db
-    //         .update(feedbacks)
-    //         .set({
-    //             status,
-    //             ...(resolvedAt ? { resolvedAt } : {}),
-    //             updatedAt: new Date(),
-    //         })
-    //         .where(eq(feedbacks.id, id))
-    //         .returning()
+    // Update feedback status
+    async updateStatus(id: string, status: FeedbackStatus, resolvedAt?: Date): Promise<void> {
+        await db.update(feedbacks)
+            .set({
+                status,
+                ...(resolvedAt ? { resolvedAt } : {}),
+                updatedAt: new Date(),
+            })
+            .where(eq(feedbacks.id, id))
+    },
 
-    //     return updated
-    // },
-
-    // // 添加管理员回复
-    // async addReply(id: string, reply: string) {
-    //     const [updated] = await db
-    //         .update(feedbacks)
-    //         .set({
-    //             adminReply: reply,
-    //             resolvedAt: new Date(),
-    //             status: 'resolved',
-    //             updatedAt: new Date(),
-    //         })
-    //         .where(eq(feedbacks.id, id))
-    //         .returning()
-
-    //     return updated
-    // },
-
-    // // 获取统计信息
-    // async getStats() {
+    // Get feedback status
+    // async getStats(): Promise<FeedbackStatus[]> {
     //     const stats = await db
     //         .select({
     //             status: feedbacks.status,

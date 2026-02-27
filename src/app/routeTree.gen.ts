@@ -25,14 +25,29 @@ import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/ind
 import { Route as AuthedGroupsMyRouteImport } from './routes/_authed/groups/my'
 import { Route as AuthedGroupsCreateRouteImport } from './routes/_authed/groups/create'
 import { Route as AuthedGroupsAllRouteImport } from './routes/_authed/groups/all'
+import { Route as AuthedFeedbacksCreateRouteImport } from './routes/_authed/feedbacks/create'
+import { Route as AuthedAdminStatsRouteImport } from './routes/_authed/admin/stats'
 import { Route as AuthedGroupsSlugRouteRouteImport } from './routes/_authed/groups/$slug/route'
+import { Route as AuthedFeedbacksFeedbackIdRouteRouteImport } from './routes/_authed/feedbacks/$feedbackId/route'
 import { Route as AuthedAdminGroupsRouteRouteImport } from './routes/_authed/admin/groups/route'
+import { Route as AuthedAdminFeedbacksRouteRouteImport } from './routes/_authed/admin/feedbacks/route'
 import { Route as AuthedGroupsSlugIndexRouteImport } from './routes/_authed/groups/$slug/index'
+import { Route as AuthedFeedbacksFeedbackIdIndexRouteImport } from './routes/_authed/feedbacks/$feedbackId/index'
 import { Route as AuthedAdminGroupsIndexRouteImport } from './routes/_authed/admin/groups/index'
+import { Route as AuthedAdminFeedbacksIndexRouteImport } from './routes/_authed/admin/feedbacks/index'
 import { Route as AuthedGroupsSlugSettingsRouteImport } from './routes/_authed/groups/$slug/settings'
 import { Route as AuthedGroupsSlugMembersRouteImport } from './routes/_authed/groups/$slug/members'
 import { Route as AuthedGroupsSlugAdminRouteImport } from './routes/_authed/groups/$slug/admin'
+import { Route as AuthedFeedbacksFeedbackIdLogsRouteImport } from './routes/_authed/feedbacks/$feedbackId/logs'
 import { Route as AuthedAdminGroupsPendingRouteImport } from './routes/_authed/admin/groups/pending'
+import { Route as AuthedAdminFeedbacksPendingRouteImport } from './routes/_authed/admin/feedbacks/pending'
+import { Route as AuthedGroupsSlugPostsRouteRouteImport } from './routes/_authed/groups/$slug/posts/route'
+import { Route as AuthedGroupsSlugPostsIndexRouteImport } from './routes/_authed/groups/$slug/posts/index'
+import { Route as AuthedGroupsSlugPostsCreateRouteImport } from './routes/_authed/groups/$slug/posts/create'
+import { Route as AuthedGroupsSlugPostsAnnouncementsRouteImport } from './routes/_authed/groups/$slug/posts/announcements'
+import { Route as AuthedGroupsSlugPostsPostIdRouteRouteImport } from './routes/_authed/groups/$slug/posts/$postId/route'
+import { Route as AuthedGroupsSlugPostsPostIdIndexRouteImport } from './routes/_authed/groups/$slug/posts/$postId/index'
+import { Route as AuthedGroupsSlugPostsPostIdEditRouteImport } from './routes/_authed/groups/$slug/posts/$postId/edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -113,26 +128,60 @@ const AuthedGroupsAllRoute = AuthedGroupsAllRouteImport.update({
   path: '/all',
   getParentRoute: () => AuthedGroupsRouteRoute,
 } as any)
+const AuthedFeedbacksCreateRoute = AuthedFeedbacksCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AuthedFeedbacksRouteRoute,
+} as any)
+const AuthedAdminStatsRoute = AuthedAdminStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
 const AuthedGroupsSlugRouteRoute = AuthedGroupsSlugRouteRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => AuthedGroupsRouteRoute,
 } as any)
+const AuthedFeedbacksFeedbackIdRouteRoute =
+  AuthedFeedbacksFeedbackIdRouteRouteImport.update({
+    id: '/$feedbackId',
+    path: '/$feedbackId',
+    getParentRoute: () => AuthedFeedbacksRouteRoute,
+  } as any)
 const AuthedAdminGroupsRouteRoute = AuthedAdminGroupsRouteRouteImport.update({
   id: '/groups',
   path: '/groups',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
+const AuthedAdminFeedbacksRouteRoute =
+  AuthedAdminFeedbacksRouteRouteImport.update({
+    id: '/feedbacks',
+    path: '/feedbacks',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
 const AuthedGroupsSlugIndexRoute = AuthedGroupsSlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedGroupsSlugRouteRoute,
 } as any)
+const AuthedFeedbacksFeedbackIdIndexRoute =
+  AuthedFeedbacksFeedbackIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedFeedbacksFeedbackIdRouteRoute,
+  } as any)
 const AuthedAdminGroupsIndexRoute = AuthedAdminGroupsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedAdminGroupsRouteRoute,
 } as any)
+const AuthedAdminFeedbacksIndexRoute =
+  AuthedAdminFeedbacksIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedAdminFeedbacksRouteRoute,
+  } as any)
 const AuthedGroupsSlugSettingsRoute =
   AuthedGroupsSlugSettingsRouteImport.update({
     id: '/settings',
@@ -149,11 +198,65 @@ const AuthedGroupsSlugAdminRoute = AuthedGroupsSlugAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthedGroupsSlugRouteRoute,
 } as any)
+const AuthedFeedbacksFeedbackIdLogsRoute =
+  AuthedFeedbacksFeedbackIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
+    getParentRoute: () => AuthedFeedbacksFeedbackIdRouteRoute,
+  } as any)
 const AuthedAdminGroupsPendingRoute =
   AuthedAdminGroupsPendingRouteImport.update({
     id: '/pending',
     path: '/pending',
     getParentRoute: () => AuthedAdminGroupsRouteRoute,
+  } as any)
+const AuthedAdminFeedbacksPendingRoute =
+  AuthedAdminFeedbacksPendingRouteImport.update({
+    id: '/pending',
+    path: '/pending',
+    getParentRoute: () => AuthedAdminFeedbacksRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsRouteRoute =
+  AuthedGroupsSlugPostsRouteRouteImport.update({
+    id: '/posts',
+    path: '/posts',
+    getParentRoute: () => AuthedGroupsSlugRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsIndexRoute =
+  AuthedGroupsSlugPostsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedGroupsSlugPostsRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsCreateRoute =
+  AuthedGroupsSlugPostsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthedGroupsSlugPostsRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsAnnouncementsRoute =
+  AuthedGroupsSlugPostsAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => AuthedGroupsSlugPostsRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsPostIdRouteRoute =
+  AuthedGroupsSlugPostsPostIdRouteRouteImport.update({
+    id: '/$postId',
+    path: '/$postId',
+    getParentRoute: () => AuthedGroupsSlugPostsRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsPostIdIndexRoute =
+  AuthedGroupsSlugPostsPostIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedGroupsSlugPostsPostIdRouteRoute,
+  } as any)
+const AuthedGroupsSlugPostsPostIdEditRoute =
+  AuthedGroupsSlugPostsPostIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthedGroupsSlugPostsPostIdRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -165,8 +268,12 @@ export interface FileRoutesByFullPath {
   '/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/profile': typeof AuthedProfileRouteRouteWithChildren
+  '/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
+  '/admin/stats': typeof AuthedAdminStatsRoute
+  '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/all': typeof AuthedGroupsAllRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
   '/groups/my': typeof AuthedGroupsMyRoute
@@ -174,18 +281,31 @@ export interface FileRoutesByFullPath {
   '/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/groups/': typeof AuthedGroupsIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
+  '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
+  '/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
+  '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
+  '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
+  '/groups/$slug/posts/': typeof AuthedGroupsSlugPostsIndexRoute
+  '/groups/$slug/posts/$postId/edit': typeof AuthedGroupsSlugPostsPostIdEditRoute
+  '/groups/$slug/posts/$postId/': typeof AuthedGroupsSlugPostsPostIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/admin/stats': typeof AuthedAdminStatsRoute
+  '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/all': typeof AuthedGroupsAllRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
   '/groups/my': typeof AuthedGroupsMyRoute
@@ -193,12 +313,21 @@ export interface FileRoutesByTo {
   '/feedbacks': typeof AuthedFeedbacksIndexRoute
   '/groups': typeof AuthedGroupsIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
+  '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/admin/feedbacks': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups': typeof AuthedAdminGroupsIndexRoute
+  '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug': typeof AuthedGroupsSlugIndexRoute
+  '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
+  '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
+  '/groups/$slug/posts': typeof AuthedGroupsSlugPostsIndexRoute
+  '/groups/$slug/posts/$postId/edit': typeof AuthedGroupsSlugPostsPostIdEditRoute
+  '/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,8 +340,12 @@ export interface FileRoutesById {
   '/_authed/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/_authed/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/_authed/profile': typeof AuthedProfileRouteRouteWithChildren
+  '/_authed/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/_authed/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/_authed/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/_authed/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
+  '/_authed/admin/stats': typeof AuthedAdminStatsRoute
+  '/_authed/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/_authed/groups/all': typeof AuthedGroupsAllRoute
   '/_authed/groups/create': typeof AuthedGroupsCreateRoute
   '/_authed/groups/my': typeof AuthedGroupsMyRoute
@@ -220,12 +353,23 @@ export interface FileRoutesById {
   '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/_authed/groups/': typeof AuthedGroupsIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
+  '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/_authed/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/_authed/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/_authed/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/_authed/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/_authed/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/_authed/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/_authed/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/_authed/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/_authed/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
+  '/_authed/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
+  '/_authed/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
+  '/_authed/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
+  '/_authed/groups/$slug/posts/': typeof AuthedGroupsSlugPostsIndexRoute
+  '/_authed/groups/$slug/posts/$postId/edit': typeof AuthedGroupsSlugPostsPostIdEditRoute
+  '/_authed/groups/$slug/posts/$postId/': typeof AuthedGroupsSlugPostsPostIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -238,8 +382,12 @@ export interface FileRouteTypes {
     | '/feedbacks'
     | '/groups'
     | '/profile'
+    | '/admin/feedbacks'
     | '/admin/groups'
+    | '/feedbacks/$feedbackId'
     | '/groups/$slug'
+    | '/admin/stats'
+    | '/feedbacks/create'
     | '/groups/all'
     | '/groups/create'
     | '/groups/my'
@@ -247,18 +395,31 @@ export interface FileRouteTypes {
     | '/feedbacks/'
     | '/groups/'
     | '/profile/'
+    | '/groups/$slug/posts'
+    | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/feedbacks/$feedbackId/logs'
     | '/groups/$slug/admin'
     | '/groups/$slug/members'
     | '/groups/$slug/settings'
+    | '/admin/feedbacks/'
     | '/admin/groups/'
+    | '/feedbacks/$feedbackId/'
     | '/groups/$slug/'
+    | '/groups/$slug/posts/$postId'
+    | '/groups/$slug/posts/announcements'
+    | '/groups/$slug/posts/create'
+    | '/groups/$slug/posts/'
+    | '/groups/$slug/posts/$postId/edit'
+    | '/groups/$slug/posts/$postId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/logout'
     | '/signup'
+    | '/admin/stats'
+    | '/feedbacks/create'
     | '/groups/all'
     | '/groups/create'
     | '/groups/my'
@@ -266,12 +427,21 @@ export interface FileRouteTypes {
     | '/feedbacks'
     | '/groups'
     | '/profile'
+    | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/feedbacks/$feedbackId/logs'
     | '/groups/$slug/admin'
     | '/groups/$slug/members'
     | '/groups/$slug/settings'
+    | '/admin/feedbacks'
     | '/admin/groups'
+    | '/feedbacks/$feedbackId'
     | '/groups/$slug'
+    | '/groups/$slug/posts/announcements'
+    | '/groups/$slug/posts/create'
+    | '/groups/$slug/posts'
+    | '/groups/$slug/posts/$postId/edit'
+    | '/groups/$slug/posts/$postId'
   id:
     | '__root__'
     | '/'
@@ -283,8 +453,12 @@ export interface FileRouteTypes {
     | '/_authed/feedbacks'
     | '/_authed/groups'
     | '/_authed/profile'
+    | '/_authed/admin/feedbacks'
     | '/_authed/admin/groups'
+    | '/_authed/feedbacks/$feedbackId'
     | '/_authed/groups/$slug'
+    | '/_authed/admin/stats'
+    | '/_authed/feedbacks/create'
     | '/_authed/groups/all'
     | '/_authed/groups/create'
     | '/_authed/groups/my'
@@ -292,12 +466,23 @@ export interface FileRouteTypes {
     | '/_authed/feedbacks/'
     | '/_authed/groups/'
     | '/_authed/profile/'
+    | '/_authed/groups/$slug/posts'
+    | '/_authed/admin/feedbacks/pending'
     | '/_authed/admin/groups/pending'
+    | '/_authed/feedbacks/$feedbackId/logs'
     | '/_authed/groups/$slug/admin'
     | '/_authed/groups/$slug/members'
     | '/_authed/groups/$slug/settings'
+    | '/_authed/admin/feedbacks/'
     | '/_authed/admin/groups/'
+    | '/_authed/feedbacks/$feedbackId/'
     | '/_authed/groups/$slug/'
+    | '/_authed/groups/$slug/posts/$postId'
+    | '/_authed/groups/$slug/posts/announcements'
+    | '/_authed/groups/$slug/posts/create'
+    | '/_authed/groups/$slug/posts/'
+    | '/_authed/groups/$slug/posts/$postId/edit'
+    | '/_authed/groups/$slug/posts/$postId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -422,6 +607,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedGroupsAllRouteImport
       parentRoute: typeof AuthedGroupsRouteRoute
     }
+    '/_authed/feedbacks/create': {
+      id: '/_authed/feedbacks/create'
+      path: '/create'
+      fullPath: '/feedbacks/create'
+      preLoaderRoute: typeof AuthedFeedbacksCreateRouteImport
+      parentRoute: typeof AuthedFeedbacksRouteRoute
+    }
+    '/_authed/admin/stats': {
+      id: '/_authed/admin/stats'
+      path: '/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AuthedAdminStatsRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
     '/_authed/groups/$slug': {
       id: '/_authed/groups/$slug'
       path: '/$slug'
@@ -429,11 +628,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedGroupsSlugRouteRouteImport
       parentRoute: typeof AuthedGroupsRouteRoute
     }
+    '/_authed/feedbacks/$feedbackId': {
+      id: '/_authed/feedbacks/$feedbackId'
+      path: '/$feedbackId'
+      fullPath: '/feedbacks/$feedbackId'
+      preLoaderRoute: typeof AuthedFeedbacksFeedbackIdRouteRouteImport
+      parentRoute: typeof AuthedFeedbacksRouteRoute
+    }
     '/_authed/admin/groups': {
       id: '/_authed/admin/groups'
       path: '/groups'
       fullPath: '/admin/groups'
       preLoaderRoute: typeof AuthedAdminGroupsRouteRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/feedbacks': {
+      id: '/_authed/admin/feedbacks'
+      path: '/feedbacks'
+      fullPath: '/admin/feedbacks'
+      preLoaderRoute: typeof AuthedAdminFeedbacksRouteRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/groups/$slug/': {
@@ -443,12 +656,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedGroupsSlugIndexRouteImport
       parentRoute: typeof AuthedGroupsSlugRouteRoute
     }
+    '/_authed/feedbacks/$feedbackId/': {
+      id: '/_authed/feedbacks/$feedbackId/'
+      path: '/'
+      fullPath: '/feedbacks/$feedbackId/'
+      preLoaderRoute: typeof AuthedFeedbacksFeedbackIdIndexRouteImport
+      parentRoute: typeof AuthedFeedbacksFeedbackIdRouteRoute
+    }
     '/_authed/admin/groups/': {
       id: '/_authed/admin/groups/'
       path: '/'
       fullPath: '/admin/groups/'
       preLoaderRoute: typeof AuthedAdminGroupsIndexRouteImport
       parentRoute: typeof AuthedAdminGroupsRouteRoute
+    }
+    '/_authed/admin/feedbacks/': {
+      id: '/_authed/admin/feedbacks/'
+      path: '/'
+      fullPath: '/admin/feedbacks/'
+      preLoaderRoute: typeof AuthedAdminFeedbacksIndexRouteImport
+      parentRoute: typeof AuthedAdminFeedbacksRouteRoute
     }
     '/_authed/groups/$slug/settings': {
       id: '/_authed/groups/$slug/settings'
@@ -471,6 +698,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedGroupsSlugAdminRouteImport
       parentRoute: typeof AuthedGroupsSlugRouteRoute
     }
+    '/_authed/feedbacks/$feedbackId/logs': {
+      id: '/_authed/feedbacks/$feedbackId/logs'
+      path: '/logs'
+      fullPath: '/feedbacks/$feedbackId/logs'
+      preLoaderRoute: typeof AuthedFeedbacksFeedbackIdLogsRouteImport
+      parentRoute: typeof AuthedFeedbacksFeedbackIdRouteRoute
+    }
     '/_authed/admin/groups/pending': {
       id: '/_authed/admin/groups/pending'
       path: '/pending'
@@ -478,8 +712,80 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminGroupsPendingRouteImport
       parentRoute: typeof AuthedAdminGroupsRouteRoute
     }
+    '/_authed/admin/feedbacks/pending': {
+      id: '/_authed/admin/feedbacks/pending'
+      path: '/pending'
+      fullPath: '/admin/feedbacks/pending'
+      preLoaderRoute: typeof AuthedAdminFeedbacksPendingRouteImport
+      parentRoute: typeof AuthedAdminFeedbacksRouteRoute
+    }
+    '/_authed/groups/$slug/posts': {
+      id: '/_authed/groups/$slug/posts'
+      path: '/posts'
+      fullPath: '/groups/$slug/posts'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsRouteRouteImport
+      parentRoute: typeof AuthedGroupsSlugRouteRoute
+    }
+    '/_authed/groups/$slug/posts/': {
+      id: '/_authed/groups/$slug/posts/'
+      path: '/'
+      fullPath: '/groups/$slug/posts/'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsIndexRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsRouteRoute
+    }
+    '/_authed/groups/$slug/posts/create': {
+      id: '/_authed/groups/$slug/posts/create'
+      path: '/create'
+      fullPath: '/groups/$slug/posts/create'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsCreateRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsRouteRoute
+    }
+    '/_authed/groups/$slug/posts/announcements': {
+      id: '/_authed/groups/$slug/posts/announcements'
+      path: '/announcements'
+      fullPath: '/groups/$slug/posts/announcements'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsAnnouncementsRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsRouteRoute
+    }
+    '/_authed/groups/$slug/posts/$postId': {
+      id: '/_authed/groups/$slug/posts/$postId'
+      path: '/$postId'
+      fullPath: '/groups/$slug/posts/$postId'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsPostIdRouteRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsRouteRoute
+    }
+    '/_authed/groups/$slug/posts/$postId/': {
+      id: '/_authed/groups/$slug/posts/$postId/'
+      path: '/'
+      fullPath: '/groups/$slug/posts/$postId/'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsPostIdIndexRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsPostIdRouteRoute
+    }
+    '/_authed/groups/$slug/posts/$postId/edit': {
+      id: '/_authed/groups/$slug/posts/$postId/edit'
+      path: '/edit'
+      fullPath: '/groups/$slug/posts/$postId/edit'
+      preLoaderRoute: typeof AuthedGroupsSlugPostsPostIdEditRouteImport
+      parentRoute: typeof AuthedGroupsSlugPostsPostIdRouteRoute
+    }
   }
 }
+
+interface AuthedAdminFeedbacksRouteRouteChildren {
+  AuthedAdminFeedbacksPendingRoute: typeof AuthedAdminFeedbacksPendingRoute
+  AuthedAdminFeedbacksIndexRoute: typeof AuthedAdminFeedbacksIndexRoute
+}
+
+const AuthedAdminFeedbacksRouteRouteChildren: AuthedAdminFeedbacksRouteRouteChildren =
+  {
+    AuthedAdminFeedbacksPendingRoute: AuthedAdminFeedbacksPendingRoute,
+    AuthedAdminFeedbacksIndexRoute: AuthedAdminFeedbacksIndexRoute,
+  }
+
+const AuthedAdminFeedbacksRouteRouteWithChildren =
+  AuthedAdminFeedbacksRouteRoute._addFileChildren(
+    AuthedAdminFeedbacksRouteRouteChildren,
+  )
 
 interface AuthedAdminGroupsRouteRouteChildren {
   AuthedAdminGroupsPendingRoute: typeof AuthedAdminGroupsPendingRoute
@@ -498,30 +804,95 @@ const AuthedAdminGroupsRouteRouteWithChildren =
   )
 
 interface AuthedAdminRouteRouteChildren {
+  AuthedAdminFeedbacksRouteRoute: typeof AuthedAdminFeedbacksRouteRouteWithChildren
   AuthedAdminGroupsRouteRoute: typeof AuthedAdminGroupsRouteRouteWithChildren
+  AuthedAdminStatsRoute: typeof AuthedAdminStatsRoute
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
 }
 
 const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
+  AuthedAdminFeedbacksRouteRoute: AuthedAdminFeedbacksRouteRouteWithChildren,
   AuthedAdminGroupsRouteRoute: AuthedAdminGroupsRouteRouteWithChildren,
+  AuthedAdminStatsRoute: AuthedAdminStatsRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
 }
 
 const AuthedAdminRouteRouteWithChildren =
   AuthedAdminRouteRoute._addFileChildren(AuthedAdminRouteRouteChildren)
 
+interface AuthedFeedbacksFeedbackIdRouteRouteChildren {
+  AuthedFeedbacksFeedbackIdLogsRoute: typeof AuthedFeedbacksFeedbackIdLogsRoute
+  AuthedFeedbacksFeedbackIdIndexRoute: typeof AuthedFeedbacksFeedbackIdIndexRoute
+}
+
+const AuthedFeedbacksFeedbackIdRouteRouteChildren: AuthedFeedbacksFeedbackIdRouteRouteChildren =
+  {
+    AuthedFeedbacksFeedbackIdLogsRoute: AuthedFeedbacksFeedbackIdLogsRoute,
+    AuthedFeedbacksFeedbackIdIndexRoute: AuthedFeedbacksFeedbackIdIndexRoute,
+  }
+
+const AuthedFeedbacksFeedbackIdRouteRouteWithChildren =
+  AuthedFeedbacksFeedbackIdRouteRoute._addFileChildren(
+    AuthedFeedbacksFeedbackIdRouteRouteChildren,
+  )
+
 interface AuthedFeedbacksRouteRouteChildren {
+  AuthedFeedbacksFeedbackIdRouteRoute: typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
+  AuthedFeedbacksCreateRoute: typeof AuthedFeedbacksCreateRoute
   AuthedFeedbacksIndexRoute: typeof AuthedFeedbacksIndexRoute
 }
 
 const AuthedFeedbacksRouteRouteChildren: AuthedFeedbacksRouteRouteChildren = {
+  AuthedFeedbacksFeedbackIdRouteRoute:
+    AuthedFeedbacksFeedbackIdRouteRouteWithChildren,
+  AuthedFeedbacksCreateRoute: AuthedFeedbacksCreateRoute,
   AuthedFeedbacksIndexRoute: AuthedFeedbacksIndexRoute,
 }
 
 const AuthedFeedbacksRouteRouteWithChildren =
   AuthedFeedbacksRouteRoute._addFileChildren(AuthedFeedbacksRouteRouteChildren)
 
+interface AuthedGroupsSlugPostsPostIdRouteRouteChildren {
+  AuthedGroupsSlugPostsPostIdEditRoute: typeof AuthedGroupsSlugPostsPostIdEditRoute
+  AuthedGroupsSlugPostsPostIdIndexRoute: typeof AuthedGroupsSlugPostsPostIdIndexRoute
+}
+
+const AuthedGroupsSlugPostsPostIdRouteRouteChildren: AuthedGroupsSlugPostsPostIdRouteRouteChildren =
+  {
+    AuthedGroupsSlugPostsPostIdEditRoute: AuthedGroupsSlugPostsPostIdEditRoute,
+    AuthedGroupsSlugPostsPostIdIndexRoute:
+      AuthedGroupsSlugPostsPostIdIndexRoute,
+  }
+
+const AuthedGroupsSlugPostsPostIdRouteRouteWithChildren =
+  AuthedGroupsSlugPostsPostIdRouteRoute._addFileChildren(
+    AuthedGroupsSlugPostsPostIdRouteRouteChildren,
+  )
+
+interface AuthedGroupsSlugPostsRouteRouteChildren {
+  AuthedGroupsSlugPostsPostIdRouteRoute: typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
+  AuthedGroupsSlugPostsAnnouncementsRoute: typeof AuthedGroupsSlugPostsAnnouncementsRoute
+  AuthedGroupsSlugPostsCreateRoute: typeof AuthedGroupsSlugPostsCreateRoute
+  AuthedGroupsSlugPostsIndexRoute: typeof AuthedGroupsSlugPostsIndexRoute
+}
+
+const AuthedGroupsSlugPostsRouteRouteChildren: AuthedGroupsSlugPostsRouteRouteChildren =
+  {
+    AuthedGroupsSlugPostsPostIdRouteRoute:
+      AuthedGroupsSlugPostsPostIdRouteRouteWithChildren,
+    AuthedGroupsSlugPostsAnnouncementsRoute:
+      AuthedGroupsSlugPostsAnnouncementsRoute,
+    AuthedGroupsSlugPostsCreateRoute: AuthedGroupsSlugPostsCreateRoute,
+    AuthedGroupsSlugPostsIndexRoute: AuthedGroupsSlugPostsIndexRoute,
+  }
+
+const AuthedGroupsSlugPostsRouteRouteWithChildren =
+  AuthedGroupsSlugPostsRouteRoute._addFileChildren(
+    AuthedGroupsSlugPostsRouteRouteChildren,
+  )
+
 interface AuthedGroupsSlugRouteRouteChildren {
+  AuthedGroupsSlugPostsRouteRoute: typeof AuthedGroupsSlugPostsRouteRouteWithChildren
   AuthedGroupsSlugAdminRoute: typeof AuthedGroupsSlugAdminRoute
   AuthedGroupsSlugMembersRoute: typeof AuthedGroupsSlugMembersRoute
   AuthedGroupsSlugSettingsRoute: typeof AuthedGroupsSlugSettingsRoute
@@ -529,6 +900,7 @@ interface AuthedGroupsSlugRouteRouteChildren {
 }
 
 const AuthedGroupsSlugRouteRouteChildren: AuthedGroupsSlugRouteRouteChildren = {
+  AuthedGroupsSlugPostsRouteRoute: AuthedGroupsSlugPostsRouteRouteWithChildren,
   AuthedGroupsSlugAdminRoute: AuthedGroupsSlugAdminRoute,
   AuthedGroupsSlugMembersRoute: AuthedGroupsSlugMembersRoute,
   AuthedGroupsSlugSettingsRoute: AuthedGroupsSlugSettingsRoute,

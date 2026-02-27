@@ -1,21 +1,19 @@
-export const GROUP_MEMBER_ROLES = {
+export const GROUP_MEMBER_ROLE = {
     MEMBER: 'member',
     ADMIN: 'admin',
 } as const;
 
-export type GroupMemberRoles = typeof GROUP_MEMBER_ROLES[keyof typeof GROUP_MEMBER_ROLES];
+export type GroupMemberRole = typeof GROUP_MEMBER_ROLE[keyof typeof GROUP_MEMBER_ROLE];
+export const GROUP_MEMBER_ROLE_ARRAY = ['member', 'admin'] as const;
 
-export const GROUP_MEMBER_ROLES_ARRAY = ['member', 'admin'] as const;
-
-export const GROUP_MEMBER_STATUSES = {
+export const GROUP_MEMBER_STATUS = {
     PENDING: 'pending',
     APPROVED: 'approved',
     REJECTED: 'rejected',
 } as const;
 
-export type GroupMemberStatuses = typeof GROUP_MEMBER_STATUSES[keyof typeof GROUP_MEMBER_STATUSES];
-
-export const GROUP_MEMBER_STATUSES_ARRAY = ['pending', 'approved', 'rejected'] as const;
+export type GroupMemberStatus = typeof GROUP_MEMBER_STATUS[keyof typeof GROUP_MEMBER_STATUS];
+export const GROUP_MEMBER_STATUS_ARRAY = ['pending', 'approved', 'rejected'] as const;
 
 export const GROUP_MEMBER = {
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,

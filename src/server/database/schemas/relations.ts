@@ -1,5 +1,13 @@
 import { relations } from 'drizzle-orm/relations'
-import { users, userProfiles, feedbacks, groups, groupMembers } from './index'
+import {
+    users,
+    userProfiles,
+    feedbacks,
+    feedbackStatusLogs,
+    groups,
+    groupMembers,
+    groupPosts
+} from './index'
 
 export const usersRelations = relations(users, ({ one, many }) => ({
     profile: one(userProfiles, {
@@ -9,11 +17,31 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     feedbacks: many(feedbacks),
     createdGroups: many(groups),
     groupMemberships: many(groupMembers),
+    groupPosts: many(groupPosts),
 }))
 
-export const feedbacksRelations = relations(feedbacks, ({ one }) => ({
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+    user: one(users, {
+        fields: [userProfiles.userId],
+        references: [users.id],
+    }),
+}))
+
+export const feedbacksRelations = relations(feedbacks, ({ one, many }) => ({
     author: one(users, {
         fields: [feedbacks.authorId],
+        references: [users.id],
+    }),
+    statusLogs: many(feedbackStatusLogs),
+}))
+
+export const feedbackStatusLogsRelations = relations(feedbackStatusLogs, ({ one }) => ({
+    feedback: one(feedbacks, {
+        fields: [feedbackStatusLogs.feedbackId],
+        references: [feedbacks.id],
+    }),
+    changedBy: one(users, {
+        fields: [feedbackStatusLogs.changedBy],
         references: [users.id],
     }),
 }))
@@ -24,6 +52,7 @@ export const groupsRelations = relations(groups, ({ one, many }) => ({
         references: [users.id],
     }),
     members: many(groupMembers),
+    posts: many(groupPosts),
 }))
 
 export const groupMembersRelations = relations(groupMembers, ({ one }) => ({
@@ -33,6 +62,17 @@ export const groupMembersRelations = relations(groupMembers, ({ one }) => ({
     }),
     user: one(users, {
         fields: [groupMembers.userId],
+        references: [users.id],
+    }),
+}))
+
+export const groupPostsRelations = relations(groupPosts, ({ one, many }) => ({
+    group: one(groups, {
+        fields: [groupPosts.groupId],
+        references: [groups.id],
+    }),
+    author: one(users, {
+        fields: [groupPosts.authorId],
         references: [users.id],
     }),
 }))

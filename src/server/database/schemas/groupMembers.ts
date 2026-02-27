@@ -1,10 +1,10 @@
 import { pgTable, uuid, pgEnum, timestamp, unique, index } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { groups } from './groups'
-import { GROUP_MEMBER_ROLES_ARRAY, GroupMemberRoles, GROUP_MEMBER_STATUSES_ARRAY, GroupMemberStatuses } from '@shared/constants'
+import { GROUP_MEMBER_ROLE_ARRAY, GroupMemberRole, GROUP_MEMBER_STATUS_ARRAY, GroupMemberStatus } from '@shared/constants'
 
-export const groupMemberRoleEnum = pgEnum('group_member_role', GROUP_MEMBER_ROLES_ARRAY)
-export const groupMemberStatusEnum = pgEnum('group_member_status', GROUP_MEMBER_STATUSES_ARRAY)
+export const groupMemberRoleEnum = pgEnum('group_member_role', GROUP_MEMBER_ROLE_ARRAY)
+export const groupMemberStatusEnum = pgEnum('group_member_status', GROUP_MEMBER_STATUS_ARRAY)
 
 export const groupMembers = pgTable('group_members', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -26,5 +26,5 @@ export const groupMembers = pgTable('group_members', {
     // index('group_members_user_id_idx').on(table.userId),
 ])
 
-export type GroupMember = typeof groupMembers.$inferSelect & { role: GroupMemberRoles, status: GroupMemberStatuses }
-export type NewGroupMember = typeof groupMembers.$inferInsert & { role: GroupMemberRoles, status: GroupMemberStatuses }
+export type GroupMember = typeof groupMembers.$inferSelect & { role: GroupMemberRole, status: GroupMemberStatus }
+export type NewGroupMember = typeof groupMembers.$inferInsert & { role: GroupMemberRole, status: GroupMemberStatus }

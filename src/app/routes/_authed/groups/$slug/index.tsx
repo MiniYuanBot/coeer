@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { joinGroupFn } from '~/functions'
 import { useState } from 'react'
+import { isAbsolute } from 'path'
 
 export const Route = createFileRoute('/_authed/groups/$slug/')({
     component: GroupHomePage,
 })
 
 function GroupHomePage() {
-    const { group, isMember } = Route.useRouteContext()
+    const { group, isMember, isAdmin } = Route.useRouteContext()
     const navigate = useNavigate()
     const [isJoining, setIsJoining] = useState(false)
 
@@ -61,7 +62,7 @@ function GroupHomePage() {
                 </div>
             </div>
 
-            {!isMember && (
+            {!(isMember || isAdmin) && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
                     <p className="text-blue-900 mb-4">加入这个群组，参与讨论</p>
                     <button

@@ -4,14 +4,14 @@ import { groupMembers } from '../schemas'
 import { eq, desc, and, inArray, count, asc, SQL } from 'drizzle-orm'
 import type { NewGroupMember, GroupMember } from '../schemas'
 import { GroupMemberWithUser, GroupMemberWithGroup } from '@shared/contracts'
-import { GroupMemberRoles, GroupMemberStatuses, GROUP_MEMBER_STATUSES, GROUP_MEMBER_ROLES } from '@shared/constants'
+import { GroupMemberRole, GroupMemberStatus, GROUP_MEMBER_STATUS } from '@shared/constants'
 
 // Private query condition builder
 function buildWhereClause(params: {
     groupId?: string
     userId?: string
-    status?: GroupMemberStatuses | GroupMemberStatuses[]
-    role?: GroupMemberRoles
+    status?: GroupMemberStatus | GroupMemberStatus[]
+    role?: GroupMemberRole
 }): SQL | undefined {
     const { status, role, groupId, userId } = params
     const conditions: SQL[] = []
@@ -75,8 +75,8 @@ export const groupMemberQueries = {
     async findMembersByGroup(
         groupId: string,
         params: {
-            status?: GroupMemberStatuses
-            role?: GroupMemberRoles
+            status?: GroupMemberStatus
+            role?: GroupMemberRole
             limit?: number
             offset?: number
         }
@@ -103,12 +103,12 @@ export const groupMemberQueries = {
     async findGroupsByUser(
         userId: string,
         params: {
-            status?: GroupMemberStatuses
+            status?: GroupMemberStatus
             limit?: number
             offset?: number
         }
     ): Promise<GroupMemberWithGroup[]> {
-        const { status = GROUP_MEMBER_STATUSES.APPROVED, limit = 20, offset = 0 } = params
+        const { status = GROUP_MEMBER_STATUS.APPROVED, limit = 20, offset = 0 } = params
 
         return db.query.groupMembers.findMany({
             where: buildWhereClause({ userId, status }),
@@ -128,18 +128,18 @@ export const groupMemberQueries = {
     },
 
     // Update member role
-    async updateRole(id: string, role: GroupMemberRoles): Promise<void> {
+    async updateRole(id: string, role: GroupMemberRole): Promise<void> {
         await db.update(groupMembers)
             .set({ role, updatedAt: new Date() })
             .where(eq(groupMembers.id, id))
     },
 
     // Update member status (approve/reject join request)
-    async updateStatus(id: string, status: GroupMemberStatuses): Promise<void> {
+    async updateStatus(id: string, status: GroupMemberStatus): Promise<void> {
         await db.update(groupMembers)
             .set({
                 status,
-                joinedAt: status === GROUP_MEMBER_STATUSES.APPROVED ? new Date() : undefined,
+                joinedAt: status === GROUP_MEMBER_STATUS.APPROVED ? new Date() : undefined,
                 updatedAt: new Date()
             })
             .where(eq(groupMembers.id, id))
@@ -147,8 +147,8 @@ export const groupMemberQueries = {
 
     // Count group members by group ID with optional filters
     async countByGroup(groupId: string, params: {
-        status?: GroupMemberStatuses
-        role?: GroupMemberRoles
+        status?: GroupMemberStatus
+        role?: GroupMemberRole
     }): Promise<number> {
         const { status, role } = params
 
@@ -162,8 +162,8 @@ export const groupMemberQueries = {
 
     // Count groups I've joined by user ID with optional filters
     async countByUser(userId: string, params: {
-        status?: GroupMemberStatuses
-        role?: GroupMemberRoles
+        status?: GroupMemberStatus
+        role?: GroupMemberRole
     }): Promise<number> {
         const { status, role } = params
 
@@ -176,12 +176,12 @@ export const groupMemberQueries = {
     },
 
     // Check if user is group admin/member
-    async isRole(groupId: string, userId: string, role: GroupMemberRoles): Promise<boolean> {
+    async isRole(groupId: string, userId: string, role: GroupMemberRole): Promise<boolean> {
         const [member] = await db
             .select()
             .from(groupMembers)
             .where(
-                buildWhereClause({ groupId, userId, status: GROUP_MEMBER_STATUSES.APPROVED, role: role })
+                buildWhereClause({ groupId, userId, status: GROUP_MEMBER_STATUS.APPROVED, role: role })
             )
             .limit(1)
 

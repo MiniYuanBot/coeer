@@ -1,21 +1,21 @@
-export const FEEDBACK_TARGET_TYPES = {
+export const FEEDBACK_TARGET_TYPE = {
     ACADEMIC: 'academic',
     OFFICE: 'office',
     GENERAL: 'general'
 } as const;
 
-export type FeedbackTargetTypes = typeof FEEDBACK_TARGET_TYPES[keyof typeof FEEDBACK_TARGET_TYPES];
-export const FEEDBACK_TARGET_TYPES_ARRAY = ['academic', 'office', 'general'] as const;
+export type FeedbackTargetType = typeof FEEDBACK_TARGET_TYPE[keyof typeof FEEDBACK_TARGET_TYPE];
+export const FEEDBACK_TARGET_TYPE_ARRAY = ['academic', 'office', 'general'] as const;
 
-export const FEEDBACK_STATUSES = {
+export const FEEDBACK_STATUS = {
     PENDING: 'pending',
     PROCESSING: 'processing',
     RESOLVED: 'resolved',
     INVALID: 'invalid',
 } as const;
 
-export type FeedbackStatuses = typeof FEEDBACK_STATUSES[keyof typeof FEEDBACK_STATUSES];
-export const FEEDBACK_STATUSES_ARRAY = ['pending', 'processing', 'resolved', 'invalid'] as const;
+export type FeedbackStatus = typeof FEEDBACK_STATUS[keyof typeof FEEDBACK_STATUS];
+export const FEEDBACK_STATUS_ARRAY = ['pending', 'processing', 'resolved', 'invalid'] as const;
 
 export const FEEDBACK = {
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,

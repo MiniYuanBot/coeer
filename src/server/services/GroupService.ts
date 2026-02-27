@@ -15,13 +15,13 @@ import type {
 } from '@shared/contracts'
 import {
     GROUP_STATUS,
-    GROUP_MEMBER_ROLES,
-    GROUP_MEMBER_STATUSES,
-    GroupMemberStatuses,
+    GROUP_MEMBER_ROLE,
+    GROUP_MEMBER_STATUS,
+    GroupMemberStatus,
     GroupCategory,
     GROUP,
     GROUP_MEMBER,
-    GroupMemberRoles,
+    GroupMemberRole,
 } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { groupQueries } from '../database/queries/groups'
@@ -46,7 +46,7 @@ export class GroupService {
                 }
             }
 
-            const result = await db.transaction(async (tx) => {
+            const result = await db.transaction(async () => {
                 // Create the group
                 const group = await groupQueries.create({
                     ...data,
@@ -60,8 +60,8 @@ export class GroupService {
                 await groupMemberQueries.create({
                     groupId: group.id,
                     userId: user.id,
-                    role: GROUP_MEMBER_ROLES.ADMIN,
-                    status: GROUP_MEMBER_STATUSES.APPROVED,
+                    role: GROUP_MEMBER_ROLE.ADMIN,
+                    status: GROUP_MEMBER_STATUS.APPROVED,
                     joinedAt: new Date(),
                     updatedAt: new Date()
                 })
@@ -236,7 +236,7 @@ export class GroupService {
 
     // List groups I've joined
     static async listMyGroups(params: {
-        status?: GroupMemberStatuses
+        status?: GroupMemberStatus
         page?: number
         pageSize?: number
     }): Promise<PaginatedGroupMemberResponse<GroupMemberWithGroup>> {
@@ -396,14 +396,14 @@ export class GroupService {
 
             // Check if already a member
             const existing = await groupMemberQueries.findByGroupAndUser(groupId, user.id)
-            if (existing && existing.status === GROUP_MEMBER_STATUSES.PENDING) {
+            if (existing && existing.status === GROUP_MEMBER_STATUS.PENDING) {
                 return {
                     success: false,
                     state: GROUP_MEMBER.ALREADY_SUBMIT,
                 }
             }
 
-            if (existing && existing.status === GROUP_MEMBER_STATUSES.APPROVED) {
+            if (existing && existing.status === GROUP_MEMBER_STATUS.APPROVED) {
                 return {
                     success: false,
                     state: GROUP_MEMBER.ALREADY_EXISTS,
@@ -412,18 +412,18 @@ export class GroupService {
 
             // Determine initial status based on group type
             const initialStatus = group.isPublic
-                ? GROUP_MEMBER_STATUSES.APPROVED
-                : GROUP_MEMBER_STATUSES.PENDING
+                ? GROUP_MEMBER_STATUS.APPROVED
+                : GROUP_MEMBER_STATUS.PENDING
 
             const membership = await groupMemberQueries.create({
                 groupId,
                 userId: user.id,
-                role: GROUP_MEMBER_ROLES.MEMBER,
+                role: GROUP_MEMBER_ROLE.MEMBER,
                 status: initialStatus,
-                joinedAt: initialStatus === GROUP_MEMBER_STATUSES.APPROVED ? new Date() : undefined,
+                joinedAt: initialStatus === GROUP_MEMBER_STATUS.APPROVED ? new Date() : undefined,
             })
 
-            if (initialStatus === GROUP_MEMBER_STATUSES.APPROVED) {
+            if (initialStatus === GROUP_MEMBER_STATUS.APPROVED) {
                 return {
                     success: true,
                     data: membership,
@@ -463,10 +463,10 @@ export class GroupService {
             }
 
             // Prevent last admin from leaving
-            if (membership.role === GROUP_MEMBER_ROLES.ADMIN) {
+            if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
                 const adminCount = await groupMemberQueries.countByGroup(groupId, {
-                    role: GROUP_MEMBER_ROLES.ADMIN,
-                    status: GROUP_MEMBER_STATUSES.APPROVED
+                    role: GROUP_MEMBER_ROLE.ADMIN,
+                    status: GROUP_MEMBER_STATUS.APPROVED
                 })
                 if (adminCount <= 1) {
                     return {
@@ -495,8 +495,8 @@ export class GroupService {
     static async getMembers(
         groupId: string,
         params: {
-            status?: GroupMemberStatuses
-            role?: GroupMemberRoles
+            status?: GroupMemberStatus
+            role?: GroupMemberRole
             page?: number
             pageSize?: number
         }
@@ -523,7 +523,7 @@ export class GroupService {
             // Check permissions for private groups
             if (!group.isPublic && group.status === GROUP_STATUS.APPROVED) {
                 const membership = await groupMemberQueries.findByGroupAndUser(groupId, user.id)
-                if (!membership || membership.status !== GROUP_MEMBER_STATUSES.APPROVED) {
+                if (!membership || membership.status !== GROUP_MEMBER_STATUS.APPROVED) {
                     return {
                         success: false,
                         state: GROUP_MEMBER.FORBIDDEN,
@@ -563,14 +563,14 @@ export class GroupService {
     }
 
     // Check if user is group admin/member
-    static async isRole(groupId: string, userId: string, role: GroupMemberRoles): Promise<boolean> {
+    static async isRole(groupId: string, userId: string, role: GroupMemberRole): Promise<boolean> {
         return groupMemberQueries.isRole(groupId, userId, role)
     }
 
     // Update member role (admin only)
     static async updateMemberRole(
         memberId: string,
-        role: GroupMemberRoles
+        role: GroupMemberRole
     ): Promise<GroupMemberResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
@@ -597,10 +597,10 @@ export class GroupService {
             }
 
             // Prevent self-demotion if last admin
-            if (membership.userId === user.id && role === GROUP_MEMBER_ROLES.MEMBER) {
+            if (membership.userId === user.id && role === GROUP_MEMBER_ROLE.MEMBER) {
                 const adminCount = await groupMemberQueries.countByGroup(membership.groupId, {
-                    role: GROUP_MEMBER_ROLES.ADMIN,
-                    status: GROUP_MEMBER_STATUSES.APPROVED
+                    role: GROUP_MEMBER_ROLE.ADMIN,
+                    status: GROUP_MEMBER_STATUS.APPROVED
                 })
                 if (adminCount <= 1) {
                     return {
@@ -652,10 +652,10 @@ export class GroupService {
             }
 
             // Prevent removing last admin
-            if (membership.role === GROUP_MEMBER_ROLES.ADMIN) {
+            if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
                 const adminCount = await groupMemberQueries.countByGroup(membership.groupId, {
-                    role: GROUP_MEMBER_ROLES.ADMIN,
-                    status: GROUP_MEMBER_STATUSES.APPROVED
+                    role: GROUP_MEMBER_ROLE.ADMIN,
+                    status: GROUP_MEMBER_STATUS.APPROVED
                 })
                 if (adminCount <= 1) {
                     return {
@@ -706,14 +706,14 @@ export class GroupService {
                 }
             }
 
-            if (membership.status !== GROUP_MEMBER_STATUSES.PENDING) {
+            if (membership.status !== GROUP_MEMBER_STATUS.PENDING) {
                 return {
                     success: false,
                     state: GROUP_MEMBER.INVALID_STATUS,
                 }
             }
 
-            const updated = await groupMemberQueries.updateStatus(memberId, GROUP_MEMBER_STATUSES.APPROVED)
+            const updated = await groupMemberQueries.updateStatus(memberId, GROUP_MEMBER_STATUS.APPROVED)
 
             return {
                 success: true,

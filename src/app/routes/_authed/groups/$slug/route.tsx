@@ -72,6 +72,14 @@ function GroupLayout() {
                         >
                             成员
                         </Link>
+                        <Link
+                            to="/groups/$slug/posts"
+                            params={{ slug }}
+                            activeProps={{ className: 'border-blue-500 text-blue-600' }}
+                            className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        >
+                            帖子
+                        </Link>
                         {isAdmin && (
                             <>
                                 <Link

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole, AuthCode } from '../constants'
 import { ActionResponse } from './action';
 
 export const emailSchema = z.email('Please enter a valid email address')
@@ -26,22 +27,15 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 // export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 
-export type LoginResponseStatus =
-    | 'USER_NOT_FOUND'
-    | 'INVALID_PASSWORD'
-    | 'LOGIN_SUCCESS'
-    | 'SERVER_ERROR'
+export type SessionUser = {
+    id: string
+    email: string
+    role: UserRole
+    name: string | null
+    lastUpdated: number
+}
 
-export type SignupResponseStatus =
-    | 'EMAIL_EXISTS'
-    | 'AUTO_LOGIN'
-    | 'SIGNUP_SUCCESS'
-    | 'SERVER_ERROR'
-
-export type LogoutResponseStatus =
-    | 'LOGOUT_SUCCESS'
-    | 'SERVER_ERROR'
-
-export type LoginResponse<T> = ActionResponse<T, LoginResponseStatus>
-export type SignupResponse<T> = ActionResponse<T, SignupResponseStatus>
-export type LogoutResponse<T> = ActionResponse<T, LogoutResponseStatus>
+export type SessionUserResponse<T> = ActionResponse<T, AuthCode>
+export type LoginResponse<T> = ActionResponse<T, AuthCode>
+export type SignupResponse<T> = ActionResponse<T, AuthCode>
+export type LogoutResponse<T> = ActionResponse<T, AuthCode>
