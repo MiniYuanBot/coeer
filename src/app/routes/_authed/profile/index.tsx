@@ -2,19 +2,11 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authed/profile/')({
     component: ProfileIndexComponent,
-    beforeLoad: ({ context }) => {
-        if (!context.user) {
-            throw redirect({ href: '/login' })
-        }
-    },
 })
 
 function ProfileIndexComponent() {
-    const { user } = Route.useRouteContext()
-
-    if (!user) {
-        return null
-    }
+    const context = Route.useRouteContext()
+    const user = context.user!
 
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">

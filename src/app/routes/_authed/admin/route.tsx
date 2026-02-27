@@ -35,6 +35,7 @@ function AdminLayout() {
             <nav className="admin-nav">
                 <div className="flex space-x-4 border-b">
                     <a href="/admin" className="px-4 py-2">主页</a>
+                    <a href="/admin/groups" className="px-4 py-2">管理 Groups</a>
                 </div>
             </nav>
 

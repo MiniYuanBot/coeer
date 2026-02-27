@@ -16,11 +16,13 @@ export type ActionResponse<T = void, S extends string = string> = {
 // Response for paginated actions
 export type PaginatedActionResponse<T, S extends string = string> = {
     success: boolean
-    data?: {
-        items?: T[] // returning items
-        total?: number // total items in the database
-        page?: number // now page
-        pageSize?: number // size per page
-    }
+    data?: PaginatedData<T>
     state: ActionState<S>
+}
+
+export type PaginatedData<T> = {
+    items?: T[] // returning items
+    total?: number // total items in the database
+    page?: number // now page
+    pageSize?: number // size per page
 }

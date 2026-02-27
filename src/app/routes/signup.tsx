@@ -34,7 +34,7 @@ function SignupComp() {
       afterSubmit={
         !signupMutation.data?.success ? null : (
           <>
-            <div className="text-red-400">{signupMutation.data.message}</div>
+            <div className="text-red-400">{signupMutation.data.state.message}</div>
           </>
         )
       }

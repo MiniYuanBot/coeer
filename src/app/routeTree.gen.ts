@@ -12,23 +12,27 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedProfileRouteRouteImport } from './routes/_authed/profile/route'
-import { Route as AuthedPostsRouteRouteImport } from './routes/_authed/posts.route'
 import { Route as AuthedGroupsRouteRouteImport } from './routes/_authed/groups/route'
 import { Route as AuthedFeedbacksRouteRouteImport } from './routes/_authed/feedbacks/route'
 import { Route as AuthedAdminRouteRouteImport } from './routes/_authed/admin/route'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
-import { Route as AuthedPostsIndexRouteImport } from './routes/_authed/posts.index'
 import { Route as AuthedGroupsIndexRouteImport } from './routes/_authed/groups/index'
 import { Route as AuthedFeedbacksIndexRouteImport } from './routes/_authed/feedbacks/index'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
-import { Route as AuthedPostsPostIdRouteImport } from './routes/_authed/posts.$postId'
 import { Route as AuthedGroupsMyRouteImport } from './routes/_authed/groups/my'
 import { Route as AuthedGroupsCreateRouteImport } from './routes/_authed/groups/create'
 import { Route as AuthedGroupsAllRouteImport } from './routes/_authed/groups/all'
-import { Route as AuthedGroupsSlugRouteImport } from './routes/_authed/groups/$slug'
+import { Route as AuthedGroupsSlugRouteRouteImport } from './routes/_authed/groups/$slug/route'
+import { Route as AuthedAdminGroupsRouteRouteImport } from './routes/_authed/admin/groups/route'
+import { Route as AuthedGroupsSlugIndexRouteImport } from './routes/_authed/groups/$slug/index'
+import { Route as AuthedAdminGroupsIndexRouteImport } from './routes/_authed/admin/groups/index'
+import { Route as AuthedGroupsSlugSettingsRouteImport } from './routes/_authed/groups/$slug/settings'
+import { Route as AuthedGroupsSlugMembersRouteImport } from './routes/_authed/groups/$slug/members'
+import { Route as AuthedGroupsSlugAdminRouteImport } from './routes/_authed/groups/$slug/admin'
+import { Route as AuthedAdminGroupsPendingRouteImport } from './routes/_authed/admin/groups/pending'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -45,7 +49,7 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedRoute = AuthedRouteImport.update({
+const AuthedRouteRoute = AuthedRouteRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -57,37 +61,27 @@ const IndexRoute = IndexRouteImport.update({
 const AuthedProfileRouteRoute = AuthedProfileRouteRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedPostsRouteRoute = AuthedPostsRouteRouteImport.update({
-  id: '/posts',
-  path: '/posts',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedGroupsRouteRoute = AuthedGroupsRouteRouteImport.update({
   id: '/groups',
   path: '/groups',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedFeedbacksRouteRoute = AuthedFeedbacksRouteRouteImport.update({
   id: '/feedbacks',
   path: '/feedbacks',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedAdminRouteRoute = AuthedAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedProfileRouteRoute,
-} as any)
-const AuthedPostsIndexRoute = AuthedPostsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedPostsRouteRoute,
 } as any)
 const AuthedGroupsIndexRoute = AuthedGroupsIndexRouteImport.update({
   id: '/',
@@ -104,11 +98,6 @@ const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
-const AuthedPostsPostIdRoute = AuthedPostsPostIdRouteImport.update({
-  id: '/$postId',
-  path: '/$postId',
-  getParentRoute: () => AuthedPostsRouteRoute,
-} as any)
 const AuthedGroupsMyRoute = AuthedGroupsMyRouteImport.update({
   id: '/my',
   path: '/my',
@@ -124,11 +113,48 @@ const AuthedGroupsAllRoute = AuthedGroupsAllRouteImport.update({
   path: '/all',
   getParentRoute: () => AuthedGroupsRouteRoute,
 } as any)
-const AuthedGroupsSlugRoute = AuthedGroupsSlugRouteImport.update({
+const AuthedGroupsSlugRouteRoute = AuthedGroupsSlugRouteRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => AuthedGroupsRouteRoute,
 } as any)
+const AuthedAdminGroupsRouteRoute = AuthedAdminGroupsRouteRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
+const AuthedGroupsSlugIndexRoute = AuthedGroupsSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedGroupsSlugRouteRoute,
+} as any)
+const AuthedAdminGroupsIndexRoute = AuthedAdminGroupsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminGroupsRouteRoute,
+} as any)
+const AuthedGroupsSlugSettingsRoute =
+  AuthedGroupsSlugSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthedGroupsSlugRouteRoute,
+  } as any)
+const AuthedGroupsSlugMembersRoute = AuthedGroupsSlugMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AuthedGroupsSlugRouteRoute,
+} as any)
+const AuthedGroupsSlugAdminRoute = AuthedGroupsSlugAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedGroupsSlugRouteRoute,
+} as any)
+const AuthedAdminGroupsPendingRoute =
+  AuthedAdminGroupsPendingRouteImport.update({
+    id: '/pending',
+    path: '/pending',
+    getParentRoute: () => AuthedAdminGroupsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,57 +164,68 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthedAdminRouteRouteWithChildren
   '/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
-  '/posts': typeof AuthedPostsRouteRouteWithChildren
   '/profile': typeof AuthedProfileRouteRouteWithChildren
-  '/groups/$slug': typeof AuthedGroupsSlugRoute
+  '/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
   '/groups/all': typeof AuthedGroupsAllRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
   '/groups/my': typeof AuthedGroupsMyRoute
-  '/posts/$postId': typeof AuthedPostsPostIdRoute
   '/admin/': typeof AuthedAdminIndexRoute
   '/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/groups/': typeof AuthedGroupsIndexRoute
-  '/posts/': typeof AuthedPostsIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
+  '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
+  '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
+  '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
-  '/groups/$slug': typeof AuthedGroupsSlugRoute
   '/groups/all': typeof AuthedGroupsAllRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
   '/groups/my': typeof AuthedGroupsMyRoute
-  '/posts/$postId': typeof AuthedPostsPostIdRoute
   '/admin': typeof AuthedAdminIndexRoute
   '/feedbacks': typeof AuthedFeedbacksIndexRoute
   '/groups': typeof AuthedGroupsIndexRoute
-  '/posts': typeof AuthedPostsIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
+  '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
+  '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
+  '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/admin/groups': typeof AuthedAdminGroupsIndexRoute
+  '/groups/$slug': typeof AuthedGroupsSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authed': typeof AuthedRouteWithChildren
+  '/_authed': typeof AuthedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/_authed/admin': typeof AuthedAdminRouteRouteWithChildren
   '/_authed/feedbacks': typeof AuthedFeedbacksRouteRouteWithChildren
   '/_authed/groups': typeof AuthedGroupsRouteRouteWithChildren
-  '/_authed/posts': typeof AuthedPostsRouteRouteWithChildren
   '/_authed/profile': typeof AuthedProfileRouteRouteWithChildren
-  '/_authed/groups/$slug': typeof AuthedGroupsSlugRoute
+  '/_authed/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/_authed/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
   '/_authed/groups/all': typeof AuthedGroupsAllRoute
   '/_authed/groups/create': typeof AuthedGroupsCreateRoute
   '/_authed/groups/my': typeof AuthedGroupsMyRoute
-  '/_authed/posts/$postId': typeof AuthedPostsPostIdRoute
   '/_authed/admin/': typeof AuthedAdminIndexRoute
   '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/_authed/groups/': typeof AuthedGroupsIndexRoute
-  '/_authed/posts/': typeof AuthedPostsIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
+  '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/_authed/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
+  '/_authed/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
+  '/_authed/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/_authed/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/_authed/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,34 +237,41 @@ export interface FileRouteTypes {
     | '/admin'
     | '/feedbacks'
     | '/groups'
-    | '/posts'
     | '/profile'
+    | '/admin/groups'
     | '/groups/$slug'
     | '/groups/all'
     | '/groups/create'
     | '/groups/my'
-    | '/posts/$postId'
     | '/admin/'
     | '/feedbacks/'
     | '/groups/'
-    | '/posts/'
     | '/profile/'
+    | '/admin/groups/pending'
+    | '/groups/$slug/admin'
+    | '/groups/$slug/members'
+    | '/groups/$slug/settings'
+    | '/admin/groups/'
+    | '/groups/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/logout'
     | '/signup'
-    | '/groups/$slug'
     | '/groups/all'
     | '/groups/create'
     | '/groups/my'
-    | '/posts/$postId'
     | '/admin'
     | '/feedbacks'
     | '/groups'
-    | '/posts'
     | '/profile'
+    | '/admin/groups/pending'
+    | '/groups/$slug/admin'
+    | '/groups/$slug/members'
+    | '/groups/$slug/settings'
+    | '/admin/groups'
+    | '/groups/$slug'
   id:
     | '__root__'
     | '/'
@@ -238,23 +282,27 @@ export interface FileRouteTypes {
     | '/_authed/admin'
     | '/_authed/feedbacks'
     | '/_authed/groups'
-    | '/_authed/posts'
     | '/_authed/profile'
+    | '/_authed/admin/groups'
     | '/_authed/groups/$slug'
     | '/_authed/groups/all'
     | '/_authed/groups/create'
     | '/_authed/groups/my'
-    | '/_authed/posts/$postId'
     | '/_authed/admin/'
     | '/_authed/feedbacks/'
     | '/_authed/groups/'
-    | '/_authed/posts/'
     | '/_authed/profile/'
+    | '/_authed/admin/groups/pending'
+    | '/_authed/groups/$slug/admin'
+    | '/_authed/groups/$slug/members'
+    | '/_authed/groups/$slug/settings'
+    | '/_authed/admin/groups/'
+    | '/_authed/groups/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthedRoute: typeof AuthedRouteWithChildren
+  AuthedRouteRoute: typeof AuthedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
@@ -287,7 +335,7 @@ declare module '@tanstack/react-router' {
       id: '/_authed'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthedRouteImport
+      preLoaderRoute: typeof AuthedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -302,35 +350,28 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthedProfileRouteRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/posts': {
-      id: '/_authed/posts'
-      path: '/posts'
-      fullPath: '/posts'
-      preLoaderRoute: typeof AuthedPostsRouteRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/groups': {
       id: '/_authed/groups'
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof AuthedGroupsRouteRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/feedbacks': {
       id: '/_authed/feedbacks'
       path: '/feedbacks'
       fullPath: '/feedbacks'
       preLoaderRoute: typeof AuthedFeedbacksRouteRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/admin': {
       id: '/_authed/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthedAdminRouteRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/profile/': {
       id: '/_authed/profile/'
@@ -338,13 +379,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile/'
       preLoaderRoute: typeof AuthedProfileIndexRouteImport
       parentRoute: typeof AuthedProfileRouteRoute
-    }
-    '/_authed/posts/': {
-      id: '/_authed/posts/'
-      path: '/'
-      fullPath: '/posts/'
-      preLoaderRoute: typeof AuthedPostsIndexRouteImport
-      parentRoute: typeof AuthedPostsRouteRoute
     }
     '/_authed/groups/': {
       id: '/_authed/groups/'
@@ -366,13 +400,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthedAdminIndexRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
-    }
-    '/_authed/posts/$postId': {
-      id: '/_authed/posts/$postId'
-      path: '/$postId'
-      fullPath: '/posts/$postId'
-      preLoaderRoute: typeof AuthedPostsPostIdRouteImport
-      parentRoute: typeof AuthedPostsRouteRoute
     }
     '/_authed/groups/my': {
       id: '/_authed/groups/my'
@@ -399,17 +426,84 @@ declare module '@tanstack/react-router' {
       id: '/_authed/groups/$slug'
       path: '/$slug'
       fullPath: '/groups/$slug'
-      preLoaderRoute: typeof AuthedGroupsSlugRouteImport
+      preLoaderRoute: typeof AuthedGroupsSlugRouteRouteImport
       parentRoute: typeof AuthedGroupsRouteRoute
+    }
+    '/_authed/admin/groups': {
+      id: '/_authed/admin/groups'
+      path: '/groups'
+      fullPath: '/admin/groups'
+      preLoaderRoute: typeof AuthedAdminGroupsRouteRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/groups/$slug/': {
+      id: '/_authed/groups/$slug/'
+      path: '/'
+      fullPath: '/groups/$slug/'
+      preLoaderRoute: typeof AuthedGroupsSlugIndexRouteImport
+      parentRoute: typeof AuthedGroupsSlugRouteRoute
+    }
+    '/_authed/admin/groups/': {
+      id: '/_authed/admin/groups/'
+      path: '/'
+      fullPath: '/admin/groups/'
+      preLoaderRoute: typeof AuthedAdminGroupsIndexRouteImport
+      parentRoute: typeof AuthedAdminGroupsRouteRoute
+    }
+    '/_authed/groups/$slug/settings': {
+      id: '/_authed/groups/$slug/settings'
+      path: '/settings'
+      fullPath: '/groups/$slug/settings'
+      preLoaderRoute: typeof AuthedGroupsSlugSettingsRouteImport
+      parentRoute: typeof AuthedGroupsSlugRouteRoute
+    }
+    '/_authed/groups/$slug/members': {
+      id: '/_authed/groups/$slug/members'
+      path: '/members'
+      fullPath: '/groups/$slug/members'
+      preLoaderRoute: typeof AuthedGroupsSlugMembersRouteImport
+      parentRoute: typeof AuthedGroupsSlugRouteRoute
+    }
+    '/_authed/groups/$slug/admin': {
+      id: '/_authed/groups/$slug/admin'
+      path: '/admin'
+      fullPath: '/groups/$slug/admin'
+      preLoaderRoute: typeof AuthedGroupsSlugAdminRouteImport
+      parentRoute: typeof AuthedGroupsSlugRouteRoute
+    }
+    '/_authed/admin/groups/pending': {
+      id: '/_authed/admin/groups/pending'
+      path: '/pending'
+      fullPath: '/admin/groups/pending'
+      preLoaderRoute: typeof AuthedAdminGroupsPendingRouteImport
+      parentRoute: typeof AuthedAdminGroupsRouteRoute
     }
   }
 }
 
+interface AuthedAdminGroupsRouteRouteChildren {
+  AuthedAdminGroupsPendingRoute: typeof AuthedAdminGroupsPendingRoute
+  AuthedAdminGroupsIndexRoute: typeof AuthedAdminGroupsIndexRoute
+}
+
+const AuthedAdminGroupsRouteRouteChildren: AuthedAdminGroupsRouteRouteChildren =
+  {
+    AuthedAdminGroupsPendingRoute: AuthedAdminGroupsPendingRoute,
+    AuthedAdminGroupsIndexRoute: AuthedAdminGroupsIndexRoute,
+  }
+
+const AuthedAdminGroupsRouteRouteWithChildren =
+  AuthedAdminGroupsRouteRoute._addFileChildren(
+    AuthedAdminGroupsRouteRouteChildren,
+  )
+
 interface AuthedAdminRouteRouteChildren {
+  AuthedAdminGroupsRouteRoute: typeof AuthedAdminGroupsRouteRouteWithChildren
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
 }
 
 const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
+  AuthedAdminGroupsRouteRoute: AuthedAdminGroupsRouteRouteWithChildren,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
 }
 
@@ -427,8 +521,27 @@ const AuthedFeedbacksRouteRouteChildren: AuthedFeedbacksRouteRouteChildren = {
 const AuthedFeedbacksRouteRouteWithChildren =
   AuthedFeedbacksRouteRoute._addFileChildren(AuthedFeedbacksRouteRouteChildren)
 
+interface AuthedGroupsSlugRouteRouteChildren {
+  AuthedGroupsSlugAdminRoute: typeof AuthedGroupsSlugAdminRoute
+  AuthedGroupsSlugMembersRoute: typeof AuthedGroupsSlugMembersRoute
+  AuthedGroupsSlugSettingsRoute: typeof AuthedGroupsSlugSettingsRoute
+  AuthedGroupsSlugIndexRoute: typeof AuthedGroupsSlugIndexRoute
+}
+
+const AuthedGroupsSlugRouteRouteChildren: AuthedGroupsSlugRouteRouteChildren = {
+  AuthedGroupsSlugAdminRoute: AuthedGroupsSlugAdminRoute,
+  AuthedGroupsSlugMembersRoute: AuthedGroupsSlugMembersRoute,
+  AuthedGroupsSlugSettingsRoute: AuthedGroupsSlugSettingsRoute,
+  AuthedGroupsSlugIndexRoute: AuthedGroupsSlugIndexRoute,
+}
+
+const AuthedGroupsSlugRouteRouteWithChildren =
+  AuthedGroupsSlugRouteRoute._addFileChildren(
+    AuthedGroupsSlugRouteRouteChildren,
+  )
+
 interface AuthedGroupsRouteRouteChildren {
-  AuthedGroupsSlugRoute: typeof AuthedGroupsSlugRoute
+  AuthedGroupsSlugRouteRoute: typeof AuthedGroupsSlugRouteRouteWithChildren
   AuthedGroupsAllRoute: typeof AuthedGroupsAllRoute
   AuthedGroupsCreateRoute: typeof AuthedGroupsCreateRoute
   AuthedGroupsMyRoute: typeof AuthedGroupsMyRoute
@@ -436,7 +549,7 @@ interface AuthedGroupsRouteRouteChildren {
 }
 
 const AuthedGroupsRouteRouteChildren: AuthedGroupsRouteRouteChildren = {
-  AuthedGroupsSlugRoute: AuthedGroupsSlugRoute,
+  AuthedGroupsSlugRouteRoute: AuthedGroupsSlugRouteRouteWithChildren,
   AuthedGroupsAllRoute: AuthedGroupsAllRoute,
   AuthedGroupsCreateRoute: AuthedGroupsCreateRoute,
   AuthedGroupsMyRoute: AuthedGroupsMyRoute,
@@ -445,19 +558,6 @@ const AuthedGroupsRouteRouteChildren: AuthedGroupsRouteRouteChildren = {
 
 const AuthedGroupsRouteRouteWithChildren =
   AuthedGroupsRouteRoute._addFileChildren(AuthedGroupsRouteRouteChildren)
-
-interface AuthedPostsRouteRouteChildren {
-  AuthedPostsPostIdRoute: typeof AuthedPostsPostIdRoute
-  AuthedPostsIndexRoute: typeof AuthedPostsIndexRoute
-}
-
-const AuthedPostsRouteRouteChildren: AuthedPostsRouteRouteChildren = {
-  AuthedPostsPostIdRoute: AuthedPostsPostIdRoute,
-  AuthedPostsIndexRoute: AuthedPostsIndexRoute,
-}
-
-const AuthedPostsRouteRouteWithChildren =
-  AuthedPostsRouteRoute._addFileChildren(AuthedPostsRouteRouteChildren)
 
 interface AuthedProfileRouteRouteChildren {
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
@@ -470,28 +570,27 @@ const AuthedProfileRouteRouteChildren: AuthedProfileRouteRouteChildren = {
 const AuthedProfileRouteRouteWithChildren =
   AuthedProfileRouteRoute._addFileChildren(AuthedProfileRouteRouteChildren)
 
-interface AuthedRouteChildren {
+interface AuthedRouteRouteChildren {
   AuthedAdminRouteRoute: typeof AuthedAdminRouteRouteWithChildren
   AuthedFeedbacksRouteRoute: typeof AuthedFeedbacksRouteRouteWithChildren
   AuthedGroupsRouteRoute: typeof AuthedGroupsRouteRouteWithChildren
-  AuthedPostsRouteRoute: typeof AuthedPostsRouteRouteWithChildren
   AuthedProfileRouteRoute: typeof AuthedProfileRouteRouteWithChildren
 }
 
-const AuthedRouteChildren: AuthedRouteChildren = {
+const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedAdminRouteRoute: AuthedAdminRouteRouteWithChildren,
   AuthedFeedbacksRouteRoute: AuthedFeedbacksRouteRouteWithChildren,
   AuthedGroupsRouteRoute: AuthedGroupsRouteRouteWithChildren,
-  AuthedPostsRouteRoute: AuthedPostsRouteRouteWithChildren,
   AuthedProfileRouteRoute: AuthedProfileRouteRouteWithChildren,
 }
 
-const AuthedRouteWithChildren =
-  AuthedRoute._addFileChildren(AuthedRouteChildren)
+const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
+  AuthedRouteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthedRoute: AuthedRouteWithChildren,
+  AuthedRouteRoute: AuthedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,

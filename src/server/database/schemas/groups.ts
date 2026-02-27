@@ -1,9 +1,9 @@
 import { pgTable, varchar, text, timestamp, boolean, uuid, pgEnum } from 'drizzle-orm/pg-core'
 import { users } from './users'
-import { GROUP_CATEGORIES_ARRAY, GroupCategories, GROUP_STATUSES_ARRAY, GroupStatuses } from '@shared/constants'
+import { GROUP_CATEGORY_ARRAY, GroupCategory, GROUP_STATUS_ARRAY, GroupStatus } from '@shared/constants'
 
-export const groupCategoryEnum = pgEnum('group_category', GROUP_CATEGORIES_ARRAY)
-export const groupStatusEnum = pgEnum('group_status', GROUP_STATUSES_ARRAY)
+export const groupCategoryEnum = pgEnum('group_category', GROUP_CATEGORY_ARRAY)
+export const groupStatusEnum = pgEnum('group_status', GROUP_STATUS_ARRAY)
 
 export const groups = pgTable('groups', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -18,8 +18,8 @@ export const groups = pgTable('groups', {
     isPublic: boolean('is_public').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-    // rejectedReason: text('rejected_reason'),
+    rejectedReason: text('rejected_reason'),
 })
 
-export type Group = typeof groups.$inferSelect & { category: GroupCategories, status: GroupStatuses }
-export type NewGroup = typeof groups.$inferInsert & { category: GroupCategories, status: GroupStatuses }
+export type Group = typeof groups.$inferSelect & { category: GroupCategory, status: GroupStatus }
+export type NewGroup = typeof groups.$inferInsert & { category: GroupCategory, status: GroupStatus }

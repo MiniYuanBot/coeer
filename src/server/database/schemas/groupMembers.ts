@@ -17,6 +17,7 @@ export const groupMembers = pgTable('group_members', {
     role: groupMemberRoleEnum('role').notNull().default('member'),
     status: groupMemberStatusEnum('status').notNull().default('pending'),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
     // constraint
     unique('group_members_group_id_user_id_unique').on(table.groupId, table.userId),

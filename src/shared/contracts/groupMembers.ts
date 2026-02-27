@@ -2,16 +2,17 @@
 import { z } from 'zod'
 import type { DbUser, GroupMember } from '~/database/schemas'
 import {
-    GroupMemberCode
+    GroupMemberCode,
+    GROUP_MEMBER_ROLES_ARRAY
 } from '../constants'
 import { GroupWithCreator } from './groups'
 import { ActionResponse, PaginatedActionResponse } from './action'
 
 // Zod Schemas
-// export const UpdateGroupMemberRoleSchema = z.object({
-//     memberId: z.uuid(),
-//     role: z.enum(GROUP_MEMBER_ROLES_ARRAY),
-// })
+export const UpdateGroupMemberRoleSchema = z.object({
+    memberId: z.uuid(),
+    role: z.enum(GROUP_MEMBER_ROLES_ARRAY),
+})
 
 // export const ApproveGroupSchema = z.object({
 //     id: z.uuid(),

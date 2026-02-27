@@ -127,29 +127,23 @@ export const groupMemberQueries = {
         })
     },
 
-    // // Update member role
-    // async updateRole(id: string, role: GroupMemberRoles): Promise<GroupMember> {
-    //     const [member] = await db
-    //         .update(groupMembers)
-    //         .set({ role, updatedAt: new Date() })
-    //         .where(eq(groupMembers.id, id))
-    //         .returning()
-    //     return member
-    // },
+    // Update member role
+    async updateRole(id: string, role: GroupMemberRoles): Promise<void> {
+        await db.update(groupMembers)
+            .set({ role, updatedAt: new Date() })
+            .where(eq(groupMembers.id, id))
+    },
 
-    // // Update member status (approve/reject join request)
-    // async updateStatus(id: string, status: MemberStatus): Promise<GroupMember> {
-    //     const [member] = await db
-    //         .update(groupMembers)
-    //         .set({
-    //             status,
-    //             joinedAt: status === GroupMemberStatuses.APPROVED ? new Date() : undefined,
-    //             updatedAt: new Date()
-    //         })
-    //         .where(eq(groupMembers.id, id))
-    //         .returning()
-    //     return member
-    // },
+    // Update member status (approve/reject join request)
+    async updateStatus(id: string, status: GroupMemberStatuses): Promise<void> {
+        await db.update(groupMembers)
+            .set({
+                status,
+                joinedAt: status === GROUP_MEMBER_STATUSES.APPROVED ? new Date() : undefined,
+                updatedAt: new Date()
+            })
+            .where(eq(groupMembers.id, id))
+    },
 
     // Count group members by group ID with optional filters
     async countByGroup(groupId: string, params: {
@@ -181,13 +175,13 @@ export const groupMemberQueries = {
         return result?.value ?? 0
     },
 
-    // Check if user is group admin
-    async isAdmin(groupId: string, userId: string): Promise<boolean> {
+    // Check if user is group admin/member
+    async isRole(groupId: string, userId: string, role: GroupMemberRoles): Promise<boolean> {
         const [member] = await db
             .select()
             .from(groupMembers)
             .where(
-                buildWhereClause({ groupId, userId, status: GROUP_MEMBER_STATUSES.APPROVED, role: GROUP_MEMBER_ROLES.ADMIN })
+                buildWhereClause({ groupId, userId, status: GROUP_MEMBER_STATUSES.APPROVED, role: role })
             )
             .limit(1)
 

@@ -6,9 +6,9 @@ import {
     UpdateGroupSchema,
     ApproveGroupSchema,
     JoinGroupSchema,
-    // UpdateMemberRoleSchema
+    UpdateGroupMemberRoleSchema
 } from '@shared/contracts'
-import { GroupCategories, GroupMemberRoles, GroupMemberStatuses } from '@shared/constants'
+import { GroupCategory, GroupMemberRoles, GroupMemberStatuses } from '@shared/constants'
 import { z } from 'zod'
 
 // Create group
@@ -16,19 +16,6 @@ export const createGroupFn = createServerFn({ method: 'POST' })
     .inputValidator(CreateGroupSchema)
     .handler(async ({ data }) => {
         const result = await GroupService.create(data)
-
-        if (!result.success) {
-            throw new Error(result.state.message)
-        }
-
-        return result.data
-    })
-
-// Get group by ID
-export const getGroupByIdFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: { id: string }) => z.object({ id: z.string() }).parse(data))
-    .handler(async ({ data }) => {
-        const result = await GroupService.getById(data.id)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -82,16 +69,16 @@ export const deleteGroupFn = createServerFn({ method: 'POST' })
         return result.data
     })
 
-// List public groups
-export const listPublicGroupsFn = createServerFn({ method: 'GET' })
+// List approved groups
+export const listApprovedGroupsFn = createServerFn({ method: 'GET' })
     .inputValidator((data: {
-        category?: GroupCategories;
+        category?: GroupCategory;
         search?: string;
         page?: number;
         pageSize?: number
     }) => data)
     .handler(async ({ data }) => {
-        const result = await GroupService.listPublic({
+        const result = await GroupService.listApproved({
             category: data.category,
             search: data.search,
             page: data.page || 1,
@@ -126,35 +113,35 @@ export const listMyGroupsFn = createServerFn({ method: 'GET' })
         return result.data
     })
 
-// // List pending groups (admin)
-// export const listPendingGroupsFn = createServerFn({ method: 'GET' })
-//     .inputValidator((data: { page?: number; limit?: number }) => data)
-//     .handler(async ({ data }) => {
-//         const result = await GroupService.listPending({
-//             page: data.page || 1,
-//             limit: data.limit || 20,
-//         })
+// List pending groups (admin)
+export const listPendingGroupsFn = createServerFn({ method: 'GET' })
+    .inputValidator((data: { page?: number; pageSize?: number }) => data)
+    .handler(async ({ data }) => {
+        const result = await GroupService.listPending({
+            page: data.page || 1,
+            pageSize: data.pageSize || 20,
+        })
 
-//         if (!result.success) {
-//             throw new Error(result.message)
-//         }
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
 
-//         return result.data
-//     })
+        return result.data
+    })
 
-// // Approve/reject group (admin)
-// export const approveGroupFn = createServerFn({ method: 'POST' })
-//     .inputValidator(ApproveGroupSchema)
-//     .handler(async ({ data }) => {
-//         const { id, approved, rejectedReason } = data
-//         const result = await GroupService.approveGroup(id, { approved, reason: rejectedReason })
+// Approve/reject group (admin)
+export const approveGroupFn = createServerFn({ method: 'POST' })
+    .inputValidator(ApproveGroupSchema)
+    .handler(async ({ data }) => {
+        const { id, approved, rejectedReason } = data
+        const result = await GroupService.approveGroup(id, { approved, reason: rejectedReason })
 
-//         if (!result.success) {
-//             throw new Error(result.message)
-//         }
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
 
-//         return result.data
-//     })
+        return result.data
+    })
 
 // Join group
 export const joinGroupFn = createServerFn({ method: 'POST' })
@@ -171,7 +158,7 @@ export const joinGroupFn = createServerFn({ method: 'POST' })
 
 // Leave group
 export const leaveGroupFn = createServerFn({ method: 'POST' })
-    .inputValidator((data: { groupId: string }) => z.object({ groupId: z.string() }).parse(data))
+    .inputValidator((data: { groupId: string }) => data)
     .handler(async ({ data }) => {
         const result = await GroupService.leaveGroup(data.groupId)
 
@@ -206,42 +193,49 @@ export const getGroupMembersFn = createServerFn({ method: 'GET' })
         return result.data
     })
 
-// // Update member role (admin)
-// export const updateMemberRoleFn = createServerFn({ method: 'PUT' })
-//     .inputValidator(UpdateMemberRoleSchema)
-//     .handler(async ({ data }) => {
-//         const { memberId, role } = data
-//         const result = await GroupService.updateMemberRole(memberId, role)
+// Judge admin or not
+export const isRoleFn = createServerFn({ method: 'GET' })
+    .inputValidator((data: { groupId: string, userId: string, role: GroupMemberRoles }) => data)
+    .handler(async ({ data }) => {
+        return GroupService.isRole(data.groupId, data.userId, data.role)
+    })
 
-//         if (!result.success) {
-//             throw new Error(result.message)
-//         }
+// Update member role (admin)
+export const updateMemberRoleFn = createServerFn({ method: 'POST' })
+    .inputValidator(UpdateGroupMemberRoleSchema)
+    .handler(async ({ data }) => {
+        const { memberId, role } = data
+        const result = await GroupService.updateMemberRole(memberId, role)
 
-//         return result.data
-//     })
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
 
-// // Remove member (admin)
-// export const removeMemberFn = createServerFn({ method: 'DELETE' })
-//     .inputValidator((data: { memberId: string }) => z.object({ memberId: z.string() }).parse(data))
-//     .handler(async ({ data }) => {
-//         const result = await GroupService.removeMember(data.memberId)
+        return result.data
+    })
 
-//         if (!result.success) {
-//             throw new Error(result.message)
-//         }
+// Remove member (admin)
+export const removeMemberFn = createServerFn({ method: 'POST' })
+    .inputValidator((data: { memberId: string }) => z.object({ memberId: z.string() }).parse(data))
+    .handler(async ({ data }) => {
+        const result = await GroupService.removeMember(data.memberId)
 
-//         return result.data
-//     })
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
 
-// // Approve member join request (admin)
-// export const approveMemberFn = createServerFn({ method: 'PUT' })
-//     .inputValidator((data: { memberId: string }) => z.object({ memberId: z.string() }).parse(data))
-//     .handler(async ({ data }) => {
-//         const result = await GroupService.approveMember(data.memberId)
+        return result.data
+    })
 
-//         if (!result.success) {
-//             throw new Error(result.message)
-//         }
+// Approve member join request (admin)
+export const approveMemberFn = createServerFn({ method: 'POST' })
+    .inputValidator((data: { memberId: string }) => z.object({ memberId: z.string() }).parse(data))
+    .handler(async ({ data }) => {
+        const result = await GroupService.approveMember(data.memberId)
 
-//         return result.data
-//     })
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
+
+        return result.data
+    })

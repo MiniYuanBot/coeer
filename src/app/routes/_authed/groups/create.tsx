@@ -1,8 +1,7 @@
-// routes/_authed/groups/create.tsx
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { createGroupFn } from '~/functions/groups'
-import { GroupCategories } from '@shared/constants'
+import { createGroupFn } from '~/functions'
+import { GroupCategory, GROUP_CATEGORY } from '@shared/constants'
 
 export const Route = createFileRoute('/_authed/groups/create')({
     component: CreateGroupComponent,
@@ -23,7 +22,7 @@ function CreateGroupComponent() {
             name: formData.get('name') as string,
             slug: formData.get('slug') as string,
             description: (formData.get('description') as string) || undefined,
-            category: formData.get('category') as GroupCategories,
+            category: formData.get('category') as GroupCategory,
             isPublic: formData.get('isPublic') === 'on',
         }
 
@@ -32,10 +31,9 @@ function CreateGroupComponent() {
             if (!result) {
                 throw new Error('Create failed')
             }
-            navigate({
-                to: '/groups/$slug',
-                params: { slug: result.slug }
-            })
+            console.debug('Create successful. Wait admin to review.')
+
+            navigate({ to: '/groups' })
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Create failed')
         } finally {
@@ -89,11 +87,11 @@ function CreateGroupComponent() {
                         分类 <span className="text-red-500">*</span>
                     </label>
                     <select name="category" required className="w-full p-2 border rounded-lg">
-                        <option value="academic">学术</option>
-                        <option value="club">社团</option>
-                        <option value="project">项目</option>
-                        <option value="class">班级</option>
-                        <option value="interest">兴趣</option>
+                        <option value={GROUP_CATEGORY.CLUB}>社团</option>
+                        <option value={GROUP_CATEGORY.COURSE}>课程</option>
+                        <option value={GROUP_CATEGORY.INTEREST}>兴趣</option>
+                        <option value={GROUP_CATEGORY.ORGANIZATION}>组织</option>
+                        <option value={GROUP_CATEGORY.PROJECT}>项目</option>
                     </select>
                 </div>
 

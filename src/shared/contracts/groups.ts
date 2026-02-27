@@ -1,7 +1,7 @@
 // contracts/groups.ts
 import { z } from 'zod'
 import type { DbUser, Group } from '~/database/schemas'
-import { GROUP_CATEGORIES_ARRAY, GroupCategories, GroupCode } from '../constants'
+import { GROUP_CATEGORY_ARRAY, GroupCategory, GroupCode } from '../constants'
 import { ActionResponse, PaginatedActionResponse } from './action'
 
 // Zod Schemas
@@ -9,7 +9,7 @@ export const CreateGroupSchema = z.object({
     name: z.string().min(2).max(100),
     slug: z.string().regex(/^[a-z0-9-]+$/).max(100),
     description: z.string().max(500).optional(),
-    category: z.enum(GROUP_CATEGORIES_ARRAY),
+    category: z.enum(GROUP_CATEGORY_ARRAY),
     isPublic: z.boolean(),
 })
 
@@ -40,7 +40,7 @@ export type ApproveGroupData = z.infer<typeof ApproveGroupSchema>
 // // Group types
 // export type Group = DbGroup
 // export type GroupStatus = typeof GroupStatuses[keyof typeof GroupStatuses]
-// export type GroupCategory = typeof GroupCategories[keyof typeof GroupCategories]
+// export type GroupCategory = typeof GroupCategory[keyof typeof GroupCategory]
 
 // Group with creator info
 export type GroupWithCreator = Group & {
