@@ -1,4 +1,10 @@
-**/build
-**/public
+dist
+build
+public
+
+node_modules
+package-lock.json
 pnpm-lock.yaml
 routeTree.gen.ts
+
+tmp

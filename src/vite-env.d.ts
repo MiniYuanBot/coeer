@@ -1,17 +1,13 @@
 /// <reference types="vite/client" />
+/* 
+Define the frontend environment variable type here
+to insure frontend can use import.meta to get them.
+*/
 
 interface ImportMetaEnv {
-    readonly DATABASE_URL: string
-
-    readonly SESSION_SECRET: string
-    readonly JWT_SECRET: string
-
-    readonly NODE_ENV: 'development' | 'production' | 'test'
-    readonly PORT: string
-    readonly CLIENT_URL: string
-
-    readonly DB_POOL_MIN: string
-    readonly DB_POOL_MAX: string
+    // frontend type
+    readonly VITE_API_URL: string
+    readonly VITE_APP_NAME: string
 }
 
 interface ImportMeta {

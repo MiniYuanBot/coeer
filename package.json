@@ -16,7 +16,8 @@
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "check:env": "tsx src/server/config/env.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
