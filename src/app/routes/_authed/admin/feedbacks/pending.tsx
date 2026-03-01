@@ -1,22 +1,18 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import z from 'zod'
 import { getFeedbacksFn, updateFeedbackStatusFn } from '~/functions'
 import { FeedbackStatus } from '@shared/constants'
 import { useState } from 'react'
+import { ListFeedbacksSchema } from '@shared/contracts'
 
-const searchSchema = z.object({
-    page: z.number().default(1),
-})
 
 export const Route = createFileRoute('/_authed/admin/feedbacks/pending')({
-    validateSearch: searchSchema,
+    validateSearch: ListFeedbacksSchema,
     loaderDeps: ({ search }) => search,
     loader: async ({ deps }) => {
         const result = await getFeedbacksFn({
             data: {
+                ...deps,
                 status: 'pending' as FeedbackStatus,
-                page: deps.page,
-                pageSize: 20,
             },
         })
         return { feedbacks: result?.items || [], total: result?.total || 0 }
@@ -26,12 +22,13 @@ export const Route = createFileRoute('/_authed/admin/feedbacks/pending')({
 
 function AdminPendingFeedbacksPage() {
     const { feedbacks, total } = Route.useLoaderData()
-    const { page } = Route.useSearch()
+    const { limit, offset } = Route.useSearch()
     const navigate = useNavigate()
 
     const [processingId, setProcessingId] = useState<string | null>(null)
 
     const totalPages = Math.ceil(total / 20)
+    const currentPage = Math.floor(offset / limit) + 1
 
     const handleQuickProcess = async (id: string) => {
         setProcessingId(id)
@@ -39,7 +36,7 @@ function AdminPendingFeedbacksPage() {
             await updateFeedbackStatusFn({
                 data: { id, status: 'processing' as FeedbackStatus, note: 'Marked as processing from pending list' },
             })
-            navigate({ to: '/admin/feedbacks/pending', search: { page } })
+            navigate({ to: '/admin/feedbacks/pending', search: {} })
         } finally {
             setProcessingId(null)
         }
@@ -126,18 +123,18 @@ function AdminPendingFeedbacksPage() {
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { page: page - 1 } })}
-                        disabled={page <= 1}
+                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { offset: offset - limit } })}
+                        disabled={currentPage <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
                     <span className="px-4 py-2 text-gray-600">
-                        Page {page} of {totalPages}
+                        Page {currentPage} of {totalPages}
                     </span>
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { page: page + 1 } })}
-                        disabled={page >= totalPages}
+                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { offset: offset + limit } })}
+                        disabled={currentPage >= totalPages}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next

@@ -3,7 +3,18 @@ import { db } from '../client'
 import { groupMembers } from '../schemas'
 import { eq, desc, and, inArray, count, asc, SQL } from 'drizzle-orm'
 import type { NewGroupMember, GroupMember } from '../schemas'
-import { GroupMemberWithUser, GroupMemberWithGroup } from '@shared/contracts'
+import {
+    GroupMemberWithUser,
+    GroupMemberWithGroup,
+    GroupMemberIdInput,
+    GroupAndUserInput,
+    UpdateGroupMemberInput,
+    CountMembersByGroupInput,
+    CheckRoleInput,
+    ListMembersByGroupInput,
+    ListMembersByUserInput,
+    CountMembersByUserInput,
+} from '@shared/contracts'
 import { GroupMemberRole, GroupMemberStatus, GROUP_MEMBER_STATUS } from '@shared/constants'
 
 // Private query condition builder
@@ -46,42 +57,41 @@ export const groupMemberQueries = {
         return member
     },
 
+    // Update group member
+    async update(data: UpdateGroupMemberInput): Promise<void> {
+        await db.update(groupMembers)
+            .set({ status: data.status, role: data.role, updatedAt: new Date() })
+            .where(eq(groupMembers.id, data.memberId))
+    },
+
     // Remove member / leave group
-    async delete(id: string): Promise<void> {
-        await db.delete(groupMembers).where(eq(groupMembers.id, id))
+    async delete(data: GroupMemberIdInput): Promise<void> {
+        await db.delete(groupMembers).where(eq(groupMembers.id, data.memberId))
     },
 
     // Find a membership by its id
-    async findById(id: string): Promise<GroupMember | undefined> {
-        const [member] = await db.select().from(groupMembers).where(eq(groupMembers.id, id))
+    async findById(data: GroupMemberIdInput): Promise<GroupMember | undefined> {
+        const [member] = await db.select().from(groupMembers).where(eq(groupMembers.id, data.memberId))
         return member
     },
 
     // Find membership by group and user
-    async findByGroupAndUser(groupId: string, userId: string): Promise<GroupMember | undefined> {
+    async findByGroupAndUser(data: GroupAndUserInput): Promise<GroupMember | undefined> {
         const [member] = await db
             .select()
             .from(groupMembers)
             .where(
                 and(
-                    eq(groupMembers.groupId, groupId),
-                    eq(groupMembers.userId, userId)
+                    eq(groupMembers.groupId, data.groupId),
+                    eq(groupMembers.userId, data.userId)
                 )
             )
         return member
     },
 
     // List group members with user info, with optional filters
-    async findMembersByGroup(
-        groupId: string,
-        params: {
-            status?: GroupMemberStatus
-            role?: GroupMemberRole
-            limit?: number
-            offset?: number
-        }
-    ): Promise<GroupMemberWithUser[]> {
-        const { status, role, limit = 50, offset = 0 } = params
+    async listByGroup(data: ListMembersByGroupInput): Promise<GroupMemberWithUser[]> {
+        const { groupId, status, role, limit, offset } = data
 
         return db.query.groupMembers.findMany({
             where: buildWhereClause({ groupId, status, role }),
@@ -99,19 +109,12 @@ export const groupMemberQueries = {
         })
     },
 
-    // List groups a user has joined with optional filters
-    async findGroupsByUser(
-        userId: string,
-        params: {
-            status?: GroupMemberStatus
-            limit?: number
-            offset?: number
-        }
-    ): Promise<GroupMemberWithGroup[]> {
-        const { status = GROUP_MEMBER_STATUS.APPROVED, limit = 20, offset = 0 } = params
+    // List groups the user has joined with optional filters
+    async listByUser(data: ListMembersByUserInput): Promise<GroupMemberWithGroup[]> {
+        const { userId, status, role, limit, offset } = data
 
         return db.query.groupMembers.findMany({
-            where: buildWhereClause({ userId, status }),
+            where: buildWhereClause({ userId, status, role }),
             with: {
                 group: {
                     with: {
@@ -127,45 +130,19 @@ export const groupMemberQueries = {
         })
     },
 
-    // Update member role
-    async updateRole(id: string, role: GroupMemberRole): Promise<void> {
-        await db.update(groupMembers)
-            .set({ role, updatedAt: new Date() })
-            .where(eq(groupMembers.id, id))
-    },
-
-    // Update member status (approve/reject join request)
-    async updateStatus(id: string, status: GroupMemberStatus): Promise<void> {
-        await db.update(groupMembers)
-            .set({
-                status,
-                joinedAt: status === GROUP_MEMBER_STATUS.APPROVED ? new Date() : undefined,
-                updatedAt: new Date()
-            })
-            .where(eq(groupMembers.id, id))
-    },
-
     // Count group members by group ID with optional filters
-    async countByGroup(groupId: string, params: {
-        status?: GroupMemberStatus
-        role?: GroupMemberRole
-    }): Promise<number> {
-        const { status, role } = params
-
+    async countByGroup(data: CountMembersByGroupInput): Promise<number> {
         const [result] = await db
             .select({ value: count() })
             .from(groupMembers)
-            .where(buildWhereClause({ groupId, status, role }))
+            .where(buildWhereClause(data))
 
         return result?.value ?? 0
     },
 
     // Count groups I've joined by user ID with optional filters
-    async countByUser(userId: string, params: {
-        status?: GroupMemberStatus
-        role?: GroupMemberRole
-    }): Promise<number> {
-        const { status, role } = params
+    async countByUser(data: CountMembersByUserInput): Promise<number> {
+        const { userId, status, role } = data
 
         const [result] = await db
             .select({ value: count() })
@@ -176,12 +153,12 @@ export const groupMemberQueries = {
     },
 
     // Check if user is group admin/member
-    async isRole(groupId: string, userId: string, role: GroupMemberRole): Promise<boolean> {
+    async checkRole(data: CheckRoleInput): Promise<boolean> {
         const [member] = await db
             .select()
             .from(groupMembers)
             .where(
-                buildWhereClause({ groupId, userId, status: GROUP_MEMBER_STATUS.APPROVED, role: role })
+                buildWhereClause({ ...data, status: GROUP_MEMBER_STATUS.APPROVED })
             )
             .limit(1)
 

@@ -1,27 +1,50 @@
-// contracts/groups.ts
 import { z } from 'zod'
 import type { DbUser, Group } from '~/database/schemas'
-import { GROUP_CATEGORY_ARRAY, GroupCategory, GroupCode } from '../constants'
-import { ActionResponse, PaginatedActionResponse } from './action'
+import {
+    GROUP_CATEGORY_ARRAY,
+    GROUP_MEMBER_ROLE_ARRAY,
+    GROUP_STATUS_ARRAY,
+    GroupCode,
+} from '../constants'
+import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
+import { GroupMemberFilterSchema } from './groupMembers'
 
-// Zod Schemas
+// ===== Zod Schemas ======
+
+export const GroupSlugSchema = z.object({
+    slug: z.string().regex(/^[a-z0-9-]+$/).max(100),
+})
+
+export const GroupIdSchema = z.object({
+    groupId: z.uuid(),
+})
+
+export const GroupAndUserSchema = z.object({
+    groupId: z.string(),
+    userId: z.string(),
+})
+
 export const CreateGroupSchema = z.object({
     name: z.string().min(2).max(100),
     slug: z.string().regex(/^[a-z0-9-]+$/).max(100),
     description: z.string().max(500).optional(),
     category: z.enum(GROUP_CATEGORY_ARRAY),
     isPublic: z.boolean(),
+    // avatarUrl: z.url().optional(),
 })
 
 export const UpdateGroupSchema = z.object({
+    id: z.uuid(),
     name: z.string().min(2).max(100).optional(),
     description: z.string().max(500).optional(),
-    // avatarUrl: z.url().optional(),
     isPublic: z.boolean().optional(),
+    updatedAt: z.date().optional(),
 })
 
-export const JoinGroupSchema = z.object({
-    groupId: z.uuid(),
+export const UpdateGroupStatusSchema = z.object({
+    id: z.uuid(),
+    status: z.enum(GROUP_STATUS_ARRAY),
+    rejectedReason: z.string().max(200).optional(),
 })
 
 export const ApproveGroupSchema = z.object({
@@ -30,17 +53,54 @@ export const ApproveGroupSchema = z.object({
     rejectedReason: z.string().max(200).optional(),
 })
 
-// Types from Zod
-export type CreateGroupData = z.infer<typeof CreateGroupSchema>
-export type UpdateGroupData = z.infer<typeof UpdateGroupSchema>
-export type JoinGroupData = z.infer<typeof JoinGroupSchema>
-export type ApproveGroupData = z.infer<typeof ApproveGroupSchema>
-// export type UpdateMemberRoleData = z.infer<typeof UpdateGroupMemberRoleSchema>
+export const GroupFilterSchema = z.object({
+    status: z.enum(GROUP_STATUS_ARRAY).optional(),
+    category: z.enum(GROUP_CATEGORY_ARRAY).optional(),
+    search: z.string().optional(),
+})
 
-// // Group types
-// export type Group = DbGroup
-// export type GroupStatus = typeof GroupStatuses[keyof typeof GroupStatuses]
-// export type GroupCategory = typeof GroupCategory[keyof typeof GroupCategory]
+export const GroupIdWithFilterSchema = z.object({
+    groupId: z.uuid(),
+    ...GroupFilterSchema.shape,
+})
+
+export const GroupSlugWithFilterSchema = z.object({
+    slug: z.uuid(),
+    ...GroupFilterSchema.shape,
+})
+
+export const ListAllGroupsSchema = z.object({
+    ...GroupFilterSchema.shape,
+    ...PaginationSchema.shape,
+})
+
+export const ListMyGroupsSchema = z.object({
+    ...GroupMemberFilterSchema.shape,
+    ...PaginationSchema.shape,
+})
+
+export const CheckRoleSchema = z.object({
+    groupId: z.uuid(),
+    userId: z.uuid(),
+    role: z.enum(GROUP_MEMBER_ROLE_ARRAY),
+})
+
+// ===== Typescript Types =====
+
+// Types from Zod
+export type GroupSlugInput = z.infer<typeof GroupSlugSchema>
+export type GroupIdInput = z.infer<typeof GroupIdSchema>
+export type GroupAndUserInput = z.infer<typeof GroupAndUserSchema>
+export type CreateGroupInput = z.infer<typeof CreateGroupSchema>
+export type UpdateGroupInput = z.infer<typeof UpdateGroupSchema>
+export type UpdateGroupStatusInput = z.infer<typeof UpdateGroupStatusSchema>
+export type ApproveGroupInput = z.infer<typeof ApproveGroupSchema>
+export type GroupFilterInput = z.infer<typeof GroupFilterSchema>
+export type GroupIdWithFilterInput = z.infer<typeof GroupIdWithFilterSchema>
+export type GroupSlugWithFilterInput = z.infer<typeof GroupSlugWithFilterSchema>
+export type ListAllGroupsInput = z.infer<typeof ListAllGroupsSchema>
+export type ListMyGroupsInput = z.infer<typeof ListMyGroupsSchema>
+export type CheckRoleInput = z.infer<typeof CheckRoleSchema>
 
 // Group with creator info
 export type GroupWithCreator = Group & {
@@ -55,14 +115,3 @@ export type GroupWithStats = GroupWithCreator & {
 
 export type GroupResponse<T> = ActionResponse<T, GroupCode>
 export type PaginatedGroupResponse<T> = PaginatedActionResponse<T, GroupCode>
-
-// export type ListUserGroupsParams = {
-//     status?: GroupMemberStatuses
-//     limit?: number
-//     offset?: number
-// }
-
-// export type ListPendingGroupsParams = {
-//     limit?: number
-//     offset?: number
-// }

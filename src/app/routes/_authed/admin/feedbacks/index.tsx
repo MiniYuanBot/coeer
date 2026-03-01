@@ -1,27 +1,14 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import z from 'zod'
 import { getFeedbacksFn, updateFeedbackStatusFn, deleteFeedbackFn } from '~/functions'
-import { FeedbackStatus, FEEDBACK_STATUS_ARRAY } from '@shared/constants'
+import { FeedbackStatus } from '@shared/constants'
 import { useState } from 'react'
-
-const searchSchema = z.object({
-    status: z.enum(FEEDBACK_STATUS_ARRAY).optional(),
-    q: z.string().optional(),
-    page: z.number().default(1),
-})
+import { ListFeedbacksSchema } from '@shared/contracts'
 
 export const Route = createFileRoute('/_authed/admin/feedbacks/')({
-    validateSearch: searchSchema,
+    validateSearch: ListFeedbacksSchema,
     loaderDeps: ({ search }) => search,
     loader: async ({ deps }) => {
-        const result = await getFeedbacksFn({
-            data: {
-                status: deps.status,
-                search: deps.q,
-                page: deps.page,
-                pageSize: 20,
-            },
-        })
+        const result = await getFeedbacksFn({ data: deps })
         return { feedbacks: result?.items || [], total: result?.total || 0 }
     },
     component: AdminFeedbacksPage,
@@ -29,7 +16,7 @@ export const Route = createFileRoute('/_authed/admin/feedbacks/')({
 
 function AdminFeedbacksPage() {
     const { feedbacks, total } = Route.useLoaderData()
-    const { status, q, page } = Route.useSearch()
+    const { status, search, limit, offset } = Route.useSearch()
     const navigate = useNavigate()
 
     const [updatingId, setUpdatingId] = useState<string | null>(null)
@@ -37,6 +24,7 @@ function AdminFeedbacksPage() {
     const [showStatusModal, setShowStatusModal] = useState<string | null>(null)
 
     const totalPages = Math.ceil(total / 20)
+    const currentPage = Math.floor(offset / limit) + 1
 
     const handleStatusUpdate = async (id: string, newStatus: FeedbackStatus, note?: string) => {
         setUpdatingId(id)
@@ -44,7 +32,7 @@ function AdminFeedbacksPage() {
             await updateFeedbackStatusFn({
                 data: { id, status: newStatus, note },
             })
-            navigate({ to: '/admin/feedbacks', search: { status, q, page } })
+            navigate({ to: '/admin/feedbacks', search: { status, search } })
         } finally {
             setUpdatingId(null)
             setShowStatusModal(null)
@@ -57,7 +45,7 @@ function AdminFeedbacksPage() {
         setDeletingId(id)
         try {
             await deleteFeedbackFn({ data: { id } })
-            navigate({ to: '/admin/feedbacks', search: { status, q, page } })
+            navigate({ to: '/admin/feedbacks', search: { status, search } })
         } finally {
             setDeletingId(null)
         }
@@ -71,13 +59,13 @@ function AdminFeedbacksPage() {
                     <div className="flex-1">
                         <input
                             type="text"
-                            defaultValue={q}
+                            defaultValue={search}
                             placeholder="Search feedbacks..."
                             onChange={(e) => {
                                 const value = e.target.value
                                 clearTimeout((window as any).searchTimeout)
                                     ; (window as any).searchTimeout = setTimeout(() => {
-                                        navigate({ to: '/admin/feedbacks', search: { status, q: value, page: 1 } })
+                                        navigate({ to: '/admin/feedbacks', search: { status, search: value } })
                                     }, 300)
                             }}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -88,7 +76,7 @@ function AdminFeedbacksPage() {
                         value={status || ''}
                         onChange={(e) => navigate({
                             to: '/admin/feedbacks',
-                            search: { status: e.target.value as FeedbackStatus || undefined, q, page: 1 }
+                            search: { status: e.target.value as FeedbackStatus || undefined, search }
                         })}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -142,9 +130,9 @@ function AdminFeedbacksPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${feedback.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                feedback.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                                    feedback.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                                        'bg-gray-100 text-gray-800'
+                                            feedback.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                                feedback.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                                    'bg-gray-100 text-gray-800'
                                             }`}>
                                             {feedback.status}
                                         </span>
@@ -179,18 +167,18 @@ function AdminFeedbacksPage() {
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks', search: { status, q, page: page - 1 } })}
-                        disabled={page <= 1}
+                        onClick={() => navigate({ to: '/admin/feedbacks', search: { status, search, offset: offset - limit } })}
+                        disabled={currentPage <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
                     <span className="px-4 py-2 text-gray-600">
-                        Page {page} of {totalPages}
+                        Page {currentPage} of {totalPages}
                     </span>
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks', search: { status, q, page: page + 1 } })}
-                        disabled={page >= totalPages}
+                        onClick={() => navigate({ to: '/admin/feedbacks', search: { status, search, offset: offset + limit } })}
+                        disabled={currentPage >= totalPages}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next

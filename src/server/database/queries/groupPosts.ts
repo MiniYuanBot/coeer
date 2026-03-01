@@ -1,9 +1,22 @@
 // groupPostQueries.ts
 import { db } from '../client'
-import { groupPosts, users, groups } from '../schemas'
-import { eq, desc, and, or, inArray, count, asc, SQL, isNull } from 'drizzle-orm'
-import type { NewGroupPost, GroupPost } from '../schemas'
-import { GroupPostWithAuthor, GroupPostWithGroup } from '@shared/contracts'
+import { groupPosts } from '../schemas'
+import { eq, desc, and, count, SQL } from 'drizzle-orm'
+import type { NewGroupPost } from '../schemas'
+import {
+    CountPostsByAuthorInput,
+    CountPostsByGroupInput,
+    FeedbackIdInput,
+    GroupPostWithAuthor,
+    GroupPostWithGroup,
+    ListPostsByAuthorInput,
+    ListPostsByGroupInput,
+    PostIdInput,
+    TogglePinInput,
+    UpdateGroupPostInput,
+    CheckGroupInput,
+    CheckAuthorInput,
+} from '@shared/contracts'
 import { GroupPostType } from '@shared/constants'
 
 // Private query condition builder
@@ -42,52 +55,65 @@ function buildWhereClause(params: {
 
 export const groupPostQueries = {
     // Create a post
-    async create(data: NewGroupPost): Promise<GroupPost> {
+    async create(data: NewGroupPost): Promise<void> {
         const [post] = await db.insert(groupPosts).values(data).returning()
-        return post
+        
+        if (!post) {
+            throw new Error('Create failed')
+        }
     },
 
-    // Find a post by its id
-    async findById(id: string): Promise<GroupPost | undefined> {
+    // Update content of post
+    async update(data: UpdateGroupPostInput): Promise<void> {
         const [post] = await db
-            .select()
-            .from(groupPosts)
-            .where(eq(groupPosts.id, id))
-        return post
+            .update(groupPosts)
+            .set({
+                ...data,
+                updatedAt: new Date(),
+            })
+            .where(eq(groupPosts.id, data.id))
+            .returning()
+
+        if (!post) {
+            throw new Error('Post not found')
+        }
+    },
+
+    // Delete the post
+    async delete(data: PostIdInput): Promise<void> {
+        const [post] = await db
+            .delete(groupPosts)
+            .where(eq(groupPosts.id, data.id))
+            .returning()
+
+        if (!post) {
+            throw new Error('Post not found')
+        }
     },
 
     // Find a post with author by its id
-    async findByIdWithAuthor(id: string): Promise<GroupPostWithAuthor | undefined> {
-        const [post] = await db.query.groupPosts.findMany({
-            where: eq(groupPosts.id, id),
+    async findById(data: FeedbackIdInput): Promise<GroupPostWithAuthor | undefined> {
+        const post = await db.query.groupPosts.findFirst({
+            where: eq(groupPosts.id, data.id),
             with: {
                 author: {
-                    columns: { id: true, name: true, avatarUrl: true },
+                    columns: { id: true, name: true },
                 },
             },
-            limit: 1,
         })
 
-        return post as GroupPostWithAuthor | undefined
+        return post
     },
 
     // Find all posts by group id with optional filters
-    async findByGroup(
-        groupId: string,
-        params: {
-            type?: GroupPostType
-            isPinned?: boolean
-            limit?: number
-            offset?: number
-        }
-    ): Promise<GroupPostWithAuthor[]> {
-        const { type, isPinned, limit = 20, offset = 0 } = params
+    async findByGroup(data: ListPostsByGroupInput): Promise<GroupPostWithAuthor[]> {
+        const { groupId, type, isPinned, limit, offset } = data
 
         return db.query.groupPosts.findMany({
             where: buildWhereClause({ groupId, type, isPinned }),
             with: {
                 author: {
-                    columns: { id: true, name: true, avatarUrl: true },
+                    columns: { id: true, name: true },
                 },
             },
             orderBy: [
@@ -96,18 +122,12 @@ export const groupPostQueries = {
             ],
             limit,
             offset,
-        }) as Promise<GroupPostWithAuthor[]>
+        })
     },
 
     // Find all posts by author id with optional filters
-    async findByAuthor(
-        authorId: string,
-        params: {
-            limit?: number
-            offset?: number
-        }
-    ): Promise<GroupPostWithGroup[]> {
-        const { limit = 20, offset = 0 } = params
+    async findByAuthor(data: ListPostsByAuthorInput): Promise<GroupPostWithGroup[]> {
+        const { authorId, limit, offset } = data
 
         return db.query.groupPosts.findMany({
             where: eq(groupPosts.authorId, authorId),
@@ -119,122 +139,61 @@ export const groupPostQueries = {
             orderBy: [desc(groupPosts.createdAt)],
             limit,
             offset,
-        }) as Promise<GroupPostWithGroup[]>
-    },
-
-    // Update content of post
-    async update(id: string, data: Partial<NewGroupPost>): Promise<GroupPost> {
-        const [post] = await db
-            .update(groupPosts)
-            .set({
-                ...data,
-                updatedAt: new Date(),
-            })
-            .where(eq(groupPosts.id, id))
-            .returning()
-
-        if (!post) {
-            throw new Error('Post not found')
-        }
-
-        return post
+        })
     },
 
     // Pin/Unpin the post
-    async togglePin(id: string, isPinned: boolean): Promise<GroupPost> {
+    async togglePin(data: TogglePinInput): Promise<void> {
         const [post] = await db
             .update(groupPosts)
             .set({
-                isPinned,
+                isPinned: data.isPinned,
                 updatedAt: new Date(),
             })
-            .where(eq(groupPosts.id, id))
+            .where(eq(groupPosts.id, data.id))
             .returning()
 
         if (!post) {
             throw new Error('Post not found')
         }
-
-        return post
-    },
-
-    // Delete the post
-    async delete(id: string): Promise<GroupPost> {
-        const [post] = await db
-            .delete(groupPosts)
-            .where(eq(groupPosts.id, id))
-            .returning()
-
-        if (!post) {
-            throw new Error('Post not found')
-        }
-
-        return post
     },
 
     // Count posts by group id with optional filters
-    async countByGroup(
-        groupId: string,
-        params: {
-            type?: GroupPostType
-            authorId?: string
-            isPinned?: boolean
-        }
-    ): Promise<number> {
-        const { type, authorId, isPinned } = params
-
+    async countByGroup(data: CountPostsByGroupInput): Promise<number> {
         const [result] = await db
             .select({ value: count() })
             .from(groupPosts)
-            .where(buildWhereClause({ groupId, type, authorId, isPinned }))
+            .where(buildWhereClause(data))
 
         return result?.value ?? 0
     },
 
     // Count posts by authorId id with optional filters
-    async countByAuthor(
-        authorId: string,
-        params: {
-            type?: GroupPostType
-            isPinned?: boolean
-        }
-    ): Promise<number> {
-        const { type, isPinned } = params
-
+    async countByAuthor(data: CountPostsByAuthorInput): Promise<number> {
         const [result] = await db
             .select({ value: count() })
             .from(groupPosts)
-            .where(buildWhereClause({ authorId, type, isPinned }))
+            .where(buildWhereClause(data))
         return result?.value ?? 0
     },
 
     // Check if post exists
-    async existsInGroup(id: string, groupId: string): Promise<boolean> {
+    async checkGroup(data: CheckGroupInput): Promise<boolean> {
         const [post] = await db
             .select({ id: groupPosts.id })
             .from(groupPosts)
-            .where(
-                and(
-                    eq(groupPosts.id, id),
-                    eq(groupPosts.groupId, groupId)
-                )
-            )
+            .where(buildWhereClause(data))
             .limit(1)
 
         return !!post
     },
 
     // Check if user is author
-    async isAuthor(id: string, authorId: string): Promise<boolean> {
+    async checkAuthor(data: CheckAuthorInput): Promise<boolean> {
         const [post] = await db
             .select({ id: groupPosts.id })
             .from(groupPosts)
-            .where(
-                and(
-                    eq(groupPosts.id, id),
-                    eq(groupPosts.authorId, authorId)
-                )
-            )
+            .where(buildWhereClause(data))
             .limit(1)
 
         return !!post

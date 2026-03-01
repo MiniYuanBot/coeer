@@ -1,10 +1,96 @@
 import { z } from 'zod';
 import type { DbUser, Group, GroupPost } from '~/database/schemas';
-import { GroupPostType, GroupPostCode } from '../constants'
-import { ActionResponse, PaginatedActionResponse } from './action'
+import { GroupPostCode, GROUP_POST_TYPE_ARRAY } from '../constants'
+import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
+
+// ===== Zod Schemas ======
+
+export const GroupPostIdSchema = z.object({
+    id: z.uuid(),
+})
+
+export const AuthorIdSchema = z.object({
+    authorId: z.uuid(),
+})
+
+export const CreateGroupPostSchema = z.object({
+    groupId: z.uuid(),
+    title: z.string().min(1).max(200),
+    content: z.string().min(1).max(10000),
+    type: z.enum(GROUP_POST_TYPE_ARRAY),
+});
+
+export const UpdateGroupPostSchema = z.object({
+    id: z.uuid(),
+    title: z.string().min(1).max(200).optional(),
+    content: z.string().min(1).max(10000).optional(),
+    updatedAt: z.date().optional(),
+});
+
+export const GroupPostFilterSchema = z.object({
+    type: z.enum(GROUP_POST_TYPE_ARRAY).optional(),
+    isPinned: z.boolean().optional(),
+})
+
+export const CountPostsByGroupSchema = z.object({
+    groupId: z.uuid(),
+    ...GroupPostFilterSchema.shape,
+})
+
+export const ListPostsByGroupSchema = z.object({
+    ...CountPostsByGroupSchema.shape,
+    ...PaginationSchema.shape,
+})
+
+export const CountPostsByAuthorSchema = z.object({
+    authorId: z.uuid(),
+    ...GroupPostFilterSchema.shape,
+})
+
+export const ListPostsByAuthorSchema = z.object({
+    ...CountPostsByAuthorSchema.shape,
+    ...PaginationSchema.shape,
+})
+
+export const TogglePinSchema = z.object({
+    id: z.uuid(),
+    isPinned: z.boolean(),
+});
+
+export const CheckGroupSchema = z.object({
+    id: z.uuid(),
+    groupId: z.uuid(),
+});
+
+export const CheckAuthorSchema = z.object({
+    id: z.uuid(),
+    authorId: z.uuid(),
+});
+
+export const CheckModifySchema = z.object({
+    postId: z.uuid(),
+    userId: z.uuid(),
+});
+
+// ===== Typescript Types =====
+
+// Types from Zod
+export type GroupPostIdInput = z.infer<typeof GroupPostIdSchema>
+export type AuthorIdInput = z.infer<typeof AuthorIdSchema>
+export type CreateGroupPostInput = z.infer<typeof CreateGroupPostSchema>
+export type UpdateGroupPostInput = z.infer<typeof UpdateGroupPostSchema>
+export type GroupPostFilterInput = z.infer<typeof GroupPostFilterSchema>
+export type CountPostsByGroupInput = z.infer<typeof CountPostsByGroupSchema>
+export type ListPostsByGroupInput = z.infer<typeof ListPostsByGroupSchema>
+export type CountPostsByAuthorInput = z.infer<typeof CountPostsByAuthorSchema>
+export type ListPostsByAuthorInput = z.infer<typeof ListPostsByAuthorSchema>
+export type TogglePinInput = z.infer<typeof TogglePinSchema>
+export type CheckGroupInput = z.infer<typeof CheckGroupSchema>
+export type CheckAuthorInput = z.infer<typeof CheckAuthorSchema>
+export type CheckModifyInput = z.infer<typeof CheckModifySchema>
 
 export interface GroupPostWithAuthor extends GroupPost {
-    author: Pick<DbUser, 'id' | 'name'>;
+    author: Pick<DbUser, 'id' | 'name'> | null;
 }
 
 export interface GroupPostWithGroup extends GroupPost {
@@ -14,82 +100,6 @@ export interface GroupPostWithGroup extends GroupPost {
 export interface GroupPostFull extends GroupPost {
     author: Pick<DbUser, 'id' | 'name'>;
     group: Pick<Group, 'id' | 'name' | 'slug'>;
-}
-
-export interface CreateGroupPostData {
-    groupId: string;
-    title: string;
-    content: string;
-    type: GroupPostType;
-}
-
-export interface UpdateGroupPostData {
-    title?: string;
-    content?: string;
-}
-
-export interface TogglePinData {
-    id: string;
-    isPinned: boolean;
-}
-
-// ============================================
-// Zod Schemas
-// ============================================
-
-export const CreateGroupPostSchema = z.object({
-    groupId: z.uuid(),
-    title: z.string().min(1).max(200),
-    content: z.string().min(1).max(10000),
-    type: z.enum(['announcement', 'discussion']),
-});
-
-export const UpdateGroupPostSchema = z.object({
-    title: z.string().min(1).max(200).optional(),
-    content: z.string().min(1).max(10000).optional(),
-});
-
-export const TogglePinSchema = z.object({
-    id: z.uuid(),
-    isPinned: z.boolean(),
-});
-
-// export const GroupPostListQuerySchema = z.object({
-//     groupId: z.uuid('无效的群组ID'),
-//     type: z.enum(GROUP_POST_TYPE_ARRAY).optional(),
-//     isPinned: z
-//         .string()
-//         .transform((val) => val === 'true')
-//         .optional(),
-//     page: z
-//         .string()
-//         .transform((val) => parseInt(val, 10))
-//         .pipe(z.number().min(1).default(1))
-//         .optional(),
-//     limit: z
-//         .string()
-//         .transform((val) => parseInt(val, 10))
-//         .pipe(z.number().min(1).max(50).default(20))
-//         .optional(),
-// });
-
-// export type CreateGroupPostInput = z.infer<typeof CreateGroupPostSchema>;
-// export type UpdateGroupPostInput = z.infer<typeof UpdateGroupPostSchema>;
-// export type TogglePinInput = z.infer<typeof TogglePinSchema>;
-// export type GroupPostIdParam = z.infer<typeof GroupPostIdParamSchema>;
-// export type GroupPostListQuery = z.infer<typeof GroupPostListQuerySchema>;
-
-export interface GroupPostListResponse {
-    posts: GroupPostWithAuthor[];
-    total: number;
-    page: number;
-    limit: number;
-    hasMore: boolean;
-}
-
-export interface GroupPostDetailResponse {
-    post: GroupPostFull;
-    // related reactions、replies
 }
 
 // Response types

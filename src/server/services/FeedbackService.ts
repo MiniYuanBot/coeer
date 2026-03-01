@@ -1,22 +1,26 @@
 import { db } from '../database/client'
 import { Feedback, feedbacks, feedbackStatusLogs } from '../database/schemas'
 import type {
-    CreateFeedbackData,
+    FeedbackIdInput,
+    CreateFeedbackInput,
     FeedbackWithAuthor,
     FeedbackResponse,
     PaginatedFeedbackResponse,
-    UpdateFeedbackStatusData,
+    UpdateFeedbackStatusInput,
     FeedbackStatusLogWithUser,
-    FeedbackStats
+    FeedbackStats,
+    ListFeedbacksInput,
+    ListFeedbackStatusInput,
+    FeedbackStatsInput
 } from '@shared/contracts'
-import { FeedbackStatus, FEEDBACK } from '@shared/constants'
+import { FEEDBACK } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { feedbackQueries } from '../database/queries'
 import { eq, desc, count, and, gte, lte } from 'drizzle-orm'
 
 export class FeedbackService {
     // Create a feedback (records initial status log)
-    static async create(data: CreateFeedbackData): Promise<FeedbackResponse<Feedback>> {
+    static async create(data: CreateFeedbackInput): Promise<FeedbackResponse<Feedback>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -26,14 +30,9 @@ export class FeedbackService {
 
             const result = await db.transaction(async (tx) => {
                 const feedback = await feedbackQueries.create({
+                    ...data,
                     authorId: user.id,
-                    targetType: data.targetType,
-                    targetDesc: data.targetDesc,
-                    title: data.title,
-                    content: data.content,
-                    isAnonymous: data.isAnonymous ?? false,
                     status: 'pending',
-                    // images: data.images,
                 })
 
                 // Record initial status log
@@ -60,7 +59,7 @@ export class FeedbackService {
     }
 
     // Get feedback details by its id
-    static async getById(id: string): Promise<FeedbackResponse<FeedbackWithAuthor>> {
+    static async getById(data: FeedbackIdInput): Promise<FeedbackResponse<FeedbackWithAuthor>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -68,7 +67,7 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
-            const feedback = await feedbackQueries.findByIdWithAuthor(id)
+            const feedback = await feedbackQueries.findByIdWithAuthor(data)
 
             if (!feedback) {
                 return { success: false, state: FEEDBACK.NOT_FOUND }
@@ -100,12 +99,7 @@ export class FeedbackService {
     }
 
     // List feedbacks with filters
-    static async list(params: {
-        status?: FeedbackStatus
-        search?: string
-        page?: number
-        pageSize?: number
-    }): Promise<PaginatedFeedbackResponse<FeedbackWithAuthor>> {
+    static async list(data: ListFeedbacksInput): Promise<PaginatedFeedbackResponse<FeedbackWithAuthor>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -114,30 +108,19 @@ export class FeedbackService {
             }
 
             const isAdmin = user.role === 'admin'
-            const { status, search, page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { status, search, limit, offset } = data
 
             let items: FeedbackWithAuthor[]
             let total: number
 
             if (isAdmin) {
                 // Admin sees all feedbacks
-                items = await feedbackQueries.findAll({
-                    status,
-                    search,
-                    limit: pageSize,
-                    offset
-                }) as FeedbackWithAuthor[]
+                items = await feedbackQueries.findAll(data) as FeedbackWithAuthor[]
 
-                total = await feedbackQueries.count({ status, search })
+                total = await feedbackQueries.count({ authorId: user.id, status: data.status, search: data.search })
             } else {
                 // Regular user sees only their own feedbacks
-                items = await feedbackQueries.findByAuthorId(user.id, {
-                    status,
-                    search,
-                    limit: pageSize,
-                    offset
-                }) as FeedbackWithAuthor[]
+                items = await feedbackQueries.findByAuthorId(data)
 
                 total = await feedbackQueries.count({
                     status,
@@ -151,8 +134,8 @@ export class FeedbackService {
                 data: {
                     items,
                     total,
-                    page,
-                    pageSize
+                    limit,
+                    offset
                 },
                 state: FEEDBACK.GET_SUCCESS,
             }
@@ -163,10 +146,7 @@ export class FeedbackService {
     }
 
     // Update feedback status (admin only)
-    static async updateStatus(
-        id: string,
-        data: UpdateFeedbackStatusData
-    ): Promise<FeedbackResponse<void>> {
+    static async updateStatus(data: UpdateFeedbackStatusInput): Promise<FeedbackResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -180,18 +160,18 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
-            const feedback = await feedbackQueries.findById(id)
+            const feedback = await feedbackQueries.findById({ id: data.id })
             if (!feedback) {
                 return { success: false, state: FEEDBACK.NOT_FOUND }
             }
 
             await db.transaction(async (tx) => {
                 // Update feedback status
-                await feedbackQueries.updateStatus(id, data.status)
+                await feedbackQueries.update({ id: data.id, status: data.status })
 
                 // Record status change log
                 await tx.insert(feedbackStatusLogs).values({
-                    feedbackId: id,
+                    feedbackId: data.id,
                     status: data.status,
                     changedBy: user.id,
                     note: data.note,
@@ -211,7 +191,7 @@ export class FeedbackService {
     }
 
     // Delete a feedback (author or admin only)
-    static async delete(id: string): Promise<FeedbackResponse<void>> {
+    static async delete(data: FeedbackIdInput): Promise<FeedbackResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -219,7 +199,7 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
-            const feedback = await feedbackQueries.findById(id)
+            const feedback = await feedbackQueries.findById(data)
             if (!feedback) {
                 return { success: false, state: FEEDBACK.NOT_FOUND }
             }
@@ -232,7 +212,7 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
-            await feedbackQueries.delete(id)
+            await feedbackQueries.delete(data)
 
             return {
                 success: true,
@@ -246,13 +226,7 @@ export class FeedbackService {
     }
 
     // Get status change logs for a feedback
-    static async getStatusLogs(
-        feedbackId: string,
-        params: {
-            page?: number
-            pageSize?: number
-        }
-    ): Promise<PaginatedFeedbackResponse<FeedbackStatusLogWithUser>> {
+    static async getStatusLogs(data: ListFeedbackStatusInput): Promise<PaginatedFeedbackResponse<FeedbackStatusLogWithUser>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -260,7 +234,7 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
-            const feedback = await feedbackQueries.findById(feedbackId)
+            const feedback = await feedbackQueries.findById({ id: data.feedbackId })
             if (!feedback) {
                 return { success: false, state: FEEDBACK.NOT_FOUND }
             }
@@ -273,12 +247,11 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
-            const { page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { limit, offset } = data
 
             // Build query with pagination
             const logsQuery = db.query.feedbackStatusLogs.findMany({
-                where: eq(feedbackStatusLogs.feedbackId, feedbackId),
+                where: eq(feedbackStatusLogs.feedbackId, data.feedbackId),
                 with: isAdmin ? {
                     // Admin sees operator details
                     changedBy: {
@@ -290,13 +263,13 @@ export class FeedbackService {
                     },
                 } : undefined,
                 orderBy: [desc(feedbackStatusLogs.createdAt)],
-                limit: pageSize,
-                offset: offset,
+                limit,
+                offset,
             })
 
             const countQuery = db.select({ count: count() })
                 .from(feedbackStatusLogs)
-                .where(eq(feedbackStatusLogs.feedbackId, feedbackId))
+                .where(eq(feedbackStatusLogs.feedbackId, data.feedbackId))
 
             const [logs, [{ count: total }]] = await Promise.all([logsQuery, countQuery])
 
@@ -330,8 +303,8 @@ export class FeedbackService {
                 data: {
                     items: sanitizedLogs,
                     total: total,
-                    page,
-                    pageSize
+                    limit,
+                    offset
                 },
                 state: FEEDBACK.GET_SUCCESS
             }
@@ -342,10 +315,7 @@ export class FeedbackService {
     }
 
     // Get feedback statistics for admin dashboard
-    static async getStats(params: {
-        startDate?: string
-        endDate?: string
-    }): Promise<FeedbackResponse<FeedbackStats>> {
+    static async getStats(data: FeedbackStatsInput): Promise<FeedbackResponse<FeedbackStats>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -359,7 +329,7 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
-            const { startDate, endDate } = params
+            const { startDate, endDate } = data
 
             // Build date filter conditions
             const conditions = []

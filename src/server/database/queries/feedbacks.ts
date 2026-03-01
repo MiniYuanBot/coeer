@@ -2,16 +2,23 @@ import { db } from '../client'
 import { feedbacks } from '../schemas'
 import { eq, desc, and, inArray, ilike, or, count, asc, SQL } from 'drizzle-orm'
 import type { NewFeedback, Feedback } from '../schemas'
-import { FeedbackWithAuthor } from '@shared/contracts'
-import { FeedbackStatus } from '@shared/constants'
+import {
+    CountFeedbacksInput,
+    FeedbackIdInput,
+    FeedbackWithAuthor,
+    ListFeedbacksInput,
+    UpdateFeedbackInput
+} from '@shared/contracts'
+import { FeedbackStatus, FeedbackTargetType } from '@shared/constants'
 
 // Private query condition builder
 function buildWhereClause(params: {
     authorId?: string
     status?: FeedbackStatus | FeedbackStatus[]
     search?: string
+    targetType?: FeedbackTargetType | FeedbackTargetType[]
 }): SQL | undefined {
-    const { status, search, authorId } = params
+    const { status, search, authorId, targetType } = params
     const conditions: SQL[] = []
 
     if (authorId) {
@@ -36,31 +43,65 @@ function buildWhereClause(params: {
         }
     }
 
+    if (targetType) {
+        if (Array.isArray(targetType)) {
+            conditions.push(inArray(feedbacks.targetType, targetType))
+        } else {
+            conditions.push(eq(feedbacks.targetType, targetType))
+        }
+    }
+
     return conditions.length > 0 ? and(...conditions) : undefined
 }
 
 export const feedbackQueries = {
     // Create a feedback
-    async create(data: NewFeedback): Promise<Feedback> {
+    async create(data: NewFeedback): Promise<void> {
         const [feedback] = await db.insert(feedbacks).values(data).returning()
-        return feedback
+        
+        if (!feedback) {
+            throw new Error('Create failed')
+        }
+    },
+
+    // Update feedback status
+    async update(data: UpdateFeedbackInput): Promise<void> {
+        const [feedback] = await db.update(feedbacks)
+            .set({
+                status: data.status,
+                ...(data.resolvedAt && { resolvedAt: data.resolvedAt }),
+                updatedAt: new Date(),
+            })
+            .where(eq(feedbacks.id, data.id))
+            .returning()
+
+        if (!feedback) {
+            throw new Error('Update failed')
+        }
     },
 
     // Delete a feedback
-    async delete(id: string): Promise<void> {
-        await db.delete(feedbacks).where(eq(feedbacks.id, id))
+    async delete(data: FeedbackIdInput): Promise<void> {
+        const [feedback] = await db
+        .delete(feedbacks)
+        .where(eq(feedbacks.id, data.id))
+        .returning()
+
+        if (!feedback) {
+            throw new Error('Delete failed')
+        }
     },
 
     // Find a feedback by its ID
-    async findById(id: string): Promise<Feedback | undefined> {
-        const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id))
+    async findById(data: FeedbackIdInput): Promise<Feedback | undefined> {
+        const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, data.id))
         return feedback
     },
 
     // Find a feedback with author info by its ID
-    async findByIdWithAuthor(id: string): Promise<FeedbackWithAuthor | undefined> {
+    async findByIdWithAuthor(data: FeedbackIdInput): Promise<FeedbackWithAuthor | undefined> {
         return db.query.feedbacks.findFirst({
-            where: eq(feedbacks.id, id),
+            where: eq(feedbacks.id, data.id),
             with: {
                 author: {
                     columns: { id: true, name: true, email: true },
@@ -70,19 +111,11 @@ export const feedbackQueries = {
     },
 
     // Find all feedbacks by author ID with optional filters
-    async findByAuthorId(
-        authorId: string,
-        params: {
-            status?: FeedbackStatus
-            search?: string
-            limit?: number
-            offset?: number
-        }
-    ): Promise<FeedbackWithAuthor[]> {
-        const { search, status, limit = 20, offset = 0 } = params
+    async findByAuthorId(data: ListFeedbacksInput): Promise<FeedbackWithAuthor[]> {
+        const { limit, offset } = data
 
         return db.query.feedbacks.findMany({
-            where: buildWhereClause({ authorId, status, search }),
+            where: buildWhereClause(data),
             with: {
                 author: {
                     columns: { id: true, name: true, email: true },
@@ -95,16 +128,11 @@ export const feedbackQueries = {
     },
 
     // Find all feedbacks with optional filters
-    async findAll(params: {
-        status?: FeedbackStatus
-        search?: string
-        limit?: number
-        offset?: number
-    }): Promise<FeedbackWithAuthor[]> {
-        const { status, search, limit = 20, offset = 0 } = params
+    async findAll(data: ListFeedbacksInput): Promise<FeedbackWithAuthor[]> {
+        const { limit, offset } = data
 
         return db.query.feedbacks.findMany({
-            where: buildWhereClause({ status, search }),
+            where: buildWhereClause(data),
             with: {
                 author: {
                     columns: { id: true, name: true, email: true },
@@ -117,30 +145,13 @@ export const feedbackQueries = {
     },
 
     // Count all feedbacks with optional filters
-    async count(params: {
-        status?: FeedbackStatus
-        search?: string
-        authorId?: string
-    }): Promise<number> {
-        const whereClause = buildWhereClause(params)
-
+    async count(data: CountFeedbacksInput): Promise<number> {
         const [result] = await db
             .select({ value: count() })
             .from(feedbacks)
-            .where(whereClause)
+            .where(buildWhereClause(data))
 
         return result?.value ?? 0
-    },
-
-    // Update feedback status
-    async updateStatus(id: string, status: FeedbackStatus, resolvedAt?: Date): Promise<void> {
-        await db.update(feedbacks)
-            .set({
-                status,
-                ...(resolvedAt ? { resolvedAt } : {}),
-                updatedAt: new Date(),
-            })
-            .where(eq(feedbacks.id, id))
     },
 
     // Get feedback status
