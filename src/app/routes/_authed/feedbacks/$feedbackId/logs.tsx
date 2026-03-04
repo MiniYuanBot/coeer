@@ -1,20 +1,19 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import z from 'zod'
 import { getFeedbackStatusLogsFn } from '~/functions'
+import { FeedbackStatusLogsSchema } from '@shared/contracts'
 
-const searchSchema = z.object({
-    page: z.number().default(1),
-})
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/logs')({
-    validateSearch: searchSchema,
-    loaderDeps: ({ search }) => search,
+    validateSearch: FeedbackStatusLogsSchema.omit({ feedbackId: true }),
+    loaderDeps: ({ search }) => ({
+        limit: search.limit,
+        offset: search.offset,
+    }),
     loader: async ({ params, deps }) => {
         const result = await getFeedbackStatusLogsFn({
             data: {
+                ...deps,
                 feedbackId: params.feedbackId,
-                page: deps.page,
-                pageSize: 20,
             },
         })
         return { logs: result?.items || [], total: result?.total || 0 }
@@ -25,10 +24,11 @@ export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/logs')({
 function FeedbackLogsPage() {
     const { logs, total } = Route.useLoaderData()
     const { feedbackId } = Route.useParams()
-    const { page } = Route.useSearch()
+    const { limit, offset } = Route.useSearch()
     const navigate = useNavigate()
 
     const totalPages = Math.ceil(total / 20)
+    const currentPage = Math.floor(offset / limit) + 1
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -57,9 +57,9 @@ function FeedbackLogsPage() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${log.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                log.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                                    log.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                                        'bg-gray-100 text-gray-800'
+                                            log.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                                log.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                                    'bg-gray-100 text-gray-800'
                                             }`}>
                                             {log.status}
                                         </span>
@@ -90,23 +90,23 @@ function FeedbackLogsPage() {
                         onClick={() => navigate({
                             to: '/feedbacks/$feedbackId/logs',
                             params: { feedbackId },
-                            search: { page: page - 1 }
+                            search: { offset: offset - limit }
                         })}
-                        disabled={page <= 1}
+                        disabled={currentPage <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
                     <span className="px-4 py-2 text-gray-600">
-                        Page {page} of {totalPages}
+                        Page {currentPage} of {totalPages}
                     </span>
                     <button
                         onClick={() => navigate({
                             to: '/feedbacks/$feedbackId/logs',
                             params: { feedbackId },
-                            search: { page: page + 1 }
+                            search: { offset: offset + limit }
                         })}
-                        disabled={page >= totalPages}
+                        disabled={currentPage >= totalPages}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next

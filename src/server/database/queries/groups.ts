@@ -1,24 +1,35 @@
 // groupQueries.ts
 import { db } from '../client'
-import { groups, users, groupMembers } from '../schemas'
-import { eq, desc, and, inArray, ilike, or, count, asc, SQL, isNotNull } from 'drizzle-orm'
+import { groups } from '../schemas'
+import { eq, desc, and, inArray, ilike, or, count, SQL } from 'drizzle-orm'
 import type { NewGroup, Group } from '../schemas'
-import { GroupWithCreator, GroupWithStats } from '@shared/contracts'
+import {
+    UpdateGroupInput,
+    GroupFilterInput,
+    GroupIdInput,
+    GroupWithCreator,
+    GroupWithStats,
+    ListAllGroupsInput,
+    UpdateGroupStatusInput,
+    GroupIdWithFilterInput,
+    GroupSlugWithFilterInput
+} from '@shared/contracts'
 import { GroupCategory, GROUP_STATUS, GroupStatus } from '@shared/constants'
+import { groupMemberQueries } from './groupMembers'
 
 // Private query condition builder
 function buildWhereClause(params: {
-    id?: string
+    groupId?: string
     slug?: string
     status?: GroupStatus | GroupStatus[]
     category?: GroupCategory
     search?: string
 }): SQL | undefined {
-    const { id, slug, status, category, search } = params
+    const { groupId, slug, status, category, search } = params
     const conditions: SQL[] = []
 
-    if (id) {
-        conditions.push(eq(groups.id, id))
+    if (groupId) {
+        conditions.push(eq(groups.id, groupId))
     }
 
     if (slug) {
@@ -59,50 +70,27 @@ export const groupQueries = {
     },
 
     // Update group info
-    async update(id: string, data: Partial<NewGroup>): Promise<void> {
+    async update(data: UpdateGroupInput): Promise<void> {
         await db.update(groups)
             .set({ ...data, updatedAt: new Date() })
-            .where(eq(groups.id, id))
+            .where(eq(groups.id, data.id))
     },
 
     // Delete a group
-    async delete(id: string): Promise<void> {
-        await db.delete(groups).where(eq(groups.id, id))
+    async delete(data: GroupIdInput): Promise<void> {
+        await db.delete(groups).where(eq(groups.id, data.groupId))
     },
 
-    // Find a group by its ID
-    async findById(id: string): Promise<Group | undefined> {
-        const [group] = await db.select().from(groups).where(eq(groups.id, id))
+    // Find a group by its ID with optional filters
+    async findById(data: GroupIdWithFilterInput): Promise<Group | undefined> {
+        const [group] = await db.select().from(groups).where(buildWhereClause(data))
         return group
     },
 
-    // Get group's member count
-    async getMemberCount(id: string): Promise<number> {
-        const [memberCountResult] = await db
-            .select({ value: count() })
-            .from(groupMembers)
-            .where(
-                and(
-                    eq(groupMembers.groupId, id),
-                    eq(groupMembers.status, GROUP_STATUS.APPROVED)
-                )
-            )
-
-        return memberCountResult?.value ?? 0
-    },
-    
-    // Get group's post count
-    async getPostCount(id: string): Promise<number> {
-        return 0
-    },
-
-    // Find a group by its slug
-    async findBySlug(slug: string): Promise<GroupWithStats | undefined> {
+    // Find a group by its slug with optional filters
+    async findBySlug(data: GroupSlugWithFilterInput): Promise<GroupWithStats | undefined> {
         const group = await db.query.groups.findFirst({
-            where: and(
-                eq(groups.slug, slug),
-                eq(groups.status, GROUP_STATUS.APPROVED)
-            ),
+            where: buildWhereClause(data),
             with: {
                 creator: {
                     columns: { id: true, name: true, email: true },
@@ -113,10 +101,10 @@ export const groupQueries = {
         if (!group) return undefined
 
         // Get member count
-        const memberCount = await this.getMemberCount(group.id)
+        const memberCount = await groupMemberQueries.countByGroup({ groupId: group.id })
 
         // Get posts count
-        const postCount = await this.getPostCount(group.id)
+        const postCount = await this.getPostCount({ groupId: group.id })
 
         return {
             ...group,
@@ -125,37 +113,39 @@ export const groupQueries = {
         }
     },
 
+    // Count groups with filters
+    async countGroups(data: GroupFilterInput): Promise<number> {
+        const [result] = await db
+            .select({ value: count() })
+            .from(groups)
+            .where(buildWhereClause(data))
+
+        return result?.value ?? 0
+    },
+
+    // Get group's post count
+    async getPostCount(data: GroupIdInput): Promise<number> {
+        return 0
+    },
+
     // Review group (approve/reject)
-    async updateStatus(
-        id: string,
-        status: GroupStatus,
-        rejectedReason?: string
-    ): Promise<void> {
+    async updateStatus(data: UpdateGroupStatusInput): Promise<void> {
         await db.update(groups)
             .set({
-                status,
-                rejectedReason: status === GROUP_STATUS.REJECTED ? rejectedReason : null,
+                status: data.status,
+                rejectedReason: data.status === GROUP_STATUS.REJECTED ? data.rejectedReason : null,
                 // reviewedAt: new Date(),
                 updatedAt: new Date()
             })
-            .where(eq(groups.id, id))
+            .where(eq(groups.id, data.id))
     },
 
-    // List public approved groups
-    async listApproved(params: {
-        category?: GroupCategory
-        search?: string
-        limit?: number
-        offset?: number
-    }): Promise<GroupWithCreator[]> {
-        const { category, search, limit = 20, offset = 0 } = params
+    // List all groups with optional filters
+    async listAll(data: ListAllGroupsInput): Promise<GroupWithCreator[]> {
+        const { status, category, search, limit, offset } = data
 
         return db.query.groups.findMany({
-            where: buildWhereClause({
-                status: GROUP_STATUS.APPROVED,
-                category,
-                search
-            }),
+            where: buildWhereClause({ status, category, search }),
             with: {
                 creator: {
                     columns: { id: true, name: true, email: true },
@@ -191,39 +181,20 @@ export const groupQueries = {
     //     })
     // },
 
-    // List pending groups for admin review
-    async listPending(params: {
-        limit?: number
-        offset?: number
-    }): Promise<GroupWithCreator[]> {
-        const { limit = 20, offset = 0 } = params
+    // // List pending groups for admin review
+    // async listPending(data: ListPendingGroupsInput): Promise<GroupWithCreator[]> {
+    //     const { limit, offset } = data
 
-        return db.query.groups.findMany({
-            where: eq(groups.status, GROUP_STATUS.PENDING),
-            with: {
-                creator: {
-                    columns: { id: true, name: true, email: true },
-                },
-            },
-            orderBy: [asc(groups.createdAt)],
-            limit,
-            offset,
-        })
-    },
-
-    // Count groups with filters
-    async count(params: {
-        status?: GroupStatus
-        category?: GroupCategory
-        search?: string
-    }): Promise<number> {
-        const whereClause = buildWhereClause(params)
-
-        const [result] = await db
-            .select({ value: count() })
-            .from(groups)
-            .where(whereClause)
-
-        return result?.value ?? 0
-    }
+    //     return db.query.groups.findMany({
+    //         where: eq(groups.status, GROUP_STATUS.PENDING),
+    //         with: {
+    //             creator: {
+    //                 columns: { id: true, name: true, email: true },
+    //             },
+    //         },
+    //         orderBy: [asc(groups.createdAt)],
+    //         limit,
+    //         offset,
+    //     })
+    // },
 }

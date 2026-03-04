@@ -2,26 +2,32 @@
 import { db } from '../database/client'
 import { Group, GroupMember } from '../database/schemas'
 import type {
-    CreateGroupData,
+    CreateGroupInput,
     GroupWithStats,
     GroupResponse,
     PaginatedGroupResponse,
     GroupMemberResponse,
     PaginatedGroupMemberResponse,
-    UpdateGroupData,
     GroupMemberWithGroup,
     GroupMemberWithUser,
     GroupWithCreator,
+    GroupIdInput,
+    GroupSlugWithFilterInput,
+    ListMyGroupsInput,
+    UpdateGroupInput,
+    ListAllGroupsInput,
+    ApproveGroupInput,
+    CheckRoleInput,
+    ListMembersByGroupInput,
+    UpdateGroupMemberInput,
+    GroupMemberIdInput,
 } from '@shared/contracts'
 import {
     GROUP_STATUS,
     GROUP_MEMBER_ROLE,
     GROUP_MEMBER_STATUS,
-    GroupMemberStatus,
-    GroupCategory,
     GROUP,
     GROUP_MEMBER,
-    GroupMemberRole,
 } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { groupQueries } from '../database/queries/groups'
@@ -29,7 +35,7 @@ import { groupMemberQueries } from '../database/queries'
 
 export class GroupService {
     // Create a group
-    static async create(data: CreateGroupData): Promise<GroupResponse<Group>> {
+    static async create(data: CreateGroupInput): Promise<GroupResponse<Group>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -38,7 +44,7 @@ export class GroupService {
             }
 
             // Check if slug is already taken
-            const existingGroup = await groupQueries.findBySlug(data.slug)
+            const existingGroup = await groupQueries.findBySlug(data)
             if (existingGroup) {
                 return {
                     success: false,
@@ -83,8 +89,8 @@ export class GroupService {
         }
     }
 
-    // Delete a group
-    static async delete(id: string): Promise<GroupResponse<void>> {
+    // Update group info (admin only)
+    static async update(data: UpdateGroupInput): Promise<GroupResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -92,7 +98,47 @@ export class GroupService {
                 return { success: false, state: GROUP.UNAUTHORIZED }
             }
 
-            const group = await groupQueries.findById(id)
+            // Check if user is admin
+            const isAdmin = await groupMemberQueries.checkRole({
+                groupId: data.id,
+                userId: user.id,
+                role: 'admin'
+            })
+            if (!isAdmin) {
+                return {
+                    success: false,
+                    state: GROUP.FORBIDDEN,
+                }
+            }
+
+            await groupQueries.update({
+                ...data,
+                updatedAt: new Date()
+            })
+
+            return {
+                success: true,
+                state: GROUP.UPDATE_SUCCESS,
+            }
+        } catch (err) {
+            console.error('Update group error:', err)
+            return {
+                success: false,
+                state: GROUP.SERVER_ERROR,
+            }
+        }
+    }
+
+    // Delete a group
+    static async delete(data: GroupIdInput): Promise<GroupResponse<void>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: GROUP.UNAUTHORIZED }
+            }
+
+            const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
@@ -102,7 +148,11 @@ export class GroupService {
 
             // Check if user is creator or admin
             if (group.creatorId !== user.id) {
-                const isAdmin = await groupMemberQueries.isRole(id, user.id, 'admin')
+                const isAdmin = await groupMemberQueries.checkRole({
+                    groupId: data.groupId,
+                    userId: user.id,
+                    role: 'admin'
+                })
                 if (!isAdmin) {
                     return {
                         success: false,
@@ -114,7 +164,7 @@ export class GroupService {
                 }
             }
 
-            await groupQueries.delete(id)
+            await groupQueries.delete(data)
 
             return {
                 success: true,
@@ -130,11 +180,11 @@ export class GroupService {
     }
 
     // Get group with stats by slug
-    static async getBySlug(slug: string): Promise<GroupResponse<GroupWithStats>> {
+    static async getBySlug(data: GroupSlugWithFilterInput): Promise<GroupResponse<GroupWithStats>> {
         try {
-            const group = await groupQueries.findBySlug(slug)
+            const group = await groupQueries.findBySlug(data)
 
-            if (!group || group.status !== GROUP_STATUS.APPROVED) {
+            if (!group) {
                 return {
                     success: false,
                     state: GROUP.NOT_FOUND,
@@ -155,62 +205,15 @@ export class GroupService {
         }
     }
 
-    // Update group info (admin only)
-    static async update(id: string, data: UpdateGroupData): Promise<GroupResponse<void>> {
-        try {
-            const payload = await AuthService.getCurrentUser()
-            const user = payload.data
-            if (!payload.success || !user) {
-                return { success: false, state: GROUP.UNAUTHORIZED }
-            }
-
-            // Check if user is admin
-            const isAdmin = await groupMemberQueries.isRole(id, user.id, 'admin')
-            if (!isAdmin) {
-                return {
-                    success: false,
-                    state: GROUP.FORBIDDEN,
-                }
-            }
-
-            await groupQueries.update(id, {
-                ...data,
-                updatedAt: new Date()
-            })
-
-            return {
-                success: true,
-                state: GROUP.UPDATE_SUCCESS,
-            }
-        } catch (err) {
-            console.error('Update group error:', err)
-            return {
-                success: false,
-                state: GROUP.SERVER_ERROR,
-            }
-        }
-    }
-
     // List public approved groups
-    static async listApproved(params: {
-        category?: GroupCategory
-        search?: string
-        page?: number
-        pageSize?: number
-    }): Promise<PaginatedGroupResponse<GroupWithCreator>> {
+    static async listAllGroups(data: ListAllGroupsInput): Promise<PaginatedGroupResponse<GroupWithCreator>> {
         try {
-            const { category, search, page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { status, category, search, limit, offset } = data
 
-            const groups = await groupQueries.listApproved({
-                category,
-                search,
-                limit: pageSize,
-                offset
-            })
+            const groups = await groupQueries.listAll(data)
 
-            const total = await groupQueries.count({
-                status: GROUP_STATUS.APPROVED,
+            const total = await groupQueries.countGroups({
+                status,
                 category,
                 search
             })
@@ -220,8 +223,8 @@ export class GroupService {
                 data: {
                     items: groups,
                     total,
-                    page,
-                    pageSize
+                    limit,
+                    offset
                 },
                 state: GROUP.GET_SUCCESS,
             }
@@ -235,11 +238,7 @@ export class GroupService {
     }
 
     // List groups I've joined
-    static async listMyGroups(params: {
-        status?: GroupMemberStatus
-        page?: number
-        pageSize?: number
-    }): Promise<PaginatedGroupMemberResponse<GroupMemberWithGroup>> {
+    static async listMyGroups(data: ListMyGroupsInput): Promise<PaginatedGroupMemberResponse<GroupMemberWithGroup>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -247,25 +246,22 @@ export class GroupService {
                 return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
             }
 
-            const { status, page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { status, role, limit, offset } = data
 
-            const memberships = await groupMemberQueries.findGroupsByUser(user.id, {
-                status,
-                limit: pageSize,
-                offset
+            const memberships = await groupMemberQueries.listByUser({
+                userId: user.id,
+                ...data
             })
-            const approvedMemberships = memberships.filter(member => member.group.status === GROUP_STATUS.APPROVED)
 
-            const total = await groupMemberQueries.countByUser(user.id, { status })
+            const total = await groupMemberQueries.countByUser({ userId: user.id, status, role })
 
             return {
                 success: true,
                 data: {
-                    items: approvedMemberships,
+                    items: memberships,
                     total,
-                    page,
-                    pageSize
+                    limit,
+                    offset
                 },
                 state: GROUP_MEMBER.GET_SUCCESS,
             }
@@ -278,54 +274,8 @@ export class GroupService {
         }
     }
 
-    // List pending groups for admin review
-    static async listPending(params: {
-        page?: number
-        pageSize?: number
-    }): Promise<PaginatedGroupResponse<Group>> {
-        try {
-            const payload = await AuthService.getCurrentUser()
-            const user = payload.data
-            if (!payload.success || !user) {
-                return { success: false, state: GROUP.UNAUTHORIZED }
-            }
-
-            // TODO: Check if user is admin/moderator
-            // const isAdmin = await this.isAdmin()
-            // if (!isAdmin) {
-            //     return { success: false, state: 'FORBIDDEN' }
-            // }
-
-            const { page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
-
-            const groups = await groupQueries.listPending({ limit: pageSize, offset })
-            const total = await groupQueries.count({ status: GROUP_STATUS.PENDING })
-
-            return {
-                success: true,
-                data: {
-                    items: groups,
-                    total,
-                    page,
-                    pageSize,
-                },
-                state: GROUP.GET_SUCCESS,
-            }
-        } catch (err) {
-            console.error('List pending groups error:', err)
-            return {
-                success: false,
-                state: GROUP.SERVER_ERROR,
-            }
-        }
-    }
-
     // Approve/reject group (mod/admin)
-    static async approveGroup(id: string, data: {
-        approved: boolean
-        reason?: string
-    }): Promise<GroupResponse<Group>> {
+    static async approveGroup(data: ApproveGroupInput): Promise<GroupResponse<Group>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -333,13 +283,13 @@ export class GroupService {
                 return { success: false, state: GROUP.UNAUTHORIZED }
             }
 
-            // TODO: Check if user is admin/moderator
-            // const isAdmin = await this.isAdmin()
-            // if (!isAdmin) {
-            //     return { success: false, state: 'FORBIDDEN' }
-            // }
+            // Check if user is admin
+            const isAdmin = await groupMemberQueries.checkRole({ groupId: data.id, userId: user.id, role: 'admin' })
+            if (!isAdmin) {
+                return { success: false, state: GROUP.FORBIDDEN }
+            }
 
-            const group = await groupQueries.findById(id)
+            const group = await groupQueries.findById({ groupId: data.id })
             if (!group) {
                 return {
                     success: false,
@@ -355,7 +305,7 @@ export class GroupService {
             }
 
             const status = data.approved ? GROUP_STATUS.APPROVED : GROUP_STATUS.REJECTED
-            const updated = await groupQueries.updateStatus(id, status, data.reason)
+            await groupQueries.updateStatus({ id: data.id, status, rejectedReason: data.rejectedReason })
 
             if (status === GROUP_STATUS.APPROVED) {
                 return {
@@ -378,7 +328,7 @@ export class GroupService {
     }
 
     // Join/request to join a group
-    static async joinGroup(groupId: string): Promise<GroupMemberResponse<GroupMember>> {
+    static async joinGroup(data: GroupIdInput): Promise<GroupMemberResponse<GroupMember>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -386,7 +336,7 @@ export class GroupService {
                 return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
             }
 
-            const group = await groupQueries.findById(groupId)
+            const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
@@ -395,7 +345,7 @@ export class GroupService {
             }
 
             // Check if already a member
-            const existing = await groupMemberQueries.findByGroupAndUser(groupId, user.id)
+            const existing = await groupMemberQueries.findByGroupAndUser({ groupId: data.groupId, userId: user.id })
             if (existing && existing.status === GROUP_MEMBER_STATUS.PENDING) {
                 return {
                     success: false,
@@ -416,7 +366,7 @@ export class GroupService {
                 : GROUP_MEMBER_STATUS.PENDING
 
             const membership = await groupMemberQueries.create({
-                groupId,
+                groupId: data.groupId,
                 userId: user.id,
                 role: GROUP_MEMBER_ROLE.MEMBER,
                 status: initialStatus,
@@ -446,7 +396,7 @@ export class GroupService {
     }
 
     // Leave group
-    static async leaveGroup(groupId: string): Promise<GroupMemberResponse<void>> {
+    static async leaveGroup(data: GroupIdInput): Promise<GroupMemberResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -454,7 +404,7 @@ export class GroupService {
                 return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
             }
 
-            const membership = await groupMemberQueries.findByGroupAndUser(groupId, user.id)
+            const membership = await groupMemberQueries.findByGroupAndUser({ groupId: data.groupId, userId: user.id })
             if (!membership) {
                 return {
                     success: false,
@@ -464,7 +414,8 @@ export class GroupService {
 
             // Prevent last admin from leaving
             if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
-                const adminCount = await groupMemberQueries.countByGroup(groupId, {
+                const adminCount = await groupMemberQueries.countByGroup({
+                    groupId: data.groupId,
                     role: GROUP_MEMBER_ROLE.ADMIN,
                     status: GROUP_MEMBER_STATUS.APPROVED
                 })
@@ -476,7 +427,7 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.delete(membership.id)
+            await groupMemberQueries.delete({ memberId: membership.id })
 
             return {
                 success: true,
@@ -491,16 +442,8 @@ export class GroupService {
         }
     }
 
-    // Get group members (members only for private groups)
-    static async getMembers(
-        groupId: string,
-        params: {
-            status?: GroupMemberStatus
-            role?: GroupMemberRole
-            page?: number
-            pageSize?: number
-        }
-    ): Promise<PaginatedGroupMemberResponse<GroupMemberWithUser>> {
+    // Get group members
+    static async getMembers(data: ListMembersByGroupInput): Promise<PaginatedGroupMemberResponse<GroupMemberWithUser>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -512,7 +455,7 @@ export class GroupService {
                 }
             }
 
-            const group = await groupQueries.findById(groupId)
+            const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
@@ -521,35 +464,29 @@ export class GroupService {
             }
 
             // Check permissions for private groups
-            if (!group.isPublic && group.status === GROUP_STATUS.APPROVED) {
-                const membership = await groupMemberQueries.findByGroupAndUser(groupId, user.id)
-                if (!membership || membership.status !== GROUP_MEMBER_STATUS.APPROVED) {
-                    return {
-                        success: false,
-                        state: GROUP_MEMBER.FORBIDDEN,
-                    }
-                }
-            }
+            // if (!group.isPublic && group.status === GROUP_STATUS.APPROVED) {
+            //     const membership = await groupMemberQueries.findByGroupAndUser({groupId: data.groupId, userId: user.id})
+            //     if (!membership || membership.status !== GROUP_MEMBER_STATUS.APPROVED) {
+            //         return {
+            //             success: false,
+            //             state: GROUP_MEMBER.FORBIDDEN,
+            //         }
+            //     }
+            // }
 
-            const { role, status, page = 1, pageSize = 50 } = params
-            const offset = (page - 1) * pageSize
+            const { limit, offset } = data
 
-            const members = await groupMemberQueries.findMembersByGroup(groupId, {
-                role,
-                status,
-                limit: pageSize,
-                offset
-            })
+            const members = await groupMemberQueries.listByGroup(data)
 
-            const total = await groupMemberQueries.countByGroup(groupId, { status })
+            const total = await groupMemberQueries.countByGroup(data)
 
             return {
                 success: true,
                 data: {
                     items: members,
                     total,
-                    page,
-                    pageSize
+                    limit,
+                    offset
                 },
                 state: GROUP_MEMBER.GET_SUCCESS,
             }
@@ -563,15 +500,12 @@ export class GroupService {
     }
 
     // Check if user is group admin/member
-    static async isRole(groupId: string, userId: string, role: GroupMemberRole): Promise<boolean> {
-        return groupMemberQueries.isRole(groupId, userId, role)
+    static async checkRole(data: CheckRoleInput): Promise<boolean> {
+        return groupMemberQueries.checkRole(data)
     }
 
-    // Update member role (admin only)
-    static async updateMemberRole(
-        memberId: string,
-        role: GroupMemberRole
-    ): Promise<GroupMemberResponse<void>> {
+    // Update member (admin only)
+    static async updateMember(data: UpdateGroupMemberInput): Promise<GroupMemberResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -579,7 +513,7 @@ export class GroupService {
                 return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
             }
 
-            const membership = await groupMemberQueries.findById(memberId)
+            const membership = await groupMemberQueries.findById(data)
             if (!membership) {
                 return {
                     success: false,
@@ -588,7 +522,7 @@ export class GroupService {
             }
 
             // Check if current user is admin
-            const isAdmin = await groupMemberQueries.isRole(membership.groupId, user.id, 'admin')
+            const isAdmin = await groupMemberQueries.checkRole({ groupId: membership.groupId, userId: user.id, role: 'admin' })
             if (!isAdmin) {
                 return {
                     success: false,
@@ -597,8 +531,9 @@ export class GroupService {
             }
 
             // Prevent self-demotion if last admin
-            if (membership.userId === user.id && role === GROUP_MEMBER_ROLE.MEMBER) {
-                const adminCount = await groupMemberQueries.countByGroup(membership.groupId, {
+            if (membership.userId === user.id && data.role === GROUP_MEMBER_ROLE.MEMBER) {
+                const adminCount = await groupMemberQueries.countByGroup({
+                    groupId: membership.groupId,
                     role: GROUP_MEMBER_ROLE.ADMIN,
                     status: GROUP_MEMBER_STATUS.APPROVED
                 })
@@ -610,7 +545,15 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.updateRole(memberId, role)
+            // Check status
+            if (data.status && membership.status !== GROUP_MEMBER_STATUS.PENDING) {
+                return {
+                    success: false,
+                    state: GROUP_MEMBER.INVALID_STATUS,
+                }
+            }
+
+            await groupMemberQueries.update(data)
 
             return {
                 success: true,
@@ -626,7 +569,7 @@ export class GroupService {
     }
 
     // Remove member (admin only)
-    static async removeMember(memberId: string): Promise<GroupMemberResponse<void>> {
+    static async removeMember(data: GroupMemberIdInput): Promise<GroupMemberResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -634,7 +577,7 @@ export class GroupService {
                 return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
             }
 
-            const membership = await groupMemberQueries.findById(memberId)
+            const membership = await groupMemberQueries.findById(data)
             if (!membership) {
                 return {
                     success: false,
@@ -643,7 +586,7 @@ export class GroupService {
             }
 
             // Check if current user is admin
-            const isAdmin = await groupMemberQueries.isRole(membership.groupId, user.id, 'admin')
+            const isAdmin = await groupMemberQueries.checkRole({ groupId: membership.groupId, userId: user.id, role: 'admin' })
             if (!isAdmin) {
                 return {
                     success: false,
@@ -653,7 +596,8 @@ export class GroupService {
 
             // Prevent removing last admin
             if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
-                const adminCount = await groupMemberQueries.countByGroup(membership.groupId, {
+                const adminCount = await groupMemberQueries.countByGroup({
+                    groupId: membership.groupId,
                     role: GROUP_MEMBER_ROLE.ADMIN,
                     status: GROUP_MEMBER_STATUS.APPROVED
                 })
@@ -665,7 +609,7 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.delete(memberId)
+            await groupMemberQueries.delete(data)
 
             return {
                 success: true,
@@ -673,55 +617,6 @@ export class GroupService {
             }
         } catch (err) {
             console.error('Remove member error:', err)
-            return {
-                success: false,
-                state: GROUP_MEMBER.SERVER_ERROR,
-            }
-        }
-    }
-
-    // Approve join request (admin only)
-    static async approveMember(memberId: string): Promise<GroupMemberResponse<void>> {
-        try {
-            const payload = await AuthService.getCurrentUser()
-            const user = payload.data
-            if (!payload.success || !user) {
-                return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
-            }
-
-            const membership = await groupMemberQueries.findById(memberId)
-            if (!membership) {
-                return {
-                    success: false,
-                    state: GROUP_MEMBER.NOT_FOUND,
-                }
-            }
-
-            // Check if current user is admin
-            const isAdmin = await groupMemberQueries.isRole(membership.groupId, user.id, 'admin')
-            if (!isAdmin) {
-                return {
-                    success: false,
-                    state: GROUP_MEMBER.FORBIDDEN,
-                }
-            }
-
-            if (membership.status !== GROUP_MEMBER_STATUS.PENDING) {
-                return {
-                    success: false,
-                    state: GROUP_MEMBER.INVALID_STATUS,
-                }
-            }
-
-            const updated = await groupMemberQueries.updateStatus(memberId, GROUP_MEMBER_STATUS.APPROVED)
-
-            return {
-                success: true,
-                data: updated,
-                state: GROUP_MEMBER.APPROVE_SUCCESS,
-            }
-        } catch (err) {
-            console.error('Approve member error:', err)
             return {
                 success: false,
                 state: GROUP_MEMBER.SERVER_ERROR,

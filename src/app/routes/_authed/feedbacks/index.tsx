@@ -1,55 +1,42 @@
-import { createFileRoute, Link, useNavigate,useRouter } from '@tanstack/react-router'
-import z from 'zod'
+import { createFileRoute, Link, useNavigate,useRouter} from '@tanstack/react-router'
 import { getFeedbacksFn } from '~/functions'
-import { FeedbackStatus, FEEDBACK_STATUS_ARRAY } from '@shared/constants'
+import { FeedbackStatus } from '@shared/constants'
+import { ListFeedbacksSchema } from '@shared/contracts'
 import { useState } from 'react'
 import {ButtonLink,Button} from '@/components/ui/Button'
 import {Select} from '@/components/ui/Select'
 
-const searchSchema = z.object({
-    status: z.enum(FEEDBACK_STATUS_ARRAY).optional(),
-    q: z.string().optional(),
-    page: z.number().default(1),
-})
 
 export const Route = createFileRoute('/_authed/feedbacks/')({
-  validateSearch: searchSchema,
+  validateSearch: ListFeedbacksSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const result = await getFeedbacksFn({
-      data: {
-        status: deps.status,
-        search: deps.q,
-        page: deps.page,
-        pageSize: 20,
-      },
-    })
-    return { 
-      feedbacks: result?.items || [],   
-      total: result?.total || 0 
-    }
+    const result = await getFeedbacksFn({data: deps})
+    return { feedbacks: result?.items || [], total: result?.total || 0 }
   },
   component: FeedbacksListPage,
 })
 
 function FeedbacksListPage() {
   const { feedbacks, total } = Route.useLoaderData()
-  const { status, q, page } = Route.useSearch()
+  const { status, search, limit, offset } = Route.useSearch()
   const navigate = useNavigate()
   const router = useRouter()
   const isLoading = router.state.status === 'pending'
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const totalPages = Math.ceil(total / 20)
+
+  const totalPages = Math.ceil(total / limit)
+  const currentPage = Math.floor(offset / limit) + 1
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    const q = formData.get('search') as string
-    navigate({ to: '/feedbacks', search: { status, q: q, page: 1 } })
+    const search = formData.get('search') as string
+    navigate({ to: '/feedbacks', search: { status, search: search, offset: 0 } })
   }
 
   const handleStatusChange = (newStatus: FeedbackStatus | undefined) => {
-    navigate({ to: '/feedbacks', search: { status: newStatus, q, page: 1 } })
+    navigate({ to: '/feedbacks', search: { status: newStatus, search, offset: 0 } })
   }
 
   const handleDelete = async (id: string) => {
@@ -58,7 +45,7 @@ function FeedbacksListPage() {
     setDeletingId(id)
     try {
       await fetch(`/api/feedbacks/${id}`, { method: 'DELETE' })
-      navigate({ to: '/feedbacks', search: { status, q, page } })
+      navigate({ to: '/feedbacks', search: { status, search, offset: 0 } })
     } finally {
       setDeletingId(null)
     }
@@ -79,7 +66,7 @@ function FeedbacksListPage() {
               <input
                 name="search"
                 type="text"
-                defaultValue={q}
+                defaultValue={search}
                 placeholder="Search feedbacks..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -160,18 +147,18 @@ function FeedbacksListPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button
-            onClick={() => navigate({ to: '/feedbacks', search: { status, q, page: page - 1 } })}
-            disabled={page <= 1}
+            onClick={() => navigate({ to: '/feedbacks', search: { status, search, offset: offset - limit } })}
+            disabled={currentPage <= 1}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           <span className="px-4 py-2 text-gray-600">
-            Page {page} of {totalPages}
+            Page {currentPage} of {totalPages}
           </span>
           <button
-            onClick={() => navigate({ to: '/feedbacks', search: { status, q, page: page + 1 } })}
-            disabled={page >= totalPages}
+            onClick={() => navigate({ to: '/feedbacks', search: { status, search, offset: offset + limit } })}
+            disabled={currentPage >= totalPages}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next

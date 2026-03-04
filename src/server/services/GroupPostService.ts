@@ -1,19 +1,22 @@
 // services/GroupPostService.ts
-import { GroupPost } from '../database/schemas'
 import type {
-    CreateGroupPostData,
-    UpdateGroupPostData,
     GroupPostWithAuthor,
     GroupPostWithGroup,
     GroupPostResponse,
     PaginatedGroupPostResponse,
+    CreateGroupPostInput,
+    UpdateGroupPostInput,
+    PostIdInput,
+    ListPostsByGroupInput,
+    ListPostsByAuthorInput,
+    TogglePinInput,
+    CheckModifyInput,
 } from '@shared/contracts'
 import {
     GROUP_MEMBER_ROLE,
     GROUP_MEMBER_STATUS,
     GROUP_POST_TYPE,
     GROUP_POST,
-    GroupPostType,
 } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { groupPostQueries } from '../database/queries/groupPosts'
@@ -25,7 +28,7 @@ const MAX_PINNED_POSTS = 3
 
 export class GroupPostService {
     // Create a new post (announcement requires admin role)
-    static async create(data: CreateGroupPostData): Promise<GroupPostResponse<GroupPost>> {
+    static async create(data: CreateGroupPostInput): Promise<GroupPostResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -34,7 +37,7 @@ export class GroupPostService {
             }
 
             // Check if group exists
-            const group = await groupQueries.findById(data.groupId)
+            const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
@@ -43,7 +46,7 @@ export class GroupPostService {
             }
 
             // Check membership (must be approved member to post)
-            const membership = await groupMemberQueries.findByGroupAndUser(data.groupId, user.id)
+            const membership = await groupMemberQueries.findByGroupAndUser({ groupId: data.groupId, userId: user.id })
             if (!membership || membership.status !== GROUP_MEMBER_STATUS.APPROVED) {
                 return {
                     success: false,
@@ -65,7 +68,7 @@ export class GroupPostService {
                 }
             }
 
-            const post = await groupPostQueries.create({
+            await groupPostQueries.create({
                 groupId: data.groupId,
                 authorId: user.id,
                 title: data.title,
@@ -78,7 +81,6 @@ export class GroupPostService {
 
             return {
                 success: true,
-                data: post,
                 state: GROUP_POST.CREATE_SUCCESS,
             }
         } catch (err) {
@@ -90,10 +92,115 @@ export class GroupPostService {
         }
     }
 
-    // Get post by ID with author info
-    static async getById(id: string): Promise<GroupPostResponse<GroupPostWithAuthor>> {
+    // Update post (author or admin only)
+    static async update(data: UpdateGroupPostInput): Promise<GroupPostResponse<void>> {
         try {
-            const post = await groupPostQueries.findByIdWithAuthor(id)
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: GROUP_POST.UNAUTHORIZED }
+            }
+
+            const post = await groupPostQueries.findById(data)
+            if (!post) {
+                return {
+                    success: false,
+                    state: GROUP_POST.NOT_FOUND,
+                }
+            }
+
+            // Check permission: author or group admin
+            const isAuthor = post.authorId === user.id
+            let isAdmin = false
+
+            if (!isAuthor) {
+                isAdmin = await groupMemberQueries.checkRole({
+                    groupId: post.groupId,
+                    userId: user.id,
+                    role: GROUP_MEMBER_ROLE.ADMIN
+                })
+            }
+
+            if (!isAuthor && !isAdmin) {
+                return {
+                    success: false,
+                    state: GROUP_POST.FORBIDDEN,
+                }
+            }
+
+            await groupPostQueries.update({
+                ...data,
+                updatedAt: new Date(),
+            })
+
+            return {
+                success: true,
+                state: GROUP_POST.UPDATE_SUCCESS,
+            }
+        } catch (err) {
+            console.error('Update post error:', err)
+            return {
+                success: false,
+                state: GROUP_POST.SERVER_ERROR,
+            }
+        }
+    }
+
+    // Delete post (author or admin only, cascades reactions/replies)
+    static async delete(data: PostIdInput): Promise<GroupPostResponse<void>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: GROUP_POST.UNAUTHORIZED }
+            }
+
+            const post = await groupPostQueries.findById(data)
+            if (!post) {
+                return {
+                    success: false,
+                    state: GROUP_POST.NOT_FOUND,
+                }
+            }
+
+            // Check permission: author or group admin
+            const isAuthor = post.authorId === user.id
+            let isAdmin = false
+
+            if (!isAuthor) {
+                isAdmin = await groupMemberQueries.checkRole({
+                    groupId: post.groupId,
+                    userId: user.id,
+                    role: GROUP_MEMBER_ROLE.ADMIN
+                })
+            }
+
+            if (!isAuthor && !isAdmin) {
+                return {
+                    success: false,
+                    state: GROUP_POST.FORBIDDEN,
+                }
+            }
+
+            await groupPostQueries.delete(data)
+
+            return {
+                success: false,
+                state: GROUP_POST.DELETE_SUCCESS,
+            }
+        } catch (err) {
+            console.error('Delete post error:', err)
+            return {
+                success: false,
+                state: GROUP_POST.SERVER_ERROR,
+            }
+        }
+    }
+
+    // Get post by ID with author info
+    static async getById(data: PostIdInput): Promise<GroupPostResponse<GroupPostWithAuthor>> {
+        try {
+            const post = await groupPostQueries.findById(data)
             if (!post) {
                 return {
                     success: false,
@@ -116,20 +223,12 @@ export class GroupPostService {
     }
 
     // List posts by group (pinned first, then by time desc)
-    static async listByGroup(
-        groupId: string,
-        params: {
-            type?: GroupPostType
-            page?: number
-            pageSize?: number
-        }
-    ): Promise<PaginatedGroupPostResponse<GroupPostWithAuthor>> {
+    static async listByGroup(data: ListPostsByGroupInput): Promise<PaginatedGroupPostResponse<GroupPostWithAuthor>> {
         try {
-            const { type, page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { groupId, type, limit, offset } = data
 
             // Check if group exists
-            const group = await groupQueries.findById(groupId)
+            const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
@@ -137,21 +236,17 @@ export class GroupPostService {
                 }
             }
 
-            const posts = await groupPostQueries.findByGroup(groupId, {
-                type,
-                limit: pageSize,
-                offset,
-            })
+            const posts = await groupPostQueries.findByGroup(data)
 
-            const total = await groupPostQueries.countByGroup(groupId, { type })
+            const total = await groupPostQueries.countByGroup({ groupId, type })
 
             return {
                 success: true,
                 data: {
                     items: posts,
                     total,
-                    page,
-                    pageSize,
+                    limit,
+                    offset,
                 },
                 state: GROUP_POST.GET_SUCCESS,
             }
@@ -165,32 +260,22 @@ export class GroupPostService {
     }
 
     // List posts by author across all groups
-    static async listByAuthor(
-        authorId: string,
-        params: {
-            page?: number
-            pageSize?: number
-        }
-    ): Promise<PaginatedGroupPostResponse<GroupPostWithGroup>> {
+    static async listByAuthor(data: ListPostsByAuthorInput): Promise<PaginatedGroupPostResponse<GroupPostWithGroup>> {
         try {
-            const { page = 1, pageSize = 20 } = params
-            const offset = (page - 1) * pageSize
+            const { authorId, limit, offset } = data
 
-            const posts = await groupPostQueries.findByAuthor(authorId, {
-                limit: pageSize,
-                offset,
-            })
+            const posts = await groupPostQueries.findByAuthor(data)
 
             // Count total posts by author
-            const allPostsCount = await groupPostQueries.countByAuthor(authorId, {})
+            const allPostsCount = await groupPostQueries.countByAuthor({ authorId })
 
             return {
                 success: true,
                 data: {
                     items: posts,
                     total: allPostsCount,
-                    page,
-                    pageSize,
+                    limit,
+                    offset,
                 },
                 state: GROUP_POST.GET_SUCCESS,
             }
@@ -203,119 +288,8 @@ export class GroupPostService {
         }
     }
 
-    // Update post (author or admin only)
-    static async update(
-        id: string,
-        data: UpdateGroupPostData
-    ): Promise<GroupPostResponse<void>> {
-        try {
-            const payload = await AuthService.getCurrentUser()
-            const user = payload.data
-            if (!payload.success || !user) {
-                return { success: false, state: GROUP_POST.UNAUTHORIZED }
-            }
-
-            const post = await groupPostQueries.findById(id)
-            if (!post) {
-                return {
-                    success: false,
-                    state: GROUP_POST.NOT_FOUND,
-                }
-            }
-
-            // Check permission: author or group admin
-            const isAuthor = post.authorId === user.id
-            let isAdmin = false
-
-            if (!isAuthor) {
-                isAdmin = await groupMemberQueries.isRole(
-                    post.groupId,
-                    user.id,
-                    GROUP_MEMBER_ROLE.ADMIN
-                )
-            }
-
-            if (!isAuthor && !isAdmin) {
-                return {
-                    success: false,
-                    state: GROUP_POST.FORBIDDEN,
-                }
-            }
-
-            await groupPostQueries.update(id, {
-                ...data,
-                updatedAt: new Date(),
-            })
-
-            return {
-                success: true,
-                state: GROUP_POST.UPDATE_SUCCESS,
-            }
-        } catch (err) {
-            console.error('Update post error:', err)
-            return {
-                success: false,
-                state: GROUP_POST.SERVER_ERROR,
-            }
-        }
-    }
-
-    // Delete post (author or admin only, cascades reactions/replies)
-    static async delete(id: string): Promise<GroupPostResponse<void>> {
-        try {
-            const payload = await AuthService.getCurrentUser()
-            const user = payload.data
-            if (!payload.success || !user) {
-                return { success: false, state: GROUP_POST.UNAUTHORIZED }
-            }
-
-            const post = await groupPostQueries.findById(id)
-            if (!post) {
-                return {
-                    success: false,
-                    state: GROUP_POST.NOT_FOUND,
-                }
-            }
-
-            // Check permission: author or group admin
-            const isAuthor = post.authorId === user.id
-            let isAdmin = false
-
-            if (!isAuthor) {
-                isAdmin = await groupMemberQueries.isRole(
-                    post.groupId,
-                    user.id,
-                    GROUP_MEMBER_ROLE.ADMIN
-                )
-            }
-
-            if (!isAuthor && !isAdmin) {
-                return {
-                    success: false,
-                    state: GROUP_POST.FORBIDDEN,
-                }
-            }
-
-            await groupPostQueries.delete(id)
-
-            return {
-                success: false,
-                state: GROUP_POST.DELETE_SUCCESS,
-            }
-        } catch (err) {
-            console.error('Delete post error:', err)
-            return {
-                success: false,
-                state: GROUP_POST.SERVER_ERROR,
-            }
-        }
-    }
-
     // Toggle pin status (admin only, with max limit)
-    static async togglePin(
-        id: string,
-        isPinned: boolean
-    ): Promise<GroupPostResponse<void>> {
+    static async togglePin(data: TogglePinInput): Promise<GroupPostResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -323,7 +297,7 @@ export class GroupPostService {
                 return { success: false, state: GROUP_POST.UNAUTHORIZED }
             }
 
-            const post = await groupPostQueries.findById(id)
+            const post = await groupPostQueries.findById(data)
             if (!post) {
                 return {
                     success: false,
@@ -332,11 +306,11 @@ export class GroupPostService {
             }
 
             // Only admin can pin/unpin
-            const isAdmin = await groupMemberQueries.isRole(
-                post.groupId,
-                user.id,
-                GROUP_MEMBER_ROLE.ADMIN
-            )
+            const isAdmin = await groupMemberQueries.checkRole({
+                groupId: post.groupId,
+                userId: user.id,
+                role: GROUP_MEMBER_ROLE.ADMIN,
+            })
             if (!isAdmin) {
                 return {
                     success: false,
@@ -348,8 +322,8 @@ export class GroupPostService {
             }
 
             // Check max pinned limit when pinning
-            if (isPinned && !post.isPinned) {
-                const pinnedCount = await groupPostQueries.countByGroup(post.groupId, { isPinned: true })
+            if (data.isPinned && !post.isPinned) {
+                const pinnedCount = await groupPostQueries.countByGroup({ groupId: post.groupId, isPinned: true })
                 if (pinnedCount >= MAX_PINNED_POSTS) {
                     return {
                         success: false,
@@ -361,11 +335,11 @@ export class GroupPostService {
                 }
             }
 
-            await groupPostQueries.togglePin(id, isPinned)
+            await groupPostQueries.togglePin(data)
 
             return {
                 success: true,
-                state: isPinned ? GROUP_POST.PIN_SUCCESS : GROUP_POST.UNPIN_SUCCESS,
+                state: data.isPinned ? GROUP_POST.PIN_SUCCESS : GROUP_POST.UNPIN_SUCCESS,
             }
         } catch (err) {
             console.error('Toggle pin error:', err)
@@ -376,61 +350,17 @@ export class GroupPostService {
         }
     }
 
-    // Get announcements for a group
-    static async getAnnouncements(
-        groupId: string,
-        params: {
-            pageSize?: number
-        }
-    ): Promise<PaginatedGroupPostResponse<GroupPostWithAuthor>> {
-        try {
-            const { pageSize = 10 } = params
-
-            // Check if group exists
-            const group = await groupQueries.findById(groupId)
-            if (!group) {
-                return {
-                    success: false,
-                    state: GROUP_POST.GROUP_NOT_FOUND,
-                }
-            }
-
-            const posts = await groupPostQueries.findByGroup(groupId, {
-                type: GROUP_POST_TYPE.ANNOUNCEMENT,
-                limit: pageSize,
-                offset: 0,
-            })
-
-            const total = await groupPostQueries.countByGroup(groupId, {
-                type: GROUP_POST_TYPE.ANNOUNCEMENT,
-            })
-
-            return {
-                success: true,
-                data: {
-                    items: posts,
-                    total,
-                    page: 1,
-                    pageSize,
-                },
-                state: GROUP_POST.GET_SUCCESS,
-            }
-        } catch (err) {
-            console.error('Get announcements error:', err)
-            return {
-                success: false,
-                state: GROUP_POST.SERVER_ERROR,
-            }
-        }
-    }
-
-    // Check if user can modify post (helper for other services)
-    static async canModify(postId: string, userId: string): Promise<boolean> {
-        const post = await groupPostQueries.findById(postId)
+    // Check if user can modify post
+    static async checkModify(data: CheckModifyInput): Promise<boolean> {
+        const post = await groupPostQueries.findById({ id: data.postId })
         if (!post) return false
 
-        if (post.authorId === userId) return true
+        if (post.authorId === data.userId) return true
 
-        return groupMemberQueries.isRole(post.groupId, userId, GROUP_MEMBER_ROLE.ADMIN)
+        return groupMemberQueries.checkRole({
+            groupId: post.groupId,
+            userId: data.userId,
+            role: GROUP_MEMBER_ROLE.ADMIN
+        })
     }
 }

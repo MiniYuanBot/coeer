@@ -1,4 +1,4 @@
-export * from './action'
+export * from './shared'
 export * from './auth'
 export * from './feedbacks'
 export * from './groups'

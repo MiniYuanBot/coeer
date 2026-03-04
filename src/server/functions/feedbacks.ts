@@ -1,11 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
 import { FeedbackService } from '../services/FeedbackService'
 import {
+    FeedbackIdSchema,
     CreateFeedbackSchema,
+    ListFeedbacksSchema,
     UpdateFeedbackStatusSchema,
+    ListFeedbackStatusSchema,
+    FeedbackStatsSchema,
 } from '@shared/contracts'
-import { FeedbackStatus } from '@shared/constants'
-import { z } from 'zod'
+
 
 // Create a feedback
 export const createFeedbackFn = createServerFn({ method: 'POST' })
@@ -22,9 +25,9 @@ export const createFeedbackFn = createServerFn({ method: 'POST' })
 
 // Get a feedback with author info by its id
 export const getFeedbackByIdFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: { id: string }) => z.object({ id: z.string() }).parse(data))
+    .inputValidator(FeedbackIdSchema)
     .handler(async ({ data }) => {
-        const result = await FeedbackService.getById(data.id)
+        const result = await FeedbackService.getById(data)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -35,19 +38,9 @@ export const getFeedbackByIdFn = createServerFn({ method: 'GET' })
 
 // Get all feedbacks with optional filters
 export const getFeedbacksFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: {
-        status?: FeedbackStatus;
-        search?: string;
-        page?: number;
-        pageSize?: number
-    }) => data)
+    .inputValidator(ListFeedbacksSchema)
     .handler(async ({ data }) => {
-        const result = await FeedbackService.list({
-            status: data.status,
-            search: data.search,
-            page: data.page || 1,
-            pageSize: data.pageSize || 20,
-        })
+        const result = await FeedbackService.list(data)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -60,8 +53,7 @@ export const getFeedbacksFn = createServerFn({ method: 'GET' })
 export const updateFeedbackStatusFn = createServerFn({ method: 'POST' })
     .inputValidator(UpdateFeedbackStatusSchema)
     .handler(async ({ data }) => {
-        const { id, status, note } = data
-        const result = await FeedbackService.updateStatus(id, { status, note })
+        const result = await FeedbackService.updateStatus(data)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -72,9 +64,9 @@ export const updateFeedbackStatusFn = createServerFn({ method: 'POST' })
 
 // Delete a feedback
 export const deleteFeedbackFn = createServerFn({ method: 'POST' })
-    .inputValidator((data: { id: string }) => z.object({ id: z.string() }).parse(data))
+    .inputValidator(FeedbackIdSchema)
     .handler(async ({ data }) => {
-        const result = await FeedbackService.delete(data.id)
+        const result = await FeedbackService.delete(data)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -85,20 +77,9 @@ export const deleteFeedbackFn = createServerFn({ method: 'POST' })
 
 // Get feedback's change log
 export const getFeedbackStatusLogsFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: {
-        feedbackId: string;
-        page?: number;
-        pageSize?: number
-    }) => z.object({
-        feedbackId: z.string(),
-        page: z.number().optional(),
-        pageSize: z.number().optional()
-    }).parse(data))
+    .inputValidator(ListFeedbackStatusSchema)
     .handler(async ({ data }) => {
-        const result = await FeedbackService.getStatusLogs(data.feedbackId, {
-            page: data.page || 1,
-            pageSize: data.pageSize || 20,
-        })
+        const result = await FeedbackService.getStatusLogs(data)
 
         if (!result.success) {
             throw new Error(result.state.message)
@@ -109,15 +90,9 @@ export const getFeedbackStatusLogsFn = createServerFn({ method: 'GET' })
 
 // Gat feedback statistics
 export const getFeedbackStatsFn = createServerFn({ method: 'GET' })
-    .inputValidator((data: {
-        startDate?: string;
-        endDate?: string
-    }) => data)
+    .inputValidator(FeedbackStatsSchema)
     .handler(async ({ data }) => {
-        const result = await FeedbackService.getStats({
-            startDate: data.startDate,
-            endDate: data.endDate,
-        })
+        const result = await FeedbackService.getStats(data)
 
         if (!result.success) {
             throw new Error(result.state.message)

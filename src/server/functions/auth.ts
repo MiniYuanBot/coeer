@@ -2,7 +2,7 @@ import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { useAppSession } from '~/utils/session'
 import { AuthService } from '~/services'
-import { LoginInput, SignupInput } from '@shared/contracts'
+import { loginSchema, signupSchema } from '@shared/contracts'
 
 export const fetchUserFn = createServerFn({ method: 'GET' })
     .handler(async () => {
@@ -16,13 +16,11 @@ export const fetchUserFn = createServerFn({ method: 'GET' })
     })
 
 export const loginFn = createServerFn({ method: 'POST' })
-    .inputValidator((d: LoginInput) => d)
+    .inputValidator(loginSchema)
     .handler(async ({ data }) => AuthService.login(data))
 
 export const signupFn = createServerFn({ method: 'POST' })
-    .inputValidator(
-        (d: SignupInput & { redirectUrl?: string }) => d,
-    )
+    .inputValidator(signupSchema)
     .handler(async ({ data }) => {
         const result = await AuthService.signup({
             email: data.email,
@@ -33,9 +31,7 @@ export const signupFn = createServerFn({ method: 'POST' })
             return result
         }
 
-        throw redirect({
-            href: data.redirectUrl || '/',
-        })
+        throw redirect({ to: data.redirectUrl || '/' })
     })
 
 export const logoutFn = createServerFn().handler(async () => {
@@ -43,7 +39,5 @@ export const logoutFn = createServerFn().handler(async () => {
 
     session.clear()
 
-    throw redirect({
-        href: '/',
-    })
+    throw redirect({ to: '/' })
 })
