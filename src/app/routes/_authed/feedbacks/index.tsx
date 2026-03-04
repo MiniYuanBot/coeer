@@ -1,8 +1,10 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate,useRouter } from '@tanstack/react-router'
 import z from 'zod'
 import { getFeedbacksFn } from '~/functions'
 import { FeedbackStatus, FEEDBACK_STATUS_ARRAY } from '@shared/constants'
 import { useState } from 'react'
+import {ButtonLink,Button} from '@/components/ui/Button'
+import {Select} from '@/components/ui/Select'
 
 const searchSchema = z.object({
     status: z.enum(FEEDBACK_STATUS_ARRAY).optional(),
@@ -22,7 +24,10 @@ export const Route = createFileRoute('/_authed/feedbacks/')({
         pageSize: 20,
       },
     })
-    return { feedbacks: result?.items || [], total: result?.total || 0 }
+    return { 
+      feedbacks: result?.items || [],   
+      total: result?.total || 0 
+    }
   },
   component: FeedbacksListPage,
 })
@@ -31,9 +36,9 @@ function FeedbacksListPage() {
   const { feedbacks, total } = Route.useLoaderData()
   const { status, q, page } = Route.useSearch()
   const navigate = useNavigate()
-
+  const router = useRouter()
+  const isLoading = router.state.status === 'pending'
   const [deletingId, setDeletingId] = useState<string | null>(null)
-
   const totalPages = Math.ceil(total / 20)
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,7 +63,12 @@ function FeedbacksListPage() {
       setDeletingId(null)
     }
   }
-
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'invalid', label: 'Invalid' },
+  ]
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -73,26 +83,15 @@ function FeedbacksListPage() {
                 placeholder="Search feedbacks..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-              >
-                Search
-              </button>
+              <Button type='submit' variant='secondary' loading={isLoading}>Search</Button> 
             </div>
           </form>
-
-          <select
+          <Select
             value={status || ''}
             onChange={(e) => handleStatusChange(e.target.value as FeedbackStatus || undefined)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="resolved">Resolved</option>
-            <option value="invalid">Invalid</option>
-          </select>
+            options={statusOptions}
+            placeholder="All Status"
+          />
         </div>
       </div>
 
@@ -107,6 +106,7 @@ function FeedbacksListPage() {
           <div className="divide-y divide-gray-200">
             {feedbacks.map((feedback) => (
               <div key={feedback.id} className="p-6 hover:bg-gray-50 transition-colors">
+                
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">

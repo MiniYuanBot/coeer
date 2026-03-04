@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listMyGroupsFn, leaveGroupFn } from '~/functions'
 import { useState } from 'react'
+import {ButtonLink,Button} from '@/components/ui/Button'
 
 const pageSize = 5
 
@@ -56,12 +57,7 @@ function GroupsMyPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">我的群组</h1>
-                <Link
-                    to="/groups/create"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                    创建群组
-                </Link>
+                    <ButtonLink to="/groups/create">创建群组</ButtonLink>
             </div>
 
             <div className="flex gap-2 bg-white p-4 rounded-lg shadow-sm">

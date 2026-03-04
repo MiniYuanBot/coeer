@@ -1,25 +1,38 @@
 import { Link } from '@tanstack/react-router'
+import { ButtonLink,Button} from '../ui/Button'
 
-export function NotFound({ children }: { children?: any }) {
+export function NotFound({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="space-y-2 p-2">
-      <div className="text-gray-600 dark:text-gray-400">
-        {children || <p>The page you are looking for does not exist.</p>}
+    <div className="min-w-30 flex flex-col items-center justify-center text-center p-8">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-9xl font-black text-gray-200 dark:text-gray-700 select-none">
+          404
+        </h1>
+        <div className="mt-4 text-xl text-gray-600 dark:text-gray-300">
+          {children || (
+            <>
+              <p className="font-semibold">Page Not Found</p>
+              <p className="text-base mt-2">
+                The page you are looking for might have been removed, had its name changed,
+                or is temporarily unavailable.
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+          <ButtonLink
+            to="/"
+            variant="outline"
+            className="min-w-30"
+          >Home</ButtonLink>
+          <Button
+            variant="primary"
+            onClick={() => window.history.back()}
+            className="min-w-30"
+          >Go Back</Button>
+        </div>
       </div>
-      <p className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => window.history.back()}
-          className="bg-emerald-500 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-        >
-          Go back
-        </button>
-        <Link
-          to="/"
-          className="bg-cyan-600 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-        >
-          Start Over
-        </Link>
-      </p>
     </div>
   )
 }

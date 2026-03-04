@@ -79,7 +79,7 @@ function PostIndexComponent() {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">{post.title}</h1>
 
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium">
+          <div className="w-10 h-10 rounded-full bg-liner-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium">
             {(post.author.name || '未知用户').charAt(0).toUpperCase()}
           </div>
           <div>

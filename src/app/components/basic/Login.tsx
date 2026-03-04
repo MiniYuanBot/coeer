@@ -22,7 +22,7 @@ export function Login() {
   }
 
   const handleSignupClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    console.log('Signup button clicked')
+   // console.log('Signup button clicked')
     e.preventDefault()
 
     const form = e.currentTarget.form
@@ -31,7 +31,7 @@ export function Login() {
       const email = formData.get('email')
       const password = formData.get('password')
 
-      console.log('Signup form data:', { email, password })
+      //console.log('Signup form data:', { email, password })
 
       signupMutation.mutate({
         data: {
@@ -41,30 +41,30 @@ export function Login() {
       })
     }
   }
+  
+  const afterSubmitContent = loginMutation.data ? (
+    <>
+      <div className="text-red-400">{loginMutation.data.state.message}</div>
+      {loginMutation.data.state.code === 'USER_NOT_FOUND' && (
+        <div>
+          <button
+            className="text-sm text-blue-400 hover:underline hover:text-blue-600"
+            onClick={handleSignupClick}
+            type="button"
+          >
+            Sign up instead?
+          </button>
+        </div>
+      )}
+    </>
+  ) : null
 
   return (
     <AuthForm
       actionText="Login"
       status={loginMutation.status}
       onSubmit={handleSubmit}
-      afterSubmit={
-        loginMutation.data ? (
-          <>
-            <div className="text-red-400">{loginMutation.data.state.message}</div>
-            {loginMutation.data.state.code === 'USER_NOT_FOUND' ? (
-              <div>
-                <button
-                  className="text-blue-500"
-                  onClick={handleSignupClick}
-                  type="button"
-                >
-                  Sign up instead?
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : null
-      }
+      afterSubmit={afterSubmitContent}
     />
   )
 }
