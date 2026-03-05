@@ -1,34 +1,41 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import z from 'zod'
 import { getFeedbackStatusLogsFn } from '~/functions'
-import { FeedbackStatusLogsSchema } from '@shared/contracts'
 
+
+const searchSchema = z.object({
+    page: z.number().default(1),
+})
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/logs')({
-    validateSearch: FeedbackStatusLogsSchema.omit({ feedbackId: true }),
-    loaderDeps: ({ search }) => ({
-        limit: search.limit,
-        offset: search.offset,
-    }),
-    loader: async ({ params, deps }) => {
+    validateSearch: searchSchema,
+    loaderDeps: ({ search }) => ({ search }),
+    loader: async ({ params, deps: { search } }) => {
+        const pageSize = 5
+
         const result = await getFeedbackStatusLogsFn({
             data: {
-                ...deps,
                 feedbackId: params.feedbackId,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
-        return { logs: result?.items || [], total: result?.total || 0 }
+        return { 
+            logs: result?.items || [], 
+            total: result?.total || 0,
+            pageSize
+        }
     },
     component: FeedbackLogsPage,
 })
 
 function FeedbackLogsPage() {
-    const { logs, total } = Route.useLoaderData()
+    const { logs, total, pageSize } = Route.useLoaderData()
     const { feedbackId } = Route.useParams()
-    const { limit, offset } = Route.useSearch()
+    const { page } = Route.useSearch()
     const navigate = useNavigate()
 
-    const totalPages = Math.ceil(total / 20)
-    const currentPage = Math.floor(offset / limit) + 1
+    const totalPages = Math.ceil(total / pageSize)
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -90,23 +97,23 @@ function FeedbackLogsPage() {
                         onClick={() => navigate({
                             to: '/feedbacks/$feedbackId/logs',
                             params: { feedbackId },
-                            search: { offset: offset - limit }
+                            search: { page: page - 1 }
                         })}
-                        disabled={currentPage <= 1}
+                        disabled={page <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
                     <span className="px-4 py-2 text-gray-600">
-                        Page {currentPage} of {totalPages}
+                        Page {page} of {totalPages}
                     </span>
                     <button
                         onClick={() => navigate({
                             to: '/feedbacks/$feedbackId/logs',
                             params: { feedbackId },
-                            search: { offset: offset + limit }
+                            search: { page: page + 1 }
                         })}
-                        disabled={currentPage >= totalPages}
+                        disabled={page >= totalPages}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next

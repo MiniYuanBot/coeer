@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
-import { listGroupPostsFn, deleteGroupPostFn, togglePinPostFn, getGroupBySlugFn } from '~/functions'
-import type { GroupPostWithAuthor } from '@shared/contracts'
+import { listPostsByGroupFn, deleteGroupPostFn, togglePinPostFn, getGroupBySlugFn } from '~/functions'
+import { type GroupPostWithAuthor, GroupPostFilterSchema } from '@shared/contracts'
 import { GroupPostType } from '@shared/constants'
 
 const searchSchema = z.object({
-    type: z.string().optional(),
+    ...GroupPostFilterSchema.shape,
     page: z.number().default(1),
-    pageSize: z.number().default(20),
 })
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/')({
@@ -16,13 +15,14 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/')({
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ context, params, deps: { search } }) => {
         const group = context.group!
+        const pageSize = 5
 
-        const posts = await listGroupPostsFn({
+        const posts = await listPostsByGroupFn({
             data: {
                 groupId: group.id,
-                type: search.type as GroupPostType | undefined,
-                page: search.page,
-                pageSize: search.pageSize,
+                type: search.type,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             }
         })
 
@@ -30,8 +30,8 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/')({
             posts: posts?.items || [],
             total: posts?.total || 0,
             page: search.page,
-            pageSize: search.pageSize,
-            type: search.type as GroupPostType | undefined,
+            pageSize: pageSize,
+            type: search.type,
         }
     },
     component: PostsListPage,
@@ -200,9 +200,9 @@ function PostsListPage() {
                             <div className="flex items-center justify-between text-sm text-gray-500">
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
-                                        {(post.author.name || '未知用户').charAt(0).toUpperCase()}
+                                        {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="font-medium text-gray-900">{post.author.name}</span>
+                                    <span className="font-medium text-gray-900">{post.author?.name}</span>
                                     <span>•</span>
                                     <time dateTime={post.createdAt.toString()}>
                                         {new Date(post.createdAt).toLocaleDateString()}

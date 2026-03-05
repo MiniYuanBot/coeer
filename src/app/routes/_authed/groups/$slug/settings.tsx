@@ -51,7 +51,7 @@ function GroupSettingsPage() {
         setDeleteLoading(true)
 
         try {
-            await deleteGroupFn({ data: { id: group.id } })
+            await deleteGroupFn({ data: { groupId: group.id } })
             navigate({ to: '/groups/my' })
         } finally {
             setDeleteLoading(false)

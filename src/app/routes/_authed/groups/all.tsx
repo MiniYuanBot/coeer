@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
-import { listApprovedGroupsFn } from '~/functions'
-import {ButtonLink,Button} from '@/components/ui/Button'
-
-const pageSize = 5
+import { listAllGroupsFn } from '~/functions'
+import { ButtonLink, Button } from '@/components/ui/Button'
+import { GroupFilterSchema } from '@shared/contracts'
+import { GroupCategory } from '@shared/constants'
 
 const searchSchema = z.object({
-    category: z.string().optional(),
-    q: z.string().optional(),
+    ...GroupFilterSchema.shape,
     page: z.number().default(1),
 })
 
@@ -15,25 +14,28 @@ export const Route = createFileRoute('/_authed/groups/all')({
     validateSearch: searchSchema,
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ deps: { search } }) => {
-        const result = await listApprovedGroupsFn({
+        const pageSize = 5
+
+        const result = await listAllGroupsFn({
             data: {
-                category: search.category as any,
-                search: search.q,
-                page: search.page,
-                pageSize: pageSize,
+                category: search.category,
+                search: search.search,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
         return {
             groups: result?.items ?? [],
-            total: result?.total ?? 0
+            total: result?.total ?? 0,
+            pageSize
         }
     },
     component: GroupsAllPage,
 })
 
 function GroupsAllPage() {
-    const { groups, total } = Route.useLoaderData()
-    const { category, q, page } = Route.useSearch()
+    const { groups, total, pageSize } = Route.useLoaderData()
+    const { category, search, page } = Route.useSearch()
     const navigate = Route.useNavigate()
 
     const totalPages = Math.ceil(total / pageSize)
@@ -49,11 +51,11 @@ function GroupsAllPage() {
                 <input
                     type="text"
                     placeholder="搜索群组..."
-                    defaultValue={q}
+                    defaultValue={search}
                     onChange={(e) => {
                         const value = e.target.value
                         navigate({
-                            search: (prev) => ({ ...prev, q: value || undefined, page: 1 }),
+                            search: (prev) => ({ ...prev, search: value || undefined, page: 1 }),
                         })
                     }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -61,7 +63,7 @@ function GroupsAllPage() {
                 <select
                     value={category || ''}
                     onChange={(e) => {
-                        const value = e.target.value
+                        const value = e.target.value as GroupCategory
                         navigate({
                             search: (prev) => ({
                                 ...prev,

@@ -1,34 +1,46 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import z from 'zod'
 import { getFeedbacksFn, updateFeedbackStatusFn } from '~/functions'
 import { FeedbackStatus } from '@shared/constants'
 import { useState } from 'react'
-import { ListFeedbacksSchema } from '@shared/contracts'
+import { FeedbackFilterSchema } from '@shared/contracts'
 
+
+const searchSchema = z.object({
+    ...FeedbackFilterSchema.shape,
+    page: z.number().default(1),
+})
 
 export const Route = createFileRoute('/_authed/admin/feedbacks/pending')({
-    validateSearch: ListFeedbacksSchema,
-    loaderDeps: ({ search }) => search,
-    loader: async ({ deps }) => {
+    validateSearch: searchSchema,
+    loaderDeps: ({ search }) => ({ search }),
+    loader: async ({ deps: { search } }) => {
+        const pageSize = 5
+
         const result = await getFeedbacksFn({
             data: {
-                ...deps,
-                status: 'pending' as FeedbackStatus,
+                status: 'pending',
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
-        return { feedbacks: result?.items || [], total: result?.total || 0 }
+        return {
+            feedbacks: result?.items || [],
+            total: result?.total || 0,
+            pageSize
+        }
     },
     component: AdminPendingFeedbacksPage,
 })
 
 function AdminPendingFeedbacksPage() {
-    const { feedbacks, total } = Route.useLoaderData()
-    const { limit, offset } = Route.useSearch()
+    const { feedbacks, total, pageSize } = Route.useLoaderData()
+    const { targetType, status, search, page } = Route.useSearch()
     const navigate = useNavigate()
 
     const [processingId, setProcessingId] = useState<string | null>(null)
 
-    const totalPages = Math.ceil(total / 20)
-    const currentPage = Math.floor(offset / limit) + 1
+    const totalPages = Math.ceil(total / pageSize)
 
     const handleQuickProcess = async (id: string) => {
         setProcessingId(id)
@@ -123,18 +135,18 @@ function AdminPendingFeedbacksPage() {
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { offset: offset - limit } })}
-                        disabled={currentPage <= 1}
+                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { page: page - 1 } })}
+                        disabled={page <= 1}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
                     <span className="px-4 py-2 text-gray-600">
-                        Page {currentPage} of {totalPages}
+                        Page {page} of {totalPages}
                     </span>
                     <button
-                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { offset: offset + limit } })}
-                        disabled={currentPage >= totalPages}
+                        onClick={() => navigate({ to: '/admin/feedbacks/pending', search: { page: page + 1 } })}
+                        disabled={page >= totalPages}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next

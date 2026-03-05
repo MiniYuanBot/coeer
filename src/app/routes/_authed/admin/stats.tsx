@@ -1,22 +1,20 @@
 import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
+import z from 'zod'
 import { getFeedbackStatsFn } from '~/functions'
 
-type SearchParams = {
-    startDate?: string
-    endDate?: string
-}
+const searchSchema = z.object({
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+})
 
 export const Route = createFileRoute('/_authed/admin/stats')({
-    validateSearch: (search: Record<string, unknown>): SearchParams => ({
-        startDate: (search.startDate as string) || '',
-        endDate: (search.endDate as string) || '',
-    }),
+    validateSearch: searchSchema,
     loaderDeps: ({ search }) => search,
     loader: async ({ deps }) => {
         const result = await getFeedbackStatsFn({
             data: {
-                startDate: deps.startDate || undefined,
-                endDate: deps.endDate || undefined,
+                startDate: deps.startDate,
+                endDate: deps.endDate,
             },
         })
         if (!result) {
@@ -45,8 +43,8 @@ function AdminStatsPage() {
         navigate({
             to: '/admin/stats',
             search: {
-                startDate: formData.get('startDate') as string,
-                endDate: formData.get('endDate') as string,
+                startDate: new Date(formData.get('startDate') as string),
+                endDate: new Date(formData.get('endDate') as string),
             },
         })
     }
@@ -61,7 +59,7 @@ function AdminStatsPage() {
                         <input
                             name="startDate"
                             type="date"
-                            defaultValue={startDate}
+                            defaultValue={startDate?.toString()}
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -70,7 +68,7 @@ function AdminStatsPage() {
                         <input
                             name="endDate"
                             type="date"
-                            defaultValue={endDate}
+                            defaultValue={endDate?.toString()}
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>

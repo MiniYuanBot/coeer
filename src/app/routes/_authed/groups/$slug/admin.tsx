@@ -1,23 +1,45 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { approveGroupFn, listPendingGroupsFn } from '~/functions'
+import { z } from 'zod'
+import { approveGroupFn, listAllGroupsFn } from '~/functions'
 import { useState } from 'react'
 
+
+const searchSchema = z.object({
+    page: z.number().default(1),
+})
+
 export const Route = createFileRoute('/_authed/groups/$slug/admin')({
-    loader: async () => {
-        const result = await listPendingGroupsFn({ data: { page: 1, pageSize: 10 } })
-        return { pendingGroups: result?.items ?? [] }
+    validateSearch: searchSchema,
+    loaderDeps: ({ search }) => ({ search }),
+    loader: async ({ deps: { search } }) => {
+        const pageSize = 5
+
+        const result = await listAllGroupsFn({
+            data: {
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
+            }
+        })
+        return {
+            pendingGroups: result?.items ?? [],
+            total: result?.total ?? 0,
+            pageSize
+        }
     },
     component: GroupAdminPage,
 })
 
 function GroupAdminPage() {
-    const { pendingGroups } = Route.useLoaderData()
+    const { pendingGroups, total, pageSize } = Route.useLoaderData()
+    const { page } = Route.useSearch()
     const { group } = Route.useRouteContext()
-    const navigate = useNavigate()
+    const navigate = Route.useNavigate()
     const { slug } = Route.useParams()
 
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [rejectReason, setRejectReason] = useState<Record<string, string>>({})
+
+    const totalPages = Math.ceil(total / pageSize)
 
     const handleApprove = async (groupId: string) => {
         setProcessingId(groupId)
@@ -136,6 +158,36 @@ function GroupAdminPage() {
             {pendingGroups.length === 0 && (
                 <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                     <p className="text-gray-500">暂无待审核群组</p>
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                    <button
+                        disabled={page <= 1}
+                        onClick={() =>
+                            navigate({
+                                search: (prev) => ({ ...prev, page: prev.page - 1 }),
+                            })
+                        }
+                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
+                    >
+                        上一页
+                    </button>
+                    <span className="text-sm text-gray-600">
+                        {page} / {totalPages}
+                    </span>
+                    <button
+                        disabled={page >= totalPages}
+                        onClick={() =>
+                            navigate({
+                                search: (prev) => ({ ...prev, page: prev.page + 1 }),
+                            })
+                        }
+                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
+                    >
+                        下一页
+                    </button>
                 </div>
             )}
         </div>
