@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
-import { getGroupBySlugFn, isRoleFn } from '~/functions'
+import { getGroupBySlugFn, checkRoleFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/groups/$slug')({
     beforeLoad: async ({ params, context }) => {
@@ -9,8 +9,8 @@ export const Route = createFileRoute('/_authed/groups/$slug')({
         }
 
         const user = context.user!
-        const isAdmin = await isRoleFn({ data: { groupId: group.id, userId: user.id, role: 'admin' } })
-        const isMember = await isRoleFn({ data: { groupId: group.id, userId: user.id, role: 'member' } })
+        const isAdmin = await checkRoleFn({ data: { groupId: group.id, userId: user.id, role: 'admin' } })
+        const isMember = await checkRoleFn({ data: { groupId: group.id, userId: user.id, role: 'member' } })
 
         return { group, isAdmin, isMember }
     },

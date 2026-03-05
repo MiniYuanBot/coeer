@@ -1,12 +1,11 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { serial } from 'drizzle-orm/mysql-core'
 import z from 'zod'
-import { getAnnouncementsFn, getGroupBySlugFn } from '~/functions'
+import { listPostsByGroupFn, getGroupBySlugFn } from '~/functions'
+import { GroupPostFilterSchema } from '@shared/contracts'
 
 const searchSchema = z.object({
-    type: z.string().optional(),
+    ...GroupPostFilterSchema.shape,
     page: z.number().default(1),
-    pageSize: z.number().default(10),
 })
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/announcements')({
@@ -15,11 +14,14 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/announcements'
     loader: async ({ context, params, deps: { search } }) => {
         try {
             const group = context.group!
+            const pageSize = 5
 
-            const result = await getAnnouncementsFn({
+            const result = await listPostsByGroupFn({
                 data: {
                     groupId: group.id,
-                    pageSize: search.pageSize,
+                    type: 'announcement',
+                    limit: pageSize,
+                    offset: (search.page - 1) * pageSize,
                 }
             })
             if (!result) {
@@ -93,9 +95,9 @@ function AnnouncementsPage() {
 
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium text-xs">
-                                    {(post.author.name || '未知用户').charAt(0).toUpperCase()}
+                                    {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                 </div>
-                                <span className="font-medium text-gray-900">{post.author.name}</span>
+                                <span className="font-medium text-gray-900">{post.author?.name}</span>
                                 <span>•</span>
                                 <time dateTime={post.createdAt.toString()}>
                                     {new Date(post.createdAt).toLocaleDateString()}

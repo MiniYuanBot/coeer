@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { getGroupMembersFn, approveMemberFn, removeMemberFn, updateMemberRoleFn } from '~/functions'
+import { getGroupMembersFn, removeMemberFn, updateMemberRoleFn } from '~/functions'
 import { useState } from 'react'
-import { GroupMemberRole } from '@shared/constants'
+import { GROUP_MEMBER_STATUS, GroupMemberRole } from '@shared/constants'
+import { GroupMemberFilterSchema } from '@shared/contracts'
 
 const searchSchema = z.object({
-    status: z.string().optional(),
+    ...GroupMemberFilterSchema.shape,
     page: z.number().default(1),
 })
 
@@ -14,15 +15,22 @@ export const Route = createFileRoute('/_authed/groups/$slug/members')({
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ context, deps: { search } }) => {
         const { group } = context
+        const pageSize = 5
+
         const result = await getGroupMembersFn({
             data: {
                 groupId: group.id,
                 status: search.status as any,
-                page: search.page,
-                pageSize: 20,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
-        return { members: result?.items ?? [], total: result?.total ?? 0, group }
+        return {
+            members: result?.items ?? [],
+            total: result?.total ?? 0,
+            group,
+            pageSize,
+        }
     },
     component: GroupMembersPage,
 })
@@ -40,7 +48,7 @@ function GroupMembersPage() {
     const handleApprove = async (memberId: string) => {
         setProcessingId(memberId)
         try {
-            await approveMemberFn({ data: { memberId } })
+            await updateMemberRoleFn({ data: { memberId, status: 'approved' } })
             // Refresh
             navigate({
                 to: '/groups/$slug/members',
@@ -90,9 +98,9 @@ function GroupMembersPage() {
                 <h2 className="text-xl font-semibold text-gray-900">群组成员</h2>
                 <div className="flex gap-2">
                     {[
-                        { value: '', label: '全部' },
-                        { value: 'approved', label: '已通过' },
-                        { value: 'pending', label: '待审核' },
+                        { value: undefined, label: '全部' },
+                        { value: GROUP_MEMBER_STATUS.APPROVED, label: '已通过' },
+                        { value: GROUP_MEMBER_STATUS.PENDING, label: '待审核' },
                     ].map((item) => (
                         <Link
                             key={item.value || 'all'}
@@ -100,8 +108,8 @@ function GroupMembersPage() {
                             params={{ slug }}
                             search={{ status: item.value || undefined, page: 1 }}
                             className={`px-3 py-1 rounded-full text-sm ${(status || '') === item.value
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             {item.label}

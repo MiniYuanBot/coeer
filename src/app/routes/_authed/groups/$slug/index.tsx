@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { joinGroupFn } from '~/functions'
 import { useState } from 'react'
-import { isAbsolute } from 'path'
+
 
 export const Route = createFileRoute('/_authed/groups/$slug/')({
     component: GroupHomePage,

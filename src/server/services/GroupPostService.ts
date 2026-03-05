@@ -6,7 +6,7 @@ import type {
     PaginatedGroupPostResponse,
     CreateGroupPostInput,
     UpdateGroupPostInput,
-    PostIdInput,
+    GroupPostIdInput,
     ListPostsByGroupInput,
     ListPostsByAuthorInput,
     TogglePinInput,
@@ -147,7 +147,7 @@ export class GroupPostService {
     }
 
     // Delete post (author or admin only, cascades reactions/replies)
-    static async delete(data: PostIdInput): Promise<GroupPostResponse<void>> {
+    static async delete(data: GroupPostIdInput): Promise<GroupPostResponse<void>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -198,7 +198,7 @@ export class GroupPostService {
     }
 
     // Get post by ID with author info
-    static async getById(data: PostIdInput): Promise<GroupPostResponse<GroupPostWithAuthor>> {
+    static async getById(data: GroupPostIdInput): Promise<GroupPostResponse<GroupPostWithAuthor>> {
         try {
             const post = await groupPostQueries.findById(data)
             if (!post) {

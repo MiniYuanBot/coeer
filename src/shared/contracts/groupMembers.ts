@@ -16,8 +16,8 @@ export const GroupMemberIdSchema = z.object({
 
 export const UpdateGroupMemberSchema = z.object({
     memberId: z.uuid(),
-    status: z.enum(GROUP_MEMBER_STATUS_ARRAY),
-    role: z.enum(GROUP_MEMBER_ROLE_ARRAY),
+    status: z.enum(GROUP_MEMBER_STATUS_ARRAY).optional(),
+    role: z.enum(GROUP_MEMBER_ROLE_ARRAY).default('member'),
 })
 
 export const GroupMemberFilterSchema = z.object({

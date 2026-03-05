@@ -35,7 +35,6 @@ export const FeedbackFilterSchema = z.object({
 })
 
 export const CountFeedbacksSchema = z.object({
-    authorId: z.uuid(),
     ...FeedbackFilterSchema.shape,
 })
 
@@ -58,7 +57,7 @@ export const UpdateFeedbackStatusSchema = z.object({
     id: z.uuid(),
     status: z.enum(FEEDBACK_STATUS_ARRAY),
     search: z.string().optional(),
-    authorId: z.uuid(),
+    authorId: z.uuid().optional(),
     note: z.string().max(1000).optional(),
 })
 

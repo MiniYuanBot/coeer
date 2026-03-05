@@ -2,12 +2,13 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listMyGroupsFn, leaveGroupFn } from '~/functions'
 import { useState } from 'react'
-import {ButtonLink,Button} from '@/components/ui/Button'
+import { ButtonLink, Button } from '@/components/ui/Button'
+import { GroupFilterSchema } from '@shared/contracts'
+import { GROUP_STATUS } from '@shared/constants'
 
-const pageSize = 5
 
 const searchSchema = z.object({
-    status: z.string().optional(),
+    ...GroupFilterSchema.shape,
     page: z.number().default(1),
 })
 
@@ -15,23 +16,26 @@ export const Route = createFileRoute('/_authed/groups/my')({
     validateSearch: searchSchema,
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ deps: { search } }) => {
+        const pageSize = 5
+
         const result = await listMyGroupsFn({
             data: {
-                status: search.status as any,
-                page: search.page,
-                pageSize: pageSize,
+                status: search.status,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
         return {
             members: result?.items ?? [],
-            total: result?.total ?? 0
+            total: result?.total ?? 0,
+            pageSize
         }
     },
     component: GroupsMyPage,
 })
 
 function GroupsMyPage() {
-    const { members, total } = Route.useLoaderData()
+    const { members, total, pageSize } = Route.useLoaderData()
     const { status, page } = Route.useSearch()
     const navigate = useNavigate()
     const [leavingId, setLeavingId] = useState<string | null>(null)
@@ -57,14 +61,14 @@ function GroupsMyPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">我的群组</h1>
-                    <ButtonLink to="/groups/create">创建群组</ButtonLink>
+                <ButtonLink to="/groups/create">创建群组</ButtonLink>
             </div>
 
             <div className="flex gap-2 bg-white p-4 rounded-lg shadow-sm">
                 {[
-                    { value: '', label: '全部' },
-                    { value: 'approved', label: '已通过' },
-                    { value: 'pending', label: '审核中' },
+                    { value: undefined, label: '全部' },
+                    { value: GROUP_STATUS.APPROVED, label: '已通过' },
+                    { value: GROUP_STATUS.PENDING, label: '审核中' },
                 ].map((item) => (
                     <Link
                         key={item.value || 'all'}

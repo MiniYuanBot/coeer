@@ -80,10 +80,10 @@ function PostIndexComponent() {
 
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-gray-100">
           <div className="w-10 h-10 rounded-full bg-liner-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium">
-            {(post.author.name || '未知用户').charAt(0).toUpperCase()}
+            {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{post.author.name}</p>
+            <p className="font-medium text-gray-900">{post.author?.name}</p>
             <p className="text-sm text-gray-500">
               <time dateTime={post.createdAt.toString()}>
                 {new Date(post.createdAt).toLocaleDateString(undefined, {

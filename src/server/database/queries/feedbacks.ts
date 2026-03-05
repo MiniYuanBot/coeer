@@ -56,12 +56,14 @@ function buildWhereClause(params: {
 
 export const feedbackQueries = {
     // Create a feedback
-    async create(data: NewFeedback): Promise<void> {
+    async create(data: NewFeedback): Promise<Feedback> {
         const [feedback] = await db.insert(feedbacks).values(data).returning()
         
         if (!feedback) {
             throw new Error('Create failed')
         }
+
+        return feedback
     },
 
     // Update feedback status

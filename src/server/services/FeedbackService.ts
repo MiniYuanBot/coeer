@@ -117,7 +117,7 @@ export class FeedbackService {
                 // Admin sees all feedbacks
                 items = await feedbackQueries.findAll(data) as FeedbackWithAuthor[]
 
-                total = await feedbackQueries.count({ authorId: user.id, status: data.status, search: data.search })
+                total = await feedbackQueries.count({ status: data.status, search: data.search })
             } else {
                 // Regular user sees only their own feedbacks
                 items = await feedbackQueries.findByAuthorId(data)
@@ -125,7 +125,6 @@ export class FeedbackService {
                 total = await feedbackQueries.count({
                     status,
                     search,
-                    authorId: user.id
                 })
             }
 
