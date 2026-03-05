@@ -43,7 +43,7 @@ export function TextLink({
             'mobile-menu-item-base',
             'mobile-menu-text',
             isActive && 'font-semibold text-accent mobile-active-indicator'
-        ].filter(Boolean).join(' ')
+        ].filter(Boolean).join(' ')        
     ].filter(Boolean).join(' ')
 
     if (isExternal) {

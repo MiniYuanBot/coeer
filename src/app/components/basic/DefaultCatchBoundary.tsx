@@ -1,11 +1,11 @@
 import {
   ErrorComponent,
-  Link,
   rootRouteId,
   useMatch,
   useRouter,
 } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
+import { ButtonLink, Button } from '../ui/Button'  // 与 NotFound 保持一致
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter()
@@ -17,36 +17,39 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   console.error(error)
 
   return (
-    <div className="min-w-0 flex-1 p-4 flex flex-col items-center justify-center gap-6">
-      <ErrorComponent error={error} />
-      <div className="flex gap-2 items-center flex-wrap">
-        <button
-          onClick={() => {
-            router.invalidate()
-          }}
-          className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
-        >
-          Try Again
-        </button>
-        {isRoot ? (
-          <Link
-            to="/"
-            className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
+    <div className="min-w-30 flex flex-col items-center justify-center text-center p-8">
+      <div className="max-w-md mx-auto">
+        
+        <div className="mb-6">
+          <ErrorComponent error={error} />
+        </div>
+
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+           {isRoot ? (
+            <ButtonLink
+              to="/"
+              variant="outline"
+              className="min-w-30"
+            >
+              Home
+            </ButtonLink>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+              className="min-w-30"
+            >
+              Go Back
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            onClick={() => router.invalidate()}
+            className="min-w-30"
           >
-            Home
-          </Link>
-        ) : (
-          <Link
-            to="/"
-            className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
-            onClick={(e) => {
-              e.preventDefault()
-              window.history.back()
-            }}
-          >
-            Go Back
-          </Link>
-        )}
+            Try Again
+          </Button>
+        </div>
       </div>
     </div>
   )

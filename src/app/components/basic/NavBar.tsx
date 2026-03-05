@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import {ButtonLink} from '../ui/Button'
 
 interface NavBarProps {
     user?: {
@@ -6,66 +6,30 @@ interface NavBarProps {
         role: "student" | "moderator" | "admin"
     } | null
 }
+const NavBaractive="!bg-gray-100 border-x border-gray-300 text-gray-900 font-medium"
 
 export function NavBar({ user }: NavBarProps) {
     return (
-        <div className="p-2 flex gap-2 text-lg">
-            <Link
-                to="/"
-                activeProps={{
-                    className: 'font-bold',
-                }}
-                activeOptions={{ exact: true }}
-            >
-                Home
-            </Link>{' '}
-            {/* <Link
-                to="/posts"
-                activeProps={{
-                    className: 'font-bold',
-                }}
-            >
-                Posts
-            </Link> */}
-            <Link
-                to="/profile"
-                activeProps={{
-                    className: 'font-bold',
-                }}
-            >
-                Profile
-            </Link>
-            <Link
-                to="/feedbacks"
-                activeProps={{
-                    className: 'font-bold',
-                }}
-            >
-                Feedbacks
-            </Link>
-            <Link
-                to="/groups"
-                activeProps={{
-                    className: 'font-bold',
-                }}
-            >
-                Groups
-            </Link>
-            <div className="ml-auto">
+        <div className=" py-2 px-2 flex gap-2 text-lg">
+            <ButtonLink to="/" variant="Navbar"  exact activeClassName={NavBaractive}>Home</ButtonLink>
+            <ButtonLink to="/profile" variant="Navbar" activeClassName={NavBaractive}>Profile</ButtonLink>
+            <ButtonLink to="/feedbacks" variant="Navbar" activeClassName={NavBaractive}>Feedbacks</ButtonLink>
+            <ButtonLink to="/groups" variant="Navbar" activeClassName={NavBaractive}>Groups</ButtonLink>
+            <div className="ml-auto flex items-center gap-2">
                 {user ? (
-                    <>
-                        <span className="mr-2">{user.email}</span>
+                     <>
+                        <span className="text-sm text-gray-600">{user.email}</span>
                         {user.role === 'admin' && (
-                            <Link to="/admin">Admin</Link>
-                        )}
-                        <Link to="/logout">Logout</Link>
-                    </>
+                            <ButtonLink to="/admin" variant="Navbar" activeClassName={NavBaractive} >Admin</ButtonLink>
+                         )}
+                        <ButtonLink to="/logout" variant="danger" size='sm'>Logout</ButtonLink>
+                     </>
                 ) : (
                     <>
-                        <Link to="/login">Login</Link>
-                        <Link to="/signup">Signup</Link>
+                        <ButtonLink to="/login" variant="Navbar">Login</ButtonLink>
+                        <ButtonLink to="/signup" variant="primary">Signup</ButtonLink>
                     </>
-                )}
+                 )}
             </div>
         </div>
     )

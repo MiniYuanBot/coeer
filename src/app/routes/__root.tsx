@@ -87,7 +87,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <NavBar user={user} />
-        <hr />
+        <hr className="border-t-2 border-gray-300 my-0" />
         {children}
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
