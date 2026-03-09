@@ -1,6 +1,6 @@
 # COEER
 
-目前还出在开发阶段，尚未部署。整体上使用分层架构设计，自底向上分为数据层、业务层、应用层和表现层。
+目前还出在开发阶段，尚未部署，故数据库仍使用本地数据库。项目整体上使用分层架构设计，自底向上分为数据层、业务层、应用层和表现层。
 
 ## Tech Stack
 
@@ -69,7 +69,18 @@ pnpm dev
 pnpm preview
 ```
 
-项目中也有一些数据库种子，但是数据库结构有变，种子还未修改，可能有错。详见 `package.json`
+项目中也有一些数据库种子，详见 `package.json`。为了快速测试，可以使用：
+
+```sh
+# 注入测试用户
+pnpm seed:users
+pnpm seed:feedbacks
+
+# 或者直接统一注入
+pnpm seed:all
+```
+
+更多的种子还需要补全。
 
 ## Project Architecture
 
@@ -78,6 +89,19 @@ pnpm preview
 ### Environment Variables
 
 环境变量配置方面，所有前端会用到的环境变量（以`VITE_` 开头）在 `src/vite-env.d.ts` 中。后端可以使用前端环境变量以及 server-only 的环境变量，定义在 `src/server/config` 中
+
+### Shared Files
+
+在 `shared` 文件夹下主要放置了项目常量、zod 类型检查方法以及前后端统一的字段结构。这一部分的根目录是 `shared`
+
+- 项目常量：`./constants`
+- zod 类型检查方法：`./constracts` 中各文件的前半部分
+- 前后端统一的字段结构：`./constracts` 中各文件的后半部分
+
+这一块之前有一点混乱，后续应当考虑
+
+- 尽量区别 interface 和 type 的使用，并且将 interface 分离
+
 
 ### Data Access Layer
 
@@ -138,6 +162,8 @@ pnpm preview
 ### TODO List
 
 目前的任务：
-1. 表现层构建约等于 0，或者说我目前对于表现层还没有任何规划
-2. 加快建设剩余功能系统
-3. 依据前端设计对后端进行修改与修正
+1. 修改规划中有关类型的问题
+2. 表现层构建约等于 0，或者说我暂时不想先处理表现层
+3. 加快建设剩余功能系统
+4. 依据前端设计对后端进行修改与修正
+5. 添加各功能的种子

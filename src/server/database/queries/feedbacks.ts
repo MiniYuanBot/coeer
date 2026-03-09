@@ -67,7 +67,7 @@ export const feedbackQueries = {
     },
 
     // Update feedback status
-    async update(data: UpdateFeedbackInput): Promise<void> {
+    async update(data: UpdateFeedbackInput): Promise<Feedback> {
         const [feedback] = await db.update(feedbacks)
             .set({
                 status: data.status,
@@ -80,10 +80,12 @@ export const feedbackQueries = {
         if (!feedback) {
             throw new Error('Update failed')
         }
+
+        return feedback
     },
 
     // Delete a feedback
-    async delete(data: FeedbackIdInput): Promise<void> {
+    async delete(data: FeedbackIdInput): Promise<Feedback> {
         const [feedback] = await db
         .delete(feedbacks)
         .where(eq(feedbacks.id, data.id))
@@ -92,6 +94,8 @@ export const feedbackQueries = {
         if (!feedback) {
             throw new Error('Delete failed')
         }
+
+        return feedback
     },
 
     // Find a feedback by its ID
@@ -157,7 +161,7 @@ export const feedbackQueries = {
     },
 
     // Get feedback status
-    // async getStats(): Promise<FeedbackStatus[]> {
+    // async getStats(): Promise<{status: FeedbackStatus, count: number}[]> {
     //     const stats = await db
     //         .select({
     //             status: feedbacks.status,

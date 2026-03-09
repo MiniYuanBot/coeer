@@ -1,11 +1,9 @@
 import { z } from 'zod';
-import { UserRole, AuthCode } from '../constants'
-import { ActionResponse } from './shared';
+import { AuthCode } from '../constants'
+import { DbUser } from '~/database/schemas'
+import { emailSchema, passwordSchema, ActionResponse } from './shared';
 
 // ===== Zod Schemas ======
-
-export const emailSchema = z.email('Please enter a valid email address')
-export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters')
 
 export const loginSchema = z.object({
     email: emailSchema,
@@ -22,24 +20,12 @@ export const signupSchema = z.object({
     // grade: z.number().min(1).max(8).optional()
 });
 
-// export const passwordResetSchema = z.object({
-//     email: emailSchema
-// });
-
 // ===== Typescript Types =====
 
 // Types from Zod
-export type LoginInput = z.infer<typeof loginSchema>;
-export type SignupInput = z.infer<typeof signupSchema>;
-// export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
-
-export type SessionUser = {
-    id: string
-    email: string
-    role: UserRole
-    name: string | null
-    lastUpdated: number
-}
+export type LoginInput = z.infer<typeof loginSchema>
+export type SignupInput = z.infer<typeof signupSchema>
+export type SessionUser = Pick<DbUser, 'id' | 'email' | 'role' | 'name'> & { lastUpdated: number, }
 
 export type SessionUserResponse<T> = ActionResponse<T, AuthCode>
 export type LoginResponse<T> = ActionResponse<T, AuthCode>

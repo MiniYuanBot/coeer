@@ -2,7 +2,13 @@ import { useAppSession } from '../utils/session'
 import { userQueries } from '../database/queries/users'
 import { verifyPassword, hashPassword } from '../utils/password'
 import type {
-    LoginInput, SignupInput, LoginResponse, SignupResponse, LogoutResponse, SessionUserResponse, SessionUser
+    LoginInput,
+    SignupInput,
+    LoginResponse,
+    SignupResponse,
+    LogoutResponse,
+    SessionUserResponse,
+    SessionUser
 } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
 
@@ -34,7 +40,7 @@ export class AuthService {
 
     static async login(data: LoginInput): Promise<LoginResponse<void>> {
         try {
-            const user = await userQueries.findByEmail(data.email)
+            const user = await userQueries.findByEmail(data)
 
             if (!user) {
                 return { success: false, state: AUTH.NOT_FOUND }
@@ -63,7 +69,7 @@ export class AuthService {
 
     static async signup(data: SignupInput): Promise<SignupResponse<void>> {
         try {
-            const existing = await userQueries.findByEmail(data.email)
+            const existing = await userQueries.findByEmail(data)
 
             if (existing) {
                 const isValid = await verifyPassword(data.password, existing.passwordHash)

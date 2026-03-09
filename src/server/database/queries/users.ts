@@ -1,7 +1,46 @@
-import { eq, like, and, sql, count } from 'drizzle-orm'
+import { eq, like, and, count, inArray, ilike, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { type DbUser, type NewDbUser, users } from '../schemas'
 import { UserRole } from '@shared/constants'
+import {
+    EmailInput,
+    UpdateUserInput,
+    UserIdInput,
+    ListUsersInput,
+    CountUsersInput,
+    UsersWithProfile,
+} from '@shared/contracts/users'
+
+// Private query condition builder
+function buildWhereClause(params: {
+    id?: string
+    role?: UserRole | UserRole[]
+    search?: string
+}): SQL | undefined {
+    const { id, role, search } = params
+    const conditions: SQL[] = []
+
+    if (id) {
+        conditions.push(eq(users.id, id))
+    }
+
+    if (role) {
+        if (Array.isArray(role)) {
+            conditions.push(inArray(users.role, role))
+        } else {
+            conditions.push(eq(users.role, role))
+        }
+    }
+
+    if (search) {
+        const searchCondition = ilike(users.name, `%${search}%`)
+        if (searchCondition) {
+            conditions.push(searchCondition)
+        }
+    }
+
+    return conditions.length > 0 ? and(...conditions) : undefined
+}
 
 // All user here refers to DbUser, namely with sensitive info
 export const userQueries = {
@@ -11,23 +50,33 @@ export const userQueries = {
         return user
     },
 
+    // Update user basic info
+    async update(data: UpdateUserInput): Promise<DbUser> {
+        const [user] = await db
+            .update(users)
+            .set(data)
+            .where(eq(users.id, data.id))
+            .returning()
+        return user
+    },
+
     // Delete user
-    async delete(id: string): Promise<void> {
-        await db.delete(users).where(eq(users.id, id))
+    async delete(data: UserIdInput): Promise<void> {
+        await db.delete(users).where(eq(users.id, data.id))
     },
 
     // Find user by its id
-    async findById(id: string): Promise<DbUser | undefined> {
+    async findById(data: UserIdInput): Promise<DbUser | undefined> {
         const user = await db.query.users.findFirst({
-            where: eq(users.id, id),
+            where: eq(users.id, data.id),
         })
         return user
     },
 
     // Find user by its email
-    async findByEmail(email: string): Promise<DbUser | undefined> {
+    async findByEmail(data: EmailInput): Promise<DbUser | undefined> {
         const user = await db.query.users.findFirst({
-            where: eq(users.email, email),
+            where: eq(users.email, data.email),
         })
         return user
     },
@@ -41,23 +90,13 @@ export const userQueries = {
     // },
 
     // Find user with profile (for personal homepage)
-    async findWithProfile(id: string): Promise<DbUser | undefined> {
+    async findWithProfile(data: UserIdInput): Promise<DbUser | undefined> {
         const user = await db.query.users.findFirst({
-            where: eq(users.id, id),
+            where: eq(users.id, data.id),
             with: {
                 profile: true,
             },
         })
-        return user
-    },
-
-    // Update user basic info
-    async update(id: string, data: Partial<NewDbUser>): Promise<DbUser> {
-        const [user] = await db
-            .update(users)
-            .set(data)
-            .where(eq(users.id, id))
-            .returning()
         return user
     },
 
@@ -73,27 +112,12 @@ export const userQueries = {
     //     return user
     // },
 
-    // Paginated list of users by role with optional search
-    async listByRole(
-        role: UserRole,
-        params: {
-            limit?: number
-            offset?: number
-            search?: string
-        } = {}
-    ): Promise<DbUser[]> {
-        const { limit = 20, offset = 0, search } = params
-
-        const conditions = [eq(users.role, role)]
-
-        if (search) {
-            conditions.push(
-                like(users.name, `%${search}%`)
-            )
-        }
+    // Paginated list of users with optional search
+    async list(data: ListUsersInput): Promise<UsersWithProfile[]> {
+        const { limit, offset, search, role } = data
 
         const userList = await db.query.users.findMany({
-            where: and(...conditions),
+            where: buildWhereClause({ role, search }),
             limit,
             offset,
             with: {
@@ -104,23 +128,12 @@ export const userQueries = {
         return userList
     },
 
-    // Count users by role with optional search filter
-    async countByRole(
-        role: UserRole,
-        search?: string
-    ): Promise<number> {
-        const conditions = [eq(users.role, role)]
-
-        if (search) {
-            conditions.push(
-                like(users.name, `%${search}%`)
-            )
-        }
-
+    // Count users with optional search filter
+    async count(data: CountUsersInput): Promise<number> {
         const [result] = await db
             .select({ count: count() })
             .from(users)
-            .where(and(...conditions))
+            .where(buildWhereClause(data))
 
         return result?.count ?? 0
     },

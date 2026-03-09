@@ -10,7 +10,8 @@ export const users = pgTable('users', {
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     role: userRoleEnum('role').notNull().default('student'),
     isActive: boolean('is_active').default(true).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
     // avatarUrl: text('avatar_url'),
     // points: integer('points').notNull().default(0),
 })
