@@ -1,5 +1,6 @@
 export * from './shared'
 export * from './auth'
+export * from './users'
 export * from './feedbacks'
 export * from './groups'
 export * from './groupMembers'

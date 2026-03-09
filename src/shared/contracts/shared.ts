@@ -2,13 +2,21 @@ import { z } from 'zod'
 
 // ===== Zod Schemas ======
 
+export const emailSchema = z.email('Please enter a valid email address')
+export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters')
+export const passwordHashSchema = z.string().min(50).max(60)
+
 export const EntityIdSchema = z.object({
     id: z.uuid(),
 })
 
 export const PaginationSchema = z.object({
     limit: z.number().int().positive().default(20),
+<<<<<<< Updated upstream
     offset: z.number().int().nonnegative().default(0),
+=======
+    offset: z.number().int().positive().default(0),
+>>>>>>> Stashed changes
 })
 
 // ===== Typescript Types =====

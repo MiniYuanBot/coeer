@@ -35,6 +35,10 @@ export const FeedbackFilterSchema = z.object({
 })
 
 export const CountFeedbacksSchema = z.object({
+<<<<<<< Updated upstream
+=======
+    authorId: z.uuid().optional(),
+>>>>>>> Stashed changes
     ...FeedbackFilterSchema.shape,
 })
 

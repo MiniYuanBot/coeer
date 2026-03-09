@@ -11,7 +11,7 @@ import {
     GroupPostWithGroup,
     ListPostsByAuthorInput,
     ListPostsByGroupInput,
-    PostIdInput,
+    GroupPostIdInput,
     TogglePinInput,
     UpdateGroupPostInput,
     CheckGroupInput,
@@ -80,7 +80,7 @@ export const groupPostQueries = {
     },
 
     // Delete the post
-    async delete(data: PostIdInput): Promise<void> {
+    async delete(data: GroupPostIdInput): Promise<void> {
         const [post] = await db
             .delete(groupPosts)
             .where(eq(groupPosts.id, data.id))
