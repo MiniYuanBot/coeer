@@ -7,7 +7,8 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import * as React from 'react'
-import { DefaultCatchBoundary, NotFound, NavBar } from '@/components/basic'
+import { DefaultCatchBoundary, NotFound } from '@/components/basic'
+import { AppShell, PageStatus, ToastProvider } from '@/components/coeer'
 import appCss from '@/styles/app.css?url'
 import { seo } from '~/utils/seo.js'
 import { fetchUserFn } from '../../server/functions'
@@ -31,8 +32,8 @@ export const Route = createRootRoute({
       },
       ...seo({
         title:
-          'TanStack Start | Type-Safe, Client-First, Full-Stack React Framework',
-        description: `TanStack Start is a type-safe, client-first, full-stack React framework. `,
+          'COEER | 学院社区与成长激励系统',
+        description: `COEER 是学院/组织内部社区与成长激励系统。`,
       }),
     ],
     links: [
@@ -86,10 +87,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <NavBar user={user} />
-        <hr className="border-t-2 border-gray-300 my-0" />
-        {children}
-        <TanStackRouterDevtools position="bottom-right" />
+        <ToastProvider>
+          <PageStatus />
+          <AppShell user={user}>{children}</AppShell>
+        </ToastProvider>
+        {import.meta.env.DEV ? <TanStackRouterDevtools position="bottom-right" /> : null}
         <Scripts />
       </body>
     </html>

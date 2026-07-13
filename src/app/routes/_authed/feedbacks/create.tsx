@@ -2,8 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createFeedbackFn } from '~/functions'
 import { FeedbackTargetType } from '@shared/constants'
 import { useState } from 'react'
-import {ButtonLink,Button} from '@/components/ui/Button'
-import {Select} from '@/components/ui/Select'
+import { Badge, Button, Card, Icon, SectionHeader, useToast } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/feedbacks/create')({
     component: CreateFeedbackPage,
@@ -11,6 +10,7 @@ export const Route = createFileRoute('/_authed/feedbacks/create')({
 
 function CreateFeedbackPage() {
     const navigate = useNavigate()
+    const { toast } = useToast()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -20,9 +20,6 @@ function CreateFeedbackPage() {
         setError(null)
 
         const formData = new FormData(e.currentTarget)
-        // const images = formData.get('images') as string
-        // const imageUrls = images ? images.split(',').map(url => url.trim()).filter(Boolean) : []
-
         try {
             const result = await createFeedbackFn({
                 data: {
@@ -31,138 +28,68 @@ function CreateFeedbackPage() {
                     title: formData.get('title') as string,
                     content: formData.get('content') as string,
                     isAnonymous: formData.get('isAnonymous') === 'on',
-                    // images: imageUrls,
                 },
             })
 
-            if (!result) {
-                throw new Error('Failed to create feedback')
-            }
-
+            if (!result) throw new Error('Failed to create feedback')
+            toast({ title: '反馈已提交', description: '我们会在反馈列表中跟踪处理进度。', tone: 'success' })
             navigate({ to: '/feedbacks' })
-        } 
-        catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to submit feedback')
-        } 
-        finally {
+        } catch (err) {
+            const message = err instanceof Error ? err.message : '提交失败'
+            setError(message)
+            toast({ title: '提交失败', description: message, tone: 'danger' })
+        } finally {
             setIsSubmitting(false)
         }
     }
 
-
     return (
-        <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Submit Feedback</h2>
+        <div className="mx-auto max-w-3xl space-y-6">
+            <SectionHeader title="提交反馈" description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。" />
+            <Card className="p-6">
+                <div className="mb-6 flex flex-wrap gap-2">
+                    <Badge tone="primary">问题</Badge>
+                    <Badge>建议</Badge>
+                    <Badge>事务</Badge>
+                </div>
+                {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div> : null}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <label className="block">
+                        <span className="text-sm font-medium">反馈对象</span>
+                        <select name="targetType" required className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                            <option value="">选择对象</option>
+                            <option value="academic">教学事务</option>
+                            <option value="office">办公室</option>
+                            <option value="general">通用问题</option>
+                        </select>
+                    </label>
 
-                {error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                        {error}
-                    </div>
-                )}
+                    <label className="block">
+                        <span className="text-sm font-medium">对象补充</span>
+                        <input name="targetDesc" placeholder="例如：选课系统、宿舍网络、活动报名" className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                    </label>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Target Type *
-                        </label>
-                        <Select
-                            name="targetType"
-                            required
-                            options={[
-                                { value: 'academic', label: 'Academic' },
-                                { value: 'office', label: 'Office' },
-                                { value: 'general', label: 'General' },
-                            ]}
-                            placeholder="Select target type"
-                            className="w-full"
-                        />
-                        
-                        {/* <select
-                            name="targetType"
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Select target type</option>
-                            <option value="group">Group</option>
-                            <option value="event">Event</option>
-                            <option value="user">User</option>
-                            <option value="system">System</option>
-                            <option value="other">Other</option>
-                        </select> */
-                        }
-                    </div>
+                    <label className="block">
+                        <span className="text-sm font-medium">标题</span>
+                        <input name="title" required maxLength={200} placeholder="一句话说明问题" className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                    </label>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Target Description
-                        </label>
-                        <input
-                            name="targetDesc"
-                            type="text"
-                            placeholder="e.g., Group name, Event title, etc."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
+                    <label className="block">
+                        <span className="text-sm font-medium">内容</span>
+                        <textarea name="content" required rows={7} maxLength={5000} placeholder="描述发生了什么、影响是什么、你期待怎样处理。" className="coeer-focus mt-2 w-full resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
+                    </label>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Title *
-                        </label>
-                        <input
-                            name="title"
-                            type="text"
-                            required
-                            maxLength={200}
-                            placeholder="Brief summary of your feedback"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                        <input name="isAnonymous" type="checkbox" className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />
+                        匿名提交
+                    </label>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Content *
-                        </label>
-                        <textarea
-                            name="content"
-                            required
-                            rows={6}
-                            maxLength={5000}
-                            placeholder="Detailed description of your feedback..."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Images (URLs, comma separated)
-                        </label>
-                        <input
-                            name="images"
-                            type="text"
-                            placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            name="isAnonymous"
-                            type="checkbox"
-                            id="isAnonymous"
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="isAnonymous" className="text-sm text-gray-700">
-                            Submit anonymously
-                        </label>
-                    </div>
-
-                    <div className="flex gap-4 pt-4">
-                        <Button variant="outline" onClick={() => navigate({ to: '/feedbacks' })}>Cancel</Button>
-                        <Button type="submit" variant="primary" disabled={isSubmitting} >Submit Feedbacks</Button>    
+                    <div className="flex flex-wrap justify-end gap-3 pt-2">
+                        <Button type="button" variant="outline" onClick={() => navigate({ to: '/feedbacks' })}>取消</Button>
+                        <Button type="submit" loading={isSubmitting}><Icon name="send" /> 提交反馈</Button>
                     </div>
                 </form>
-            </div>
+            </Card>
         </div>
     )
 }

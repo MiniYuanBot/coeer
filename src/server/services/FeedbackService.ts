@@ -123,6 +123,7 @@ export class FeedbackService {
                 items = await feedbackQueries.findByAuthorId(data)
 
                 total = await feedbackQueries.count({
+                    authorId: user.id,
                     status,
                     search,
                 })

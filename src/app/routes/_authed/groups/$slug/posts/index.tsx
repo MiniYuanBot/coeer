@@ -54,7 +54,7 @@ function PostsListPage() {
         setDeletingPost(null)
         navigate({
             to: `/groups/${slug}/posts`,
-            search: { type, page, pageSize }
+            search: { type, page }
         })
     }
 
@@ -62,7 +62,7 @@ function PostsListPage() {
         await togglePinPostFn({ data: { id: postId, isPinned } })
         navigate({
             to: `/groups/${slug}/posts`,
-            search: { type, page, pageSize }
+            search: { type, page }
         })
     }
 
@@ -72,7 +72,6 @@ function PostsListPage() {
             search: {
                 type: newType,
                 page: 1,
-                pageSize: pageSize
             }
         })
     }
@@ -220,7 +219,7 @@ function PostsListPage() {
                     <button
                         onClick={() => navigate({
                             to: `/groups/${slug}/posts`,
-                            search: { type, page: page - 1, pageSize: pageSize }
+                            search: { type, page: page - 1 }
                         })}
                         disabled={page <= 1}
                         className="px-4 py-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
@@ -233,7 +232,7 @@ function PostsListPage() {
                     <button
                         onClick={() => navigate({
                             to: `/groups/${slug}/posts`,
-                            search: { type, page: page + 1, pageSize: pageSize }
+                            search: { type, page: page + 1 }
                         })}
                         disabled={page >= totalPages}
                         className="px-4 py-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"

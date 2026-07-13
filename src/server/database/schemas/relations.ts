@@ -6,7 +6,19 @@ import {
     feedbackStatusLogs,
     groups,
     groupMembers,
-    groupPosts
+    groupPosts,
+    reactions,
+    replies,
+    userSubscriptions,
+    activities,
+    activityParticipants,
+    pointTransactions,
+    cards,
+    userCards,
+    achievements,
+    userAchievements,
+    redeemItems,
+    redeemOrders
 } from './index'
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -18,6 +30,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     createdGroups: many(groups),
     groupMemberships: many(groupMembers),
     groupPosts: many(groupPosts),
+    reactions: many(reactions),
+    replies: many(replies),
+    subscriptions: many(userSubscriptions),
+    activityParticipants: many(activityParticipants),
+    pointTransactions: many(pointTransactions),
+    userCards: many(userCards),
+    userAchievements: many(userAchievements),
+    redeemOrders: many(redeemOrders),
 }))
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -74,5 +94,101 @@ export const groupPostsRelations = relations(groupPosts, ({ one, many }) => ({
     author: one(users, {
         fields: [groupPosts.authorId],
         references: [users.id],
+    }),
+}))
+
+export const reactionsRelations = relations(reactions, ({ one }) => ({
+    user: one(users, {
+        fields: [reactions.userId],
+        references: [users.id],
+    }),
+}))
+
+export const repliesRelations = relations(replies, ({ one, many }) => ({
+    author: one(users, {
+        fields: [replies.userId],
+        references: [users.id],
+    }),
+    parent: one(replies, {
+        fields: [replies.parentId],
+        references: [replies.id],
+        relationName: 'reply_children',
+    }),
+    children: many(replies, {
+        relationName: 'reply_children',
+    }),
+}))
+
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ one }) => ({
+    user: one(users, {
+        fields: [userSubscriptions.userId],
+        references: [users.id],
+    }),
+}))
+
+export const activitiesRelations = relations(activities, ({ many }) => ({
+    participants: many(activityParticipants),
+}))
+
+export const activityParticipantsRelations = relations(activityParticipants, ({ one }) => ({
+    activity: one(activities, {
+        fields: [activityParticipants.activityId],
+        references: [activities.id],
+    }),
+    user: one(users, {
+        fields: [activityParticipants.userId],
+        references: [users.id],
+    }),
+}))
+
+export const pointTransactionsRelations = relations(pointTransactions, ({ one }) => ({
+    user: one(users, {
+        fields: [pointTransactions.userId],
+        references: [users.id],
+    }),
+}))
+
+export const cardsRelations = relations(cards, ({ many }) => ({
+    userCards: many(userCards),
+}))
+
+export const userCardsRelations = relations(userCards, ({ one }) => ({
+    user: one(users, {
+        fields: [userCards.userId],
+        references: [users.id],
+    }),
+    card: one(cards, {
+        fields: [userCards.cardId],
+        references: [cards.id],
+    }),
+}))
+
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+    userAchievements: many(userAchievements),
+}))
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+    user: one(users, {
+        fields: [userAchievements.userId],
+        references: [users.id],
+    }),
+    achievement: one(achievements, {
+        fields: [userAchievements.achievementId],
+        references: [achievements.id],
+    }),
+}))
+
+export const redeemItemsRelations = relations(redeemItems, ({ many }) => ({
+    orders: many(redeemOrders),
+}))
+
+export const redeemOrdersRelations = relations(redeemOrders, ({ one }) => ({
+    user: one(users, {
+        fields: [redeemOrders.userId],
+        references: [users.id],
+    }),
+    item: one(redeemItems, {
+        fields: [redeemOrders.itemId],
+        references: [redeemItems.id],
     }),
 }))
