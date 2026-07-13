@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listMyGroupsFn, leaveGroupFn } from '~/functions'
 import { useState } from 'react'
-import { ButtonLink, Button } from '@/components/ui/Button'
+import { Badge, Button, Card, EmptyState, SectionHeader } from '@/components/coeer'
 import { GroupFilterSchema } from '@shared/contracts'
 import { GROUP_STATUS } from '@shared/constants'
 
@@ -59,12 +59,13 @@ function GroupsMyPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">我的群组</h1>
-                <ButtonLink to="/groups/create">创建群组</ButtonLink>
-            </div>
+            <SectionHeader
+                title="我的群组"
+                description="管理你加入和创建的群组。"
+                action={<Link to="/groups/create"><Button>创建群组</Button></Link>}
+            />
 
-            <div className="flex gap-2 bg-white p-4 rounded-lg shadow-sm">
+            <Card className="flex gap-2 p-4">
                 {[
                     { value: undefined, label: '全部' },
                     { value: GROUP_STATUS.APPROVED, label: '已通过' },
@@ -77,32 +78,21 @@ function GroupsMyPage() {
                             status: item.value || undefined,
                             page: 1,
                         }}
-                        className={`px-3 py-1 rounded-full text-sm ${(status || '') === item.value
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
+                        className="contents"
                     >
-                        {item.label}
+                        <Badge tone={(status || '') === item.value ? 'primary' : 'default'}>{item.label}</Badge>
                     </Link>
                 ))}
-            </div>
+            </Card>
 
             {members.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                    <p className="text-gray-500">您还没有加入任何群组</p>
-                    <Link
-                        to="/groups/all"
-                        className="mt-4 inline-block text-blue-600 hover:text-blue-800"
-                    >
-                        去发现群组
-                    </Link>
-                </div>
+                <EmptyState title="您还没有加入任何群组" action={<Link to="/groups/all"><Button variant="outline">去发现群组</Button></Link>} />
             ) : (
                 <div className="space-y-4">
                     {members.map((member) => (
-                        <div
+                        <Card
                             key={member.id}
-                            className="bg-white rounded-lg shadow-sm p-6 flex items-center justify-between"
+                            className="flex items-center justify-between p-6"
                         >
                             <Link
                                 to="/groups/$slug"
@@ -122,10 +112,10 @@ function GroupsMyPage() {
                                         </div>
                                     )} */}
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">
+                                        <h3 className="text-lg font-semibold">
                                             {member.group.name}
                                         </h3>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-[hsl(var(--muted-foreground))]">
                                             {member.role === 'admin' && '群主'}
                                             {member.role === 'member' && '成员'} ·
                                             {member.status === 'approved' ? '已加入' : '审核中'}
@@ -133,21 +123,24 @@ function GroupsMyPage() {
                                     </div>
                                 </div>
                             </Link>
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => handleLeave(member.groupId)}
                                 disabled={leavingId === member.groupId}
-                                className="px-4 py-2 text-sm text-red-600 hover:text-red-800 border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                loading={leavingId === member.groupId}
+                                className="text-red-600 hover:text-red-700"
                             >
-                                {leavingId === member.groupId ? '退出中...' : '退出'}
-                            </button>
-                        </div>
+                                退出
+                            </Button>
+                        </Card>
                     ))}
                 </div>
             )}
 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-4">
-                    <button
+                    <Button
+                        variant="outline"
                         disabled={page <= 1}
                         onClick={() =>
                             navigate({
@@ -155,14 +148,14 @@ function GroupsMyPage() {
                                 search: { status, page: page - 1 },
                             })
                         }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
                     >
                         上一页
-                    </button>
-                    <span className="text-sm text-gray-600">
+                    </Button>
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">
                         {page} / {totalPages}
                     </span>
-                    <button
+                    <Button
+                        variant="outline"
                         disabled={page >= totalPages}
                         onClick={() =>
                             navigate({
@@ -170,10 +163,9 @@ function GroupsMyPage() {
                                 search: { status, page: page + 1 },
                             })
                         }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
                     >
                         下一页
-                    </button>
+                    </Button>
                 </div>
             )}
         </div>

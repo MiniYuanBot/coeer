@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ButtonLink,Button} from '../ui/Button'
+import { Button } from '../coeer'
 
 export function NotFound({ children }: { children?: React.ReactNode }) {
   return (
@@ -21,11 +21,9 @@ export function NotFound({ children }: { children?: React.ReactNode }) {
         </div>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <ButtonLink
-            to="/"
-            variant="outline"
-            className="min-w-30"
-          >Home</ButtonLink>
+          <Link to="/">
+            <Button variant="outline" className="min-w-30">Home</Button>
+          </Link>
           <Button
             variant="primary"
             onClick={() => window.history.back()}

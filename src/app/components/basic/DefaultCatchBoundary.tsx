@@ -3,9 +3,10 @@ import {
   rootRouteId,
   useMatch,
   useRouter,
+  Link,
 } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
-import { ButtonLink, Button } from '../ui/Button'  // 与 NotFound 保持一致
+import { Button } from '../coeer'
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter()
@@ -26,13 +27,9 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
            {isRoot ? (
-            <ButtonLink
-              to="/"
-              variant="outline"
-              className="min-w-30"
-            >
-              Home
-            </ButtonLink>
+            <Link to="/">
+              <Button variant="outline" className="min-w-30">Home</Button>
+            </Link>
           ) : (
             <Button
               variant="outline"
