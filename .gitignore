@@ -1,6 +1,7 @@
 node_modules
 package-lock.json
 yarn.lock
+dist
 
 .env
 .env.*.local
@@ -21,3 +22,4 @@ yarn.lock
 /playwright/.cache/
 
 tmp
+README.pdf

@@ -121,7 +121,7 @@ export const feedbackQueries = {
         const { limit, offset } = data
 
         return db.query.feedbacks.findMany({
-            where: buildWhereClause(data),
+            where: buildWhereClause({ ...data, authorId: data.authorId }),
             with: {
                 author: {
                     columns: { id: true, name: true, email: true },

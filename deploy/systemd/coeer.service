@@ -1,0 +1,19 @@
+# Replace /var/www/coeer with the actual project path on your server.
+# Install to: /etc/systemd/system/coeer.service
+
+[Unit]
+Description=COEER TanStack Start Application
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/coeer
+ExecStart=/usr/bin/pnpm start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+# Keep secrets in /var/www/coeer/.env. The app loads it via dotenv/config.
+
+[Install]
+WantedBy=multi-user.target

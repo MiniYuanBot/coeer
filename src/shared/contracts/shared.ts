@@ -12,7 +12,7 @@ export const EntityIdSchema = z.object({
 
 export const PaginationSchema = z.object({
     limit: z.number().int().positive().default(20),
-    offset: z.number().int().positive().default(0),
+    offset: z.number().int().nonnegative().default(0),
 })
 
 // ===== Typescript Types =====

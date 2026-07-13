@@ -185,7 +185,7 @@ export class GroupPostService {
             await groupPostQueries.delete(data)
 
             return {
-                success: false,
+                success: true,
                 state: GROUP_POST.DELETE_SUCCESS,
             }
         } catch (err) {
