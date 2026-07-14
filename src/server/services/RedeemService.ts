@@ -9,10 +9,12 @@ import type {
     PaginatedRedeemResponse,
     ProcessRedeemOrderInput,
     RedeemItemInput,
+    RedeemItemIdInput,
     RedeemOrderIdInput,
     RedeemOrderWithDetails,
     RedeemOrderWithItem,
     RedeemResponse,
+    UpdateRedeemItemInput,
 } from '@shared/contracts'
 import type { RedeemItem, RedeemOrder } from '../database/schemas'
 
@@ -45,6 +47,15 @@ export class RedeemService {
         return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
     }
 
+    static async adminListOrders(data: ListRedeemOrdersInput): Promise<PaginatedRedeemResponse<RedeemOrderWithDetails>> {
+        const payload = await AuthService.getCurrentUser()
+        const user = payload.data
+        if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
+        if (user.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
+        const items = await redeemQueries.listOrders(data)
+        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
+    }
+
     static async getOrder(data: RedeemOrderIdInput): Promise<RedeemResponse<RedeemOrderWithDetails>> {
         const order = await redeemQueries.findOrderById(data.orderId)
         if (!order) return { success: false, state: REDEEM.ORDER_NOT_FOUND }
@@ -60,6 +71,24 @@ export class RedeemService {
         return { success: true, data: item, state: REDEEM.CREATE_SUCCESS }
     }
 
+    static async adminUpdateItem(data: UpdateRedeemItemInput): Promise<RedeemResponse<RedeemItem>> {
+        const payload = await AuthService.getCurrentUser()
+        const user = payload.data
+        if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
+        if (user.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
+        const item = await redeemQueries.updateItem(data)
+        return { success: true, data: item, state: REDEEM.UPDATE_SUCCESS }
+    }
+
+    static async adminDeleteItem(data: RedeemItemIdInput): Promise<RedeemResponse<void>> {
+        const payload = await AuthService.getCurrentUser()
+        const user = payload.data
+        if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
+        if (user.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
+        await redeemQueries.deleteItem(data.itemId)
+        return { success: true, state: REDEEM.DELETE_SUCCESS }
+    }
+
     static async adminProcessOrder(data: ProcessRedeemOrderInput): Promise<RedeemResponse<RedeemOrder>> {
         const payload = await AuthService.getCurrentUser()
         const user = payload.data
@@ -69,4 +98,3 @@ export class RedeemService {
         return { success: true, data: order, state: REDEEM.UPDATE_SUCCESS }
     }
 }
-

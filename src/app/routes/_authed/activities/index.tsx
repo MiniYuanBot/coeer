@@ -51,7 +51,7 @@ function ActivitiesPage() {
                     {
                         title: '类型',
                         items: [
-                            { key: 'all-types', label: `全部 ${total}`, active: !type, onClick: () => go({ type: undefined }) },
+                            { key: 'all-types', label: '全部', active: !type, onClick: () => go({ type: undefined }) },
                             ...ACTIVITY_TYPE_ARRAY.map((item) => ({
                                 key: item,
                                 label: activityTypeLabels[item],
@@ -83,14 +83,15 @@ function ActivitiesPage() {
                             action={
                                 <Button
                                     className="w-full"
+                                    variant={activity.status === 'completed' || activity.status === 'cancelled' ? 'ghost' : 'primary'}
                                     loading={loadingKey === activity.id}
-                                    disabled={activity.status === 'completed'}
+                                    disabled={activity.status === 'completed' || activity.status === 'cancelled'}
                                     onClick={() => run(activity.id, () => registerActivityFn({ data: { activityId: activity.id } }), {
                                         success: '报名成功',
                                         error: '报名失败',
                                     })}
                                 >
-                                    <Icon name="check" /> 报名
+                                    <Icon name="check" /> {activity.status === 'completed' || activity.status === 'cancelled' ? '已结束' : '报名'}
                                 </Button>
                             }
                         />

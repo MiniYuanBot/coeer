@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { BulletinCard, EmptyState, FilterPanel, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
+import { Badge, BulletinCard, EmptyState, FilterPanel, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
 import { getBulletinFeedFn } from '~/functions'
 import { BULLETIN_TYPE_ARRAY, BulletinType } from '@shared/constants'
 
@@ -39,7 +39,7 @@ function BulletinsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="公告" description="聚合官方通知、群组公告和活动提醒。" />
+            <SectionHeader title="公告" description="聚合官方通知、群组公告和活动提醒。" action={<Badge tone="primary">共 {total}</Badge>} />
             <FilterPanel
                 searchValue={search}
                 searchPlaceholder="搜索公告标题或内容"
@@ -48,7 +48,7 @@ function BulletinsPage() {
                     {
                         title: '类型',
                         items: [
-                            { key: 'all', label: `全部 ${total}`, active: !type, onClick: () => go({ type: undefined }) },
+                            { key: 'all', label: '全部', active: !type, onClick: () => go({ type: undefined }) },
                             ...BULLETIN_TYPE_ARRAY.map((item) => ({
                                 key: item,
                                 label: bulletinTypeLabels[item],

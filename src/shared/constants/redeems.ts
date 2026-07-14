@@ -30,6 +30,7 @@ export const REDEEM = {
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,
     CREATE_SUCCESS: { code: 'CREATE_SUCCESS', message: 'Create successful' } as const,
     UPDATE_SUCCESS: { code: 'UPDATE_SUCCESS', message: 'Update successful' } as const,
+    DELETE_SUCCESS: { code: 'DELETE_SUCCESS', message: 'Delete successful' } as const,
     ITEM_NOT_FOUND: { code: 'ITEM_NOT_FOUND', message: 'Redeem item not found' } as const,
     ORDER_NOT_FOUND: { code: 'ORDER_NOT_FOUND', message: 'Redeem order not found' } as const,
     OUT_OF_STOCK: { code: 'OUT_OF_STOCK', message: 'Out of stock' } as const,
@@ -40,4 +41,3 @@ export const REDEEM = {
 } as const
 
 export type RedeemCode = typeof REDEEM[keyof typeof REDEEM]['code']
-

@@ -39,7 +39,7 @@ function FeedbacksListPage() {
     const isLoading = router.state.status === 'pending'
     const totalPages = Math.ceil(total / pageSize)
 
-    const go = (next: { view?: 'mine_reviewed' | 'mine_pending' | 'public'; targetType?: FeedbackTargetType; search?: string; page?: number }) => {
+    const go = (next: { view?: 'mine' | 'public'; targetType?: FeedbackTargetType; search?: string; page?: number }) => {
         navigate({ to: '/feedbacks', search: { view, targetType, search, page: 1, ...next } })
     }
 
@@ -59,8 +59,7 @@ function FeedbacksListPage() {
                     {
                         title: '查看',
                         items: [
-                            { key: 'mine-reviewed', label: '我提交且完成审核', active: view === 'mine_reviewed', onClick: () => go({ view: 'mine_reviewed' }) },
-                            { key: 'mine-pending', label: '我提交但未完成审核', active: view === 'mine_pending', onClick: () => go({ view: 'mine_pending' }) },
+                            { key: 'mine', label: '我提交的', active: view === 'mine', onClick: () => go({ view: 'mine' }) },
                             { key: 'public', label: '所有公开的', active: view === 'public' || !view, onClick: () => go({ view: 'public' }) },
                         ],
                     },

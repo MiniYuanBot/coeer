@@ -17,8 +17,9 @@ function buildWhereClause(params: {
     status?: FeedbackStatus | FeedbackStatus[]
     search?: string
     targetType?: FeedbackTargetType | FeedbackTargetType[]
+    isPublic?: boolean
 }): SQL | undefined {
-    const { status, search, authorId, targetType } = params
+    const { status, search, authorId, targetType, isPublic } = params
     const conditions: SQL[] = []
 
     if (authorId) {
@@ -51,6 +52,10 @@ function buildWhereClause(params: {
         }
     }
 
+    if (isPublic !== undefined) {
+        conditions.push(eq(feedbacks.isPublic, isPublic))
+    }
+
     return conditions.length > 0 ? and(...conditions) : undefined
 }
 
@@ -58,7 +63,7 @@ function buildVisibleWhereClause(params: CountFeedbacksInput & { viewerId: strin
     const base = buildWhereClause(params)
     const visibility = or(
         eq(feedbacks.authorId, params.viewerId),
-        inArray(feedbacks.status, ['processing', 'resolved'])
+        eq(feedbacks.isPublic, true)
     )
 
     return base ? and(base, visibility) : visibility
@@ -81,6 +86,7 @@ export const feedbackQueries = {
         const [feedback] = await db.update(feedbacks)
             .set({
                 status: data.status,
+                ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
                 ...(data.resolvedAt && { resolvedAt: data.resolvedAt }),
                 updatedAt: new Date(),
             })

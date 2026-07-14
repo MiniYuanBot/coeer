@@ -165,6 +165,8 @@ pnpm start
 
 已按领域拆分为 `AuthService`、`GroupService`、`GroupPostService`、`FeedbackService`、`ReactionService`、`ReplyService`、`BulletinService`、`SubscriptionService`、`ActivityService`、`PointService`、`CardService`、`AchievementService`、`RedeemService` 等。
 
+后台统计另有 `UserService`，用于 `/admin/stats` 汇总用户概览。
+
 ### Application Layer
 
 应用层的主要任务是完成路由逻辑、定义服务器函数
@@ -183,19 +185,30 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 - 客户端 hooks：`app/hooks`
 - TanStack Query：依赖已安装，尚未系统化接入
 
-核心 UI 组件集中在 `src/app/components/coeer`，包含 `AppShell`、`TopNav`、`MobileNav`、`Card`、`Button`、`Badge`、`SearchInput`、`PostCard`、`GroupCard`、`BulletinCard`、`ActivityCard`、`FeedbackCard`、`PointsSummaryCard`、`AchievementCard`、`RedeemItemCard`、`CommentList`、`EmptyState`、`Toast`、`Modal` 和 `Drawer`。
+核心 UI 组件集中在 `src/app/components/coeer`，包含 `AppShell`、`TopNav`、`MobileNav`、`Card`、`Button`、`Badge`、`SearchInput`、`FilterPanel`、`PostCard`、`GroupCard`、`BulletinCard`、`ActivityCard`、`FeedbackCard`、`PointsSummaryCard`、`AchievementCard`、`RedeemItemCard`、`CommentList`、`EmptyState`、`Toast`、`Modal` 和 `Drawer`。
 
 主要页面入口：
 
 - `/login`、`/signup`：认证页
 - `/`：动态首页
-- `/groups`：群组列表，详情沿用 `/groups/$slug`
-- `/feedbacks`、`/feedbacks/create`：反馈列表与提交
-- `/bulletins`、`/bulletins/$bulletinId`：公告列表与详情
-- `/activities`、`/activities/$activityId`：活动列表与详情
-- `/redeems`：积分商城
-- `/achievements`：卡片/成就墙
+- `/groups`：群组聚合首页，支持我加入的、我管理的、公开的、申请中的分类查看
+- `/feedbacks`、`/feedbacks/create`：反馈列表与提交，支持我的已审核、我的待审核、所有公开反馈分类
+- `/bulletins`、`/bulletins/$bulletinId`：公告列表与详情，支持公告类型分类
+- `/activities`、`/activities/$activityId`：活动列表与详情，支持活动类型与状态分类
+- `/redeems`：积分商城，支持实体物品、虚拟权益分类
+- `/achievements`：卡片/成就墙，支持我的卡片、成就进度、成就类型与卡片稀有度分类
 - `/profile`：个人中心
+
+管理后台页面：
+
+- `/admin`：管理工作台
+- `/admin/feedbacks`：反馈审核，支持全部/待审核筛选，可独立设置审核状态、公开性与审核备注
+- `/admin/groups`：群组审核，支持全部/待审核筛选，可设置审核状态与审核备注
+- `/admin/bulletins`：公告管理，支持发布、编辑、删除公告
+- `/admin/activities`：活动管理，支持发布、编辑、删除活动，并查看报名情况
+- `/admin/redeems`：商城管理，支持添加、编辑、删除商城物品，并查看兑换详情
+- `/admin/achievements`：成就管理，支持添加、编辑、删除成就
+- `/admin/stats`：统计概览，展示所有用户及用户情况数据
 
 ## Project Status
 
@@ -227,6 +240,8 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 7. 活动系统
 8. 积分、卡片、成就与兑换系统的后端基础能力
 9. COEER 前端 UI 基础体验与主要页面骨架
+10. 主要首页统一搜索栏与分类查看栏
+11. 管理后台基础能力：反馈审核、群组审核、公告管理、活动管理、商城管理、成就管理、用户统计概览
 
 ### TODO List
 
@@ -236,7 +251,7 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 2. 将抽卡概率、积分扣减、兑换库存等关键流程进一步收紧为数据库事务
 3. 根据前端实际体验继续修正 Service 权限与返回数据形状
 4. 为新模块继续补充端到端测试
-5. 继续打磨管理端、详情页和移动端细节
+5. 继续打磨详情页和移动端细节
 
 ## Test Commands
 
@@ -249,6 +264,12 @@ pnpm db:push -- --force
 pnpm seed:all:clean
 pnpm exec tsc --noEmit
 pnpm build
+```
+
+当前 schema 包含后台审核新增字段 `feedbacks.is_public` 与 `groups.review_note`。如果数据库来自旧版本，请先执行：
+
+```sh
+pnpm db:push
 ```
 
 如果希望手动确认 Drizzle 生成的 SQL，可以把 `pnpm db:push -- --force` 换成 `pnpm db:push`。

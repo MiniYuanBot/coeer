@@ -1,20 +1,27 @@
 import * as React from 'react'
 import { formatDate, formatDateTime } from '../lib/date'
 import { activityStatusLabels } from '../lib/labels'
+import type { BadgeTone } from '../lib/types'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
 
 export function ActivityCard({ activity, action }: { activity: any; action?: React.ReactNode }) {
+    const statusTone: BadgeTone = activity.status === 'ongoing'
+        ? 'success'
+        : activity.status === 'completed' || activity.status === 'cancelled'
+            ? 'default'
+            : 'primary'
+
     return (
-        <Card className="p-5">
+        <Card className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[hsl(var(--border))] hover:shadow-sm">
             <div className="flex items-start justify-between gap-3">
-                <Badge tone={activity.status === 'completed' ? 'success' : 'primary'}>{activityStatusLabels[activity.status] || activity.status}</Badge>
+                <Badge tone={statusTone}>{activityStatusLabels[activity.status] || activity.status}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(activity.startTime)}</span>
             </div>
-            <h3 className="mt-3 font-semibold">{activity.title}</h3>
-            <p className="mt-2 line-clamp-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">{activity.description}</p>
-            <div className="mt-4 grid gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+            <h3 className="mt-3 text-[15px] font-medium">{activity.title}</h3>
+            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{activity.description}</p>
+            <div className="mt-4 grid gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
                 <span className="inline-flex items-center gap-2"><Icon name="calendar" /> {formatDateTime(activity.startTime)}</span>
                 <span className="inline-flex items-center gap-2"><Icon name="bookmark" /> {activity.location || '待定地点'}</span>
             </div>

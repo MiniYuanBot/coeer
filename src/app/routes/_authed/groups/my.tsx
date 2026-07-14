@@ -90,32 +90,21 @@ function GroupsMyPage() {
             ) : (
                 <div className="space-y-4">
                     {members.map((member) => (
-                        <Card
-                            key={member.id}
-                            className="flex items-center justify-between p-6"
-                        >
+                        <Card key={member.id} className="flex flex-col gap-3 rounded-xl p-5 md:flex-row md:items-center md:justify-between">
                             <Link
                                 to="/groups/$slug"
                                 params={{ slug: member.group.slug }}
                                 className="flex-1"
                             >
                                 <div className="flex items-center gap-4">
-                                    {/* {member.group.avatarUrl ? (
-                                        <img
-                                            src={member.group.avatarUrl}
-                                            alt=""
-                                            className="w-12 h-12 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-bold">
-                                            {member.group.name[0]}
-                                        </div>
-                                    )} */}
+                                    <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                                        {member.group.name[0]}
+                                    </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold">
+                                        <h3 className="text-[15px] font-medium">
                                             {member.group.name}
                                         </h3>
-                                        <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">
                                             {member.role === 'admin' && '群主'}
                                             {member.role === 'member' && '成员'} ·
                                             {member.status === 'approved' ? '已加入' : '审核中'}
@@ -128,7 +117,7 @@ function GroupsMyPage() {
                                 onClick={() => handleLeave(member.groupId)}
                                 disabled={leavingId === member.groupId}
                                 loading={leavingId === member.groupId}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-rose-600 hover:text-rose-700 dark:text-rose-400"
                             >
                                 退出
                             </Button>

@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { cn } from '../lib/cn'
-import { Badge } from './Badge'
 import { Card } from './Card'
 import { SearchInput } from './SearchInput'
 
@@ -27,7 +26,7 @@ export function FilterPanel({
     className?: string
 }) {
     return (
-        <Card className={cn('space-y-4 p-4', className)}>
+        <Card className={cn('space-y-4 rounded-xl p-4', className)}>
             <form
                 onSubmit={(e) => {
                     e.preventDefault()
@@ -38,16 +37,25 @@ export function FilterPanel({
                 <SearchInput name={searchName} defaultValue={searchValue} placeholder={searchPlaceholder} />
             </form>
 
-            <div className="space-y-3">
+            <div className="flex gap-2 overflow-x-auto pb-1 md:flex-wrap">
                 {groups.map((group, index) => (
-                    <div key={group.title || index} className="flex flex-wrap items-center gap-2">
-                        {group.title ? <span className="mr-1 text-xs font-medium text-[hsl(var(--muted-foreground))]">{group.title}</span> : null}
+                    <React.Fragment key={group.title || index}>
                         {group.items.map((item) => (
-                            <button key={item.key} type="button" onClick={item.onClick} className="coeer-focus rounded-full">
-                                <Badge tone={item.active ? 'primary' : 'default'}>{item.label}</Badge>
+                            <button
+                                key={item.key}
+                                type="button"
+                                onClick={item.onClick}
+                                className={cn(
+                                    'coeer-focus shrink-0 rounded-md border px-3 py-1.5 text-sm transition-colors',
+                                    item.active
+                                        ? 'border-[hsl(var(--primary)/0.24)] bg-[hsl(var(--primary)/0.1)] font-medium text-[hsl(var(--primary))]'
+                                        : 'border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary)/0.35)] hover:text-[hsl(var(--foreground))]',
+                                )}
+                            >
+                                {item.label}
                             </button>
                         ))}
-                    </div>
+                    </React.Fragment>
                 ))}
             </div>
         </Card>

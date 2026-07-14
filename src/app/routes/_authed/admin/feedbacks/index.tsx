@@ -51,10 +51,10 @@ function AdminFeedbacksPage() {
         navigate({ to: '/admin/feedbacks', search: { status, search: (formData.get('search') as string) || undefined, page: 1 } })
     }
 
-    const handleReview = async (id: string, nextStatus: FeedbackStatus, note?: string) => {
+    const handleReview = async (id: string, nextStatus: FeedbackStatus, isPublic: boolean, note?: string) => {
         setWorkingId(id)
         try {
-            await updateFeedbackStatusFn({ data: { id, status: nextStatus, note } })
+            await updateFeedbackStatusFn({ data: { id, status: nextStatus, isPublic, note } })
             setReviewingId(null)
             refresh()
         } finally {
@@ -172,7 +172,7 @@ function AdminFeedbacksPage() {
                 open={!!reviewingId}
                 loading={!!reviewingId && workingId === reviewingId}
                 onOpenChange={(open) => setReviewingId(open ? reviewingId : null)}
-                onSubmit={(status, note) => reviewingId ? handleReview(reviewingId, status, note) : undefined}
+                onSubmit={(status, isPublic, note) => reviewingId ? handleReview(reviewingId, status, isPublic, note) : undefined}
             />
         </div>
     )
@@ -187,7 +187,7 @@ function ReviewModal({
     open: boolean
     loading: boolean
     onOpenChange: (open: boolean) => void
-    onSubmit: (status: FeedbackStatus, note?: string) => void
+    onSubmit: (status: FeedbackStatus, isPublic: boolean, note?: string) => void
 }) {
     return (
         <Modal open={open} title="审核反馈" onOpenChange={onOpenChange}>
@@ -196,16 +196,23 @@ function ReviewModal({
                 onSubmit={(e) => {
                     e.preventDefault()
                     const formData = new FormData(e.currentTarget)
-                    onSubmit(formData.get('status') as FeedbackStatus, (formData.get('note') as string) || undefined)
+                    onSubmit(formData.get('status') as FeedbackStatus, formData.get('isPublic') === 'true', (formData.get('note') as string) || undefined)
                 }}
             >
                 <label className="block text-sm font-medium">
-                    <span>处理状态</span>
+                    <span>审核状态</span>
                     <select name="status" className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
-                        <option value="processing">同意公开，进入处理</option>
-                        <option value="resolved">同意公开，标记已解决</option>
-                        <option value="invalid">驳回为无效反馈</option>
+                        <option value="processing">处理中</option>
+                        <option value="resolved">已解决</option>
+                        <option value="invalid">无效</option>
                         <option value="pending">退回待审核</option>
+                    </select>
+                </label>
+                <label className="block text-sm font-medium">
+                    <span>公开性</span>
+                    <select name="isPublic" className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                        <option value="true">公开</option>
+                        <option value="false">不公开</option>
                     </select>
                 </label>
                 <label className="block text-sm font-medium">

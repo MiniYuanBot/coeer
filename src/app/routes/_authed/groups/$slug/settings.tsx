@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { updateGroupFn, deleteGroupFn } from '~/functions'
 import { useState } from 'react'
+import { Button, Card, SectionHeader } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/settings')({
     component: GroupSettingsPage,
@@ -59,15 +60,15 @@ function GroupSettingsPage() {
     }
 
     return (
-        <div className="max-w-2xl space-y-8">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">群组设置</h2>
+        <div className="max-w-2xl space-y-6">
+            <SectionHeader title="群组设置" description="更新群组展示信息和可见性。" />
+            <Card className="rounded-xl p-5">
 
                 <form onSubmit={handleUpdate} className="space-y-6">
                     <input type="hidden" name="id" value={group.id} />
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium">
                             群组名称
                         </label>
                         <input
@@ -76,25 +77,12 @@ function GroupSettingsPage() {
                             defaultValue={group.name}
                             required
                             disabled={updateLoading}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                            className="coeer-focus mt-2 block h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm disabled:opacity-50"
                         />
                     </div>
 
-                    {/* <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            头像 URL
-                        </label>
-                        <input
-                            type="url"
-                            name="avatarUrl"
-                            defaultValue={group.avatarUrl || ''}
-                            disabled={updateLoading}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                        />
-                    </div> */}
-
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium">
                             描述
                         </label>
                         <textarea
@@ -102,7 +90,7 @@ function GroupSettingsPage() {
                             rows={4}
                             defaultValue={group.description || ''}
                             disabled={updateLoading}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                            className="coeer-focus mt-2 block w-full resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6 disabled:opacity-50"
                         />
                     </div>
 
@@ -113,40 +101,39 @@ function GroupSettingsPage() {
                             id="isPublic"
                             defaultChecked={group.isPublic}
                             disabled={updateLoading}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                            className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))] disabled:opacity-50"
                         />
-                        <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-900">
+                        <label htmlFor="isPublic" className="ml-2 block text-sm">
                             公开群组
                         </label>
                     </div>
 
                     <div className="flex justify-end">
-                        <button
+                        <Button
                             type="submit"
-                            disabled={updateLoading}
-                            className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                            loading={updateLoading}
                         >
-                            {updateLoading ? '保存中...' : '保存设置'}
-                        </button>
+                            保存设置
+                        </Button>
                     </div>
                 </form>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-red-200">
-                <h2 className="text-lg font-semibold text-red-600 mb-4">危险区域</h2>
-                <p className="text-sm text-gray-600 mb-4">
+            <Card className="rounded-xl border-rose-500/20 p-5">
+                <h2 className="mb-4 text-[15px] font-medium text-rose-600 dark:text-rose-400">危险区域</h2>
+                <p className="mb-4 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     删除群组将永久移除所有数据和内容，此操作不可撤销。
                 </p>
                 <form onSubmit={handleDelete}>
-                    <button
+                    <Button
                         type="submit"
-                        disabled={deleteLoading}
-                        className="px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        variant="danger"
+                        loading={deleteLoading}
                     >
-                        {deleteLoading ? '删除中...' : '删除群组'}
-                    </button>
+                        删除群组
+                    </Button>
                 </form>
-            </div>
+            </Card>
         </div>
     )
 }

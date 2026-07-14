@@ -19,6 +19,7 @@ export const groups = pgTable('groups', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     rejectedReason: text('rejected_reason'),
+    reviewNote: text('review_note'),
 })
 
 export type Group = typeof groups.$inferSelect & { category: GroupCategory, status: GroupStatus }

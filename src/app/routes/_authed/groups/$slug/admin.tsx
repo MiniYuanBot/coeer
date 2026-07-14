@@ -1,7 +1,8 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { approveGroupFn, listAllGroupsFn } from '~/functions'
 import { useState } from 'react'
+import { Button, Card, EmptyState } from '@/components/coeer'
 
 
 const searchSchema = z.object({
@@ -89,46 +90,47 @@ function GroupAdminPage() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">群组统计</h2>
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="text-2xl font-bold text-gray-900">{group.memberCount}</p>
-                        <p className="text-sm text-gray-500">成员数</p>
+            <Card className="rounded-xl p-5">
+                <h2 className="mb-4 text-[15px] font-medium">群组统计</h2>
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+                        <p className="text-2xl font-medium tabular-nums">{group.memberCount}</p>
+                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">成员数</p>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="text-2xl font-bold text-gray-900">{group.postCount || 0}</p>
-                        <p className="text-sm text-gray-500">帖子数</p>
+                    <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+                        <p className="text-2xl font-medium tabular-nums">{group.postCount || 0}</p>
+                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">帖子数</p>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="text-2xl font-bold text-gray-900">
+                    <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+                        <p className="text-2xl font-medium tabular-nums">
                             {new Date(group.createdAt).toLocaleDateString()}
                         </p>
-                        <p className="text-sm text-gray-500">创建时间</p>
+                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">创建时间</p>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             {pendingGroups.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">待审核群组</h2>
+                <Card className="rounded-xl p-5">
+                    <h2 className="mb-4 text-[15px] font-medium">待审核群组</h2>
                     <div className="space-y-4">
                         {pendingGroups.map((g) => (
-                            <div key={g.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div key={g.id} className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] p-4 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <p className="font-medium text-gray-900">{g.name}</p>
-                                    <p className="text-sm text-gray-500">创建者: {g.creatorId}</p>
+                                    <p className="text-[15px] font-medium">{g.name}</p>
+                                    <p className="text-[13px] text-[hsl(var(--muted-foreground))]">创建者：{g.creatorId}</p>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        size="sm"
                                         onClick={() => handleApprove(g.id)}
                                         disabled={processingId === g.id}
-                                        className="px-3 py-1 text-sm text-green-600 hover:text-green-800 border border-green-200 rounded hover:bg-green-50 disabled:opacity-50"
+                                        loading={processingId === g.id}
                                     >
-                                        {processingId === g.id ? '处理中...' : '通过'}
-                                    </button>
+                                        通过
+                                    </Button>
 
-                                    <div className="flex gap-2 items-center">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <input
                                             type="text"
                                             value={rejectReason[g.id] || ''}
@@ -137,57 +139,57 @@ function GroupAdminPage() {
                                                 [g.id]: e.target.value
                                             }))}
                                             placeholder="拒绝原因"
-                                            className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+                                            className="coeer-focus h-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
                                             disabled={processingId === g.id}
                                         />
-                                        <button
+                                        <Button
+                                            size="sm"
+                                            variant="danger"
                                             onClick={() => handleReject(g.id)}
                                             disabled={processingId === g.id || !rejectReason[g.id]?.trim()}
-                                            className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-200 rounded hover:bg-red-50 disabled:opacity-50"
+                                            loading={processingId === g.id}
                                         >
-                                            {processingId === g.id ? '处理中...' : '拒绝'}
-                                        </button>
+                                            拒绝
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </Card>
             )}
 
             {pendingGroups.length === 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                    <p className="text-gray-500">暂无待审核群组</p>
-                </div>
+                <EmptyState title="暂无待审核群组" description="新的群组创建申请会显示在这里。" />
             )}
 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-4">
-                    <button
+                    <Button
+                        variant="outline"
                         disabled={page <= 1}
                         onClick={() =>
                             navigate({
                                 search: (prev) => ({ ...prev, page: prev.page - 1 }),
                             })
                         }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
                     >
                         上一页
-                    </button>
-                    <span className="text-sm text-gray-600">
+                    </Button>
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">
                         {page} / {totalPages}
                     </span>
-                    <button
+                    <Button
+                        variant="outline"
                         disabled={page >= totalPages}
                         onClick={() =>
                             navigate({
                                 search: (prev) => ({ ...prev, page: prev.page + 1 }),
                             })
                         }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
                     >
                         下一页
-                    </button>
+                    </Button>
                 </div>
             )}
         </div>

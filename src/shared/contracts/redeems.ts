@@ -20,9 +20,21 @@ export const CreateRedeemItemSchema = z.object({
     type: z.enum(REDEEM_ITEM_TYPE_ARRAY),
 })
 
+export const UpdateRedeemItemSchema = z.object({
+    itemId: z.uuid(),
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().optional(),
+    imageUrl: z.string().url().optional(),
+    pointsCost: z.number().int().positive().optional(),
+    stock: z.number().int().min(-1).optional(),
+    type: z.enum(REDEEM_ITEM_TYPE_ARRAY).optional(),
+    status: z.enum(REDEEM_ITEM_STATUS_ARRAY).optional(),
+})
+
 export const ListRedeemItemsSchema = z.object({
     status: z.enum(REDEEM_ITEM_STATUS_ARRAY).optional(),
     type: z.enum(REDEEM_ITEM_TYPE_ARRAY).optional(),
+    search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 
@@ -32,6 +44,7 @@ export const RedeemItemSchema = z.object({
 })
 
 export const ListRedeemOrdersSchema = z.object({
+    itemId: z.uuid().optional(),
     status: z.enum(REDEEM_ORDER_STATUS_ARRAY).optional(),
     ...PaginationSchema.shape,
 })
@@ -45,6 +58,7 @@ export const ProcessRedeemOrderSchema = z.object({
 export type RedeemItemIdInput = z.infer<typeof RedeemItemIdSchema>
 export type RedeemOrderIdInput = z.infer<typeof RedeemOrderIdSchema>
 export type CreateRedeemItemInput = z.infer<typeof CreateRedeemItemSchema>
+export type UpdateRedeemItemInput = z.infer<typeof UpdateRedeemItemSchema>
 export type ListRedeemItemsInput = z.infer<typeof ListRedeemItemsSchema>
 export type RedeemItemInput = z.infer<typeof RedeemItemSchema>
 export type ListRedeemOrdersInput = z.infer<typeof ListRedeemOrdersSchema>
@@ -61,4 +75,3 @@ export type RedeemOrderWithDetails = RedeemOrder & {
 
 export type RedeemResponse<T> = ActionResponse<T, RedeemCode>
 export type PaginatedRedeemResponse<T> = PaginatedActionResponse<T, RedeemCode>
-

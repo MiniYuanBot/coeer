@@ -44,3 +44,26 @@ export const feedbackStatusLabels: Record<string, string> = {
     resolved: '已解决',
     invalid: '已驳回',
 }
+
+export const redeemItemTypeLabels: Record<string, string> = {
+    physical: '实体物品',
+    virtual: '虚拟权益',
+}
+
+export const redeemItemStatusLabels: Record<string, string> = {
+    active: '可兑换',
+    sold_out: '已兑完',
+    discontinued: '已下架',
+}
+
+export const achievementConditionTypeLabels: Record<string, string> = {
+    count: '累计次数',
+    action: '行动达成',
+    level: '等级成长',
+}
+
+export const cardRarityLabels: Record<string, string> = {
+    common: '普通',
+    rare: '稀有',
+    legendary: '传说',
+}

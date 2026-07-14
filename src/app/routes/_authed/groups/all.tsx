@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
-import { Badge, Button, Card, EmptyState, GroupCard, Icon, SearchInput, SectionHeader } from '@/components/coeer'
+import { Button, EmptyState, FilterPanel, GroupCard, Icon, SectionHeader, groupCategoryLabels } from '@/components/coeer'
 import { listAllGroupsFn } from '~/functions'
 import { GroupFilterSchema } from '@shared/contracts'
-import { GroupCategory } from '@shared/constants'
+import { GROUP_CATEGORY_ARRAY, GroupCategory } from '@shared/constants'
 
 const searchSchema = z.object({
     ...GroupFilterSchema.shape,
@@ -46,37 +46,24 @@ function GroupsAllPage() {
                 action={<Link to="/groups/create"><Button><Icon name="group" /> 创建群组</Button></Link>}
             />
 
-            <Card className="grid gap-3 p-4 md:grid-cols-[1fr_14rem]">
-                <SearchInput
-                    placeholder="搜索群组"
-                    defaultValue={search}
-                    onChange={(e) => {
-                        const value = e.target.value
-                        navigate({ search: (prev) => ({ ...prev, search: value || undefined, page: 1 }) })
-                    }}
-                />
-                <select
-                    value={category || ''}
-                    onChange={(e) => {
-                        const value = e.target.value as GroupCategory
-                        navigate({ search: (prev) => ({ ...prev, category: value || undefined, page: 1 }) })
-                    }}
-                    className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
-                >
-                    <option value="">全部分类</option>
-                    <option value="organization">组织</option>
-                    <option value="interest">兴趣</option>
-                    <option value="project">项目</option>
-                    <option value="course">课程</option>
-                    <option value="other">其他</option>
-                </select>
-            </Card>
-
-            <div className="flex flex-wrap gap-2">
-                <Badge tone="primary">全部 {total}</Badge>
-                <Badge>公开群组</Badge>
-                <Badge>申请中</Badge>
-            </div>
+            <FilterPanel
+                searchValue={search}
+                searchPlaceholder="搜索群组名称、slug 或描述"
+                onSearch={(value) => navigate({ search: (prev) => ({ ...prev, search: value || undefined, page: 1 }) })}
+                groups={[
+                    {
+                        items: [
+                            { key: 'all', label: `全部 ${total}`, active: !category, onClick: () => navigate({ search: (prev) => ({ ...prev, category: undefined, page: 1 }) }) },
+                            ...GROUP_CATEGORY_ARRAY.map((item) => ({
+                                key: item,
+                                label: groupCategoryLabels[item],
+                                active: category === item,
+                                onClick: () => navigate({ search: (prev) => ({ ...prev, category: item as GroupCategory, page: 1 }) }),
+                            })),
+                        ],
+                    },
+                ]}
+            />
 
             {groups.length ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { joinGroupFn } from '~/functions'
 import { useState } from 'react'
+import { Button, Card, Icon, SectionHeader } from '@/components/coeer'
 
 
 export const Route = createFileRoute('/_authed/groups/$slug/')({
@@ -28,51 +29,43 @@ function GroupHomePage() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">关于群组</h2>
-                <p className="text-gray-600 whitespace-pre-wrap">
+            <Card className="rounded-xl p-5">
+                <h2 className="text-[15px] font-medium">关于群组</h2>
+                <p className="mt-3 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     {group.description || '暂无描述'}
                 </p>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <Card className="rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">管理员</h2>
+                    <h2 className="text-[15px] font-medium">管理员</h2>
                     <Link
                         to="/groups/$slug/members"
                         params={{ slug: group.slug }}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-[hsl(var(--primary))]"
                     >
                         查看全部成员
                     </Link>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* {group.creator.avatarUrl ? (
-                        <img
-                            src={group.creator.avatarUrl}
-                            alt=""
-                            className="w-10 h-10 rounded-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
-                            {group.creator.name?.[0] || '?'}
-                        </div>
-                    )} */}
-                    <span className="font-medium text-gray-900">{group.creator?.name || '未知用户'}</span>
+                    <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                        {group.creator?.name?.[0] || '?'}
+                    </div>
+                    <span className="text-[15px] font-medium">{group.creator?.name || '未知用户'}</span>
                 </div>
-            </div>
+            </Card>
 
             {!(isMember || isAdmin) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <p className="text-blue-900 mb-4">加入这个群组，参与讨论</p>
-                    <button
+                <Card className="rounded-xl p-5 text-center">
+                    <p className="mb-4 text-[13px] text-[hsl(var(--muted-foreground))]">加入这个群组，参与讨论</p>
+                    <Button
                         onClick={handleJoin}
                         disabled={isJoining}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        loading={isJoining}
                     >
-                        {isJoining ? '申请中...' : '申请加入'}
-                    </button>
-                </div>
+                        <Icon name="group" /> 申请加入
+                    </Button>
+                </Card>
             )}
         </div>
     )

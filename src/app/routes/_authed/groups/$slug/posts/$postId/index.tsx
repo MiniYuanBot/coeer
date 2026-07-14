@@ -1,146 +1,81 @@
-import { createFileRoute, Link, useNavigate, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { deleteGroupPostFn, togglePinPostFn } from '~/functions'
+import { Badge, Button, Card, Icon, Modal, SectionHeader, formatDateTime } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/')({
   component: PostIndexComponent,
 })
 
 function PostIndexComponent() {
-  const { group, post } = Route.useRouteContext()
+  const { group, post, isAdmin } = Route.useRouteContext()
   const { slug, postId } = Route.useParams()
   const navigate = useNavigate()
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false) // Should come from auth context
 
   const handleDelete = async () => {
     await deleteGroupPostFn({ data: { id: postId } })
-    navigate({ to: `/groups/${slug}/posts` })
+    navigate({ to: '/groups/$slug/posts', params: { slug } })
   }
 
   const handleTogglePin = async () => {
     await togglePinPostFn({ data: { id: postId, isPinned: !post.isPinned } })
-    navigate({ to: `/groups/${slug}/posts/${postId}` })
+    navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId } })
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link to={`/groups/$slug`} params={{ slug: slug }} className="hover:text-gray-900">{group.name}</Link>
-        <span>/</span>
-        <Link to={`/groups/$slug/posts`} params={{ slug: slug }} className="hover:text-gray-900">Posts</Link>
-        <span>/</span>
-        <span className="text-gray-900 truncate max-w-xs">{post.title}</span>
-      </div>
-
-      {/* Post Header */}
-      <div className="bg-white rounded-xl border border-gray-200 p-8 mb-6">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3">
-            {post.isPinned && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                Pinned
-              </span>
-            )}
-            <span className={`px-3 py-1 text-sm font-medium rounded-full ${post.type === 'announcement'
-              ? 'bg-purple-100 text-purple-700'
-              : 'bg-gray-100 text-gray-700'
-              }`}>
-              {post.type}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <button
-                onClick={handleTogglePin}
-                className="text-sm text-gray-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-gray-100"
-              >
-                {post.isPinned ? 'Unpin Post' : 'Pin Post'}
-              </button>
-            )}
-            <Link
-              to={`/groups/$slug/posts/$postId/edit`}
-              params={{ slug: slug, postId: postId }}
-              className="text-sm text-gray-500 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100"
-            >
-              Edit
+    <div className="mx-auto max-w-3xl space-y-6">
+      <SectionHeader
+        title={post.title}
+        description={`${group.name} · ${formatDateTime(post.createdAt)}`}
+        action={
+          <div className="flex flex-wrap gap-2">
+            {isAdmin ? <Button variant="outline" onClick={handleTogglePin}>{post.isPinned ? '取消置顶' : '置顶'}</Button> : null}
+            <Link to="/groups/$slug/posts/$postId/edit" params={{ slug, postId }}>
+              <Button variant="outline">编辑</Button>
             </Link>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-sm text-red-500 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50"
-            >
-              Delete
-            </button>
+            <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>删除</Button>
           </div>
+        }
+      />
+
+      <Card className="rounded-xl p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          {post.isPinned ? <Badge tone="primary">置顶</Badge> : null}
+          <Badge>{post.type === 'announcement' ? '公告' : '讨论'}</Badge>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">{post.title}</h1>
-
-        <div className="flex items-center gap-3 mb-8 pb-8 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-full bg-liner-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium">
+        <div className="my-5 flex items-center gap-3 border-b border-[hsl(var(--border))] pb-5">
+          <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
             {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{post.author?.name}</p>
-            <p className="text-sm text-gray-500">
-              <time dateTime={post.createdAt.toString()}>
-                {new Date(post.createdAt).toLocaleDateString(undefined, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </time>
-              {post.updatedAt !== post.createdAt && ' (edited)'}
+            <p className="text-[15px] font-medium">{post.author?.name || '未知用户'}</p>
+            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">
+              {formatDateTime(post.createdAt)}
+              {post.updatedAt !== post.createdAt ? ' · 已编辑' : ''}
             </p>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="prose prose-gray max-w-none">
-          <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-            {post.content}
-          </div>
+        <div className="whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--foreground))]">
+          {post.content}
         </div>
-      </div>
+      </Card>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between">
-        <Link
-          to={`/groups/$slug/posts`}
-          params={{ slug: slug }}
-          className="text-gray-600 hover:text-gray-900 font-medium"
-        >
-          ← Back to posts
-        </Link>
-      </div>
+      <Link to="/groups/$slug/posts" params={{ slug }} className="inline-flex items-center gap-2 text-sm text-[hsl(var(--primary))]">
+        <Icon name="chevron" className="h-4 w-4 rotate-180" /> 返回帖子
+      </Link>
 
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Post?</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{post.title}"? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+      <Modal open={showDeleteConfirm} title="删除帖子" onOpenChange={setShowDeleteConfirm}>
+        <p className="text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+          确定删除“{post.title}”吗？此操作不可撤销。
+        </p>
+        <div className="mt-5 flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>取消</Button>
+          <Button variant="danger" onClick={handleDelete}>删除</Button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

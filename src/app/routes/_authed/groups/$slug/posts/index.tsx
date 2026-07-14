@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
-import { listPostsByGroupFn, deleteGroupPostFn, togglePinPostFn, getGroupBySlugFn } from '~/functions'
+import { deleteGroupPostFn, listPostsByGroupFn, togglePinPostFn } from '~/functions'
 import { type GroupPostWithAuthor, GroupPostFilterSchema } from '@shared/contracts'
 import { GroupPostType } from '@shared/constants'
+import { Badge, Button, Card, EmptyState, FilterPanel, Icon, Modal, SectionHeader, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
@@ -13,263 +14,141 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_authed/groups/$slug/posts/')({
     validateSearch: searchSchema,
     loaderDeps: ({ search }) => ({ search }),
-    loader: async ({ context, params, deps: { search } }) => {
+    loader: async ({ context, deps: { search } }) => {
         const group = context.group!
         const pageSize = 5
-
         const posts = await listPostsByGroupFn({
             data: {
                 groupId: group.id,
                 type: search.type,
                 limit: pageSize,
                 offset: (search.page - 1) * pageSize,
-            }
+            },
         })
 
         return {
             posts: posts?.items || [],
             total: posts?.total || 0,
             page: search.page,
-            pageSize: pageSize,
+            pageSize,
             type: search.type,
         }
     },
     component: PostsListPage,
 })
 
+function postTypeLabel(type: string) {
+    return type === 'announcement' ? '公告' : '讨论'
+}
+
 function PostsListPage() {
     const { posts, total, page, pageSize, type } = Route.useLoaderData()
+    const { isAdmin } = Route.useRouteContext()
     const navigate = useNavigate()
     const { slug } = Route.useParams()
-
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [deletingPost, setDeletingPost] = useState<GroupPostWithAuthor | null>(null)
-    const [isAdmin, setIsAdmin] = useState(false) // Should come from auth context
-
     const totalPages = Math.ceil(total / pageSize)
+
+    const go = (next: { type?: GroupPostType; page?: number }) => {
+        navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page: 1, ...next } })
+    }
 
     const handleDelete = async (postId: string) => {
         await deleteGroupPostFn({ data: { id: postId } })
-        setShowDeleteConfirm(false)
         setDeletingPost(null)
-        navigate({
-            to: `/groups/${slug}/posts`,
-            search: { type, page }
-        })
+        navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page } })
     }
 
     const handleTogglePin = async (postId: string, isPinned: boolean) => {
         await togglePinPostFn({ data: { id: postId, isPinned } })
-        navigate({
-            to: `/groups/${slug}/posts`,
-            search: { type, page }
-        })
-    }
-
-    const handleFilterChange = (newType: GroupPostType | undefined) => {
-        navigate({
-            to: `/groups/${slug}/posts`,
-            search: {
-                type: newType,
-                page: 1,
-            }
-        })
+        navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page } })
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Posts</h1>
-                    <p className="text-gray-600">Share discussions and announcements with the group</p>
-                </div>
-                <Link
-                    to={`/groups/$slug/posts/create`}
-                    params={{ slug: slug }}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    New Post
-                </Link>
-            </div>
+        <div className="space-y-6">
+            <SectionHeader
+                title="帖子"
+                description="查看群组讨论与公告。"
+                action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button><Icon name="send" /> 发布帖子</Button></Link>}
+            />
 
-            {/* Filters */}
-            <div className="flex gap-4 mb-6">
-                <button
-                    onClick={() => handleFilterChange(undefined)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!type
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                        }`}
-                >
-                    All
-                </button>
-                <button
-                    onClick={() => handleFilterChange('discussion')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${type === 'discussion'
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                        }`}
-                >
-                    Discussions
-                </button>
-                <button
-                    onClick={() => handleFilterChange('announcement')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${type === 'announcement'
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                        }`}
-                >
-                    Announcements
-                </button>
-            </div>
+            <FilterPanel
+                searchPlaceholder="帖子页暂不支持搜索"
+                onSearch={() => undefined}
+                groups={[
+                    {
+                        items: [
+                            { key: 'all', label: `全部 ${total}`, active: !type, onClick: () => go({ type: undefined }) },
+                            { key: 'discussion', label: '讨论', active: type === 'discussion', onClick: () => go({ type: 'discussion' }) },
+                            { key: 'announcement', label: '公告', active: type === 'announcement', onClick: () => go({ type: 'announcement' }) },
+                        ],
+                    },
+                ]}
+            />
 
-            {/* Posts List */}
-            <div className="space-y-4">
-                {posts.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-                        <p className="text-gray-500 text-lg mb-4">No posts yet</p>
-                        <Link
-                            to={`/groups/$slug/posts/create`}
-                            params={{ slug: slug }}
-                            className="text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                            Create the first post →
-                        </Link>
-                    </div>
-                ) : (
-                    posts.map((post) => (
-                        <div
-                            key={post.id}
-                            className={`bg-white rounded-xl border ${post.isPinned ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'
-                                } p-6 hover:shadow-md transition-shadow`}
-                        >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    {post.isPinned && (
-                                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                            Pinned
-                                        </span>
-                                    )}
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${post.type === 'announcement'
-                                        ? 'bg-purple-100 text-purple-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {post.type}
-                                    </span>
+            {posts.length ? (
+                <div className="space-y-4">
+                    {posts.map((post) => (
+                        <Card key={post.id} className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {post.isPinned ? <Badge tone="primary">置顶</Badge> : null}
+                                    <Badge>{postTypeLabel(post.type)}</Badge>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {isAdmin && (
-                                        <button
-                                            onClick={() => handleTogglePin(post.id, !post.isPinned)}
-                                            className="text-sm text-gray-500 hover:text-blue-600 px-3 py-1 rounded-lg hover:bg-gray-100"
-                                        >
-                                            {post.isPinned ? 'Unpin' : 'Pin'}
-                                        </button>
-                                    )}
-                                    <Link
-                                        to={`/groups/$slug/posts/$postId/edit`}
-                                        params={{ slug: slug, postId: post.id }}
-                                        className="text-sm text-gray-500 hover:text-gray-900 px-3 py-1 rounded-lg hover:bg-gray-100"
-                                    >
-                                        Edit
+                                <div className="flex flex-wrap gap-2">
+                                    {isAdmin ? (
+                                        <Button size="sm" variant="ghost" onClick={() => handleTogglePin(post.id, !post.isPinned)}>
+                                            {post.isPinned ? '取消置顶' : '置顶'}
+                                        </Button>
+                                    ) : null}
+                                    <Link to="/groups/$slug/posts/$postId/edit" params={{ slug, postId: post.id }}>
+                                        <Button size="sm" variant="outline">编辑</Button>
                                     </Link>
-                                    <button
-                                        onClick={() => {
-                                            setDeletingPost(post)
-                                            setShowDeleteConfirm(true)
-                                        }}
-                                        className="text-sm text-red-500 hover:text-red-700 px-3 py-1 rounded-lg hover:bg-red-50"
-                                    >
-                                        Delete
-                                    </button>
+                                    <Button size="sm" variant="danger" onClick={() => setDeletingPost(post)}>删除</Button>
                                 </div>
                             </div>
 
-                            <Link to={`/groups/$slug/posts/$postId`} params={{ slug: slug, postId: post.id }}>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600">
-                                    {post.title}
-                                </h3>
+                            <Link to="/groups/$slug/posts/$postId" params={{ slug, postId: post.id }} className="mt-4 block">
+                                <h3 className="text-[15px] font-medium hover:text-[hsl(var(--primary))]">{post.title}</h3>
                             </Link>
-
-                            <p className="text-gray-600 line-clamp-2 mb-4">
-                                {post.content.replace(/[#*`]/g, '').slice(0, 200)}...
+                            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+                                {post.content.replace(/[#*`]/g, '')}
                             </p>
-
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
-                                        {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="font-medium text-gray-900">{post.author?.name}</span>
-                                    <span>•</span>
-                                    <time dateTime={post.createdAt.toString()}>
-                                        {new Date(post.createdAt).toLocaleDateString()}
-                                    </time>
+                            <div className="mt-4 flex items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
+                                <div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xs font-medium text-[hsl(var(--primary))]">
+                                    {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                 </div>
+                                <span className="font-medium text-[hsl(var(--foreground))]">{post.author?.name || '未知用户'}</span>
+                                <span>{formatDate(post.createdAt)}</span>
                             </div>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                    <button
-                        onClick={() => navigate({
-                            to: `/groups/${slug}/posts`,
-                            search: { type, page: page - 1 }
-                        })}
-                        disabled={page <= 1}
-                        className="px-4 py-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-gray-600">
-                        Page {page} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => navigate({
-                            to: `/groups/${slug}/posts`,
-                            search: { type, page: page + 1 }
-                        })}
-                        disabled={page >= totalPages}
-                        className="px-4 py-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                        Next
-                    </button>
+                        </Card>
+                    ))}
                 </div>
+            ) : (
+                <EmptyState
+                    title="暂无帖子"
+                    description="发布第一条讨论或公告，开启群组协作。"
+                    action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button>发布帖子</Button></Link>}
+                />
             )}
 
-            {/* Delete Confirmation Modal */}
-            {showDeleteConfirm && deletingPost && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Post?</h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete "{deletingPost.title}"? This action cannot be undone.
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDeleteConfirm(false)
-                                    setDeletingPost(null)
-                                }}
-                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => handleDelete(deletingPost.id)}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+            {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-2">
+                    <Button variant="outline" disabled={page <= 1} onClick={() => go({ page: page - 1 })}>上一页</Button>
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span>
+                    <Button variant="outline" disabled={page >= totalPages} onClick={() => go({ page: page + 1 })}>下一页</Button>
                 </div>
-            )}
+            ) : null}
+
+            <Modal open={Boolean(deletingPost)} title="删除帖子" onOpenChange={(open) => !open && setDeletingPost(null)}>
+                <p className="text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+                    确定删除“{deletingPost?.title}”吗？此操作不可撤销。
+                </p>
+                <div className="mt-5 flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setDeletingPost(null)}>取消</Button>
+                    <Button variant="danger" onClick={() => deletingPost && handleDelete(deletingPost.id)}>删除</Button>
+                </div>
+            </Modal>
         </div>
     )
 }

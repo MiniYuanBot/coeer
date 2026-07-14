@@ -1,116 +1,59 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import z from 'zod'
-import { getFeedbackStatsFn } from '~/functions'
-import { Button, Card, SectionHeader } from '@/components/coeer'
-
-const searchSchema = z.object({
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-})
+import { createFileRoute } from '@tanstack/react-router'
+import { Card, SectionHeader } from '@/components/coeer'
+import { getUserStatsFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/admin/stats')({
-    validateSearch: searchSchema,
-    loaderDeps: ({ search }) => search,
-    loader: async ({ deps }) => {
-        const result = await getFeedbackStatsFn({
-            data: {
-                startDate: deps.startDate ? new Date(deps.startDate) : undefined,
-                endDate: deps.endDate ? new Date(deps.endDate) : undefined,
-            },
-        })
-        if (!result) {
-            throw new Error('No stat found')
-        }
-        return result
-    },
-    errorComponent: ({ error }) => {
-        if (error.message === 'No stat found') {
-            throw redirect({ to: '/admin' })
-        }
-
-        throw error
-    },
+    loader: async () => getUserStatsFn(),
     component: AdminStatsPage,
 })
 
 function AdminStatsPage() {
     const stats = Route.useLoaderData()
-    const { startDate, endDate } = Route.useSearch()
-    const navigate = useNavigate()
-
-    const handleFilter = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        navigate({
-            to: '/admin/stats',
-            search: {
-                startDate: (formData.get('startDate') as string) || undefined,
-                endDate: (formData.get('endDate') as string) || undefined,
-            },
-        })
-    }
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="反馈统计" description="按时间范围查看反馈处理概况。" />
-
-            <Card className="p-4">
-                <form onSubmit={handleFilter} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                    <label className="text-sm font-medium">
-                        <span>开始日期</span>
-                        <input
-                            name="startDate"
-                            type="date"
-                            defaultValue={startDate}
-                            className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
-                        />
-                    </label>
-                    <label className="text-sm font-medium">
-                        <span>结束日期</span>
-                        <input
-                            name="endDate"
-                            type="date"
-                            defaultValue={endDate}
-                            className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
-                        />
-                    </label>
-                    <Button type="submit">筛选</Button>
-                </form>
-            </Card>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="全部反馈" value={stats.total} />
-                <StatCard label="待审核" value={stats.pending} tone="text-amber-600 dark:text-amber-300" />
-                <StatCard label="已公开" value={stats.processing} tone="text-[hsl(var(--primary))]" />
-                <StatCard label="已解决" value={stats.resolved} tone="text-emerald-600 dark:text-emerald-300" />
+            <SectionHeader title="统计概览" description="所有用户及用户情况的数据概览。" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <StatCard label="全部用户" value={stats.total} />
+                <StatCard label="活跃用户" value={stats.active} />
+                <StatCard label="停用用户" value={stats.inactive} />
+                <StatCard label="学生" value={stats.students} />
+                <StatCard label="协管" value={stats.moderators} />
+                <StatCard label="管理员" value={stats.admins} />
             </div>
-
-            <Card className="p-5">
-                <h2 className="font-semibold">处理明细</h2>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    <StatCard label="已驳回" value={stats.invalid} compact />
-                    <StatCard label="平均解决时长" value={`${stats.avgResolveTime || 0} 小时`} compact />
+            <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[680px] text-sm">
+                        <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
+                            <tr>
+                                <th className="px-4 py-3 font-medium">用户</th>
+                                <th className="px-4 py-3 font-medium">邮箱</th>
+                                <th className="px-4 py-3 font-medium">角色</th>
+                                <th className="px-4 py-3 font-medium">创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[hsl(var(--border))]">
+                            {stats.users.map((user) => (
+                                <tr key={user.id}>
+                                    <td className="px-4 py-3">{user.name || '未命名'}</td>
+                                    <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{user.email}</td>
+                                    <td className="px-4 py-3">{user.role}</td>
+                                    <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{new Date(user.createdAt).toLocaleDateString('zh-CN')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </Card>
         </div>
     )
 }
 
-function StatCard({
-    label,
-    value,
-    tone,
-    compact,
-}: {
-    label: string
-    value: number | string
-    tone?: string
-    compact?: boolean
-}) {
+function StatCard({ label, value }: { label: string; value: number }) {
     return (
-        <Card className={compact ? 'p-4' : 'p-5'}>
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">{label}</p>
-            <p className={`mt-2 font-bold ${compact ? 'text-2xl' : 'text-3xl'} ${tone || ''}`}>{value}</p>
+        <Card className="rounded-xl p-5">
+            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</p>
+            <p className="mt-2 text-2xl font-medium tabular-nums">{value}</p>
         </Card>
     )
 }

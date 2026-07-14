@@ -85,12 +85,12 @@ function FeedbackDetailPage() {
 
             <Card className="p-5">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--primary)/0.1)] text-sm font-semibold text-[hsl(var(--primary))]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
                         {feedback.isAnonymous ? '匿' : feedback.author?.name?.[0] || 'U'}
                     </div>
                     <div>
-                        <p className="font-medium">{feedback.isAnonymous ? '匿名用户' : feedback.author?.name || '未知用户'}</p>
-                        <p className="text-sm text-[hsl(var(--muted-foreground))]">提交人</p>
+                        <p className="text-[15px] font-medium">{feedback.isAnonymous ? '匿名用户' : feedback.author?.name || '未知用户'}</p>
+                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">提交人</p>
                     </div>
                 </div>
             </Card>

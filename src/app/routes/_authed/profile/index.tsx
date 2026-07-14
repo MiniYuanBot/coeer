@@ -28,30 +28,30 @@ function ProfileIndexComponent() {
                 action={<Link to="/logout"><Button variant="outline"><Icon name="logout" /> 退出</Button></Link>}
             />
             <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-                <Card className="p-6">
+                <Card className="rounded-xl p-5">
                     <div className="flex items-center gap-4">
-                        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[hsl(var(--primary)/0.1)] text-2xl font-bold text-[hsl(var(--primary))]">
+                        <div className="grid h-12 w-12 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xl font-medium text-[hsl(var(--primary))]">
                             {(user.name || user.email).slice(0, 1).toUpperCase()}
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold">{user.name || 'COEER 成员'}</h2>
-                            <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{user.email}</p>
+                            <h2 className="text-[15px] font-medium">{user.name || 'COEER 成员'}</h2>
+                            <p className="mt-1 text-[13px] text-[hsl(var(--muted-foreground))]">{user.email}</p>
                             <div className="mt-2"><Badge tone="primary">{user.role}</Badge></div>
                         </div>
                     </div>
 
                     <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
-                            <div className="text-2xl font-bold">3</div>
-                            <div className="text-sm text-[hsl(var(--muted-foreground))]">加入群组</div>
+                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                            <div className="text-2xl font-medium tabular-nums">3</div>
+                            <div className="text-[13px] text-[hsl(var(--muted-foreground))]">加入群组</div>
                         </div>
-                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
-                            <div className="text-2xl font-bold">8</div>
-                            <div className="text-sm text-[hsl(var(--muted-foreground))]">提交反馈</div>
+                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                            <div className="text-2xl font-medium tabular-nums">8</div>
+                            <div className="text-[13px] text-[hsl(var(--muted-foreground))]">提交反馈</div>
                         </div>
-                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
-                            <div className="text-2xl font-bold">2</div>
-                            <div className="text-sm text-[hsl(var(--muted-foreground))]">成就解锁</div>
+                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                            <div className="text-2xl font-medium tabular-nums">2</div>
+                            <div className="text-[13px] text-[hsl(var(--muted-foreground))]">成就解锁</div>
                         </div>
                     </div>
                 </Card>
@@ -61,7 +61,7 @@ function ProfileIndexComponent() {
 
             <Card className="p-5">
                 <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-semibold">积分流水</h2>
+                    <h2 className="text-[15px] font-medium">积分流水</h2>
                     <Badge>{history.length} 条</Badge>
                 </div>
                 <div className="divide-y divide-[hsl(var(--border)/0.65)]">
@@ -71,7 +71,7 @@ function ProfileIndexComponent() {
                                 <div className="text-sm font-medium">{item.description || item.source}</div>
                                 <div className="text-xs text-[hsl(var(--muted-foreground))]">{item.source}</div>
                             </div>
-                            <div className={item.amount > 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-red-600'}>
+                            <div className={item.amount > 0 ? 'font-medium tabular-nums text-emerald-600 dark:text-emerald-400' : 'font-medium tabular-nums text-rose-600 dark:text-rose-400'}>
                                 {item.amount > 0 ? '+' : ''}{item.amount}
                             </div>
                         </div>

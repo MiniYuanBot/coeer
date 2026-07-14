@@ -25,6 +25,7 @@ export const CreateFeedbackSchema = z.object({
 export const UpdateFeedbackSchema = z.object({
     id: z.uuid(),
     status: z.enum(FEEDBACK_STATUS_ARRAY),
+    isPublic: z.boolean().optional(),
     resolvedAt: z.date().optional(),
 })
 
@@ -32,7 +33,7 @@ export const FeedbackFilterSchema = z.object({
     targetType: z.enum(FEEDBACK_TARGET_TYPE_ARRAY).optional(),
     status: z.enum(FEEDBACK_STATUS_ARRAY).optional(),
     search: z.string().optional(),
-    view: z.enum(['mine_reviewed', 'mine_pending', 'public']).optional(),
+    view: z.enum(['mine', 'mine_reviewed', 'mine_pending', 'public']).optional(),
 })
 
 export const CountFeedbacksSchema = z.object({
@@ -58,6 +59,7 @@ export const FeedbackStatsSchema = z.object({
 export const UpdateFeedbackStatusSchema = z.object({
     id: z.uuid(),
     status: z.enum(FEEDBACK_STATUS_ARRAY),
+    isPublic: z.boolean().optional(),
     search: z.string().optional(),
     authorId: z.uuid().optional(),
     note: z.string().max(1000).optional(),

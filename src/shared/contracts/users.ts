@@ -51,7 +51,17 @@ export type UserFilterInput = z.infer<typeof UserFilterSchema>
 export type CountUsersInput = z.infer<typeof CountUsersSchema>
 export type ListUsersInput = z.infer<typeof ListUsersSchema>
 
-export type User = Pick<DbUser, 'id' | 'email' | 'role' | 'createdAt' | 'name'>
+export type User = Pick<DbUser, 'id' | 'email' | 'role' | 'createdAt' | 'name' | 'isActive'>
 export type UsersWithProfile = User & {
     profile: UserProfile | null;
+}
+
+export type UserStats = {
+    total: number
+    active: number
+    inactive: number
+    students: number
+    moderators: number
+    admins: number
+    users: User[]
 }

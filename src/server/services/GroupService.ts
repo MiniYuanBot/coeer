@@ -15,6 +15,7 @@ import type {
     GroupSlugWithFilterInput,
     ListMyGroupsInput,
     UpdateGroupInput,
+    UpdateGroupStatusInput,
     ListAllGroupsInput,
     ApproveGroupInput,
     CheckRoleInput,
@@ -324,6 +325,35 @@ export class GroupService {
                 success: false,
                 state: GROUP.SERVER_ERROR,
             }
+        }
+    }
+
+    // Platform admin review for management dashboard.
+    static async updateGroupStatus(data: UpdateGroupStatusInput): Promise<GroupResponse<void>> {
+        try {
+            const payload = await AuthService.getCurrentUser()
+            const user = payload.data
+            if (!payload.success || !user) {
+                return { success: false, state: GROUP.UNAUTHORIZED }
+            }
+            if (user.role !== 'admin') {
+                return { success: false, state: GROUP.FORBIDDEN }
+            }
+
+            const group = await groupQueries.findById({ groupId: data.id })
+            if (!group) {
+                return { success: false, state: GROUP.NOT_FOUND }
+            }
+
+            await groupQueries.updateStatus(data)
+
+            return {
+                success: true,
+                state: GROUP.UPDATE_SUCCESS,
+            }
+        } catch (err) {
+            console.error('Update group status error:', err)
+            return { success: false, state: GROUP.SERVER_ERROR }
         }
     }
 

@@ -23,9 +23,5 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId')({
 })
 
 function RouteLayout() {
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <Outlet />
-        </div>
-    )
+    return <Outlet />
 }

@@ -1,11 +1,19 @@
-import { and, eq, SQL } from 'drizzle-orm'
+import { and, eq, ilike, or, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { achievements, NewAchievement, userAchievements } from '../schemas'
-import type { ListAchievementsInput } from '@shared/contracts'
+import type { AchievementIdInput, ListAchievementsInput, UpdateAchievementInput } from '@shared/contracts'
 
 function buildAchievementWhere(data: ListAchievementsInput): SQL | undefined {
     const conditions: SQL[] = []
     if (data.conditionType) conditions.push(eq(achievements.conditionType, data.conditionType))
+    if (data.search) {
+        const searchCondition = or(
+            ilike(achievements.name, `%${data.search}%`),
+            ilike(achievements.description, `%${data.search}%`),
+            ilike(achievements.code, `%${data.search}%`)
+        )
+        if (searchCondition) conditions.push(searchCondition)
+    }
     return conditions.length ? and(...conditions) : undefined
 }
 
@@ -24,6 +32,19 @@ export const achievementQueries = {
         })
     },
 
+    async update(data: UpdateAchievementInput) {
+        const [achievement] = await db.update(achievements)
+            .set(data)
+            .where(eq(achievements.id, data.achievementId))
+            .returning()
+        if (!achievement) throw new Error('Achievement not found')
+        return achievement
+    },
+
+    async delete(data: AchievementIdInput): Promise<void> {
+        await db.delete(achievements).where(eq(achievements.id, data.achievementId))
+    },
+
     async listByUser(userId: string, limit = 20, offset = 0) {
         return db.query.userAchievements.findMany({
             where: eq(userAchievements.userId, userId),
@@ -38,4 +59,3 @@ export const achievementQueries = {
         return record
     },
 }
-

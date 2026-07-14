@@ -4,6 +4,7 @@ import { getGroupMembersFn, removeMemberFn, updateMemberRoleFn } from '~/functio
 import { useState } from 'react'
 import { GROUP_MEMBER_STATUS, GroupMemberRole } from '@shared/constants'
 import { GroupMemberFilterSchema } from '@shared/contracts'
+import { Badge, Button, Card, EmptyState, FilterPanel, SectionHeader } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupMemberFilterSchema.shape,
@@ -37,13 +38,13 @@ export const Route = createFileRoute('/_authed/groups/$slug/members')({
 
 function GroupMembersPage() {
     const { isAdmin } = Route.useRouteContext()
-    const { members, total, group } = Route.useLoaderData()
+    const { members, total, group, pageSize } = Route.useLoaderData()
     const { status, page } = Route.useSearch()
     const navigate = useNavigate()
     const { slug } = Route.useParams()
     const [processingId, setProcessingId] = useState<string | null>(null)
 
-    const totalPages = Math.ceil(total / 20)
+    const totalPages = Math.ceil(total / pageSize)
 
     const handleApprove = async (memberId: string) => {
         setProcessingId(memberId)
@@ -94,109 +95,87 @@ function GroupMembersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">群组成员</h2>
-                <div className="flex gap-2">
-                    {[
-                        { value: undefined, label: '全部' },
-                        { value: GROUP_MEMBER_STATUS.APPROVED, label: '已通过' },
-                        { value: GROUP_MEMBER_STATUS.PENDING, label: '待审核' },
-                    ].map((item) => (
-                        <Link
-                            key={item.value || 'all'}
-                            to="/groups/$slug/members"
-                            params={{ slug }}
-                            search={{ status: item.value || undefined, page: 1 }}
-                            className={`px-3 py-1 rounded-full text-sm ${(status || '') === item.value
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </div>
-            </div>
+            <SectionHeader title="群组成员" description={`共 ${total} 名成员或申请记录。`} />
+
+            <FilterPanel
+                searchPlaceholder="成员页暂不支持搜索"
+                onSearch={() => undefined}
+                groups={[
+                    {
+                        items: [
+                            { key: 'all', label: '全部', active: !status, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } }) },
+                            { key: 'approved', label: '已通过', active: status === GROUP_MEMBER_STATUS.APPROVED, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.APPROVED, page: 1 } }) },
+                            { key: 'pending', label: '待审核', active: status === GROUP_MEMBER_STATUS.PENDING, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.PENDING, page: 1 } }) },
+                        ],
+                    },
+                ]}
+            />
 
             {members.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                    <p className="text-gray-500">暂无成员</p>
-                </div>
+                <EmptyState title="暂无成员" description="成员加入或申请后会显示在这里。" />
             ) : (
-                <div className="bg-white rounded-lg shadow-sm divide-y divide-gray-200">
+                <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">
                     {members.map((member) => (
-                        <div key={member.id} className="p-4 flex items-center justify-between">
+                        <div key={member.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-3">
+                                <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                                    {member.user.name?.[0] || 'U'}
+                                </div>
                                 <div>
-                                    <p className="font-medium text-gray-900">{member.user.name}</p>
-                                    <p className="text-sm text-gray-500">
-                                        {member.role === 'admin' && '管理员'}
-                                        {member.role === 'member' && '成员'}
-                                        {member.status === 'pending' && ' · 待审核'}
-                                    </p>
+                                    <p className="text-[15px] font-medium">{member.user.name}</p>
+                                    <div className="mt-1 flex flex-wrap gap-2">
+                                        <Badge>{member.role === 'admin' ? '管理员' : '成员'}</Badge>
+                                        {member.status === 'pending' ? <Badge tone="warning">待审核</Badge> : <Badge tone="success">已通过</Badge>}
+                                    </div>
                                 </div>
                             </div>
 
                             {isAdmin && member.user.id !== group.creatorId && (
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     {member.status === 'pending' && (
-                                        <button
+                                        <Button
+                                            size="sm"
                                             onClick={() => handleApprove(member.id)}
                                             disabled={processingId === member.id}
-                                            className="px-3 py-1 text-sm text-green-600 hover:text-green-800 border border-green-200 rounded hover:bg-green-50 disabled:opacity-50"
+                                            loading={processingId === member.id}
                                         >
-                                            {processingId === member.id ? '处理中...' : '通过'}
-                                        </button>
+                                            通过
+                                        </Button>
                                     )}
 
                                     <select
                                         value={member.role}
                                         onChange={(e) => handleRoleChange(member.id, e.target.value)}
                                         disabled={processingId === member.id}
-                                        className="text-sm border-gray-300 rounded-md focus:ring-blue-500 disabled:opacity-50"
+                                        className="coeer-focus h-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm disabled:opacity-50"
                                     >
-                                        <option value="MEMBER">成员</option>
-                                        <option value="MODERATOR">版主</option>
-                                        <option value="ADMIN">管理员</option>
+                                        <option value="member">成员</option>
+                                        <option value="admin">管理员</option>
                                     </select>
 
-                                    <button
+                                    <Button
+                                        size="sm"
+                                        variant="danger"
                                         onClick={() => handleRemove(member.id)}
                                         disabled={processingId === member.id}
-                                        className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-200 rounded hover:bg-red-50 disabled:opacity-50"
+                                        loading={processingId === member.id}
                                     >
-                                        {processingId === member.id ? '处理中...' : '移除'}
-                                    </button>
+                                        移除
+                                    </Button>
                                 </div>
                             )}
                         </div>
                     ))}
-                </div>
+                </Card>
             )}
 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-4">
-                    <Link
-                        to="/groups/$slug/members"
-                        params={{ slug }}
-                        search={{ status, page: page - 1 }}
-                        disabled={page <= 1}
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
-                    >
-                        上一页
-                    </Link>
-                    <span className="text-sm text-gray-600">
+                    <Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page: page - 1 } })}>上一页</Button>
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">
                         {page} / {totalPages}
                     </span>
-                    <Link
-                        to="/groups/$slug/members"
-                        params={{ slug }}
-                        search={{ status, page: page + 1 }}
-                        disabled={page >= totalPages}
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
-                    >
-                        下一页
-                    </Link>
+                    <Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page: page + 1 } })}>下一页</Button>
                 </div>
             )}
         </div>

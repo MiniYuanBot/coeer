@@ -32,9 +32,9 @@ function ActivityDetailPage() {
                     </Button>
                 }
             />
-            <Card className="p-6">
-                <h2 className="font-semibold">活动说明</h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--muted-foreground))]">{activity.description}</p>
+            <Card className="rounded-xl p-5">
+                <h2 className="text-[15px] font-medium">活动说明</h2>
+                <p className="mt-3 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{activity.description}</p>
             </Card>
         </div>
     )
