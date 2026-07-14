@@ -27,7 +27,13 @@ export async function seedUsers(options: { clean?: boolean } = {}) {
             })
             console.log(`Create successful: ${user.email}`)
         } else {
-            console.log(`User exists: ${user.email}`)
+            await userQueries.update({
+                id: existingUser.id,
+                name: user.name,
+                passwordHash: user.passwordHash,
+                role: user.role,
+            })
+            console.log(`User exists, credentials synced: ${user.email}`)
         }
     }
 

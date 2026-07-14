@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   if (mode === 'development') {
-    console.log('✅ Env variables load successfully')
+    console.log('Env variables load successfully')
   }
   
   return {

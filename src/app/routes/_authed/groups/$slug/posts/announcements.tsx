@@ -1,7 +1,8 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import z from 'zod'
-import { listPostsByGroupFn, getGroupBySlugFn } from '~/functions'
+import { listPostsByGroupFn } from '~/functions'
 import { GroupPostFilterSchema } from '@shared/contracts'
+import { Badge, Button, Card, EmptyState, Icon, SectionHeader, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
@@ -12,31 +13,20 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/announcements'
     validateSearch: searchSchema,
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ context, params, deps: { search } }) => {
-        try {
-            const group = context.group!
-            const pageSize = 5
-
-            const result = await listPostsByGroupFn({
-                data: {
-                    groupId: group.id,
-                    type: 'announcement',
-                    limit: pageSize,
-                    offset: (search.page - 1) * pageSize,
-                }
-            })
-            if (!result) {
-                throw redirect({
-                    to: '/groups/$slug/posts',
-                    params: { slug: params.slug }
-                })
-            }
-            return { group, announcements: result.items || [] }
-        } catch (error) {
-            throw error
+        const group = context.group!
+        const pageSize = 5
+        const result = await listPostsByGroupFn({
+            data: {
+                groupId: group.id,
+                type: 'announcement',
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
+            },
+        })
+        if (!result) {
+            throw redirect({ to: '/groups/$slug/posts', params: { slug: params.slug } })
         }
-    },
-    errorComponent: ({ error }) => {
-        throw error
+        return { group, announcements: result.items || [] }
     },
     component: AnnouncementsPage,
 })
@@ -46,67 +36,40 @@ function AnnouncementsPage() {
     const { slug } = Route.useParams()
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Announcements</h1>
-                    <p className="text-gray-600">Official updates from {group.name}</p>
-                </div>
-                <Link
-                    to={`/groups/$slug/posts`}
-                    params={{ slug: slug }}
-                    className="text-gray-600 hover:text-gray-900 font-medium"
-                >
-                    ← All Posts
-                </Link>
-            </div>
+        <div className="space-y-6">
+            <SectionHeader
+                title="群组公告"
+                description={`${group.name} 的正式通知。`}
+                action={<Link to="/groups/$slug/posts" params={{ slug }}><Button variant="outline"><Icon name="chevron" className="h-4 w-4 rotate-180" /> 全部帖子</Button></Link>}
+            />
 
-            <div className="space-y-4">
-                {announcements.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-                        <p className="text-gray-500 text-lg">No announcements yet</p>
-                    </div>
-                ) : (
-                    announcements.map((post) => (
-                        <div
-                            key={post.id}
-                            className="bg-white rounded-xl border border-purple-100 bg-purple-50/30 p-6"
-                        >
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                                    Announcement
-                                </span>
-                                {post.isPinned && (
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                        Pinned
-                                    </span>
-                                )}
+            {announcements.length ? (
+                <div className="space-y-4">
+                    {announcements.map((post) => (
+                        <Card key={post.id} className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge tone="primary">公告</Badge>
+                                {post.isPinned ? <Badge>置顶</Badge> : null}
+                                <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</span>
                             </div>
-
-                            <Link to={`/groups/$slug/posts/$postId`} params={{slug: slug, postId: post.id}}>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600">
-                                    {post.title}
-                                </h3>
+                            <Link to="/groups/$slug/posts/$postId" params={{ slug, postId: post.id }} className="mt-3 block">
+                                <h3 className="text-[15px] font-medium hover:text-[hsl(var(--primary))]">{post.title}</h3>
                             </Link>
-
-                            <p className="text-gray-600 line-clamp-2 mb-4">
-                                {post.content.replace(/[#*`]/g, '').slice(0, 200)}...
+                            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+                                {post.content.replace(/[#*`]/g, '')}
                             </p>
-
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-medium text-xs">
+                            <div className="mt-4 flex items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
+                                <div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xs font-medium text-[hsl(var(--primary))]">
                                     {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                 </div>
-                                <span className="font-medium text-gray-900">{post.author?.name}</span>
-                                <span>•</span>
-                                <time dateTime={post.createdAt.toString()}>
-                                    {new Date(post.createdAt).toLocaleDateString()}
-                                </time>
+                                <span className="font-medium text-[hsl(var(--foreground))]">{post.author?.name || '未知用户'}</span>
                             </div>
-                        </div>
-                    ))
-                )}
-            </div>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <EmptyState title="暂无公告" description="群组公告发布后会显示在这里。" />
+            )}
         </div>
     )
 }

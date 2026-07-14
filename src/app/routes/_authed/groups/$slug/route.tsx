@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
 import { getGroupBySlugFn, checkRoleFn } from '~/functions'
+import { Badge, Card, groupCategoryLabels } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug')({
     beforeLoad: async ({ params, context }) => {
@@ -29,54 +30,48 @@ function GroupLayout() {
     const { slug } = Route.useParams()
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-6 flex items-center justify-between">
+        <div className="space-y-6">
+            <Card className="overflow-hidden rounded-xl">
+                <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            {/* {group.avatarUrl ? (
-                                <img
-                                    src={group.avatarUrl}
-                                    alt=""
-                                    className="w-16 h-16 rounded-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-2xl font-bold">
-                                    {group.name[0]}
-                                </div>
-                            )} */}
+                            <div className="grid h-12 w-12 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xl font-medium text-[hsl(var(--primary))]">
+                                {group.name[0]}
+                            </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
-                                <p className="text-sm text-gray-500">
-                                    {group.category} · {group.isPublic ? '公开' : '私密'} · {group.memberCount} 成员
-                                </p>
+                                <h1 className="text-[28px] font-medium leading-tight">{group.name}</h1>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    <Badge>{groupCategoryLabels[group.category] || group.category}</Badge>
+                                    <Badge tone={group.isPublic ? 'success' : 'default'}>{group.isPublic ? '公开' : '私密'}</Badge>
+                                    <span className="text-[13px] text-[hsl(var(--muted-foreground))]">{group.memberCount} 名成员</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <nav className="flex gap-6 -mb-px">
+                    <nav className="mt-5 flex gap-2 overflow-x-auto border-t border-[hsl(var(--border))] pt-4">
                         <Link
                             to="/groups/$slug"
                             params={{ slug }}
                             activeOptions={{ exact: true }}
-                            activeProps={{ className: 'border-blue-500 text-blue-600' }}
-                            className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
+                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                         >
                             主页
                         </Link>
                         <Link
                             to="/groups/$slug/members"
                             params={{ slug }}
-                            activeProps={{ className: 'border-blue-500 text-blue-600' }}
-                            className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
+                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                         >
                             成员
                         </Link>
                         <Link
                             to="/groups/$slug/posts"
                             params={{ slug }}
-                            activeProps={{ className: 'border-blue-500 text-blue-600' }}
-                            className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
+                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                         >
                             帖子
                         </Link>
@@ -85,16 +80,16 @@ function GroupLayout() {
                                 <Link
                                     to="/groups/$slug/admin"
                                     params={{ slug }}
-                                    activeProps={{ className: 'border-blue-500 text-blue-600' }}
-                                    className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                    activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
+                                    className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                                 >
                                     管理
                                 </Link>
                                 <Link
                                     to="/groups/$slug/settings"
                                     params={{ slug }}
-                                    activeProps={{ className: 'border-blue-500 text-blue-600' }}
-                                    className="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                    activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
+                                    className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                                 >
                                     设置
                                 </Link>
@@ -102,11 +97,9 @@ function GroupLayout() {
                         )}
                     </nav>
                 </div>
-            </div>
+            </Card>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Outlet />
-            </div>
+            <Outlet />
         </div>
     )
 }

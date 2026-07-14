@@ -8,6 +8,7 @@ import {
     ListMyGroupsSchema,
     CheckRoleSchema,
     UpdateGroupSchema,
+    UpdateGroupStatusSchema,
     ListAllGroupsSchema,
     ListMembersByGroupSchema,
     UpdateGroupMemberSchema,
@@ -97,6 +98,18 @@ export const approveGroupFn = createServerFn({ method: 'POST' })
     .inputValidator(ApproveGroupSchema)
     .handler(async ({ data }) => {
         const result = await GroupService.approveGroup(data)
+
+        if (!result.success) {
+            throw new Error(result.state.message)
+        }
+
+        return result.data
+    })
+
+export const updateGroupStatusFn = createServerFn({ method: 'POST' })
+    .inputValidator(UpdateGroupStatusSchema)
+    .handler(async ({ data }) => {
+        const result = await GroupService.updateGroupStatus(data)
 
         if (!result.success) {
             throw new Error(result.state.message)

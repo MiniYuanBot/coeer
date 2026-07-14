@@ -9,9 +9,9 @@ export function MobileNav({ open, onOpenChange, user }: { open: boolean; onOpenC
     if (!open) return null
 
     return (
-        <div className="fixed inset-0 z-50 lg:hidden">
-            <button className="absolute inset-0 bg-slate-950/35" aria-label="关闭导航" onClick={() => onOpenChange(false)} />
-            <aside className="absolute right-0 top-0 h-full w-80 max-w-[86vw] border-l border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 animate-in fade-in duration-150 lg:hidden">
+            <button className="absolute inset-0 bg-[hsl(var(--background)/0.72)] backdrop-blur-sm" aria-label="关闭导航" onClick={() => onOpenChange(false)} />
+            <aside className="absolute right-0 top-0 h-full w-80 max-w-[86vw] animate-in slide-in-from-right-4 duration-200 border-l border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-2xl">
                 <div className="flex items-center justify-between">
                     <div className="font-semibold">COEER 导航</div>
                     <Button type="button" variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="关闭">

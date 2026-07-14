@@ -37,9 +37,11 @@ export const UpdateActivitySchema = z.object({
 })
 
 export const ListActivitiesSchema = z.object({
+    type: z.enum(ACTIVITY_TYPE_ARRAY).optional(),
     organizerType: z.enum(ORGANIZER_TYPE_ARRAY).optional(),
     organizerId: z.uuid().optional(),
     status: z.enum(ACTIVITY_STATUS_ARRAY).optional(),
+    search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 
@@ -79,4 +81,3 @@ export type ActivityParticipantWithActivity = ActivityParticipant & {
 
 export type ActivityResponse<T> = ActionResponse<T, ActivityCode>
 export type PaginatedActivityResponse<T> = PaginatedActionResponse<T, ActivityCode>
-

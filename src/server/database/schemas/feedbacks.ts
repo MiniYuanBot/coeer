@@ -21,6 +21,7 @@ export const feedbacks = pgTable('feedbacks', {
     title: varchar('title', { length: 255 }).notNull(),
     content: text('content').notNull(),
     isAnonymous: boolean('is_anonymous').default(false).notNull(),
+    isPublic: boolean('is_public').default(false).notNull(),
 
     status: feedbackStatusEnum('status').default('pending').notNull(),
 

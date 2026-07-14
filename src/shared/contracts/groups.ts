@@ -45,6 +45,7 @@ export const UpdateGroupStatusSchema = z.object({
     id: z.uuid(),
     status: z.enum(GROUP_STATUS_ARRAY),
     rejectedReason: z.string().max(200).optional(),
+    reviewNote: z.string().max(1000).optional(),
 })
 
 export const ApproveGroupSchema = z.object({

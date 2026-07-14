@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Badge, Card, EmptyState, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Badge, Card, EmptyState, SectionHeader, bulletinTypeLabels, formatDateTime } from '@/components/coeer'
 import { getBulletinByIdFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/bulletins/$bulletinId/')({
@@ -17,9 +17,9 @@ function BulletinDetailPage() {
     return (
         <article className="mx-auto max-w-3xl space-y-6">
             <SectionHeader title={bulletin.title} description={formatDateTime(bulletin.createdAt)} />
-            <Card className="p-6">
-                <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletin.type}</Badge>
-                <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--muted-foreground))]">{bulletin.content}</p>
+            <Card className="rounded-xl p-5">
+                <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
+                <p className="mt-5 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{bulletin.content}</p>
             </Card>
         </article>
     )

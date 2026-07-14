@@ -134,6 +134,7 @@ export const groupQueries = {
             .set({
                 status: data.status,
                 rejectedReason: data.status === GROUP_STATUS.REJECTED ? data.rejectedReason : null,
+                reviewNote: data.reviewNote,
                 // reviewedAt: new Date(),
                 updatedAt: new Date()
             })

@@ -75,9 +75,9 @@ export class FeedbackService {
 
             const isAdmin = user.role === 'admin'
             const isAuthor = feedback.authorId === user.id
+            const isPublic = feedback.isPublic
 
-            // Permission check: only author or admin can view
-            if (!isAdmin && !isAuthor) {
+            if (!isAdmin && !isAuthor && !isPublic) {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
@@ -108,7 +108,7 @@ export class FeedbackService {
             }
 
             const isAdmin = user.role === 'admin'
-            const { status, search, limit, offset } = data
+            const { status, search, targetType, view, limit, offset } = data
 
             let items: FeedbackWithAuthor[]
             let total: number
@@ -117,16 +117,35 @@ export class FeedbackService {
                 // Admin sees all feedbacks
                 items = await feedbackQueries.findAll(data) as FeedbackWithAuthor[]
 
-                total = await feedbackQueries.count({ status: data.status, search: data.search })
+                total = await feedbackQueries.count({ status, search, targetType })
             } else {
-                // Regular user sees only their own feedbacks
-                items = await feedbackQueries.findByAuthorId(data)
+                const scopedData = { ...data }
 
-                total = await feedbackQueries.count({
-                    authorId: user.id,
-                    status,
+                if (view === 'mine') {
+                    scopedData.authorId = user.id
+                } else if (view === 'mine_reviewed') {
+                    scopedData.authorId = user.id
+                    scopedData.status = ['processing', 'resolved', 'invalid'] as any
+                } else if (view === 'mine_pending') {
+                    scopedData.authorId = user.id
+                    scopedData.status = 'pending'
+                } else if (view === 'public') {
+                    scopedData.authorId = undefined
+                    ; (scopedData as any).isPublic = true
+                }
+
+                // Regular user sees own submissions plus feedback approved for public visibility.
+                items = view === 'mine' || view?.startsWith('mine_')
+                    ? await feedbackQueries.findByAuthorId(scopedData as any)
+                    : await feedbackQueries.findVisibleToUser({ ...scopedData, viewerId: user.id } as any)
+
+                total = await feedbackQueries.countVisibleToUser({
+                    viewerId: user.id,
+                    authorId: scopedData.authorId,
+                    status: scopedData.status as any,
                     search,
-                })
+                    targetType,
+                } as any)
             }
 
             return {
@@ -167,7 +186,7 @@ export class FeedbackService {
 
             await db.transaction(async (tx) => {
                 // Update feedback status
-                await feedbackQueries.update({ id: data.id, status: data.status })
+                await feedbackQueries.update({ id: data.id, status: data.status, isPublic: data.isPublic })
 
                 // Record status change log
                 await tx.insert(feedbackStatusLogs).values({
@@ -241,9 +260,10 @@ export class FeedbackService {
 
             const isAdmin = user.role === 'admin'
             const isAuthor = feedback.authorId === user.id
+            const isPublic = feedback.isPublic
 
-            // Permission check: only author or admin can view logs
-            if (!isAdmin && !isAuthor) {
+            // Permission check: public feedback logs are visible without operator details.
+            if (!isAdmin && !isAuthor && !isPublic) {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 

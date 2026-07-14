@@ -1,124 +1,59 @@
-import { createFileRoute, useNavigate, redirect } from '@tanstack/react-router'
-import z from 'zod'
-import { getFeedbackStatsFn } from '~/functions'
-
-const searchSchema = z.object({
-    startDate: z.date().optional(),
-    endDate: z.date().optional(),
-})
+import { createFileRoute } from '@tanstack/react-router'
+import { Card, SectionHeader } from '@/components/coeer'
+import { getUserStatsFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/admin/stats')({
-    validateSearch: searchSchema,
-    loaderDeps: ({ search }) => search,
-    loader: async ({ deps }) => {
-        const result = await getFeedbackStatsFn({
-            data: {
-                startDate: deps.startDate,
-                endDate: deps.endDate,
-            },
-        })
-        if (!result) {
-            throw new Error('No stat found')
-        }
-        return result || []
-    },
-    errorComponent: ({ error }) => {
-        if (error.message === 'No stat found') {
-            throw redirect({ to: '/admin' })
-        }
-
-        throw error
-    },
+    loader: async () => getUserStatsFn(),
     component: AdminStatsPage,
 })
 
 function AdminStatsPage() {
     const stats = Route.useLoaderData()
-    const { startDate, endDate } = Route.useSearch()
-    const navigate = useNavigate()
-
-    const handleFilter = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        navigate({
-            to: '/admin/stats',
-            search: {
-                startDate: new Date(formData.get('startDate') as string),
-                endDate: new Date(formData.get('endDate') as string),
-            },
-        })
-    }
 
     return (
         <div className="space-y-6">
-            {/* Date Filter */}
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                        <input
-                            name="startDate"
-                            type="date"
-                            defaultValue={startDate?.toString()}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                        <input
-                            name="endDate"
-                            type="date"
-                            defaultValue={endDate?.toString()}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Filter
-                    </button>
-                </form>
+            <SectionHeader title="统计概览" description="所有用户及用户情况的数据概览。" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <StatCard label="全部用户" value={stats.total} />
+                <StatCard label="活跃用户" value={stats.active} />
+                <StatCard label="停用用户" value={stats.inactive} />
+                <StatCard label="学生" value={stats.students} />
+                <StatCard label="协管" value={stats.moderators} />
+                <StatCard label="管理员" value={stats.admins} />
             </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Total Feedbacks</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+            <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[680px] text-sm">
+                        <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
+                            <tr>
+                                <th className="px-4 py-3 font-medium">用户</th>
+                                <th className="px-4 py-3 font-medium">邮箱</th>
+                                <th className="px-4 py-3 font-medium">角色</th>
+                                <th className="px-4 py-3 font-medium">创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[hsl(var(--border))]">
+                            {stats.users.map((user) => (
+                                <tr key={user.id}>
+                                    <td className="px-4 py-3">{user.name || '未命名'}</td>
+                                    <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{user.email}</td>
+                                    <td className="px-4 py-3">{user.role}</td>
+                                    <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{new Date(user.createdAt).toLocaleDateString('zh-CN')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Pending</p>
-                    <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Processing</p>
-                    <p className="text-3xl font-bold text-blue-600">{stats.processing}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Resolved</p>
-                    <p className="text-3xl font-bold text-green-600">{stats.resolved}</p>
-                </div>
-            </div>
-
-            {/* Additional Stats */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Statistics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <p className="text-sm text-gray-600 mb-1">Invalid Feedbacks</p>
-                        <p className="text-2xl font-semibold text-gray-700">{stats.invalid}</p>
-                    </div>
-                    {stats.avgResolveTime && (
-                        <div>
-                            <p className="text-sm text-gray-600 mb-1">Avg. Response Time</p>
-                            <p className="text-2xl font-semibold text-gray-700">
-                                {stats.avgResolveTime} hours
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
+            </Card>
         </div>
+    )
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+    return (
+        <Card className="rounded-xl p-5">
+            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</p>
+            <p className="mt-2 text-2xl font-medium tabular-nums">{value}</p>
+        </Card>
     )
 }

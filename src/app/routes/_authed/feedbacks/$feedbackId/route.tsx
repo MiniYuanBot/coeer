@@ -7,9 +7,9 @@ export const Route = createFileRoute('/_authed/feedbacks/$feedbackId')({
 function FeedbackDetailLayout() {
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                <Link to="/feedbacks" className="hover:text-blue-600">
-                    ← Back to Feedbacks
+            <div className="mb-4 flex items-center gap-4 text-sm text-[hsl(var(--muted-foreground))]">
+                <Link to="/feedbacks" className="hover:text-[hsl(var(--primary))]">
+                    返回反馈列表
                 </Link>
             </div>
             <Outlet />

@@ -1,20 +1,25 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import { getFeedbackByIdFn, deleteFeedbackFn } from '~/functions'
 import { useState } from 'react'
+import { deleteFeedbackFn, getFeedbackByIdFn } from '~/functions'
+import { Badge, Button, Card, Icon, SectionHeader, formatDateTime } from '@/components/coeer'
+import { FeedbackStatusBadge, feedbackTargetLabels } from '../-feedback-ui'
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/')({
-    loader: async ({ params }) => {
+    loader: async ({ params, context }) => {
         const result = await getFeedbackByIdFn({
             data: { id: params.feedbackId },
         })
         if (!result) {
             throw new Error('Feedback not found')
         }
-        return result
+        return {
+            feedback: result,
+            currentUser: context.user,
+        }
     },
     errorComponent: ({ error }) => {
         if (error.message === 'Feedback not found') {
-            throw redirect({to: '/feedbacks'})
+            throw redirect({ to: '/feedbacks' })
         }
 
         throw error
@@ -23,12 +28,13 @@ export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/')({
 })
 
 function FeedbackDetailPage() {
-    const feedback = Route.useLoaderData()
+    const { feedback, currentUser } = Route.useLoaderData()
     const navigate = useNavigate()
     const [isDeleting, setIsDeleting] = useState(false)
+    const canDelete = currentUser?.role === 'admin' || currentUser?.email === feedback.author?.email
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this feedback?')) return
+        if (!confirm('确定删除这条反馈吗？')) return
 
         setIsDeleting(true)
         try {
@@ -40,95 +46,54 @@ function FeedbackDetailPage() {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${feedback.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                feedback.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                    feedback.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                        'bg-gray-100 text-gray-800'
-                            }`}>
-                            {feedback.status}
-                        </span>
-                        {feedback.isAnonymous && (
-                            <span className="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-full">
-                                Anonymous
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Link
-                            to="/feedbacks/$feedbackId/logs"
-                            params={{ feedbackId: feedback.id }}
-                            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
-                        >
-                            View Logs
+        <div className="space-y-6">
+            <SectionHeader
+                title={feedback.title}
+                description="反馈详情、处理状态与流转记录。"
+                action={
+                    <div className="flex flex-wrap gap-2">
+                        <Link to="/feedbacks/$feedbackId/logs" params={{ feedbackId: feedback.id }}>
+                            <Button variant="outline"><Icon name="activity" /> 处理记录</Button>
                         </Link>
-                        <button
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                            className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
-                        >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
-                        </button>
+                        {canDelete ? (
+                            <Button variant="danger" loading={isDeleting} onClick={handleDelete}>
+                                删除
+                            </Button>
+                        ) : null}
                     </div>
+                }
+            />
+
+            <Card className="p-5">
+                <div className="flex flex-wrap items-center gap-2">
+                    <FeedbackStatusBadge status={feedback.status} />
+                    <Badge>{feedbackTargetLabels[feedback.targetType]}</Badge>
+                    {feedback.isAnonymous ? <Badge>匿名提交</Badge> : null}
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDateTime(feedback.createdAt)}</span>
                 </div>
 
-                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                    {feedback.title}
-                </h1>
+                {feedback.targetDesc ? (
+                    <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">
+                        关联对象：{feedback.targetDesc}
+                    </p>
+                ) : null}
 
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>Target: {feedback.targetType}</span>
-                    {feedback.targetDesc && <span>- {feedback.targetDesc}</span>}
-                    <span>•</span>
-                    <span>{new Date(feedback.createdAt).toLocaleString()}</span>
-                </div>
-            </div>
-
-            <div className="p-6">
-                <div className="prose max-w-none text-gray-700 whitespace-pre-wrap">
+                <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--foreground))]">
                     {feedback.content}
                 </div>
+            </Card>
 
-                {/* {feedback.images && feedback.images.length > 0 && (
-                    <div className="mt-6">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3">Attachments</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {feedback.images.map((url, idx) => (
-                                <a
-                                    key={idx}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block aspect-square bg-gray-100 rounded-lg overflow-hidden hover:opacity-75 transition-opacity"
-                                >
-                                    <img
-                                        src={url}
-                                        alt={`Attachment ${idx + 1}`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </a>
-                            ))}
-                        </div>
+            <Card className="p-5">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                        {feedback.isAnonymous ? '匿' : feedback.author?.name?.[0] || 'U'}
                     </div>
-                )} */}
-
-                {feedback.author && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-                                {feedback.author.name?.[0] || 'U'}
-                            </div>
-                            <div>
-                                <p className="font-medium text-gray-900">{feedback.author.name}</p>
-                                <p className="text-sm text-gray-500">Author</p>
-                            </div>
-                        </div>
+                    <div>
+                        <p className="text-[15px] font-medium">{feedback.isAnonymous ? '匿名用户' : feedback.author?.name || '未知用户'}</p>
+                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">提交人</p>
                     </div>
-                )}
-            </div>
+                </div>
+            </Card>
         </div>
     )
 }

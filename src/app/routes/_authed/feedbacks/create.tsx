@@ -46,13 +46,13 @@ function CreateFeedbackPage() {
     return (
         <div className="mx-auto max-w-3xl space-y-6">
             <SectionHeader title="提交反馈" description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。" />
-            <Card className="p-6">
+            <Card className="rounded-xl p-5">
                 <div className="mb-6 flex flex-wrap gap-2">
                     <Badge tone="primary">问题</Badge>
                     <Badge>建议</Badge>
                     <Badge>事务</Badge>
                 </div>
-                {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</div> : null}
+                {error ? <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</div> : null}
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <label className="block">
                         <span className="text-sm font-medium">反馈对象</span>

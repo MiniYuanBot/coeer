@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { SectionHeader } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/admin')({
     beforeLoad: ({ context }) => {
@@ -18,14 +19,12 @@ export const Route = createFileRoute('/_authed/admin')({
 
 function AdminLayout() {
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Manage feedbacks and view system statistics</p>
-                </div>
-                <Outlet />
-            </div>
+        <div className="space-y-6">
+            <SectionHeader
+                title="管理工作台"
+                description="审核反馈、跟进处理状态，并查看反馈系统运行情况。"
+            />
+            <Outlet />
         </div>
     )
 }
