@@ -26,6 +26,7 @@ export const UpdateBulletinSchema = z.object({
 export const ListBulletinsSchema = z.object({
     type: z.enum(BULLETIN_TYPE_ARRAY).optional(),
     isPinned: z.boolean().optional(),
+    search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 
@@ -40,4 +41,3 @@ export type BulletinWithSource = Bulletin & {
 
 export type BulletinResponse<T> = ActionResponse<T, BulletinCode>
 export type PaginatedBulletinResponse<T> = PaginatedActionResponse<T, BulletinCode>
-

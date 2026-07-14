@@ -1,4 +1,4 @@
-import { and, count, desc, eq, SQL } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, or, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { activities, activityParticipants, NewActivity, NewActivityParticipant } from '../schemas'
 import type {
@@ -12,9 +12,18 @@ import type {
 
 function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
     const conditions: SQL[] = []
+    if (data.type) conditions.push(eq(activities.type, data.type))
     if (data.organizerType) conditions.push(eq(activities.organizerType, data.organizerType))
     if (data.organizerId) conditions.push(eq(activities.organizerId, data.organizerId))
     if (data.status) conditions.push(eq(activities.status, data.status))
+    if (data.search) {
+        const searchCondition = or(
+            ilike(activities.title, `%${data.search}%`),
+            ilike(activities.description, `%${data.search}%`),
+            ilike(activities.location, `%${data.search}%`)
+        )
+        if (searchCondition) conditions.push(searchCondition)
+    }
     return conditions.length ? and(...conditions) : undefined
 }
 
@@ -94,4 +103,3 @@ export const activityQueries = {
         return result?.value ?? 0
     },
 }
-

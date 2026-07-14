@@ -1,4 +1,4 @@
-import { and, count, desc, eq, SQL } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, or, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { bulletins, NewBulletin, Bulletin } from '../schemas'
 import type { BulletinIdInput, ListBulletinsInput, UpdateBulletinInput } from '@shared/contracts'
@@ -7,6 +7,13 @@ function buildWhere(data: ListBulletinsInput): SQL | undefined {
     const conditions: SQL[] = []
     if (data.type) conditions.push(eq(bulletins.type, data.type))
     if (data.isPinned !== undefined) conditions.push(eq(bulletins.isPinned, data.isPinned))
+    if (data.search) {
+        const searchCondition = or(
+            ilike(bulletins.title, `%${data.search}%`),
+            ilike(bulletins.content, `%${data.search}%`)
+        )
+        if (searchCondition) conditions.push(searchCondition)
+    }
     return conditions.length ? and(...conditions) : undefined
 }
 
@@ -48,4 +55,3 @@ export const bulletinQueries = {
         return result?.value ?? 0
     },
 }
-

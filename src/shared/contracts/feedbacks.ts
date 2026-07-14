@@ -32,6 +32,7 @@ export const FeedbackFilterSchema = z.object({
     targetType: z.enum(FEEDBACK_TARGET_TYPE_ARRAY).optional(),
     status: z.enum(FEEDBACK_STATUS_ARRAY).optional(),
     search: z.string().optional(),
+    view: z.enum(['mine_reviewed', 'mine_pending', 'public']).optional(),
 })
 
 export const CountFeedbacksSchema = z.object({

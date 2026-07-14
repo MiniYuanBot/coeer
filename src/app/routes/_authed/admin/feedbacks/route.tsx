@@ -1,4 +1,7 @@
-import { createFileRoute, Outlet, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+
+const tabClass = 'coeer-focus rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]'
+const activeClass = 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]'
 
 export const Route = createFileRoute('/_authed/admin/feedbacks')({
     component: AdminFeedbacksLayout,
@@ -7,20 +10,12 @@ export const Route = createFileRoute('/_authed/admin/feedbacks')({
 function AdminFeedbacksLayout() {
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4 border-b border-gray-200 pb-4">
-                <Link
-                    to="/admin/feedbacks"
-                    className="text-sm font-medium text-gray-600 hover:text-blue-600 pb-4 border-b-2 border-transparent hover:border-blue-600 -mb-4"
-                    activeProps={{ className: 'text-blue-600 border-blue-600' }}
-                >
-                    All Feedbacks
+            <div className="flex flex-wrap gap-2">
+                <Link to="/admin/feedbacks" className={tabClass} activeProps={{ className: activeClass }}>
+                    全部反馈
                 </Link>
-                <Link
-                    to="/admin/feedbacks/pending"
-                    className="text-sm font-medium text-gray-600 hover:text-blue-600 pb-4 border-b-2 border-transparent hover:border-blue-600 -mb-4"
-                    activeProps={{ className: 'text-blue-600 border-blue-600' }}
-                >
-                    Pending Review
+                <Link to="/admin/feedbacks/pending" className={tabClass} activeProps={{ className: activeClass }}>
+                    待审核
                 </Link>
             </div>
             <Outlet />

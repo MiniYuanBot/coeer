@@ -6,7 +6,7 @@ export const testUsers = [
     {
         email: 'test@example.com',
         name: 'Test User',
-        passwordHash: await hashPassword('test123'),
+        passwordHash: await hashPassword('test1234'),
         role: 'student' as UserRole,
         isActive: true,
         createdAt: new Date(),
@@ -22,7 +22,7 @@ export const testUsers = [
     {
         email: 'demo@example.com',
         name: 'Demo User',
-        passwordHash: await hashPassword('demo123'),
+        passwordHash: await hashPassword('demo1234'),
         role: 'moderator' as UserRole,
         isActive: true,
         createdAt: new Date(),

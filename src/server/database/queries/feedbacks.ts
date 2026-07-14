@@ -1,6 +1,6 @@
 import { db } from '../client'
 import { feedbacks } from '../schemas'
-import { eq, desc, and, inArray, ilike, or, count, asc, SQL } from 'drizzle-orm'
+import { eq, desc, and, inArray, ilike, or, count, SQL } from 'drizzle-orm'
 import type { NewFeedback, Feedback } from '../schemas'
 import {
     CountFeedbacksInput,
@@ -52,6 +52,16 @@ function buildWhereClause(params: {
     }
 
     return conditions.length > 0 ? and(...conditions) : undefined
+}
+
+function buildVisibleWhereClause(params: CountFeedbacksInput & { viewerId: string }): SQL | undefined {
+    const base = buildWhereClause(params)
+    const visibility = or(
+        eq(feedbacks.authorId, params.viewerId),
+        inArray(feedbacks.status, ['processing', 'resolved'])
+    )
+
+    return base ? and(base, visibility) : visibility
 }
 
 export const feedbackQueries = {
@@ -133,6 +143,23 @@ export const feedbackQueries = {
         })
     },
 
+    // Find feedbacks visible to a regular user: own submissions or approved public items.
+    async findVisibleToUser(data: ListFeedbacksInput & { viewerId: string }): Promise<FeedbackWithAuthor[]> {
+        const { limit, offset } = data
+
+        return db.query.feedbacks.findMany({
+            where: buildVisibleWhereClause(data),
+            with: {
+                author: {
+                    columns: { id: true, name: true, email: true },
+                },
+            },
+            orderBy: [desc(feedbacks.createdAt)],
+            limit,
+            offset,
+        })
+    },
+
     // Find all feedbacks with optional filters
     async findAll(data: ListFeedbacksInput): Promise<FeedbackWithAuthor[]> {
         const { limit, offset } = data
@@ -156,6 +183,15 @@ export const feedbackQueries = {
             .select({ value: count() })
             .from(feedbacks)
             .where(buildWhereClause(data))
+
+        return result?.value ?? 0
+    },
+
+    async countVisibleToUser(data: CountFeedbacksInput & { viewerId: string }): Promise<number> {
+        const [result] = await db
+            .select({ value: count() })
+            .from(feedbacks)
+            .where(buildVisibleWhereClause(data))
 
         return result?.value ?? 0
     },

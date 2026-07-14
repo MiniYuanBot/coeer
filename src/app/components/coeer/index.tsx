@@ -1,11 +1,13 @@
 export * from './lib/cn'
 export * from './lib/date'
+export * from './lib/labels'
 export * from './lib/types'
 
 export * from './ui/Badge'
 export * from './ui/Button'
 export * from './ui/Card'
 export * from './ui/EmptyState'
+export * from './ui/FilterPanel'
 export * from './ui/Icon'
 export * from './ui/SearchInput'
 export * from './ui/SectionHeader'

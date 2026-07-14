@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { formatDate, formatDateTime } from '../lib/date'
+import { activityStatusLabels } from '../lib/labels'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
@@ -8,7 +9,7 @@ export function ActivityCard({ activity, action }: { activity: any; action?: Rea
     return (
         <Card className="p-5">
             <div className="flex items-start justify-between gap-3">
-                <Badge tone={activity.status === 'completed' ? 'success' : 'primary'}>{activity.status}</Badge>
+                <Badge tone={activity.status === 'completed' ? 'success' : 'primary'}>{activityStatusLabels[activity.status] || activity.status}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(activity.startTime)}</span>
             </div>
             <h3 className="mt-3 font-semibold">{activity.title}</h3>

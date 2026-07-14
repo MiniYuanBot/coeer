@@ -87,6 +87,14 @@ pnpm seed:gamification
 pnpm seed:all
 ```
 
+测试用户账号：
+
+| 角色 | 邮箱 | 密码 |
+| ---- | ---- | ---- |
+| student | `test@example.com` | `test1234` |
+| admin | `admin@example.com` | `admin123` |
+| moderator | `demo@example.com` | `demo1234` |
+
 如果希望重置测试数据后重新注入，可以使用：
 
 ```sh

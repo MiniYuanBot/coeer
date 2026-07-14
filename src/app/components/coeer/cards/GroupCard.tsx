@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { groupCategoryLabels, groupStatusLabels } from '../lib/labels'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 
@@ -11,10 +12,10 @@ export function GroupCard({ group }: { group: any }) {
                         <h3 className="truncate font-semibold">{group.name}</h3>
                         <p className="mt-2 line-clamp-2 text-sm text-[hsl(var(--muted-foreground))]">{group.description || '暂无简介'}</p>
                     </div>
-                    <Badge tone={group.status === 'approved' ? 'success' : 'warning'}>{group.status}</Badge>
+                    <Badge tone={group.status === 'approved' ? 'success' : 'warning'}>{groupStatusLabels[group.status] || group.status}</Badge>
                 </div>
                 <div className="mt-5 flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-                    <span>{group.category}</span>
+                    <span>{groupCategoryLabels[group.category] || group.category}</span>
                     <span>{group.isPublic ? '公开' : '私密'}</span>
                 </div>
             </Card>

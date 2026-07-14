@@ -1,9 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import z from 'zod'
-import { listAllGroupsFn, deleteGroupFn } from '~/functions'
-import { useServerFn } from '@tanstack/react-start'
-import { useState } from 'react'
-
+import { useMemo, useState } from 'react'
+import { deleteGroupFn, listAllGroupsFn } from '~/functions'
+import { Badge, Button, Card, EmptyState, SearchInput, SectionHeader } from '@/components/coeer'
 
 const searchSchema = z.object({
     page: z.number().default(1),
@@ -14,18 +13,17 @@ export const Route = createFileRoute('/_authed/admin/groups/')({
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ deps: { search } }) => {
         const pageSize = 5
-
         const result = await listAllGroupsFn({
             data: {
                 status: 'approved',
                 limit: pageSize,
                 offset: (search.page - 1) * pageSize,
-            }
+            },
         })
         return {
             groups: result?.items ?? [],
             total: result?.total ?? 0,
-            pageSize
+            pageSize,
         }
     },
     component: AllGroupsManageComponent,
@@ -34,96 +32,77 @@ export const Route = createFileRoute('/_authed/admin/groups/')({
 function AllGroupsManageComponent() {
     const { groups, total, pageSize } = Route.useLoaderData()
     const { page } = Route.useSearch()
+    const navigate = useNavigate()
     const [search, setSearch] = useState('')
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const navigate = Route.useNavigate()
-
-    const deleteGroup = useServerFn(deleteGroupFn)
     const totalPages = Math.ceil(total / pageSize)
+    const visibleGroups = useMemo(() => {
+        const keyword = search.trim().toLowerCase()
+        if (!keyword) return groups
+        return groups.filter((group) =>
+            group.name.toLowerCase().includes(keyword) ||
+            group.slug.toLowerCase().includes(keyword) ||
+            group.description?.toLowerCase().includes(keyword)
+        )
+    }, [groups, search])
 
     const handleDelete = async (groupId: string) => {
-        if (!confirm('确定要删除这个群组吗？此操作不可恢复！')) {
-            return
-        }
+        if (!confirm('确定要删除这个群组吗？此操作不可恢复。')) return
 
         setDeletingId(groupId)
         try {
-            await deleteGroup({ data: { groupId: groupId } })
-            // refresh
-            window.location.reload()
-        } catch (error) {
-            alert('删除失败')
+            await deleteGroupFn({ data: { groupId } })
+            navigate({ to: '/admin/groups', search: { page } })
         } finally {
             setDeletingId(null)
         }
     }
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl">所有群组 (共 {total} 个)</h2>
-                <input
-                    type="text"
-                    placeholder="搜索群组..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="px-3 py-2 border rounded"
-                />
-            </div>
+        <div className="space-y-6">
+            <SectionHeader title="所有群组" description="管理已审核通过的群组。" />
 
-            <div className="space-y-2">
-                {groups.map((group) => (
-                    <div key={group.id} className="border p-4 rounded flex justify-between items-center">
-                        <div>
-                            <h3 className="font-semibold">{group.name}</h3>
-                            <p className="text-sm text-gray-600">slug: {group.slug}</p>
-                            <p className="text-sm text-gray-500">创建者: {group.creatorId}</p>
-                        </div>
-                        <div className="flex gap-2">
-                            <span className={`px-2 py-1 text-xs rounded ${group.isPublic ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                {group.isPublic ? '公开' : '私密'}
-                            </span>
-                            <button
-                                onClick={() => handleDelete(group.id)}
-                                disabled={deletingId === group.id}
-                                className="text-red-600 text-sm disabled:opacity-50"
-                            >
-                                {deletingId === group.id ? '删除中...' : '删除'}
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            <Card className="grid gap-3 p-4 md:grid-cols-[1fr_auto] md:items-center">
+                <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索群组名称、slug 或描述" />
+                <Badge tone="primary">共 {total} 个</Badge>
+            </Card>
 
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
-                    <button
-                        disabled={page <= 1}
-                        onClick={() =>
-                            navigate({
-                                search: (prev) => ({ ...prev, page: prev.page - 1 }),
-                            })
-                        }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
-                    >
-                        上一页
-                    </button>
-                    <span className="text-sm text-gray-600">
-                        {page} / {totalPages}
-                    </span>
-                    <button
-                        disabled={page >= totalPages}
-                        onClick={() =>
-                            navigate({
-                                search: (prev) => ({ ...prev, page: prev.page + 1 }),
-                            })
-                        }
-                        className="px-3 py-1 rounded border disabled:opacity-50 hover:bg-gray-100"
-                    >
-                        下一页
-                    </button>
+            {visibleGroups.length ? (
+                <div className="grid gap-4">
+                    {visibleGroups.map((group) => (
+                        <Card key={group.id} className="p-5">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h2 className="font-semibold">{group.name}</h2>
+                                        <Badge tone={group.isPublic ? 'success' : 'default'}>{group.isPublic ? '公开' : '私密'}</Badge>
+                                    </div>
+                                    <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">slug: {group.slug}</p>
+                                    {group.description ? (
+                                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-[hsl(var(--muted-foreground))]">{group.description}</p>
+                                    ) : null}
+                                    <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">创建者：{group.creatorId}</p>
+                                </div>
+                                <Button variant="danger" loading={deletingId === group.id} onClick={() => handleDelete(group.id)}>
+                                    删除
+                                </Button>
+                            </div>
+                        </Card>
+                    ))}
                 </div>
+            ) : (
+                <Card className="p-8">
+                    <EmptyState title="没有匹配的群组" description="调整搜索关键词后再试试。" />
+                </Card>
             )}
+
+            {totalPages > 1 ? (
+                <div className="flex items-center justify-center gap-2">
+                    <Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/admin/groups', search: { page: page - 1 } })}>上一页</Button>
+                    <span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span>
+                    <Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/admin/groups', search: { page: page + 1 } })}>下一页</Button>
+                </div>
+            ) : null}
         </div>
     )
 }

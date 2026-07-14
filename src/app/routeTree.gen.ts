@@ -24,7 +24,6 @@ import { Route as AuthedActivitiesRouteRouteImport } from './routes/_authed/acti
 import { Route as AuthedAchievementsRouteRouteImport } from './routes/_authed/achievements/route'
 import { Route as AuthedRedeemsIndexRouteImport } from './routes/_authed/redeems/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
-import { Route as AuthedGroupsIndexRouteImport } from './routes/_authed/groups/index'
 import { Route as AuthedFeedbacksIndexRouteImport } from './routes/_authed/feedbacks/index'
 import { Route as AuthedBulletinsIndexRouteImport } from './routes/_authed/bulletins/index'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
@@ -132,11 +131,6 @@ const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedProfileRouteRoute,
-} as any)
-const AuthedGroupsIndexRoute = AuthedGroupsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedGroupsRouteRoute,
 } as any)
 const AuthedFeedbacksIndexRoute = AuthedFeedbacksIndexRouteImport.update({
   id: '/',
@@ -348,7 +342,6 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthedAdminIndexRoute
   '/bulletins/': typeof AuthedBulletinsIndexRoute
   '/feedbacks/': typeof AuthedFeedbacksIndexRoute
-  '/groups/': typeof AuthedGroupsIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
   '/redeems/': typeof AuthedRedeemsIndexRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
@@ -376,6 +369,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/all': typeof AuthedGroupsAllRoute
@@ -386,7 +380,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthedAdminIndexRoute
   '/bulletins': typeof AuthedBulletinsIndexRoute
   '/feedbacks': typeof AuthedFeedbacksIndexRoute
-  '/groups': typeof AuthedGroupsIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
   '/redeems': typeof AuthedRedeemsIndexRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
@@ -436,7 +429,6 @@ export interface FileRoutesById {
   '/_authed/admin/': typeof AuthedAdminIndexRoute
   '/_authed/bulletins/': typeof AuthedBulletinsIndexRoute
   '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
-  '/_authed/groups/': typeof AuthedGroupsIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/redeems/': typeof AuthedRedeemsIndexRoute
   '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
@@ -488,7 +480,6 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/bulletins/'
     | '/feedbacks/'
-    | '/groups/'
     | '/profile/'
     | '/redeems/'
     | '/groups/$slug/posts'
@@ -516,6 +507,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/groups'
     | '/admin/stats'
     | '/feedbacks/create'
     | '/groups/all'
@@ -526,7 +518,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bulletins'
     | '/feedbacks'
-    | '/groups'
     | '/profile'
     | '/redeems'
     | '/admin/feedbacks/pending'
@@ -575,7 +566,6 @@ export interface FileRouteTypes {
     | '/_authed/admin/'
     | '/_authed/bulletins/'
     | '/_authed/feedbacks/'
-    | '/_authed/groups/'
     | '/_authed/profile/'
     | '/_authed/redeems/'
     | '/_authed/groups/$slug/posts'
@@ -713,13 +703,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile/'
       preLoaderRoute: typeof AuthedProfileIndexRouteImport
       parentRoute: typeof AuthedProfileRouteRoute
-    }
-    '/_authed/groups/': {
-      id: '/_authed/groups/'
-      path: '/'
-      fullPath: '/groups/'
-      preLoaderRoute: typeof AuthedGroupsIndexRouteImport
-      parentRoute: typeof AuthedGroupsRouteRoute
     }
     '/_authed/feedbacks/': {
       id: '/_authed/feedbacks/'
@@ -1143,7 +1126,6 @@ interface AuthedGroupsRouteRouteChildren {
   AuthedGroupsAllRoute: typeof AuthedGroupsAllRoute
   AuthedGroupsCreateRoute: typeof AuthedGroupsCreateRoute
   AuthedGroupsMyRoute: typeof AuthedGroupsMyRoute
-  AuthedGroupsIndexRoute: typeof AuthedGroupsIndexRoute
 }
 
 const AuthedGroupsRouteRouteChildren: AuthedGroupsRouteRouteChildren = {
@@ -1151,7 +1133,6 @@ const AuthedGroupsRouteRouteChildren: AuthedGroupsRouteRouteChildren = {
   AuthedGroupsAllRoute: AuthedGroupsAllRoute,
   AuthedGroupsCreateRoute: AuthedGroupsCreateRoute,
   AuthedGroupsMyRoute: AuthedGroupsMyRoute,
-  AuthedGroupsIndexRoute: AuthedGroupsIndexRoute,
 }
 
 const AuthedGroupsRouteRouteWithChildren =
