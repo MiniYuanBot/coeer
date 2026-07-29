@@ -1,0 +1,1450 @@
+[
+  {
+    "qid": "q11a",
+    "category": "作息规律",
+    "dimension": "weekday_sleep",
+    "question_text": "上课期间，您通常的就寝时间是？",
+    "options": [
+      {
+        "label": "22:00前",
+        "value": 1
+      },
+      {
+        "label": "22:00-23:00",
+        "value": 2
+      },
+      {
+        "label": "23:00-24:00",
+        "value": 3
+      },
+      {
+        "label": "00:00-01:00",
+        "value": 4
+      },
+      {
+        "label": "01:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定",
+        "value": 6
+      }
+    ],
+    "weight": 3.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q12a",
+    "category": "作息规律",
+    "dimension": "weekday_wake",
+    "question_text": "上课期间，您通常的起床时间是？",
+    "options": [
+      {
+        "label": "6:00前",
+        "value": 1
+      },
+      {
+        "label": "6:00-7:00",
+        "value": 2
+      },
+      {
+        "label": "7:00-8:00",
+        "value": 3
+      },
+      {
+        "label": "8:00-9:00",
+        "value": 4
+      },
+      {
+        "label": "9:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定",
+        "value": 6
+      }
+    ],
+    "weight": 3.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q13a",
+    "category": "作息规律",
+    "dimension": "weekend_sleep",
+    "question_text": "假期/周末期间，您通常的就寝时间是？",
+    "options": [
+      {
+        "label": "22:00前",
+        "value": 1
+      },
+      {
+        "label": "22:00-23:00",
+        "value": 2
+      },
+      {
+        "label": "23:00-24:00",
+        "value": 3
+      },
+      {
+        "label": "00:00-01:00",
+        "value": 4
+      },
+      {
+        "label": "01:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定",
+        "value": 6
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q14a",
+    "category": "作息规律",
+    "dimension": "weekend_wake",
+    "question_text": "假期/周末期间，您通常的起床时间是？",
+    "options": [
+      {
+        "label": "8:00前",
+        "value": 1
+      },
+      {
+        "label": "8:00-9:00",
+        "value": 2
+      },
+      {
+        "label": "9:00-10:00",
+        "value": 3
+      },
+      {
+        "label": "10:00-11:00",
+        "value": 4
+      },
+      {
+        "label": "11:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定",
+        "value": 6
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q15a",
+    "category": "作息规律",
+    "dimension": "exam_sleep",
+    "question_text": "期末周/考试期间，您通常的就寝时间是？",
+    "options": [
+      {
+        "label": "22:00前",
+        "value": 1
+      },
+      {
+        "label": "22:00-23:00",
+        "value": 2
+      },
+      {
+        "label": "23:00-24:00",
+        "value": 3
+      },
+      {
+        "label": "00:00-01:00",
+        "value": 4
+      },
+      {
+        "label": "01:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定/通宵",
+        "value": 6
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q16a",
+    "category": "作息规律",
+    "dimension": "exam_wake",
+    "question_text": "期末周/考试期间，您通常的起床时间是？",
+    "options": [
+      {
+        "label": "6:00前",
+        "value": 1
+      },
+      {
+        "label": "6:00-7:00",
+        "value": 2
+      },
+      {
+        "label": "7:00-8:00",
+        "value": 3
+      },
+      {
+        "label": "8:00-9:00",
+        "value": 4
+      },
+      {
+        "label": "9:00以后",
+        "value": 5
+      },
+      {
+        "label": "不固定",
+        "value": 6
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q17a",
+    "category": "作息规律",
+    "dimension": "nap",
+    "question_text": "您是否有午睡习惯？",
+    "options": [
+      {
+        "label": "每天必睡（1小时以上）",
+        "value": 1
+      },
+      {
+        "label": "每天小睡（30分钟内）",
+        "value": 2
+      },
+      {
+        "label": "偶尔",
+        "value": 3
+      },
+      {
+        "label": "从不",
+        "value": 4
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q18a",
+    "category": "睡眠特征",
+    "dimension": "sleep_depth",
+    "question_text": "您的睡眠深浅程度如何？",
+    "options": [
+      {
+        "label": "深睡眠（较难被吵醒）",
+        "value": 1
+      },
+      {
+        "label": "中等",
+        "value": 2
+      },
+      {
+        "label": "浅睡眠（易被惊醒）",
+        "value": 3
+      },
+      {
+        "label": "极浅（需绝对安静黑暗）",
+        "value": 4
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q19a",
+    "category": "睡眠特征",
+    "dimension": "fall_asleep_time",
+    "question_text": "您入睡通常需要多长时间？",
+    "options": [
+      {
+        "label": "10分钟内",
+        "value": 1
+      },
+      {
+        "label": "10-30分钟",
+        "value": 2
+      },
+      {
+        "label": "30分钟-1小时",
+        "value": 3
+      },
+      {
+        "label": "1小时以上",
+        "value": 4
+      },
+      {
+        "label": "经常失眠",
+        "value": 5
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q20a",
+    "category": "睡眠特征",
+    "dimension": "snore",
+    "question_text": "夜间睡眠时，您是否打呼噜？",
+    "options": [
+      {
+        "label": "从不",
+        "value": 1
+      },
+      {
+        "label": "偶尔（疲劳时）",
+        "value": 2
+      },
+      {
+        "label": "经常",
+        "value": 3
+      },
+      {
+        "label": "不清楚",
+        "value": 4
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q21a",
+    "category": "睡眠特征",
+    "dimension": "sleep_behavior",
+    "question_text": "夜间睡眠时，您是否会说梦话、磨牙或有其他睡眠行为？",
+    "options": [
+      {
+        "label": "从无",
+        "value": 1
+      },
+      {
+        "label": "偶尔",
+        "value": 2
+      },
+      {
+        "label": "经常",
+        "value": 3
+      },
+      {
+        "label": "不清楚",
+        "value": 4
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q22a",
+    "category": "睡眠特征",
+    "dimension": "light_sensitivity",
+    "question_text": "夜间您对光线的敏感程度是？",
+    "options": [
+      {
+        "label": "必须全黑（不能有微光）",
+        "value": 1
+      },
+      {
+        "label": "较敏感（需遮光帘）",
+        "value": 2
+      },
+      {
+        "label": "一般（小夜灯可接受）",
+        "value": 3
+      },
+      {
+        "label": "不敏感（开灯也能睡）",
+        "value": 4
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q23a",
+    "category": "睡眠特征",
+    "dimension": "sound_sensitivity",
+    "question_text": "夜间您对声音的敏感程度是？",
+    "options": [
+      {
+        "label": "极敏感（需耳塞/不能有键盘声）",
+        "value": 1
+      },
+      {
+        "label": "较敏感（不能有说话声）",
+        "value": 2
+      },
+      {
+        "label": "一般（正常活动声可接受）",
+        "value": 3
+      },
+      {
+        "label": "不敏感（较大声响也能睡）",
+        "value": 4
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q24a",
+    "category": "卫生习惯",
+    "dimension": "cleanliness",
+    "question_text": "您对个人卫生与整洁的标准是？",
+    "options": [
+      {
+        "label": "极度洁癖：物品必须归类、桌面无杂物、地面无尘、每日打扫",
+        "value": 5
+      },
+      {
+        "label": "比较爱干净：定期整理，见不得明显脏乱",
+        "value": 4
+      },
+      {
+        "label": "一般标准：基本整洁，偶尔乱但会定期收拾",
+        "value": 3
+      },
+      {
+        "label": "比较随性：东西乱放但自己能找到，卫生周期较长",
+        "value": 2
+      },
+      {
+        "label": "不太在意：只要不招虫，乱一点无所谓",
+        "value": 1
+      }
+    ],
+    "weight": 2.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q25a",
+    "category": "卫生习惯",
+    "dimension": "cleaning_frequency",
+    "question_text": "您期望宿舍公共区域（地面、卫生间、阳台）多久打扫一次？",
+    "options": [
+      {
+        "label": "每天",
+        "value": 5
+      },
+      {
+        "label": "2-3天一次",
+        "value": 4
+      },
+      {
+        "label": "一周一次",
+        "value": 3
+      },
+      {
+        "label": "两周一次",
+        "value": 2
+      },
+      {
+        "label": "谁看不过去谁打扫",
+        "value": 1
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q26a",
+    "category": "卫生习惯",
+    "dimension": "clutter_tolerance",
+    "question_text": "您对宿舍内个人空间（桌面、床铺区域）杂乱的容忍度是？",
+    "options": [
+      {
+        "label": "完全不能容忍他人区域杂乱",
+        "value": 1
+      },
+      {
+        "label": "较介意但可沟通",
+        "value": 2
+      },
+      {
+        "label": "无所谓，只要不影响公共空间",
+        "value": 3
+      },
+      {
+        "label": "我自己也很乱，大家随意",
+        "value": 4
+      }
+    ],
+    "weight": 1.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q27a",
+    "category": "卫生习惯",
+    "dimension": "shower_frequency",
+    "question_text": "您个人的洗澡频率是？",
+    "options": [
+      {
+        "label": "每天一次及以上",
+        "value": 5
+      },
+      {
+        "label": "2-3天一次",
+        "value": 4
+      },
+      {
+        "label": "4-5天一次",
+        "value": 3
+      },
+      {
+        "label": "一周一次",
+        "value": 2
+      },
+      {
+        "label": "不固定",
+        "value": 1
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q28a",
+    "category": "卫生习惯",
+    "dimension": "laundry_frequency",
+    "question_text": "您换洗衣物的频率是？",
+    "options": [
+      {
+        "label": "每天换",
+        "value": 5
+      },
+      {
+        "label": "2-3天换",
+        "value": 4
+      },
+      {
+        "label": "4-5天换",
+        "value": 3
+      },
+      {
+        "label": "一周换",
+        "value": 2
+      },
+      {
+        "label": "不固定",
+        "value": 1
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q29a",
+    "category": "生活习惯",
+    "dimension": "smoking",
+    "question_text": "您是否吸烟？",
+    "options": [
+      {
+        "label": "是，且经常在宿舍吸",
+        "value": 1
+      },
+      {
+        "label": "是，但不在宿舍吸",
+        "value": 2
+      },
+      {
+        "label": "偶尔",
+        "value": 3
+      },
+      {
+        "label": "从不",
+        "value": 4
+      }
+    ],
+    "weight": 3.0,
+    "is_hard": true,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q30a",
+    "category": "生活习惯",
+    "dimension": "drinking",
+    "question_text": "您是否会在宿舍饮酒？",
+    "options": [
+      {
+        "label": "经常",
+        "value": 1
+      },
+      {
+        "label": "偶尔",
+        "value": 2
+      },
+      {
+        "label": "特殊场合",
+        "value": 3
+      },
+      {
+        "label": "从不",
+        "value": 4
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q31a",
+    "category": "生活习惯",
+    "dimension": "strong_smell_food",
+    "question_text": "您是否介意在宿舍食用气味较大的食物（如榴莲、螺蛳粉、臭豆腐等）？",
+    "options": [
+      {
+        "label": "经常",
+        "value": 1
+      },
+      {
+        "label": "偶尔",
+        "value": 2
+      },
+      {
+        "label": "很少",
+        "value": 3
+      },
+      {
+        "label": "从不",
+        "value": 4
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q32a",
+    "category": "生活习惯",
+    "dimension": "summer_ac",
+    "question_text": "夏季您对空调的使用习惯是？",
+    "options": [
+      {
+        "label": "必须整晚/全天开，温度较低（<24℃）",
+        "value": 1
+      },
+      {
+        "label": "定时开（入睡后关）",
+        "value": 2
+      },
+      {
+        "label": "温度适中（24-26℃）",
+        "value": 3
+      },
+      {
+        "label": "尽量不开，吹风扇即可",
+        "value": 4
+      },
+      {
+        "label": "不怕热，从不开",
+        "value": 5
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q33a",
+    "category": "生活习惯",
+    "dimension": "winter_heating",
+    "question_text": "冬季您对暖气/空调的使用习惯是？",
+    "options": [
+      {
+        "label": "必须全天温暖（>22℃）",
+        "value": 1
+      },
+      {
+        "label": "适度使用（18-22℃）",
+        "value": 2
+      },
+      {
+        "label": "尽量不用，耐寒",
+        "value": 3
+      },
+      {
+        "label": "依情况而定",
+        "value": 4
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q34a",
+    "category": "生活习惯",
+    "dimension": "preferred_temp",
+    "question_text": "您偏好的室内温度大约是？",
+    "options": [
+      {
+        "label": "22℃以下",
+        "value": 1
+      },
+      {
+        "label": "22-24℃",
+        "value": 2
+      },
+      {
+        "label": "24-26℃",
+        "value": 3
+      },
+      {
+        "label": "26℃以上",
+        "value": 4
+      },
+      {
+        "label": "无所谓",
+        "value": 5
+      }
+    ],
+    "weight": 1.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q35a",
+    "category": "生活习惯",
+    "dimension": "device_volume",
+    "question_text": "您在宿舍使用电子设备（手机、电脑、平板）时，习惯？",
+    "options": [
+      {
+        "label": "总是外放（声音较大）",
+        "value": 1
+      },
+      {
+        "label": "偶尔外放（较小声）",
+        "value": 2
+      },
+      {
+        "label": "基本戴耳机，但有时会忘",
+        "value": 3
+      },
+      {
+        "label": "始终戴耳机，绝不外放",
+        "value": 4
+      }
+    ],
+    "weight": 2.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q36a",
+    "category": "生活习惯",
+    "dimension": "call_frequency",
+    "question_text": "您在宿舍进行语音通话/视频通话的频率是？",
+    "options": [
+      {
+        "label": "每天多次，且时间较长",
+        "value": 1
+      },
+      {
+        "label": "每天1-2次，较短",
+        "value": 2
+      },
+      {
+        "label": "偶尔",
+        "value": 3
+      },
+      {
+        "label": "很少，会去走廊/阳台",
+        "value": 4
+      },
+      {
+        "label": "从不",
+        "value": 5
+      }
+    ],
+    "weight": 1.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q37a",
+    "category": "生活习惯",
+    "dimension": "game_voice_chat",
+    "question_text": "您打游戏时是否习惯开麦语音交流？",
+    "options": [
+      {
+        "label": "经常开麦且声音较大",
+        "value": 1
+      },
+      {
+        "label": "偶尔开麦",
+        "value": 2
+      },
+      {
+        "label": "很少开麦",
+        "value": 3
+      },
+      {
+        "label": "不打游戏",
+        "value": 4
+      },
+      {
+        "label": "打游戏但从不语音",
+        "value": 5
+      }
+    ],
+    "weight": 1.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q38a",
+    "category": "性格与社交",
+    "dimension": "mbti",
+    "question_text": "您的MBTI性格类型是？",
+    "options": [
+      {
+        "label": "ISTJ",
+        "value": "ISTJ"
+      },
+      {
+        "label": "ISFJ",
+        "value": "ISFJ"
+      },
+      {
+        "label": "INFJ",
+        "value": "INFJ"
+      },
+      {
+        "label": "INTJ",
+        "value": "INTJ"
+      },
+      {
+        "label": "ISTP",
+        "value": "ISTP"
+      },
+      {
+        "label": "ISFP",
+        "value": "ISFP"
+      },
+      {
+        "label": "INFP",
+        "value": "INFP"
+      },
+      {
+        "label": "INTP",
+        "value": "INTP"
+      },
+      {
+        "label": "ESTP",
+        "value": "ESTP"
+      },
+      {
+        "label": "ESFP",
+        "value": "ESFP"
+      },
+      {
+        "label": "ENFP",
+        "value": "ENFP"
+      },
+      {
+        "label": "ENTP",
+        "value": "ENTP"
+      },
+      {
+        "label": "ESTJ",
+        "value": "ESTJ"
+      },
+      {
+        "label": "ESFJ",
+        "value": "ESFJ"
+      },
+      {
+        "label": "ENFJ",
+        "value": "ENFJ"
+      },
+      {
+        "label": "ENTJ",
+        "value": "ENTJ"
+      },
+      {
+        "label": "不清楚/未测试",
+        "value": "UNKNOWN"
+      }
+    ],
+    "weight": 0.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "string"
+  },
+  {
+    "qid": "q39a",
+    "category": "性格与社交",
+    "dimension": "introversion",
+    "question_text": "您认为自己属于？",
+    "options": [
+      {
+        "label": "极度内向：喜欢独处，社交消耗能量",
+        "value": 1
+      },
+      {
+        "label": "偏内向：有选择地社交",
+        "value": 2
+      },
+      {
+        "label": "中性：可静可动",
+        "value": 3
+      },
+      {
+        "label": "偏外向：喜欢热闹和群体活动",
+        "value": 4
+      },
+      {
+        "label": "极度外向：需要持续社交充电",
+        "value": 5
+      }
+    ],
+    "weight": 1.2,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q40a",
+    "category": "性格与社交",
+    "dimension": "social_activity",
+    "question_text": "您的社交活跃度如何？",
+    "options": [
+      {
+        "label": "经常参加聚会、社团活动，宿舍只是睡觉的地方",
+        "value": 1
+      },
+      {
+        "label": "偶尔外出社交，宿舍是主要休息场所",
+        "value": 2
+      },
+      {
+        "label": "社交很少，大部分时间待在宿舍",
+        "value": 3
+      },
+      {
+        "label": "几乎不社交，宿舍是最主要的活动空间",
+        "value": 4
+      }
+    ],
+    "weight": 1.2,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q41a",
+    "category": "性格与社交",
+    "dimension": "dorm_activity",
+    "question_text": "在宿舍内，您主要的活动是？",
+    "options": [
+      {
+        "label": "学习（看书、写作业、上网课）",
+        "value": 1
+      },
+      {
+        "label": "休息（睡觉、发呆、放松）",
+        "value": 2
+      },
+      {
+        "label": "娱乐（打游戏、追剧、听音乐）",
+        "value": 3
+      },
+      {
+        "label": "社交（和室友聊天、招待朋友）",
+        "value": 4
+      },
+      {
+        "label": "混合，无明显偏好",
+        "value": 5
+      }
+    ],
+    "weight": 1.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q42a",
+    "category": "性格与社交",
+    "dimension": "visitor_day",
+    "question_text": "您是否接受室友白天（非休息时间）带朋友/同学回宿舍？",
+    "options": [
+      {
+        "label": "非常欢迎，喜欢热闹",
+        "value": 1
+      },
+      {
+        "label": "偶尔可接受",
+        "value": 2
+      },
+      {
+        "label": "不太喜欢，但可沟通",
+        "value": 3
+      },
+      {
+        "label": "完全不接受",
+        "value": 4
+      }
+    ],
+    "weight": 1.2,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q43a",
+    "category": "性格与社交",
+    "dimension": "visitor_overnight",
+    "question_text": "您是否接受室友留宿过夜访客（如朋友、伴侣等）？",
+    "options": [
+      {
+        "label": "完全接受",
+        "value": 1
+      },
+      {
+        "label": "偶尔可接受（提前告知）",
+        "value": 2
+      },
+      {
+        "label": "不太接受",
+        "value": 3
+      },
+      {
+        "label": "完全不接受",
+        "value": 4
+      }
+    ],
+    "weight": 1.2,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q44a",
+    "category": "兴趣爱好",
+    "dimension": "gaming",
+    "question_text": "您是否玩电脑/主机游戏？如有，主要类型是？",
+    "options": [
+      {
+        "label": "不玩",
+        "value": 0
+      },
+      {
+        "label": "MOBA类（LOL、DOTA等）",
+        "value": 1
+      },
+      {
+        "label": "FPS类（CS、Valorant等）",
+        "value": 2
+      },
+      {
+        "label": "生存/建造类（MC、饥荒等）",
+        "value": 3
+      },
+      {
+        "label": "单机/主机大作",
+        "value": 4
+      },
+      {
+        "label": "手游为主",
+        "value": 5
+      },
+      {
+        "label": "多种类型都玩",
+        "value": 6
+      }
+    ],
+    "weight": 0.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "multi"
+  },
+  {
+    "qid": "q45a",
+    "category": "兴趣爱好",
+    "dimension": "sports",
+    "question_text": "您是否进行体育运动？如有，主要项目是？",
+    "options": [
+      {
+        "label": "不运动",
+        "value": 0
+      },
+      {
+        "label": "跑步/健身",
+        "value": 1
+      },
+      {
+        "label": "球类（篮球、足球、羽毛球等）",
+        "value": 2
+      },
+      {
+        "label": "游泳",
+        "value": 3
+      },
+      {
+        "label": "极限/户外（滑板、骑行、登山等）",
+        "value": 4
+      },
+      {
+        "label": "多种运动",
+        "value": 5
+      }
+    ],
+    "weight": 0.8,
+    "is_hard": false,
+    "active": true,
+    "value_type": "multi"
+  },
+  {
+    "qid": "q46a",
+    "category": "兴趣爱好",
+    "dimension": "other_hobbies",
+    "question_text": "除游戏和运动外，您还有哪些兴趣爱好？",
+    "options": [
+      {
+        "label": "阅读/写作",
+        "value": 1
+      },
+      {
+        "label": "追剧/看电影/动漫",
+        "value": 2
+      },
+      {
+        "label": "听音乐/乐器",
+        "value": 3
+      },
+      {
+        "label": "绘画/设计/摄影",
+        "value": 4
+      },
+      {
+        "label": "追星/饭圈",
+        "value": 5
+      },
+      {
+        "label": "二次元/漫展/Cosplay",
+        "value": 6
+      },
+      {
+        "label": "科技/数码/编程",
+        "value": 7
+      },
+      {
+        "label": "社交/辩论/演讲",
+        "value": 8
+      },
+      {
+        "label": "手工/DIY",
+        "value": 9
+      },
+      {
+        "label": "无明显特定爱好",
+        "value": 10
+      }
+    ],
+    "weight": 0.6,
+    "is_hard": false,
+    "active": true,
+    "value_type": "multi"
+  },
+  {
+    "qid": "q47a",
+    "category": "住宿设施",
+    "dimension": "bunk_preference",
+    "question_text": "如果宿舍是上下铺结构，您的床位偏好是？",
+    "options": [
+      {
+        "label": "坚决要下铺（身体/习惯原因）",
+        "value": 1
+      },
+      {
+        "label": "偏好下铺",
+        "value": 2
+      },
+      {
+        "label": "偏好上铺",
+        "value": 3
+      },
+      {
+        "label": "坚决要上铺",
+        "value": 4
+      },
+      {
+        "label": "无所谓",
+        "value": 5
+      }
+    ],
+    "weight": 0.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q48a",
+    "category": "住宿设施",
+    "dimension": "bed_position",
+    "question_text": "如果宿舍床位可选，您偏好？",
+    "options": [
+      {
+        "label": "靠窗（采光好、通风）",
+        "value": 1
+      },
+      {
+        "label": "靠门（进出方便）",
+        "value": 2
+      },
+      {
+        "label": "中间/靠墙（有安全感）",
+        "value": 3
+      },
+      {
+        "label": "无所谓",
+        "value": 4
+      }
+    ],
+    "weight": 0.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q49a",
+    "category": "住宿设施",
+    "dimension": "privacy_need",
+    "question_text": "您对个人隐私空间的需求程度是？",
+    "options": [
+      {
+        "label": "极高：必须装床帘、桌帘，不喜欢被看到屏幕/桌面",
+        "value": 1
+      },
+      {
+        "label": "较高：需要一定的个人边界",
+        "value": 2
+      },
+      {
+        "label": "中等：可接受适度共享视线",
+        "value": 3
+      },
+      {
+        "label": "较低：喜欢开放、无隔阂的空间",
+        "value": 4
+      },
+      {
+        "label": "极低：完全透明，彼此无秘密最好",
+        "value": 5
+      }
+    ],
+    "weight": 1.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q50a",
+    "category": "相处模式",
+    "dimension": "sharing_attitude",
+    "question_text": "您对个人物品（洗发水、纸巾、零食、充电器等）共享的态度是？",
+    "options": [
+      {
+        "label": "非常乐意共享，不分你我",
+        "value": 1
+      },
+      {
+        "label": "基本可共享，但需提前告知",
+        "value": 2
+      },
+      {
+        "label": "部分共享（消耗品可借，贵重物品不借）",
+        "value": 3
+      },
+      {
+        "label": "原则上不共享，但紧急情况可借",
+        "value": 4
+      },
+      {
+        "label": "非常介意，私人物品绝不外借",
+        "value": 5
+      }
+    ],
+    "weight": 1.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q51a",
+    "category": "相处模式",
+    "dimension": "expense_attitude",
+    "question_text": "对于宿舍公共费用（水电费、网费、饮用水、公共清洁用品等），您的态度是？",
+    "options": [
+      {
+        "label": "非常积极，主动AA，及时转账",
+        "value": 1
+      },
+      {
+        "label": "愿意AA，但需有人提醒/统一收取",
+        "value": 2
+      },
+      {
+        "label": "希望轮流负责，不计较精确金额",
+        "value": 3
+      },
+      {
+        "label": "不太在意，谁方便谁付",
+        "value": 4
+      },
+      {
+        "label": "希望费用越少越好，节约用电用水",
+        "value": 5
+      }
+    ],
+    "weight": 1.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q52a",
+    "category": "相处模式",
+    "dimension": "dorm_atmosphere",
+    "question_text": "您期望宿舍的整体氛围是？",
+    "options": [
+      {
+        "label": "安静图书馆型：大部分时间安静，各自学习休息",
+        "value": 1
+      },
+      {
+        "label": "温馨家庭型：互相关心，经常聊天分享，但不吵闹",
+        "value": 2
+      },
+      {
+        "label": "活跃社交型：经常一起活动、聚餐、游戏，热闹",
+        "value": 3
+      },
+      {
+        "label": "互不打扰型：各自独立，保持礼貌距离",
+        "value": 4
+      },
+      {
+        "label": "无所谓，能和平相处即可",
+        "value": 5
+      }
+    ],
+    "weight": 1.5,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q53a",
+    "category": "相处模式",
+    "dimension": "study_atmosphere",
+    "question_text": "您期望宿舍的学习氛围是？",
+    "options": [
+      {
+        "label": "全员学霸，互相督促，一起自习",
+        "value": 1
+      },
+      {
+        "label": "适度学习，考试周一起复习",
+        "value": 2
+      },
+      {
+        "label": "各自安排，不互相干涉",
+        "value": 3
+      },
+      {
+        "label": "学习不是重点，宿舍就是放松的地方",
+        "value": 4
+      },
+      {
+        "label": "无所谓",
+        "value": 5
+      }
+    ],
+    "weight": 1.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  },
+  {
+    "qid": "q54a",
+    "category": "敏感信息",
+    "dimension": "orientation",
+    "question_text": "您的性取向是？",
+    "options": [
+      {
+        "label": "异性恋",
+        "value": 1
+      },
+      {
+        "label": "同性恋",
+        "value": 2
+      },
+      {
+        "label": "双性恋/泛性恋",
+        "value": 3
+      },
+      {
+        "label": "无性恋",
+        "value": 4
+      },
+      {
+        "label": "不确定/不愿透露",
+        "value": 5
+      }
+    ],
+    "weight": 0.0,
+    "is_hard": false,
+    "active": true,
+    "value_type": "scalar"
+  }
+]
