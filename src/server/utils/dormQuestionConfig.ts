@@ -19,7 +19,7 @@ let cached: DormQuestionConfig[] | null = null
 export function getDormQuestionConfig(): DormQuestionConfig[] {
     if (cached) return cached
     const currentDir = path.dirname(fileURLToPath(import.meta.url))
-    const jsonPath = path.resolve(currentDir, '../../../tmp/wenjuan/question_config.json')
+    const jsonPath = path.resolve(currentDir, '../../shared/constants/question_config.json')
     const raw = fs.readFileSync(jsonPath, 'utf-8')
     cached = JSON.parse(raw) as DormQuestionConfig[]
     return cached
