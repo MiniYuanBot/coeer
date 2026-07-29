@@ -24,6 +24,7 @@ export type IconName =
     | 'group'
     | 'heart'
     | 'home'
+    | 'bed'
     | 'login'
     | 'logout'
     | 'menu'

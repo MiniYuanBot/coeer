@@ -6,6 +6,7 @@ export const navItems: Array<{ to: string; label: string; icon: IconName }> = [
     { to: '/bulletins', label: '公告', icon: 'bell' },
     { to: '/activities', label: '活动', icon: 'calendar' },
     { to: '/feedbacks', label: '反馈', icon: 'feedback' },
+    { to: '/dorms', label: '宿舍', icon: 'bed' },
     { to: '/redeems', label: '商城', icon: 'gift' },
     { to: '/achievements', label: '成就', icon: 'award' },
 ]
