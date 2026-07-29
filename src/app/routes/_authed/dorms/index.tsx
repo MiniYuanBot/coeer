@@ -37,7 +37,10 @@ export const Route = createFileRoute('/_authed/dorms/')({
         const cyclesResult = await listDormCyclesFn({ data: { limit: 20, offset: 0, search: search.search } }) as { items?: DormCycle[] }
         const questionConfig = (await getDormQuestionnaireConfigFn()) as DormQuestionConfig[]
         const cycles = cyclesResult.items ?? []
-        const selectedCycleId = search.cycleId ?? cycles.find((item) => ['collecting', 'computed', 'confirmed'].includes(item.status))?.id ?? cycles[0]?.id
+        const selectedCycle = cycles.find((item) => item.id === search.cycleId)
+            ?? cycles.find((item) => ['collecting', 'computed', 'confirmed'].includes(item.status))
+            ?? cycles[0]
+        const selectedCycleId = selectedCycle?.id
         const view = selectedCycleId ? await getDormStudentViewFn({ data: { cycleId: selectedCycleId } }) : null
         return { cycles, questionConfig, selectedCycleId, view }
     },
