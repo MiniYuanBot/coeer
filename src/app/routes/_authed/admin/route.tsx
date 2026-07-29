@@ -22,7 +22,7 @@ function AdminLayout() {
         <div className="space-y-6">
             <SectionHeader
                 title="管理工作台"
-                description="审核反馈、跟进处理状态，并查看反馈系统运行情况。"
+                description="审核反馈、跟进处理状态，并管理宿舍、活动、商城与成就。"
             />
             <Outlet />
         </div>

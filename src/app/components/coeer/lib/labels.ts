@@ -67,3 +67,17 @@ export const cardRarityLabels: Record<string, string> = {
     rare: '稀有',
     legendary: '传说',
 }
+
+export const dormCycleStatusLabels: Record<string, string> = {
+    draft: '草稿',
+    collecting: '收集中',
+    computed: '已计算',
+    confirmed: '已确认',
+    closed: '已关闭',
+}
+
+export const dormRoomStatusLabels: Record<string, string> = {
+    draft: '草稿',
+    committed: '已下发',
+    adjusted: '已调整',
+}

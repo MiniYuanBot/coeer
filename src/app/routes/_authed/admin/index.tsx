@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_authed/admin/')({
 })
 
 type AdminLink = {
-    to: '/admin/feedbacks' | '/admin/feedbacks/pending' | '/admin/stats' | '/admin/groups' | '/admin/groups/pending' | '/admin/bulletins' | '/admin/activities' | '/admin/redeems' | '/admin/achievements'
+    to: '/admin/feedbacks' | '/admin/feedbacks/pending' | '/admin/stats' | '/admin/groups' | '/admin/groups/pending' | '/admin/bulletins' | '/admin/activities' | '/admin/redeems' | '/admin/achievements' | '/admin/dorms'
     title: string
     description: string
     icon: IconName
@@ -53,6 +53,7 @@ const adminGroups: Array<{ title: string; links: AdminLink[] }> = [
             { to: '/admin/activities', title: '活动管理', description: '管理活动报名', icon: 'calendar', badge: '活动', tone: 'primary' },
             { to: '/admin/redeems', title: '商城管理', description: '维护兑换物品', icon: 'gift', badge: '商城', tone: 'success' },
             { to: '/admin/achievements', title: '成就管理', description: '配置成长成就', icon: 'award', badge: '成就', tone: 'primary' },
+            { to: '/admin/dorms', title: '宿舍管理', description: '运行宿舍分配、调整房间并下发结果', icon: 'bed', badge: '宿舍', tone: 'warning' },
         ],
     },
 ]

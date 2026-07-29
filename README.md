@@ -163,7 +163,7 @@ pnpm start
 
 业务层的主要任务是为前端提供完整的后端服务。也即前端不应直接进行数据库查询操作，所有查询操作都应在业务层完成，前端只能调用业务层。这一层的根目录是 `server/services`
 
-已按领域拆分为 `AuthService`、`GroupService`、`GroupPostService`、`FeedbackService`、`ReactionService`、`ReplyService`、`BulletinService`、`SubscriptionService`、`ActivityService`、`PointService`、`CardService`、`AchievementService`、`RedeemService` 等。
+已按领域拆分为 `AuthService`、`GroupService`、`GroupPostService`、`FeedbackService`、`ReactionService`、`ReplyService`、`BulletinService`、`SubscriptionService`、`ActivityService`、`PointService`、`CardService`、`AchievementService`、`RedeemService`、`DormService` 等。
 
 后台统计另有 `UserService`，用于 `/admin/stats` 汇总用户概览。
 
@@ -197,6 +197,7 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 - `/activities`、`/activities/$activityId`：活动列表与详情，支持活动类型与状态分类
 - `/redeems`：积分商城，支持实体物品、虚拟权益分类
 - `/achievements`：卡片/成就墙，支持我的卡片、成就进度、成就类型与卡片稀有度分类
+- `/dorms`：新生宿舍问卷与结果页，按宿舍届次区分不同届学生，管理员确认前显示等待中
 - `/profile`：个人中心
 
 管理后台页面：
@@ -208,7 +209,10 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 - `/admin/activities`：活动管理，支持发布、编辑、删除活动，并查看报名情况
 - `/admin/redeems`：商城管理，支持添加、编辑、删除商城物品，并查看兑换详情
 - `/admin/achievements`：成就管理，支持添加、编辑、删除成就
+- `/admin/dorms`：宿舍管理，支持创建届次、运行分配算法、查看结果、调整房间成员并确认下发
 - `/admin/stats`：统计概览，展示所有用户及用户情况数据
+
+宿舍模块复用 `tmp/wenjuan/question_config.json` 作为问卷题库。分配结果不会在学生访问时自动计算，只在管理员进入宿舍管理页并点击运行分配时生成；确认下发前学生端仅展示等待中。
 
 ## Project Status
 
@@ -226,6 +230,7 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 6. 公告栏系统
 7. 活动系统
 8. 积分与激励系统
+9. 新生宿舍分配系统
 
 ### Done List
 
@@ -241,7 +246,8 @@ Server Function 只负责输入校验、调用 Service 和少量框架级跳转�
 8. 积分、卡片、成就与兑换系统的后端基础能力
 9. COEER 前端 UI 基础体验与主要页面骨架
 10. 主要首页统一搜索栏与分类查看栏
-11. 管理后台基础能力：反馈审核、群组审核、公告管理、活动管理、商城管理、成就管理、用户统计概览
+11. 管理后台基础能力：反馈审核、群组审核、公告管理、活动管理、商城管理、成就管理、宿舍管理、用户统计概览
+12. 新生宿舍分配：学生填写问卷，管理员按届次运行算法、调整房间并确认下发
 
 ### TODO List
 

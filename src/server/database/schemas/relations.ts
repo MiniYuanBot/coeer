@@ -1,25 +1,18 @@
 import { relations } from 'drizzle-orm/relations'
-import {
-    users,
-    userProfiles,
-    feedbacks,
-    feedbackStatusLogs,
-    groups,
-    groupMembers,
-    groupPosts,
-    reactions,
-    replies,
-    userSubscriptions,
-    activities,
-    activityParticipants,
-    pointTransactions,
-    cards,
-    userCards,
-    achievements,
-    userAchievements,
-    redeemItems,
-    redeemOrders
-} from './index'
+import { achievements, userAchievements } from './achievements'
+import { activities, activityParticipants } from './activities'
+import { cards, userCards } from './cards'
+import { dormCycles, dormQuestionnaires, dormRooms } from './dorms'
+import { feedbacks, feedbackStatusLogs } from './feedbacks'
+import { groupMembers } from './groupMembers'
+import { groupPosts } from './groupPosts'
+import { groups } from './groups'
+import { pointTransactions } from './points'
+import { reactions } from './reactions'
+import { redeemItems, redeemOrders } from './redeems'
+import { replies } from './replies'
+import { userSubscriptions } from './subscriptions'
+import { users, userProfiles } from './users'
 
 export const usersRelations = relations(users, ({ one, many }) => ({
     profile: one(userProfiles, {
@@ -190,5 +183,28 @@ export const redeemOrdersRelations = relations(redeemOrders, ({ one }) => ({
     item: one(redeemItems, {
         fields: [redeemOrders.itemId],
         references: [redeemItems.id],
+    }),
+}))
+
+export const dormCyclesRelations = relations(dormCycles, ({ many }) => ({
+    questionnaires: many(dormQuestionnaires),
+    rooms: many(dormRooms),
+}))
+
+export const dormQuestionnairesRelations = relations(dormQuestionnaires, ({ one }) => ({
+    cycle: one(dormCycles, {
+        fields: [dormQuestionnaires.cycleId],
+        references: [dormCycles.id],
+    }),
+    user: one(users, {
+        fields: [dormQuestionnaires.userId],
+        references: [users.id],
+    }),
+}))
+
+export const dormRoomsRelations = relations(dormRooms, ({ one }) => ({
+    cycle: one(dormCycles, {
+        fields: [dormRooms.cycleId],
+        references: [dormCycles.id],
     }),
 }))
