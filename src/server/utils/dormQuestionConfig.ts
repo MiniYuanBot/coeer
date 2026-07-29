@@ -1,6 +1,4 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import questionConfig from '@shared/constants/question_config.json'
 
 export type DormQuestionConfig = {
     qid: string
@@ -18,9 +16,6 @@ let cached: DormQuestionConfig[] | null = null
 
 export function getDormQuestionConfig(): DormQuestionConfig[] {
     if (cached) return cached
-    const currentDir = path.dirname(fileURLToPath(import.meta.url))
-    const jsonPath = path.resolve(currentDir, '../../shared/constants/question_config.json')
-    const raw = fs.readFileSync(jsonPath, 'utf-8')
-    cached = JSON.parse(raw) as DormQuestionConfig[]
+    cached = questionConfig as DormQuestionConfig[]
     return cached
 }
