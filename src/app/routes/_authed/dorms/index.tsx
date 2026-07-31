@@ -298,9 +298,9 @@ function QuestionBlock({ question, defaultValue }: { question: DormQuestionConfi
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <div className="text-sm font-medium">{question.question_text}</div>
-                    <div className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{question.dimension}</div>
+                    {/* <div className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{question.dimension}</div> */}
                 </div>
-                {question.is_hard ? <Badge tone="warning">硬约束</Badge> : <Badge>权重 {question.weight}</Badge>}
+                {/* {question.is_hard ? <Badge tone="warning">硬约束</Badge> : <Badge>权重 {question.weight}</Badge>} */}
             </div>
             {isMulti ? (
                 <div className="grid gap-2 sm:grid-cols-2">
