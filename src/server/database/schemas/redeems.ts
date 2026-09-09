@@ -29,6 +29,7 @@ export const redeemOrders = pgTable('redeem_orders', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     itemId: uuid('item_id').references(() => redeemItems.id, { onDelete: 'restrict' }).notNull(),
+    quantity: integer('quantity').default(1).notNull(),
     status: redeemOrderStatusEnum('status').default('pending').notNull(),
     redeemCode: varchar('redeem_code', { length: 100 }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

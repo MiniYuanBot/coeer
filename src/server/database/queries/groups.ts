@@ -14,8 +14,9 @@ import {
     GroupIdWithFilterInput,
     GroupSlugWithFilterInput
 } from '@shared/contracts'
-import { GroupCategory, GROUP_STATUS, GroupStatus } from '@shared/constants'
+import { GroupCategory, GROUP_MEMBER_STATUS, GROUP_STATUS, GroupStatus } from '@shared/constants'
 import { groupMemberQueries } from './groupMembers'
+import { groupPostQueries } from './groupPosts'
 
 // Private query condition builder
 function buildWhereClause(params: {
@@ -100,11 +101,15 @@ export const groupQueries = {
 
         if (!group) return undefined
 
-        // Get member count
-        const memberCount = await groupMemberQueries.countByGroup({ groupId: group.id })
+        // Member count only counts *approved* memberships (pending/rejected
+        // applications must not inflate the displayed roster size).
+        const memberCount = await groupMemberQueries.countByGroup({
+            groupId: group.id,
+            status: GROUP_MEMBER_STATUS.APPROVED,
+        })
 
-        // Get posts count
-        const postCount = await this.getPostCount({ groupId: group.id })
+        // Posts count (implemented — previously a stub returning 0).
+        const postCount = await groupPostQueries.countByGroup({ groupId: group.id })
 
         return {
             ...group,
@@ -125,7 +130,7 @@ export const groupQueries = {
 
     // Get group's post count
     async getPostCount(data: GroupIdInput): Promise<number> {
-        return 0
+        return groupPostQueries.countByGroup({ groupId: data.groupId })
     },
 
     // Review group (approve/reject)

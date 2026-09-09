@@ -1,6 +1,7 @@
-import { feedbackQueries, groupPostQueries, reactionQueries } from '../database/queries'
+import { reactionQueries } from '../database/queries'
 import { AuthService } from './AuthService'
 import { REACTION } from '@shared/constants'
+import { canViewTarget } from '../utils/access'
 import type {
     ListMyReactionsInput,
     ListReactionsInput,
@@ -12,19 +13,14 @@ import type {
 } from '@shared/contracts'
 
 export class ReactionService {
-    private static async targetExists(data: ToggleReactionInput): Promise<boolean> {
-        if (data.targetType === 'group_post') {
-            return !!await groupPostQueries.findById({ id: data.targetId })
-        }
-        return !!await feedbackQueries.findById({ id: data.targetId })
-    }
-
     static async toggle(data: ToggleReactionInput): Promise<ReactionResponse<{ reacted: boolean; count: number }>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) return { success: false, state: REACTION.UNAUTHORIZED }
-            if (!await this.targetExists(data)) return { success: false, state: REACTION.TARGET_NOT_FOUND }
+
+            // Only react to content the caller can actually see.
+            if (!await canViewTarget(data, user)) return { success: false, state: REACTION.TARGET_NOT_FOUND }
 
             const existing = await reactionQueries.findByUserAndTarget(user.id, data)
             if (existing) {

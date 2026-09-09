@@ -4,7 +4,13 @@ import { CardService } from '../services'
 
 export const drawCardsFn = createServerFn({ method: 'POST' })
     .inputValidator(DrawCardsSchema)
-    .handler(async ({ data }) => CardService.draw(data))
+    .handler(async ({ data }) => {
+        const result = await CardService.draw(data)
+        if (!result.success) {
+            throw new Error(result.state.message || '抽卡失败')
+        }
+        return result.data
+    })
 
 export const getCardPoolFn = createServerFn({ method: 'GET' })
     .inputValidator(ListCardsSchema)

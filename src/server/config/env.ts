@@ -11,7 +11,6 @@ const envSchema = z.object({
 
     DATABASE_URL: z.string().min(1, 'DATABASE_URL environment variable is required'),
 
-    JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters long'),
     SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters long'),
 
     DB_POOL_MIN: z.coerce.number().min(1).default(2),

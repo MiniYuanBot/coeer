@@ -17,7 +17,13 @@ export const listRedeemItemsFn = createServerFn({ method: 'GET' })
 
 export const redeemItemFn = createServerFn({ method: 'POST' })
     .inputValidator(RedeemItemSchema)
-    .handler(async ({ data }) => RedeemService.redeem(data))
+    .handler(async ({ data }) => {
+        const result = await RedeemService.redeem(data)
+        if (!result.success) {
+            throw new Error(result.state.message || '兑换失败')
+        }
+        return result.data
+    })
 
 export const getMyRedeemOrdersFn = createServerFn({ method: 'GET' })
     .inputValidator(ListRedeemOrdersSchema)

@@ -7,7 +7,7 @@ import { Icon } from '../ui/Icon'
 
 export function PostCard({ post, to }: { post: any; to?: string }) {
     const content = (
-        <Card className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[hsl(var(--border))] hover:shadow-sm">
+        <Card className="rounded-xl p-5">
             <div className="flex items-center gap-2">
                 <Badge tone={post.isPinned ? 'primary' : 'default'}>{post.isPinned ? '置顶' : post.type}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</span>

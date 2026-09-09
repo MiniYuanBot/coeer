@@ -192,6 +192,27 @@ export class GroupService {
                 }
             }
 
+            // Hide not-yet-approved groups from everyone except their members
+            // and platform admins (a pending group must not be discoverable).
+            if (group.status !== GROUP_STATUS.APPROVED) {
+                const payload = await AuthService.getCurrentUser()
+                const user = payload.data
+                const isPlatformAdmin = payload.success && !!user && user.role === 'admin'
+
+                let canView = isPlatformAdmin
+                if (!canView && user?.id) {
+                    const membership = await groupMemberQueries.findByGroupAndUser({
+                        groupId: group.id,
+                        userId: user.id,
+                    })
+                    canView = !!membership && membership.status === GROUP_MEMBER_STATUS.APPROVED
+                }
+
+                if (!canView) {
+                    return { success: false, state: GROUP.NOT_FOUND }
+                }
+            }
+
             return {
                 success: true,
                 data: group,
@@ -275,7 +296,10 @@ export class GroupService {
         }
     }
 
-    // Approve/reject group (mod/admin)
+    // Platform admin review for pending groups.
+    // NOTE: this must check the *platform* role. Previously it checked group
+    // membership, which let a creator (auto-inserted as group admin) approve
+    // their own group — a moderation bypass.
     static async approveGroup(data: ApproveGroupInput): Promise<GroupResponse<Group>> {
         try {
             const payload = await AuthService.getCurrentUser()
@@ -284,9 +308,7 @@ export class GroupService {
                 return { success: false, state: GROUP.UNAUTHORIZED }
             }
 
-            // Check if user is admin
-            const isAdmin = await groupMemberQueries.checkRole({ groupId: data.id, userId: user.id, role: 'admin' })
-            if (!isAdmin) {
+            if (user.role !== 'admin') {
                 return { success: false, state: GROUP.FORBIDDEN }
             }
 
@@ -371,6 +393,14 @@ export class GroupService {
                 return {
                     success: false,
                     state: GROUP_MEMBER.GROUP_NOT_FOUND,
+                }
+            }
+
+            // Only approved groups accept new members.
+            if (group.status !== GROUP_STATUS.APPROVED) {
+                return {
+                    success: false,
+                    state: { ...GROUP_MEMBER.GROUP_NOT_FOUND, message: '该群组尚未通过审核，暂不可加入' },
                 }
             }
 
@@ -493,22 +523,42 @@ export class GroupService {
                 }
             }
 
-            // Check permissions for private groups
-            // if (!group.isPublic && group.status === GROUP_STATUS.APPROVED) {
-            //     const membership = await groupMemberQueries.findByGroupAndUser({groupId: data.groupId, userId: user.id})
-            //     if (!membership || membership.status !== GROUP_MEMBER_STATUS.APPROVED) {
-            //         return {
-            //             success: false,
-            //             state: GROUP_MEMBER.FORBIDDEN,
-            //         }
-            //     }
-            // }
+            // Private groups: only approved members (or admins) may list members.
+            // Without this gate, any user could enumerate members (incl. emails
+            // and pending applicants) of any group by id.
+            const isPlatformAdmin = user.role === 'admin'
+            const isGroupAdmin = isPlatformAdmin || await groupMemberQueries.checkRole({
+                groupId: group.id,
+                userId: user.id,
+                role: 'admin',
+            })
+            const isApprovedMember = isGroupAdmin || await groupMemberQueries.checkRole({
+                groupId: group.id,
+                userId: user.id,
+                role: 'member',
+            })
+
+            if (!group.isPublic && !isApprovedMember) {
+                return { success: false, state: GROUP_MEMBER.FORBIDDEN }
+            }
+            if (group.status !== GROUP_STATUS.APPROVED && !isPlatformAdmin) {
+                return { success: false, state: GROUP_MEMBER.FORBIDDEN }
+            }
 
             const { limit, offset } = data
 
-            const members = await groupMemberQueries.listByGroup(data)
+            // Regular members only see the approved roster; pending applicants
+            // are visible to the group admins alone.
+            const memberStatus = isGroupAdmin ? data.status : GROUP_MEMBER_STATUS.APPROVED
+            const members = await groupMemberQueries.listByGroup({
+                ...data,
+                status: memberStatus,
+            })
 
-            const total = await groupMemberQueries.countByGroup(data)
+            const total = await groupMemberQueries.countByGroup({
+                ...data,
+                status: memberStatus,
+            })
 
             return {
                 success: true,
@@ -529,9 +579,16 @@ export class GroupService {
         }
     }
 
-    // Check if user is group admin/member
+    /**
+     * Role check for the *session* user inside a group.
+     * The `userId` coming from the client is ignored — callers may only
+     * query their own membership, which also prevents membership probing.
+     */
     static async checkRole(data: CheckRoleInput): Promise<boolean> {
-        return groupMemberQueries.checkRole(data)
+        const payload = await AuthService.getCurrentUser()
+        const user = payload.data
+        if (!payload.success || !user) return false
+        return groupMemberQueries.checkRole({ groupId: data.groupId, userId: user.id, role: data.role })
     }
 
     // Update member (admin only)

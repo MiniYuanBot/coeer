@@ -31,7 +31,7 @@ function FeedbackDetailPage() {
     const { feedback, currentUser } = Route.useLoaderData()
     const navigate = useNavigate()
     const [isDeleting, setIsDeleting] = useState(false)
-    const canDelete = currentUser?.role === 'admin' || currentUser?.email === feedback.author?.email
+    const canDelete = currentUser?.role === 'admin' || feedback.authorId === currentUser?.id
 
     const handleDelete = async () => {
         if (!confirm('确定删除这条反馈吗？')) return

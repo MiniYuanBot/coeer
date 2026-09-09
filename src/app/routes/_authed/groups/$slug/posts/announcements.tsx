@@ -46,7 +46,7 @@ function AnnouncementsPage() {
             {announcements.length ? (
                 <div className="space-y-4">
                     {announcements.map((post) => (
-                        <Card key={post.id} className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                        <Card key={post.id} className="rounded-xl p-5">
                             <div className="flex flex-wrap items-center gap-2">
                                 <Badge tone="primary">公告</Badge>
                                 {post.isPinned ? <Badge>置顶</Badge> : null}

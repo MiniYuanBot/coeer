@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Badge, Card, Icon, type BadgeTone, type IconName } from '@/components/coeer'
+import { Badge, Card, Icon, SectionHeader, type BadgeTone, type IconName } from '@/components/coeer'
 import { getFeedbacksFn, listActivitiesFn, listAllGroupsFn, listRedeemItemsFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/admin/')({
@@ -69,6 +69,10 @@ function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
+            <SectionHeader
+                title="管理工作台"
+                description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就与宿舍。"
+            />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {metricCards.map((item) => (
                     <Card key={item.label} className="rounded-xl p-5">
@@ -92,7 +96,7 @@ function AdminDashboardPage() {
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {group.links.map((item) => (
                             <Link key={item.to} to={item.to} className="block">
-                                <Card className="group h-full rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                                <Card className="group h-full rounded-xl p-5">
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
                                             <Icon name={item.icon} />

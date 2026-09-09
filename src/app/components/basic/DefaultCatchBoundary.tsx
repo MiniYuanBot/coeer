@@ -15,36 +15,42 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
     select: (state) => state.id === rootRouteId,
   })
 
-  console.error(error)
+  if (import.meta.env.DEV) {
+    console.error(error)
+  }
 
   return (
-    <div className="min-w-30 flex flex-col items-center justify-center text-center p-8">
-      <div className="max-w-md mx-auto">
-        
-        <div className="mb-6">
-          <ErrorComponent error={error} />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+      <div className="mx-auto max-w-md">
+        <div className="mb-6 rounded-xl border border-border bg-card p-5 text-left">
+          <div className="text-sm font-medium text-foreground">页面出错了</div>
+          <div className="mt-2 text-sm leading-6 text-muted-foreground">
+            <ErrorComponent error={error} />
+          </div>
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-           {isRoot ? (
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+          {isRoot ? (
             <Link to="/">
-              <Button variant="outline" className="min-w-30">Home</Button>
+              <Button variant="outline" className="w-full sm:w-auto">
+                返回首页
+              </Button>
             </Link>
           ) : (
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => window.history.back()}
-              className="min-w-30"
             >
-              Go Back
+              返回上一页
             </Button>
           )}
           <Button
             variant="primary"
+            className="w-full sm:w-auto"
             onClick={() => router.invalidate()}
-            className="min-w-30"
           >
-            Try Again
+            重试
           </Button>
         </div>
       </div>

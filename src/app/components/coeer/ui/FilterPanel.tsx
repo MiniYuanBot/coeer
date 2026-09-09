@@ -37,24 +37,35 @@ export function FilterPanel({
                 <SearchInput name={searchName} defaultValue={searchValue} placeholder={searchPlaceholder} />
             </form>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 md:flex-wrap">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
                 {groups.map((group, index) => (
                     <React.Fragment key={group.title || index}>
-                        {group.items.map((item) => (
-                            <button
-                                key={item.key}
-                                type="button"
-                                onClick={item.onClick}
-                                className={cn(
-                                    'coeer-focus shrink-0 rounded-md border px-3 py-1.5 text-sm transition-colors',
-                                    item.active
-                                        ? 'border-[hsl(var(--primary)/0.24)] bg-[hsl(var(--primary)/0.1)] font-medium text-[hsl(var(--primary))]'
-                                        : 'border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary)/0.35)] hover:text-[hsl(var(--foreground))]',
-                                )}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
+                        {group.title ? (
+                            <span className="hidden items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:flex">
+                                {group.title}
+                            </span>
+                        ) : null}
+                        <div className="flex flex-wrap gap-2">
+                            {group.items.map((item) => (
+                                <button
+                                    key={item.key}
+                                    type="button"
+                                    onClick={item.onClick}
+                                    aria-pressed={item.active}
+                                    className={cn(
+                                        'coeer-focus shrink-0 rounded-lg border px-3 py-1.5 text-sm transition-colors',
+                                        item.active
+                                            ? 'border-primary/30 bg-primary-soft font-medium text-primary'
+                                            : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                                    )}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                        {index < groups.length - 1 ? (
+                            <span aria-hidden className="hidden h-4 w-px bg-border sm:block" />
+                        ) : null}
                     </React.Fragment>
                 ))}
             </div>

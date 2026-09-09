@@ -24,11 +24,11 @@ export function Button({
                 size === 'md' && 'h-10 px-4',
                 size === 'lg' && 'h-11 px-5',
                 size === 'icon' && 'h-10 w-10',
-                variant === 'primary' && 'bg-[hsl(var(--primary))] text-white shadow-sm hover:bg-[hsl(var(--primary)/0.92)]',
-                variant === 'secondary' && 'bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted)/0.72)]',
-                variant === 'outline' && 'border border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:bg-[hsl(var(--muted))]',
-                variant === 'ghost' && 'hover:bg-[hsl(var(--muted))]',
-                variant === 'danger' && 'bg-red-600 text-white hover:bg-red-700',
+                variant === 'primary' && 'bg-primary text-primary-foreground shadow-sm hover:opacity-90',
+                variant === 'secondary' && 'border border-border bg-card text-foreground hover:bg-muted',
+                variant === 'outline' && 'border border-border bg-transparent hover:bg-muted',
+                variant === 'ghost' && 'hover:bg-muted',
+                variant === 'danger' && 'bg-danger text-white hover:opacity-90',
                 className,
             )}
         >

@@ -29,6 +29,12 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             creatorId: adminUser.id,
             status: 'approved' as const,
             isPublic: true,
+            // 谁可以以什么身份出现在这个群（key = 自然身份，value = 预设成员状态）
+            members: [
+                { userId: adminUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: testUser.id, role: 'member' as const, status: 'approved' as const },
+                { userId: demoUser.id, role: 'member' as const, status: 'approved' as const },
+            ],
         },
         {
             name: '编程学习小组',
@@ -38,6 +44,11 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             creatorId: demoUser.id,
             status: 'approved' as const,
             isPublic: true,
+            members: [
+                { userId: demoUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: testUser.id, role: 'member' as const, status: 'approved' as const },
+                { userId: adminUser.id, role: 'member' as const, status: 'approved' as const },
+            ],
         },
         {
             name: '校园活动筹备组',
@@ -47,42 +58,73 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             creatorId: testUser.id,
             status: 'pending' as const,
             isPublic: false,
+            // 未审核的私密群：只有创建者可见（其它“已批准成员”是错的）
+            members: [
+                { userId: testUser.id, role: 'admin' as const, status: 'approved' as const },
+            ],
+        },
+        {
+            name: '读书分享会',
+            slug: 'book-club',
+            description: '每月共读一本书，线下或线上分享。私密群，成员由管理员审核。',
+            category: 'interest' as const,
+            creatorId: testUser.id,
+            status: 'approved' as const,
+            isPublic: false,
+            members: [
+                { userId: testUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: demoUser.id, role: 'member' as const, status: 'approved' as const },
+                // 待审核申请：用于演示群管理员的“成员审核”流程
+                { userId: adminUser.id, role: 'member' as const, status: 'pending' as const },
+            ],
         },
     ]
 
     for (const group of sampleGroups) {
         const existing = await db.query.groups.findFirst({ where: eq(groups.slug, group.slug) })
         if (!existing) {
-            await db.insert(groups).values(group)
+            await db.insert(groups).values({
+                name: group.name,
+                slug: group.slug,
+                description: group.description,
+                category: group.category,
+                creatorId: group.creatorId,
+                status: group.status,
+                isPublic: group.isPublic,
+            })
             console.log(`Create group: ${group.slug}`)
         } else {
             console.log(`Group exists: ${group.slug}`)
         }
     }
 
+    // Memberships（幂等）
     const seededGroups = await db.query.groups.findMany({
         where: inArray(groups.slug, sampleGroups.map((group) => group.slug)),
     })
 
     for (const group of seededGroups) {
-        const members = [
-            { groupId: group.id, userId: group.creatorId ?? adminUser.id, role: 'admin' as const, status: 'approved' as const },
-            { groupId: group.id, userId: testUser.id, role: 'member' as const, status: 'approved' as const },
-            { groupId: group.id, userId: demoUser.id, role: 'member' as const, status: 'approved' as const },
-        ]
-
-        for (const member of members) {
+        const preset = sampleGroups.find((item) => item.slug === group.slug)
+        for (const member of preset?.members ?? []) {
             const existing = await db.query.groupMembers.findFirst({
-                where: (table, { and, eq }) => and(eq(table.groupId, member.groupId), eq(table.userId, member.userId)),
+                where: (table, { and, eq }) => and(eq(table.groupId, group.id), eq(table.userId, member.userId)),
             })
             if (!existing) {
-                await db.insert(groupMembers).values(member)
+                // joinedAt 有 notNull+defaultNow；对 pending 申请行不传让其用默认值即可
+                await db.insert(groupMembers).values({
+                    groupId: group.id,
+                    userId: member.userId,
+                    role: member.role,
+                    status: member.status,
+                })
+                console.log(`  Add member ${member.userId === testUser.id ? 'test' : member.userId === adminUser.id ? 'admin' : 'demo'}: ${member.status} @ ${group.slug}`)
             }
         }
     }
 
     const officialGroup = seededGroups.find((group) => group.slug === 'coeer-official')
     const codingGroup = seededGroups.find((group) => group.slug === 'coding-study')
+    const bookClub = seededGroups.find((group) => group.slug === 'book-club')
 
     const samplePosts = [
         officialGroup && {
@@ -92,6 +134,30 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             content: '当前环境用于开发测试，欢迎通过反馈系统提交问题。',
             type: 'announcement' as const,
             isPinned: true,
+        },
+        officialGroup && {
+            groupId: officialGroup.id,
+            authorId: adminUser.id,
+            title: '积分与成就系统使用说明',
+            content: '提交反馈、参与活动、发帖互动都会累积积分；积分可抽卡片，也能在积分商城兑换校园周边与权益。',
+            type: 'announcement' as const,
+            isPinned: false,
+        },
+        officialGroup && {
+            groupId: officialGroup.id,
+            authorId: demoUser.id,
+            title: '九月校园活动日历上线',
+            content: '功能体验会、Hack Night 与共创圆桌已排期，欢迎在活动页报名。',
+            type: 'discussion' as const,
+            isPinned: false,
+        },
+        officialGroup && {
+            groupId: officialGroup.id,
+            authorId: testUser.id,
+            title: '新人报到：介绍一下自己',
+            content: '第一次使用 COEER？来官方动态下打个招呼，介绍一下你的专业和兴趣吧。',
+            type: 'discussion' as const,
+            isPinned: false,
         },
         codingGroup && {
             groupId: codingGroup.id,
@@ -106,6 +172,14 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             authorId: testUser.id,
             title: '项目协作规范草案',
             content: '建议统一使用 feature 分支开发，PR 中说明测试结果。',
+            type: 'discussion' as const,
+            isPinned: false,
+        },
+        bookClub && {
+            groupId: bookClub.id,
+            authorId: demoUser.id,
+            title: '第一期共读书目投票',
+            content: '候选书目：《卡片笔记写作法》《事实》《置身事内》，欢迎大家投票并附理由。',
             type: 'discussion' as const,
             isPinned: false,
         },

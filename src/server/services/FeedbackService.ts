@@ -19,7 +19,7 @@ import { feedbackQueries } from '../database/queries'
 import { eq, desc, count, and, gte, lte } from 'drizzle-orm'
 
 export class FeedbackService {
-    // Create a feedback (records initial status log)
+    // Create a feedback (records initial status log) — both writes in one transaction.
     static async create(data: CreateFeedbackInput): Promise<FeedbackResponse<Feedback>> {
         try {
             const payload = await AuthService.getCurrentUser()
@@ -28,34 +28,45 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.UNAUTHORIZED }
             }
 
-            const result = await db.transaction(async (tx) => {
-                const feedback = await feedbackQueries.create({
+            const feedback = await db.transaction(async (tx) => {
+                const created = await feedbackQueries.create({
                     ...data,
                     authorId: user.id,
                     status: 'pending',
-                })
+                }, tx)
 
                 // Record initial status log
                 await tx.insert(feedbackStatusLogs).values({
-                    feedbackId: feedback.id,
+                    feedbackId: created.id,
                     status: 'pending',
                     changedBy: user.id,
                     note: 'Initial submission',
                     createdAt: new Date(),
                 })
 
-                return feedback
+                return created
             })
 
             return {
                 success: true,
-                data: result,
+                data: feedback,
                 state: FEEDBACK.CREATE_SUCCESS,
             }
         } catch (err) {
             console.error('Create feedback error:', err)
             return { success: false, state: FEEDBACK.SERVER_ERROR }
         }
+    }
+
+    /**
+     * Anonymous feedback must never expose its author (name/email) to regular
+     * viewers. Admins still see the author for moderation purposes.
+     */
+    private static hideAnonymousAuthor<T extends { isAnonymous: boolean; author?: unknown }>(item: T, isAdmin: boolean): T {
+        if (item.isAnonymous && !isAdmin) {
+            return { ...item, author: undefined }
+        }
+        return item
     }
 
     // Get feedback details by its id
@@ -81,15 +92,9 @@ export class FeedbackService {
                 return { success: false, state: FEEDBACK.FORBIDDEN }
             }
 
-            // // Hide author info for anonymous feedback when viewed by non-admins
-            // if (feedback.isAnonymous && !isAdmin) {
-            //     feedback.author = undefined
-            //     feedback.authorId = undefined
-            // }
-
             return {
                 success: true,
-                data: feedback as FeedbackWithAuthor,
+                data: FeedbackService.hideAnonymousAuthor(feedback as FeedbackWithAuthor, isAdmin),
                 state: FEEDBACK.GET_SUCCESS,
             }
         } catch (err) {
@@ -117,7 +122,8 @@ export class FeedbackService {
                 // Admin sees all feedbacks
                 items = await feedbackQueries.findAll(data) as FeedbackWithAuthor[]
 
-                total = await feedbackQueries.count({ status, search, targetType })
+                // `total` must respect the same filters (incl. authorId) as items.
+                total = await feedbackQueries.count(data)
             } else {
                 const scopedData = { ...data }
 
@@ -147,6 +153,9 @@ export class FeedbackService {
                     targetType,
                 } as any)
             }
+
+            // Anonymous feedback never exposes its author to regular viewers.
+            items = (items ?? []).map((item) => FeedbackService.hideAnonymousAuthor(item, isAdmin))
 
             return {
                 success: true,
@@ -185,8 +194,8 @@ export class FeedbackService {
             }
 
             await db.transaction(async (tx) => {
-                // Update feedback status
-                await feedbackQueries.update({ id: data.id, status: data.status, isPublic: data.isPublic })
+                // Update feedback status (same transaction as the log row)
+                await feedbackQueries.update({ id: data.id, status: data.status, isPublic: data.isPublic }, tx)
 
                 // Record status change log
                 await tx.insert(feedbackStatusLogs).values({

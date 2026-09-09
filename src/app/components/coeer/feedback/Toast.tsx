@@ -6,12 +6,23 @@ import { Card } from '../ui/Card'
 type Toast = { id: number; title: string; description?: string; tone?: BadgeTone }
 const ToastContext = React.createContext<{ toast: (toast: Omit<Toast, 'id'>) => void } | null>(null)
 
+const toastToneLabels: Record<BadgeTone, string> = {
+    default: '通知',
+    primary: '提示',
+    success: '成功',
+    warning: '注意',
+    danger: '错误',
+    muted: '通知',
+}
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
     const [toasts, setToasts] = React.useState<Toast[]>([])
     const toast = React.useCallback((item: Omit<Toast, 'id'>) => {
-        const id = Date.now()
-        setToasts((prev) => [...prev, { ...item, id }])
-        window.setTimeout(() => setToasts((prev) => prev.filter((toast) => toast.id !== id)), 3200)
+        setToasts((prev) => {
+            const id = prev.length ? prev[prev.length - 1].id + 1 : 1
+            window.setTimeout(() => setToasts((cur) => cur.filter((toast) => toast.id !== id)), 3200)
+            return [...prev, { ...item, id }]
+        })
     }, [])
 
     return (
@@ -21,10 +32,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {toasts.map((item) => (
                     <Card key={item.id} className="p-4">
                         <div className="flex items-start gap-3">
-                            <Badge tone={item.tone ?? 'primary'}>{item.tone ?? 'info'}</Badge>
+                            {item.tone ? <Badge tone={item.tone}>{toastToneLabels[item.tone]}</Badge> : null}
                             <div>
                                 <div className="font-medium">{item.title}</div>
-                                {item.description ? <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{item.description}</p> : null}
+                                {item.description ? <p className="mt-1 text-sm text-muted-foreground">{item.description}</p> : null}
                             </div>
                         </div>
                     </Card>

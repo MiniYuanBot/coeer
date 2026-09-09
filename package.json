@@ -33,7 +33,6 @@
     "@tanstack/react-start-router-manifest": "^1.120.19",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.1",
-    "jsonwebtoken": "^9.0.3",
     "pg": "^8.18.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -43,7 +42,6 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.5.4",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.0.8",

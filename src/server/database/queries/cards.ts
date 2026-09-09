@@ -1,14 +1,7 @@
-import { and, eq, sql, SQL } from 'drizzle-orm'
-import { db } from '../client'
-import { cards, NewCard, userCards } from '../schemas'
+import { and, eq, sql } from 'drizzle-orm'
+import { db, type DbExecutor } from '../client'
+import { cards, NewCard, type Card, userCards } from '../schemas'
 import type { CreateCardInput, ListCardsInput } from '@shared/contracts'
-
-function buildCardWhere(data: ListCardsInput): SQL | undefined {
-    const conditions: SQL[] = []
-    if (data.rarity) conditions.push(eq(cards.rarity, data.rarity))
-    if (data.series) conditions.push(eq(cards.series, data.series))
-    return conditions.length ? and(...conditions) : undefined
-}
 
 export const cardQueries = {
     async create(data: NewCard) {
@@ -18,8 +11,11 @@ export const cardQueries = {
     },
 
     async list(data: ListCardsInput) {
+        const conditions: ReturnType<typeof eq>[] = []
+        if (data.rarity) conditions.push(eq(cards.rarity, data.rarity))
+        if (data.series) conditions.push(eq(cards.series, data.series))
         return db.query.cards.findMany({
-            where: buildCardWhere(data),
+            where: conditions.length ? and(...conditions) : undefined,
             limit: data.limit,
             offset: data.offset,
         })
@@ -29,22 +25,24 @@ export const cardQueries = {
         return db.query.cards.findFirst({ where: eq(cards.id, cardId) })
     },
 
-    async randomOne() {
-        return db.query.cards.findFirst({ orderBy: sql`random()` })
+    /** All drawable cards (the pool is small — weighted draw happens in JS). */
+    async listPool(executor: DbExecutor = db): Promise<Card[]> {
+        return executor.select().from(cards)
     },
 
-    async upsertUserCard(userId: string, cardId: string) {
-        const existing = await db.query.userCards.findFirst({
+    async upsertUserCard(userId: string, cardId: string, executor: DbExecutor = db) {
+        const existing = await executor.query.userCards.findFirst({
             where: and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)),
         })
         if (existing) {
-            const [updated] = await db.update(userCards)
-                .set({ count: existing.count + 1 })
+            const [updated] = await executor
+                .update(userCards)
+                .set({ count: sql`${userCards.count} + 1` })
                 .where(eq(userCards.id, existing.id))
                 .returning()
             return updated
         }
-        const [created] = await db.insert(userCards).values({ userId, cardId }).returning()
+        const [created] = await executor.insert(userCards).values({ userId, cardId }).returning()
         return created
     },
 
@@ -57,4 +55,3 @@ export const cardQueries = {
         })
     },
 }
-

@@ -8,6 +8,10 @@ import {
     activityParticipants,
     bulletins,
     cards,
+    dormCycles,
+    dormQuestionnaires,
+    dormRooms,
+    dormStudentProfiles,
     feedbacks,
     feedbackStatusLogs,
     groupMembers,
@@ -54,6 +58,10 @@ export async function getSeedUsers() {
 export async function cleanSeedData() {
     console.log('Cleaning seed data in dependency order...')
 
+    await db.delete(dormRooms)
+    await db.delete(dormQuestionnaires)
+    await db.delete(dormStudentProfiles)
+    await db.delete(dormCycles)
     await db.delete(redeemOrders)
     await db.delete(redeemItems)
     await db.delete(userAchievements)

@@ -17,6 +17,7 @@ import {
     GROUP_MEMBER_STATUS,
     GROUP_POST_TYPE,
     GROUP_POST,
+    GROUP_STATUS,
 } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { groupPostQueries } from '../database/queries/groupPosts'
@@ -27,6 +28,21 @@ import { groupQueries } from '../database/queries/groups'
 const MAX_PINNED_POSTS = 3
 
 export class GroupPostService {
+    /**
+     * Whether the given group's content may be read by the current viewer.
+     * Approved + public groups are readable by everyone; everything else
+     * (private groups, still-pending groups) requires an approved membership
+     * or a platform admin.
+     */
+    private static async canReadGroup(group: { id: string; status: string; isPublic: boolean }, user?: { id: string; role: string }): Promise<boolean> {
+        if (group.status === GROUP_STATUS.APPROVED && group.isPublic) return true
+        if (!user) return false
+        if (user.role === 'admin') return true
+
+        const membership = await groupMemberQueries.findByGroupAndUser({ groupId: group.id, userId: user.id })
+        return !!membership && membership.status === GROUP_MEMBER_STATUS.APPROVED
+    }
+
     // Create a new post (announcement requires admin role)
     static async create(data: CreateGroupPostInput): Promise<GroupPostResponse<void>> {
         try {
@@ -36,12 +52,18 @@ export class GroupPostService {
                 return { success: false, state: GROUP_POST.UNAUTHORIZED }
             }
 
-            // Check if group exists
+            // Check if group exists and has been approved
             const group = await groupQueries.findById(data)
             if (!group) {
                 return {
                     success: false,
                     state: GROUP_POST.GROUP_NOT_FOUND,
+                }
+            }
+            if (group.status !== GROUP_STATUS.APPROVED) {
+                return {
+                    success: false,
+                    state: { ...GROUP_POST.FORBIDDEN, message: '群组尚未通过审核，暂不能发帖' },
                 }
             }
 
@@ -208,6 +230,13 @@ export class GroupPostService {
                 }
             }
 
+            // Visibility gate: never leak posts of private/pending groups.
+            const group = await groupQueries.findById({ groupId: post.groupId })
+            const payload = await AuthService.getCurrentUser()
+            if (!group || !(await GroupPostService.canReadGroup(group, payload.success ? payload.data : undefined))) {
+                return { success: false, state: GROUP_POST.NOT_FOUND }
+            }
+
             return {
                 success: true,
                 data: post,
@@ -227,12 +256,13 @@ export class GroupPostService {
         try {
             const { groupId, type, limit, offset } = data
 
-            // Check if group exists
+            // Check if group exists and the caller may read it
             const group = await groupQueries.findById(data)
-            if (!group) {
+            const payload = await AuthService.getCurrentUser()
+            if (!group || !(await GroupPostService.canReadGroup(group, payload.success ? payload.data : undefined))) {
                 return {
                     success: false,
-                    state: GROUP_POST.GROUP_NOT_FOUND,
+                    state: GROUP_POST.NOT_FOUND,
                 }
             }
 

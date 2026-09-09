@@ -96,7 +96,7 @@ function AdminFeedbacksPage() {
                 >
                     <option value="">全部状态</option>
                     <option value="pending">待审核</option>
-                    <option value="processing">已公开</option>
+                    <option value="processing">处理中</option>
                     <option value="resolved">已解决</option>
                     <option value="invalid">已驳回</option>
                 </select>

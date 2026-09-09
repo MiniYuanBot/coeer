@@ -16,7 +16,7 @@ export function FeedbackCard({ feedback }: { feedback: any }) {
 
     return (
         <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="block">
-            <Card className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[hsl(var(--border))] hover:shadow-sm">
+            <Card className="rounded-xl p-5">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                     <Badge tone={tone}>{feedbackStatusLabels[feedback.status] || feedback.status}</Badge>

@@ -89,7 +89,7 @@ function PostsListPage() {
             {posts.length ? (
                 <div className="space-y-4">
                     {posts.map((post) => (
-                        <Card key={post.id} className="rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                        <Card key={post.id} className="rounded-xl p-5">
                             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                                 <div className="flex flex-wrap items-center gap-2">
                                     {post.isPinned ? <Badge tone="primary">置顶</Badge> : null}

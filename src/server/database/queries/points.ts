@@ -1,11 +1,11 @@
 import { and, desc, eq, sum } from 'drizzle-orm'
-import { db } from '../client'
-import { NewPointTransaction, pointTransactions } from '../schemas'
+import { db, type DbExecutor } from '../client'
+import { NewPointTransaction, pointTransactions, users } from '../schemas'
 import type { PointHistoryInput } from '@shared/contracts'
 
 export const pointQueries = {
-    async create(data: NewPointTransaction) {
-        const [transaction] = await db.insert(pointTransactions).values(data).returning()
+    async create(data: NewPointTransaction, executor: DbExecutor = db) {
+        const [transaction] = await executor.insert(pointTransactions).values(data).returning()
         if (!transaction) throw new Error('Create point transaction failed')
         return transaction
     },
@@ -22,12 +22,27 @@ export const pointQueries = {
         })
     },
 
-    async getBalance(userId: string): Promise<number> {
-        const [result] = await db
+    /**
+     * Balance for a user. When called inside a transaction the caller is
+     * responsible for locking the user row (`lockUser`) so concurrent
+     * spenders serialize.
+     */
+    async getBalance(userId: string, executor: DbExecutor = db): Promise<number> {
+        const [result] = await executor
             .select({ value: sum(pointTransactions.amount) })
             .from(pointTransactions)
             .where(eq(pointTransactions.userId, userId))
         return Number(result?.value ?? 0)
     },
+
+    /** Lock the user row for the duration of a transaction (SELECT … FOR UPDATE). */
+    async lockUser(userId: string, executor: DbExecutor): Promise<void> {
+        await executor
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.id, userId))
+            .for('update')
+    },
 }
+
 

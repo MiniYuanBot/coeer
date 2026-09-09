@@ -1,19 +1,9 @@
 import type { FeedbackStatus } from '@shared/constants'
-import { Badge } from '@/components/coeer'
+import { Badge, feedbackStatusLabels, feedbackTargetLabels } from '@/components/coeer'
 import type { BadgeTone } from '@/components/coeer'
 
-export const feedbackStatusLabels: Record<FeedbackStatus, string> = {
-    pending: '待审核',
-    processing: '已公开',
-    resolved: '已解决',
-    invalid: '已驳回',
-}
-
-export const feedbackTargetLabels = {
-    academic: '学业事务',
-    office: '办公室事务',
-    general: '综合建议',
-} as const
+// 标签文案统一以 lib/labels 为准（这里只做 re-export，避免双份映射漂移）
+export { feedbackStatusLabels, feedbackTargetLabels }
 
 export function feedbackStatusTone(status: FeedbackStatus): BadgeTone {
     if (status === 'resolved') return 'success'

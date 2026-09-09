@@ -32,15 +32,33 @@ export const deleteActivityFn = createServerFn({ method: 'POST' })
 
 export const registerActivityFn = createServerFn({ method: 'POST' })
     .inputValidator(RegisterActivitySchema)
-    .handler(async ({ data }) => ActivityService.register(data))
+    .handler(async ({ data }) => {
+        const result = await ActivityService.register(data)
+        if (!result.success) {
+            throw new Error(result.state.message || '报名失败')
+        }
+        return result.data
+    })
 
 export const cancelRegistrationFn = createServerFn({ method: 'POST' })
     .inputValidator(ActivityParticipantIdSchema)
-    .handler(async ({ data }) => ActivityService.cancelRegistration(data))
+    .handler(async ({ data }) => {
+        const result = await ActivityService.cancelRegistration(data)
+        if (!result.success) {
+            throw new Error(result.state.message || '取消失败')
+        }
+        return result.data
+    })
 
 export const checkInActivityFn = createServerFn({ method: 'POST' })
     .inputValidator(ActivityParticipantIdSchema)
-    .handler(async ({ data }) => ActivityService.checkIn(data))
+    .handler(async ({ data }) => {
+        const result = await ActivityService.checkIn(data)
+        if (!result.success) {
+            throw new Error(result.state.message || '签到失败')
+        }
+        return result.data
+    })
 
 export const getActivityParticipantsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListActivityParticipantsSchema)

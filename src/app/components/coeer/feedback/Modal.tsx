@@ -16,12 +16,20 @@ export function Modal({
 }) {
     if (!open) return null
     return (
-        <div className="fixed inset-0 z-[60] grid place-items-center p-4">
+        <div
+            className="fixed inset-0 z-[60] grid place-items-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            onKeyDown={(e) => {
+                if (e.key === 'Escape') onOpenChange(false)
+            }}
+        >
             <button className="absolute inset-0 bg-slate-950/40" aria-label="关闭弹窗" onClick={() => onOpenChange(false)} />
             <Card className="relative w-full max-w-lg p-5">
                 <div className="flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">{title}</h2>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="关闭弹窗">
                         <Icon name="x" />
                     </Button>
                 </div>

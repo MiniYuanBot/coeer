@@ -4,6 +4,15 @@ import { useState } from 'react'
 import { Button, Card, SectionHeader } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/settings')({
+    beforeLoad: ({ context, params }) => {
+        // 设置页只对群管理员开放（此前无前端守卫）。
+        if (!context.isAdmin) {
+            throw redirect({
+                to: '/groups/$slug',
+                params: { slug: params.slug },
+            })
+        }
+    },
     component: GroupSettingsPage,
 })
 
@@ -53,7 +62,7 @@ function GroupSettingsPage() {
 
         try {
             await deleteGroupFn({ data: { groupId: group.id } })
-            navigate({ to: '/groups/my' })
+            navigate({ to: '/groups' })
         } finally {
             setDeleteLoading(false)
         }

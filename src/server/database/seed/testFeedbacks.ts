@@ -42,8 +42,8 @@ export function getSampleFeedbacks(users: {
             title: '延长开放时间建议',
             content: '考试周期间，建议图书馆延长开放时间到晚上12点，方便同学们复习。现在10点就关门太早了。',
             isAnonymous: false,
+            isPublic: true,
             status: 'resolved' as const,
-            // adminReply: '感谢您的建议！经研究决定，考试周期间图书馆将开放到24:00，同时增加自习室座位。',
             resolvedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7天前
         },
         {
@@ -54,8 +54,6 @@ export function getSampleFeedbacks(users: {
             content: '二食堂三楼的麻辣香锅太咸了，而且价格偏贵，希望能调整口味和价格。',
             isAnonymous: true,
             status: 'invalid' as const,
-            // adminReply: '经核实，该窗口已暂停营业进行整改，建议您暂时去其他窗口就餐。',
-            resolvedAt: new Date(),
         },
         {
             authorId: adminUser.id,

@@ -72,17 +72,15 @@ DATABASE_URL=postgresql://coeer_user:change-this-password@localhost:5432/coeer
 DB_POOL_MIN=1
 DB_POOL_MAX=10
 
-JWT_SECRET=replace-with-production-secret
 SESSION_SECRET=replace-with-production-secret
 
 VITE_APP_NAME=COEER
 VITE_API_URL=
 ```
 
-Generate strong secrets:
+Generate a strong secret:
 
 ```sh
-openssl rand -base64 48
 openssl rand -base64 48
 ```
 
@@ -185,5 +183,5 @@ journalctl -u coeer -n 100 --no-pager
 ## Notes
 
 - Keep `.env` only on the server. Never commit it.
-- `pnpm db:push` is convenient for early deployment. For a stable production database, prefer Drizzle migrations with `pnpm db:generate` and `pnpm db:migrate`.
+- `pnpm db:push` is convenient for early deployment. For a stable production database, prefer Drizzle migrations with `pnpm db:generate` and `pnpm db:migrate`. Schema changes (e.g. new columns such as `redeem_orders.quantity`) require running `pnpm db:push`/migrations on the production database.
 - Back up PostgreSQL before schema changes and before running any clean seed command.

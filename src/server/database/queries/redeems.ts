@@ -1,5 +1,5 @@
-import { and, eq, gt, ilike, or, SQL } from 'drizzle-orm'
-import { db } from '../client'
+import { and, desc, eq, gt, gte, ilike, or, sql, SQL } from 'drizzle-orm'
+import { db, type DbExecutor } from '../client'
 import { NewRedeemItem, NewRedeemOrder, redeemItems, redeemOrders } from '../schemas'
 import type { ListRedeemItemsInput, ListRedeemOrdersInput, ProcessRedeemOrderInput, UpdateRedeemItemInput } from '@shared/contracts'
 
@@ -42,8 +42,8 @@ export const redeemQueries = {
         })
     },
 
-    async findItemById(itemId: string) {
-        return db.query.redeemItems.findFirst({ where: eq(redeemItems.id, itemId) })
+    async findItemById(itemId: string, executor: DbExecutor = db) {
+        return executor.query.redeemItems.findFirst({ where: eq(redeemItems.id, itemId) })
     },
 
     async updateItem(data: UpdateRedeemItemInput) {
@@ -59,18 +59,23 @@ export const redeemQueries = {
         await db.delete(redeemItems).where(eq(redeemItems.id, itemId))
     },
 
-    async createOrder(data: NewRedeemOrder) {
-        const [order] = await db.insert(redeemOrders).values(data).returning()
+    async createOrder(data: NewRedeemOrder, executor: DbExecutor = db) {
+        const [order] = await executor.insert(redeemOrders).values(data).returning()
         if (!order) throw new Error('Create redeem order failed')
         return order
     },
 
-    async decrementStock(itemId: string, quantity: number) {
-        const item = await this.findItemById(itemId)
-        if (!item || item.stock < 0) return item
-        const [updated] = await db.update(redeemItems)
-            .set({ stock: item.stock - quantity })
-            .where(eq(redeemItems.id, itemId))
+    /**
+     * Atomically decrement stock while it still covers the requested quantity.
+     * Returns the updated item, or undefined when stock ran out concurrently.
+     * (`stock = -1` means unlimited and is never decremented — the caller
+     * skips this step for unlimited items.)
+     */
+    async decrementStock(itemId: string, quantity: number, executor: DbExecutor = db) {
+        const [updated] = await executor
+            .update(redeemItems)
+            .set({ stock: sql`${redeemItems.stock} - ${quantity}` })
+            .where(and(eq(redeemItems.id, itemId), gte(redeemItems.stock, quantity)))
             .returning()
         return updated
     },
@@ -82,6 +87,7 @@ export const redeemQueries = {
         return db.query.redeemOrders.findMany({
             where: and(...conditions),
             with: { item: true },
+            orderBy: [desc(redeemOrders.createdAt)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -94,6 +100,7 @@ export const redeemQueries = {
         return db.query.redeemOrders.findMany({
             where: conditions.length ? and(...conditions) : undefined,
             with: { item: true, user: { columns: { id: true, name: true } } },
+            orderBy: [desc(redeemOrders.createdAt)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -119,3 +126,4 @@ export const redeemQueries = {
         return order
     },
 }
+

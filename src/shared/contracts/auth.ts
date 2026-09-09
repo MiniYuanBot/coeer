@@ -13,11 +13,6 @@ export const loginSchema = z.object({
 export const signupSchema = z.object({
     email: emailSchema,
     password: passwordSchema,
-    redirectUrl: z.url().optional(),
-    // name: z.string().min(1, 'Name must be at least 1 characters').max(50, 'Password must be at most 50 characters'),
-    // studentId: z.string().optional(),
-    // major: z.string().optional(),
-    // grade: z.number().min(1).max(8).optional()
 });
 
 // ===== Typescript Types =====

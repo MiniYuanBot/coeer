@@ -1,30 +1,90 @@
 @import 'tailwindcss' source('../');
 
+/*
+ * COEER design tokens
+ * -----------------------------------------------
+ * Palette language is borrowed from Dub's product UI:
+ * near-neutral "chrome" surfaces, hairline borders,
+ * ink text, and a single blue accent. Light mode is
+ * warm-neutral paper on white; dark mode is inverted
+ * near-black chrome.
+ *
+ * Tokens keep the hsl() triplet format so legacy
+ * arbitrary classes like `text-[hsl(var(--foreground))]`
+ * keep working while the `@theme` block below maps them
+ * to first-class Tailwind utilities (`text-foreground`,
+ * `bg-card`, `border-border`, …) for new code.
+ */
+
 :root {
-  --background: 218 40% 98%;
-  --foreground: 222 47% 11%;
+  /* canvas */
+  --background: 0 0% 98%;
+  --foreground: 0 0% 9%;
+  /* surfaces */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 9% 46%;
-  --border: 220 13% 91%;
-  --primary: 233 100% 57%;
+  --card-foreground: 0 0% 9%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 42%;
+  /* hairline borders */
+  --border: 0 0% 90%;
+  --ring: 221 83% 53%;
+  /* accent (blue-600) */
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
+  --primary-soft: 221 91% 95%;
+  /* status */
   --success: 153 62% 38%;
   --warning: 38 92% 45%;
   --danger: 0 72% 51%;
+  /* inverted (black pill / brand tile) */
+  --inverted: 0 0% 8%;
+  --inverted-foreground: 0 0% 100%;
 }
 
 .dark {
-  --background: 222 47% 7%;
-  --foreground: 214 32% 91%;
-  --card: 222 47% 10%;
-  --card-foreground: 214 32% 91%;
-  --muted: 222 40% 14%;
-  --muted-foreground: 215 16% 68%;
-  --border: 217 33% 18%;
-  --primary: 233 100% 64%;
+  /* canvas */
+  --background: 0 0% 5%;
+  --foreground: 0 0% 93%;
+  /* surfaces */
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 93%;
+  --muted: 0 0% 13%;
+  --muted-foreground: 0 0% 62%;
+  /* hairline borders */
+  --border: 0 0% 18%;
+  --ring: 217 91% 60%;
+  /* accent (blue-400) */
+  --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
+  --primary-soft: 217 60% 14%;
+  /* status */
+  --success: 153 62% 42%;
+  --warning: 43 90% 50%;
+  --danger: 0 72% 56%;
+  /* inverted (white pill / brand tile) */
+  --inverted: 0 0% 96%;
+  --inverted-foreground: 0 0% 5%;
+}
+
+/* Map the semantic tokens to Tailwind theme colors so new
+   code can use utilities like `bg-background text-foreground`. */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-soft: hsl(var(--primary-soft));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  --color-inverted: hsl(var(--inverted));
+  --color-inverted-foreground: hsl(var(--inverted-foreground));
 }
 
 @layer base {
@@ -47,11 +107,24 @@
   html,
   body {
     min-height: 100%;
-    background:
-      radial-gradient(circle at top left, hsl(233 100% 57% / 0.08), transparent 28rem),
-      hsl(var(--background));
+    background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+      Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* 移动端防横向溢出：任何超宽内容都不允许撑破视口 */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* 内容图（卡片/活动图等）在窄屏上按容器收缩 */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 
   a {
@@ -65,6 +138,10 @@
     font: inherit;
   }
 
+  ::selection {
+    background-color: hsl(var(--primary) / 0.18);
+  }
+
   .using-mouse * {
     outline: none !important;
   }
@@ -72,25 +149,15 @@
 
 @layer components {
   .coeer-container {
-    width: min(100% - 2rem, 76rem);
+    width: min(100% - 2rem, 80rem);
     margin-inline: auto;
   }
 
+  /* Card: dub-style flat surface — hairline border, no lift */
   .coeer-card {
     border-radius: 0.75rem;
-    border: 1px solid hsl(var(--border) / 0.62);
-    background: hsl(var(--card) / 0.92);
-    box-shadow: 0 10px 28px hsl(222 47% 11% / 0.06);
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease,
-      border-color 180ms ease;
-  }
-
-  .coeer-card:hover {
-    transform: translateY(-1px);
-    border-color: hsl(var(--primary) / 0.22);
-    box-shadow: 0 16px 36px hsl(222 47% 11% / 0.09);
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
   }
 
   .coeer-focus {
@@ -98,6 +165,70 @@
   }
 
   .coeer-focus:focus-visible {
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.22);
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.28);
+  }
+
+  /* Slim custom scrollbar for sidebars / drawers */
+  .coeer-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .coeer-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .coeer-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .coeer-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 8px;
+  }
+
+  /* Keyboard shortcut chip (dub-style `<kbd>`) */
+  .coeer-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.3rem;
+    border-radius: 0.375rem;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  /* Entrance used by mobile nav panels */
+  @keyframes coeer-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes coeer-slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .coeer-anim-backdrop {
+    animation: coeer-fade-in 150ms ease-out;
+  }
+
+  .coeer-anim-panel-left {
+    animation: coeer-slide-in-left 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 }

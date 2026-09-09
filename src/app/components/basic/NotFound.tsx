@@ -3,32 +3,29 @@ import { Button } from '../coeer'
 
 export function NotFound({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="min-w-30 flex flex-col items-center justify-center text-center p-8">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-9xl font-black text-gray-200 dark:text-gray-700 select-none">
-          404
-        </h1>
-        <div className="mt-4 text-xl text-gray-600 dark:text-gray-300">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+      <div className="mx-auto max-w-md">
+        <h1 className="select-none text-8xl font-black tracking-tight text-border">404</h1>
+        <div className="mt-5 text-lg text-foreground">
           {children || (
             <>
-              <p className="font-semibold">Page Not Found</p>
-              <p className="text-base mt-2">
-                The page you are looking for might have been removed, had its name changed,
-                or is temporarily unavailable.
+              <p className="font-semibold">页面不存在</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                你访问的页面可能已被移除、改名或暂时不可用。
               </p>
             </>
           )}
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link to="/">
-            <Button variant="outline" className="min-w-30">Home</Button>
+            <Button variant="outline" className="w-full sm:w-auto">
+              返回首页
+            </Button>
           </Link>
-          <Button
-            variant="primary"
-            onClick={() => window.history.back()}
-            className="min-w-30"
-          >Go Back</Button>
+          <Button variant="primary" className="w-full sm:w-auto" onClick={() => window.history.back()}>
+            返回上一页
+          </Button>
         </div>
       </div>
     </div>

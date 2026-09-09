@@ -1,17 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Login } from 'src/app/components/basic'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { AppShell } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed')({
-    beforeLoad: ({ context }) => {
+    beforeLoad: ({ context, location }) => {
         if (!context.user) {
-            throw new Error('Not authenticated')
+            // dub-style gate: bounce to the auth screen and remember the
+            // original destination so we can return after login.
+            const next = `${location.pathname}${location.search}`
+            throw redirect({
+                to: '/login',
+                search: next !== '/' ? { redirect: next } : {},
+            })
         }
     },
-    errorComponent: ({ error }) => {
-        if (error.message === 'Not authenticated') {
-            return <Login />
-        }
-
-        throw error
-    },
+    component: AuthedLayout,
 })
+
+function AuthedLayout() {
+    const { user } = Route.useRouteContext()
+
+    return (
+        <AppShell user={user}>
+            <Outlet />
+        </AppShell>
+    )
+}

@@ -6,7 +6,7 @@ import { Icon } from '../ui/Icon'
 
 export function RedeemItemCard({ item, action }: { item: any; action?: React.ReactNode }) {
     return (
-        <Card className="overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-[hsl(var(--border))] hover:shadow-sm">
+        <Card className="overflow-hidden rounded-xl">
             <div className="grid aspect-[4/3] place-items-center bg-[hsl(var(--muted))] text-[hsl(var(--primary))]">
                 {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" /> : <Icon name="gift" className="h-10 w-10" />}
             </div>

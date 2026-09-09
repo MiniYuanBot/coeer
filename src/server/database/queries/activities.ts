@@ -77,6 +77,12 @@ export const activityQueries = {
         })
     },
 
+    async findParticipantById(participantId: string) {
+        return db.query.activityParticipants.findFirst({
+            where: eq(activityParticipants.id, participantId),
+        })
+    },
+
     async listParticipants(data: ListActivityParticipantsInput) {
         const conditions = [eq(activityParticipants.activityId, data.activityId)]
         if (data.status) conditions.push(eq(activityParticipants.status, data.status))

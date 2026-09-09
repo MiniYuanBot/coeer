@@ -1,4 +1,4 @@
-import { db } from '../client'
+import { db, type DbExecutor } from '../client'
 import { feedbacks } from '../schemas'
 import { eq, desc, and, inArray, ilike, or, count, SQL } from 'drizzle-orm'
 import type { NewFeedback, Feedback } from '../schemas'
@@ -71,8 +71,8 @@ function buildVisibleWhereClause(params: CountFeedbacksInput & { viewerId: strin
 
 export const feedbackQueries = {
     // Create a feedback
-    async create(data: NewFeedback): Promise<Feedback> {
-        const [feedback] = await db.insert(feedbacks).values(data).returning()
+    async create(data: NewFeedback, executor: DbExecutor = db): Promise<Feedback> {
+        const [feedback] = await executor.insert(feedbacks).values(data).returning()
         
         if (!feedback) {
             throw new Error('Create failed')
@@ -82,8 +82,8 @@ export const feedbackQueries = {
     },
 
     // Update feedback status
-    async update(data: UpdateFeedbackInput): Promise<Feedback> {
-        const [feedback] = await db.update(feedbacks)
+    async update(data: UpdateFeedbackInput, executor: DbExecutor = db): Promise<Feedback> {
+        const [feedback] = await executor.update(feedbacks)
             .set({
                 status: data.status,
                 ...(data.isPublic !== undefined && { isPublic: data.isPublic }),

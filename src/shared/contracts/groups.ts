@@ -66,7 +66,7 @@ export const GroupIdWithFilterSchema = z.object({
 })
 
 export const GroupSlugWithFilterSchema = z.object({
-    slug: z.uuid(),
+    slug: z.string().regex(/^[a-z0-9-]+$/).max(100),
     ...GroupFilterSchema.shape,
 })
 

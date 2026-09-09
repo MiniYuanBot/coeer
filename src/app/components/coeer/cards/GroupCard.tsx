@@ -6,7 +6,7 @@ import { Card } from '../ui/Card'
 export function GroupCard({ group }: { group: any }) {
     return (
         <Link to="/groups/$slug" params={{ slug: group.slug }} className="block">
-            <Card className="h-full rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[hsl(var(--border))] hover:shadow-sm">
+            <Card className="h-full rounded-xl p-5">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">

@@ -171,7 +171,7 @@ function AchievementsPage() {
                     {visibleMyCards.length ? (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             {visibleMyCards.map((item: any) => (
-                                <Card key={item.id} className="overflow-hidden rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm">
+                                <Card key={item.id} className="overflow-hidden rounded-xl">
                                     <img src={item.card.imageUrl} alt={item.card.name} className="aspect-square w-full object-cover" />
                                     <div className="p-4">
                                         <Badge tone="primary">{cardRarityLabels[item.card.rarity] || item.card.rarity}</Badge>

@@ -8,32 +8,59 @@ import type {
     SignupResponse,
     LogoutResponse,
     SessionUserResponse,
-    SessionUser
+    SessionUser,
 } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
 
+/**
+ * Build the signed-in session payload for a DB user.
+ */
+function toSessionUser(user: {
+    id: string
+    email: string
+    role: SessionUser['role']
+    name: string | null
+}): SessionUser {
+    return {
+        id: user.id,
+        email: user.email,
+        name: user.name ?? null,
+        role: user.role,
+        lastUpdated: Date.now(),
+    }
+}
 
 export class AuthService {
+    /**
+     * Returns the current session user, re-validated against the database.
+     *
+     * The cookie alone is not trusted for authorization: roles, names and
+     * the `isActive` flag are re-read from the users table on every call, so
+     * demotions/bans/deletions take effect immediately instead of waiting for
+     * the 7-day cookie to expire.
+     */
     static async getCurrentUser(): Promise<SessionUserResponse<SessionUser>> {
         try {
             const session = await useAppSession()
+            const id = session.data?.id
+            if (!id) {
+                return { success: false, state: AUTH.UNAUTHORIZED }
+            }
 
-            if (!session.data?.id || !session.data?.email || !session.data?.role || !session.data?.lastUpdated) {
+            const dbUser = await userQueries.findById({ id })
+            if (!dbUser || !dbUser.isActive) {
+                // Stale or deactivated session — drop it.
+                await session.clear()
                 return { success: false, state: AUTH.UNAUTHORIZED }
             }
 
             return {
                 success: true,
-                data: {
-                    id: session.data.id,
-                    email: session.data.email,
-                    name: session.data.name ?? null,
-                    role: session.data.role,
-                    lastUpdated: session.data.lastUpdated
-                },
-                state: AUTH.GET_SUCCESS
+                data: toSessionUser(dbUser),
+                state: AUTH.GET_SUCCESS,
             }
         } catch (err) {
+            console.error('Get current user error:', err)
             return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
@@ -46,6 +73,10 @@ export class AuthService {
                 return { success: false, state: AUTH.NOT_FOUND }
             }
 
+            if (!user.isActive) {
+                return { success: false, state: AUTH.ACCOUNT_INACTIVE }
+            }
+
             const isValid = await verifyPassword(data.password, user.passwordHash)
 
             if (!isValid) {
@@ -53,16 +84,11 @@ export class AuthService {
             }
 
             const session = await useAppSession()
-            await session.update({
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                name: user.name,
-                lastUpdated: Date.now()
-            })
+            await session.update(toSessionUser(user))
 
             return { success: true, state: AUTH.LOGIN_SUCCESS }
         } catch (err) {
+            console.error('Login error:', err)
             return { success: false, state: AUTH.SERVER_ERROR }
         }
     }
@@ -72,26 +98,21 @@ export class AuthService {
             const existing = await userQueries.findByEmail(data)
 
             if (existing) {
+                if (!existing.isActive) {
+                    return { success: false, state: AUTH.ACCOUNT_INACTIVE }
+                }
+
                 const isValid = await verifyPassword(data.password, existing.passwordHash)
 
                 if (!isValid) {
                     return { success: false, state: AUTH.ALREADY_EXISTS }
                 }
 
-                // If password matched, login automatically
+                // If the password matched, log in automatically.
                 const session = await useAppSession()
-                await session.update({
-                    id: existing.id,
-                    email: existing.email,
-                    role: existing.role,
-                    name: existing.name,
-                    lastUpdated: Date.now()
-                })
+                await session.update(toSessionUser(existing))
 
-                return {
-                    success: true,
-                    state: { ...AUTH.LOGIN_SUCCESS, message: 'Password correct, login automatically' },
-                }
+                return { success: true, state: AUTH.LOGIN_SUCCESS }
             }
 
             const passwordHash = await hashPassword(data.password)
@@ -99,20 +120,15 @@ export class AuthService {
                 email: data.email,
                 name: null,
                 passwordHash,
-                role: 'student'
+                role: 'student',
             })
 
             const session = await useAppSession()
-            await session.update({
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                name: user.name,
-                lastUpdated: Date.now()
-            })
+            await session.update(toSessionUser(user))
 
             return { success: true, state: AUTH.SIGNUP_SUCCESS }
         } catch (err) {
+            console.error('Signup error:', err)
             return { success: false, state: AUTH.SERVER_ERROR }
         }
     }

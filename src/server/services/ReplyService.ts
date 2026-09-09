@@ -1,6 +1,7 @@
-import { feedbackQueries, groupPostQueries, replyQueries } from '../database/queries'
+import { replyQueries } from '../database/queries'
 import { AuthService } from './AuthService'
 import { REPLY } from '@shared/constants'
+import { canViewTarget } from '../utils/access'
 import type {
     CreateReplyInput,
     ListChildRepliesInput,
@@ -15,17 +16,15 @@ import type {
 } from '@shared/contracts'
 
 export class ReplyService {
-    private static async targetExists(data: { targetType: 'group_post' | 'feedback'; targetId: string }): Promise<boolean> {
-        if (data.targetType === 'group_post') return !!await groupPostQueries.findById({ id: data.targetId })
-        return !!await feedbackQueries.findById({ id: data.targetId })
-    }
-
     static async create(data: CreateReplyInput): Promise<ReplyResponse<ReplyWithAuthor>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) return { success: false, state: REPLY.UNAUTHORIZED }
-            if (!await this.targetExists(data)) return { success: false, state: REPLY.TARGET_NOT_FOUND }
+
+            // Only comment on content the caller can actually see (private /
+            // pending group posts and non-public feedbacks are off-limits).
+            if (!await canViewTarget(data, user)) return { success: false, state: REPLY.TARGET_NOT_FOUND }
 
             const reply = await replyQueries.create({ ...data, userId: user.id })
             const withAuthor = await replyQueries.findById({ id: reply.id })

@@ -40,7 +40,7 @@ export const feedbackTargetLabels: Record<string, string> = {
 
 export const feedbackStatusLabels: Record<string, string> = {
     pending: '待审核',
-    processing: '已公开',
+    processing: '处理中',
     resolved: '已解决',
     invalid: '已驳回',
 }

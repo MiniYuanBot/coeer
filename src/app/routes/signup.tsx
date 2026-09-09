@@ -1,43 +1,60 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { z } from 'zod'
 import { useAuthMutations } from '../hooks'
-import { AuthForm } from 'src/app/components/ui'
+import { AuthForm } from '@/components/ui'
+import { ThemeToggle } from '@/components/coeer'
+import { safeRedirect } from '@/components/coeer/lib/redirect'
 
 export const Route = createFileRoute('/signup')({
-  component: SignupComp,
+    validateSearch: z.object({
+        redirect: z.string().optional(),
+    }),
+    beforeLoad: ({ context }) => {
+        if (context.user) {
+            throw redirect({ to: '/' })
+        }
+    },
+    component: SignupComp,
 })
 
 function SignupComp() {
-  const { signupMutation } = useAuthMutations()
+    const router = useRouter()
+    const { signupMutation } = useAuthMutations()
+    const { redirect: redirectTo } = Route.useSearch()
+    const next = safeRedirect(redirectTo)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault() // prevent refresh
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
 
-    const formData = new FormData(e.currentTarget) // use currentTarget rather than target
-    const email = formData.get('email')
-    const password = formData.get('password')
+        const formData = new FormData(e.currentTarget)
+        const email = formData.get('email')
+        const password = formData.get('password')
 
-    // console.log('Form data:', { email, password })
+        const result = await signupMutation.mutate({
+            data: { email: email as string, password: password as string },
+        })
 
-    signupMutation.mutate({
-      data: {
-        email: email as string,
-        password: password as string,
-      },
-    })
-  }
+        if (result?.success) {
+            await router.invalidate()
+            router.navigate({ href: next })
+        }
+    }
 
-  return (
-    <AuthForm
-      actionText="Sign Up"
-      status={signupMutation.status}
-      onSubmit={handleSubmit}
-      afterSubmit={
-        !signupMutation.data?.success ? null : (
-          <>
-            <div className="text-red-400">{signupMutation.data.state.message}</div>
-          </>
-        )
-      }
-    />
-  )
+    return (
+        <div className="relative min-h-dvh">
+            <div className="fixed right-4 top-4 z-40">
+                <ThemeToggle />
+            </div>
+            <AuthForm
+                actionText="Sign Up"
+                status={signupMutation.status}
+                onSubmit={handleSubmit}
+                afterSubmit={
+                    signupMutation.data && !signupMutation.data.success ? (
+                        <div className="text-danger">{signupMutation.data.state.message}</div>
+                    ) : null
+                }
+            />
+        </div>
+    )
 }
