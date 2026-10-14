@@ -16,9 +16,12 @@ class FakeRunner:
         self.root = root
         self.calls = []
         self.fail_build = False
+        self.restart_seconds = 0
 
     def run(self, args, **options):
         self.calls.append(args)
+        if args[:2] == ['systemctl', 'restart'] and options.get('timeout', 0) < self.restart_seconds:
+            raise subprocess.TimeoutExpired(args, options.get('timeout', 0))
         if self.fail_build and args[-2:] == ['run', 'build']:
             raise subprocess.CalledProcessError(1, args)
         if options.get('capture'):
@@ -140,6 +143,16 @@ class ReleaseTransactions(unittest.TestCase):
         self.assertEqual(self.deployment.override.read_text(), self.old_unit)
         self.assertFalse(any('db:' in ' '.join(args) for args in self.runner.calls))
         self.assertEqual((self.root / '.env').read_text(), 'DATABASE_URL=original-server-secret')
+
+    def test_rollback_waits_for_legacy_units_default_stop_timeout(self):
+        new = self.ready('new-version')
+        self.deployment.failed_release = new.name
+        self.runner.restart_seconds = 90
+        with self.assertRaisesRegex(DeployError, 'simulated failed health check'):
+            self.deployment.activate(new)
+        self.assertFalse(self.deployment.current.exists())
+        self.assertFalse(self.deployment.override.exists())
+        self.assertIn((3000, None, True), self.deployment.probes)
 
     def test_build_failure_leaves_live_service_untouched(self):
         old = self.old_release()

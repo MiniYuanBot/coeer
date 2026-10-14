@@ -11,6 +11,7 @@ WorkingDirectory=/var/www/coeer
 ExecStart=/usr/bin/node /var/www/coeer/node_modules/srvx/bin/srvx.mjs --prod --host 127.0.0.1 --static ../client /var/www/coeer/dist/server/server.js
 Restart=always
 RestartSec=5
+TimeoutStopSec=15s
 Environment=NODE_ENV=production
 
 # Keep secrets in /var/www/coeer/.env. The app loads it via dotenv/config.

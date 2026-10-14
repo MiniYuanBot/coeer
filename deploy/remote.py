@@ -66,7 +66,9 @@ class Deployment:
         print(message, flush=True)
 
     def systemctl(self, *arguments, capture=False):
-        return self.runner.run(["systemctl", *arguments], capture=capture, timeout=45)
+        # A legacy unit being restored can retain systemd's default 90s stop timeout.
+        timeout = 120 if "restart" in arguments else 45
+        return self.runner.run(["systemctl", *arguments], capture=capture, timeout=timeout)
 
     def preflight(self):
         if not self.root.is_dir() or not (self.root / "package.json").is_file():
@@ -283,7 +285,7 @@ class Deployment:
         snapshot = self.snapshot(release)
         self.unit_directory.mkdir(parents=True, exist_ok=True)
         command = " ".join(self.server_command(self.current, self.args.port))
-        override = self.marker + "[Service]\nWorkingDirectory=" + str(self.current) + "\nExecStart=\nExecStart=" + command + "\nEnvironment=COEER_RELEASE_ID=" + release.name + "\n"
+        override = self.marker + "[Service]\nWorkingDirectory=" + str(self.current) + "\nExecStart=\nExecStart=" + command + "\nTimeoutStopSec=15s\nEnvironment=COEER_RELEASE_ID=" + release.name + "\n"
         try:
             self.log("切换线上版本：" + release.name)
             self.switch_link(release)
@@ -298,7 +300,7 @@ class Deployment:
                 self.log("旧版本已恢复健康。")
             except BaseException as rollback_error:
                 raise DeployError("自动回滚未恢复健康，请检查 systemctl status " + self.args.service) from rollback_error
-            raise DeployError("发布失败，已自动回滚；新版本保留在 " + str(release)) from error
+            raise DeployError("发布失败，已自动回滚；原因：" + str(error) + "；新版本保留在 " + str(release)) from error
         self.log("发布成功：" + release.name)
         self.log("回滚命令：npm run deploy:rollback")
 
