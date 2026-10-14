@@ -17,7 +17,7 @@ function BulletinDetailPage() {
     return (
         <article className="mx-auto max-w-3xl space-y-6">
             <SectionHeader title={bulletin.title} description={formatDateTime(bulletin.createdAt)} />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
                 <p className="mt-5 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{bulletin.content}</p>
             </Card>

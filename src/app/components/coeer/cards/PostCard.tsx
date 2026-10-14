@@ -7,9 +7,9 @@ import { Icon } from '../ui/Icon'
 
 export function PostCard({ post, to }: { post: any; to?: string }) {
     const content = (
-        <Card className="rounded-xl p-5">
+        <Card className="coeer-post">
             <div className="flex items-center gap-2">
-                <Badge tone={post.isPinned ? 'primary' : 'default'}>{post.isPinned ? '置顶' : post.type}</Badge>
+                <Badge tone={post.isPinned ? 'primary' : 'default'}>{post.isPinned ? '置顶' : post.type === 'announcement' ? '公告' : post.type === 'discussion' ? '讨论' : post.type}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</span>
             </div>
             <h3 className="mt-3 text-[15px] font-medium">{post.title}</h3>
@@ -21,5 +21,5 @@ export function PostCard({ post, to }: { post: any; to?: string }) {
         </Card>
     )
     if (!to) return content
-    return <Link to={to as any} className="block">{content}</Link>
+    return <Link to={to as any} className="coeer-focus block rounded-md">{content}</Link>
 }

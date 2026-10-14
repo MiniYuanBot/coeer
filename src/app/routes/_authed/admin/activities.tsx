@@ -62,7 +62,7 @@ function AdminActivitiesPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="活动管理" description="发布、编辑、删除活动，并查看报名情况。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <form onSubmit={submit} className="grid gap-3">
                     <input name="title" required defaultValue={editing?.title} placeholder="活动标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
                     <textarea name="description" required defaultValue={editing?.description} placeholder="活动说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" />
@@ -87,13 +87,13 @@ function AdminActivitiesPage() {
                 </form>
             </Card>
             {participants ? (
-                <Card className="rounded-xl p-5">
+                <Card className="rounded-lg p-5">
                     <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">报名情况</h2><Button variant="outline" onClick={() => setParticipants(null)}>关闭</Button></div>
                     {participants.length ? participants.map((item) => <p key={item.id} className="py-1 text-sm">{item.user?.name || '未知用户'} · {item.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无报名</p>}
                 </Card>
             ) : null}
             {activities.length ? (
-                <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">
+                <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">
                     {activities.map((item: any) => (
                         <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div><p className="text-[15px] font-medium">{item.title}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{activityTypeLabels[item.type]} · {activityStatusLabels[item.status]}</p></div>

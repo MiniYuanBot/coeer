@@ -9,6 +9,11 @@ export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'dan
 export type BadgeTone = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'muted'
 
 export type IconName =
+    | 'inbox'
+    | 'plus'
+    | 'panel'
+    | 'filter'
+    | 'list'
     | 'activity'
     | 'award'
     | 'bell'

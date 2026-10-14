@@ -114,7 +114,7 @@ function GroupMembersPage() {
             {members.length === 0 ? (
                 <EmptyState title="暂无成员" description="成员加入或申请后会显示在这里。" />
             ) : (
-                <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">
+                <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">
                     {members.map((member) => (
                         <div key={member.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-3">

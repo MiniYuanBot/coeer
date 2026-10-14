@@ -27,11 +27,11 @@ function GroupAdminPage() {
 
     return (
         <div className="space-y-6">
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <h2 className="mb-4 text-[15px] font-medium">群组统计</h2>
                 <div className="grid gap-4 md:grid-cols-3">
                     {stats.map((item) => (
-                        <div key={item.label} className="rounded-xl border border-border p-4">
+                        <div key={item.label} className="rounded-lg border border-border p-4">
                             <p className="text-2xl font-medium tabular-nums">{item.value}</p>
                             <p className="text-[13px] text-muted-foreground">{item.label}</p>
                             {item.hint ? (
@@ -42,13 +42,13 @@ function GroupAdminPage() {
                 </div>
             </Card>
 
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <h2 className="mb-4 text-[15px] font-medium">管理入口</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                     <Link
                         to="/groups/$slug/members"
                         params={{ slug }}
-                        className="coeer-focus flex items-center gap-3 rounded-xl border border-border p-4 transition-colors hover:bg-muted"
+                        className="coeer-focus flex items-center gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted"
                     >
                         <Icon name="group" className="h-5 w-5 text-primary" />
                         <div>
@@ -59,7 +59,7 @@ function GroupAdminPage() {
                     <Link
                         to="/groups/$slug/settings"
                         params={{ slug }}
-                        className="coeer-focus flex items-center gap-3 rounded-xl border border-border p-4 transition-colors hover:bg-muted"
+                        className="coeer-focus flex items-center gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted"
                     >
                         <Icon name="spark" className="h-5 w-5 text-primary" />
                         <div>

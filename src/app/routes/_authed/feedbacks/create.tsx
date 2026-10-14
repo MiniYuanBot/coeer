@@ -46,7 +46,7 @@ function CreateFeedbackPage() {
     return (
         <div className="mx-auto max-w-3xl space-y-6">
             <SectionHeader title="提交反馈" description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <div className="mb-6 flex flex-wrap gap-2">
                     <Badge tone="primary">问题</Badge>
                     <Badge>建议</Badge>

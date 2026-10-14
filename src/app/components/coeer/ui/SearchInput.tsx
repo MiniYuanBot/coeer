@@ -4,15 +4,10 @@ import { Icon } from './Icon'
 
 export function SearchInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     return (
-        <label className="relative block">
-            <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
-            <input
-                {...props}
-                className={cn(
-                    'coeer-focus h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-9 pr-3 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]',
-                    props.className,
-                )}
-            />
+        <label className="relative block min-w-0 flex-1">
+            <span className="sr-only">{props['aria-label'] || props.placeholder || '搜索'}</span>
+            <Icon name="search" className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input type="search" {...props} className={cn('coeer-focus h-9 w-full rounded-md border border-border bg-background pl-8 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground', props.className)} />
         </label>
     )
 }

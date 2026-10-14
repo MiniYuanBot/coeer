@@ -75,7 +75,7 @@ function AdminDashboardPage() {
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {metricCards.map((item) => (
-                    <Card key={item.label} className="rounded-xl p-5">
+                    <Card key={item.label} className="rounded-lg p-5">
                         <div className="flex items-center gap-3">
                             <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
                                 <Icon name={item.icon} />
@@ -96,7 +96,7 @@ function AdminDashboardPage() {
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {group.links.map((item) => (
                             <Link key={item.to} to={item.to} className="block">
-                                <Card className="group h-full rounded-xl p-5">
+                                <Card className="group h-full rounded-lg p-5">
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
                                             <Icon name={item.icon} />

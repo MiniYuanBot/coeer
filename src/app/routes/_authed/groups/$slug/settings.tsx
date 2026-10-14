@@ -71,7 +71,7 @@ function GroupSettingsPage() {
     return (
         <div className="max-w-2xl space-y-6">
             <SectionHeader title="群组设置" description="更新群组展示信息和可见性。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
 
                 <form onSubmit={handleUpdate} className="space-y-6">
                     <input type="hidden" name="id" value={group.id} />
@@ -128,7 +128,7 @@ function GroupSettingsPage() {
                 </form>
             </Card>
 
-            <Card className="rounded-xl border-rose-500/20 p-5">
+            <Card className="rounded-lg border-rose-500/20 p-5">
                 <h2 className="mb-4 text-[15px] font-medium text-rose-600 dark:text-rose-400">危险区域</h2>
                 <p className="mb-4 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     删除群组将永久移除所有数据和内容，此操作不可撤销。

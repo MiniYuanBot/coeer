@@ -58,7 +58,7 @@ function AdminRedeemsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="商城管理" description="添加、编辑、删除商城物品，并查看兑换详情。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <form onSubmit={submit} className="grid gap-3">
                     <input name="name" required defaultValue={editing?.name} placeholder="物品名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
                     <textarea name="description" defaultValue={editing?.description} placeholder="物品说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" />
@@ -72,8 +72,8 @@ function AdminRedeemsPage() {
                     <div className="flex gap-2"><Button type="submit">{editing ? '保存物品' : '添加物品'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}</div>
                 </form>
             </Card>
-            {orders ? <Card className="rounded-xl p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">兑换详情</h2><Button variant="outline" onClick={() => setOrders(null)}>关闭</Button></div>{orders.length ? orders.map((order) => <p key={order.id} className="py-1 text-sm">{order.user?.name || '未知用户'} · {order.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无兑换</p>}</Card> : null}
-            {items.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">{items.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{redeemItemTypeLabels[item.type]} · {redeemItemStatusLabels[item.status]}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => showOrders(item.id)}>兑换详情</Button><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无商城物品" />}
+            {orders ? <Card className="rounded-lg p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">兑换详情</h2><Button variant="outline" onClick={() => setOrders(null)}>关闭</Button></div>{orders.length ? orders.map((order) => <p key={order.id} className="py-1 text-sm">{order.user?.name || '未知用户'} · {order.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无兑换</p>}</Card> : null}
+            {items.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{items.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{redeemItemTypeLabels[item.type]} · {redeemItemStatusLabels[item.status]}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => showOrders(item.id)}>兑换详情</Button><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无商城物品" />}
         </div>
     )
 }

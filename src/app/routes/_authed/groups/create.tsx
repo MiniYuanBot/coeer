@@ -46,7 +46,7 @@ function CreateGroupComponent() {
         <div className="mx-auto max-w-2xl space-y-6">
             <SectionHeader title="创建群组" description="提交群组名称、分类和简介，创建后将进入审核流程。" />
 
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
             <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
                     <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">

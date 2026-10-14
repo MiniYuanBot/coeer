@@ -31,7 +31,7 @@ function GroupLayout() {
 
     return (
         <div className="space-y-6">
-            <Card className="overflow-hidden rounded-xl">
+            <Card className="overflow-hidden rounded-lg">
                 <div className="p-5">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-4">

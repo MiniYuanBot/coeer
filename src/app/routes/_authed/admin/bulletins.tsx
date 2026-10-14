@@ -50,7 +50,7 @@ function AdminBulletinsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="公告管理" description="发布、编辑和删除公告。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <form onSubmit={submit} className="grid gap-3">
                     <select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
                         {BULLETIN_TYPE_ARRAY.map((type) => <option key={type} value={type}>{bulletinTypeLabels[type]}</option>)}
@@ -65,7 +65,7 @@ function AdminBulletinsPage() {
                 </form>
             </Card>
             {bulletins.length ? (
-                <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">
+                <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">
                     {bulletins.map((item: any) => (
                         <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div>

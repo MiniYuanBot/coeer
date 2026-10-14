@@ -4,9 +4,9 @@
 积分 / 卡片 / 成就 / 兑换，以及新生宿舍分配。
 
 目前仍处于开发阶段（尚未正式部署，本地数据库为 PostgreSQL）。整体采用
-**分层架构**（数据层 → 业务层 → 应用层 → 表现层），前端路由与 UI 借鉴
-[dub](https://github.com/dubinc/dub) 的产品化组织方式：路径组划分公共区与登录区、
-守卫集中在布局层、侧边栏式产品外壳与统一的页面骨架。
+**分层架构**（数据层 → 业务层 → 应用层 → 表现层）。路由与布局守卫最初借鉴
+[dub](https://github.com/dubinc/dub) 的产品化组织方式；当前 UI 按用户指定的 Linear
+产品界面重构，采用紧凑侧栏、路径栏、统一工具栏与反馈行列表，浅色默认并保留深色切换。
 
 > 新朋友先读 **[docs/schema.md](docs/schema.md)**——它记录了路由模型、UI 设计
 > 体系、权限/安全基线与事务并发约定，是维护和扩展的入口。部署参见
@@ -107,18 +107,22 @@ src/
    └─ styles/      设计令牌（语义化 CSS 变量 + @theme 工具类映射）
 ```
 
-### 路由与外壳（dub 风格）
+### 路由与外壳
 
-- **公共区**：`/login`、`/signup`、`/logout`；游客访问 `/` 显示品牌落地页
-  （无导航顶栏，仅品牌 + 登录/注册 + 公开动态预览，与登录页视觉一致）；
+- **公共区**：`/login`、`/signup`、`/logout`；游客首页使用品牌、主题切换和
+  登录/注册页头，左对齐介绍与公开动态预览；认证页为居中窄表单，不套工作区外壳；
 - **登录区**：`_authed/**` 统一渲染侧边栏外壳（品牌 + 分组导航 + 主题/用户区），
   已登录访问 `/` 也进入同一外壳（侧边栏“动态”不再跳出框架）；
   未登录访问自动 `redirect` 到 `/login?redirect=<原路径>`，登录后回跳；
 - **平台管理**：`/admin/**`（仅 `admin` 角色，布局层守卫 + 服务端再校验）；
-- 列表页统一骨架：`SectionHeader` → `FilterPanel`（筛选写入 URL）→ 卡片网格 →
-  `EmptyState` → 分页；详情/表单页复用 `Card + Modal + Toast`。
+- 列表页复用 `SectionHeader` → `FilterPanel`（筛选写入 URL）→ 行列表、卡片网格或
+  表格 → `EmptyState` → 分页；反馈使用对齐行列表，首页信息流使用分隔线；
+  详情/表单页复用 `Card + Modal + Toast`；
+- 桌面外壳为 232px 侧栏与 52px 路径栏，移动端切换为抽屉；页面搜索支持
+  Cmd/Ctrl+K、方向键和 Enter 跳转。
 
-UI 令牌（亮/暗、主色、语义色）、组件与布局细节见 [docs/schema.md §3](docs/schema.md)。
+视觉令牌与组件规则以 [DESIGN.md](DESIGN.md) 为准，机器可读扩展与组件预览位于
+[.impeccable/design.json](.impeccable/design.json)；实现模型见 [docs/schema.md §3](docs/schema.md)。
 
 ### 数据与安全
 
@@ -144,9 +148,9 @@ UI 令牌（亮/暗、主色、语义色）、组件与布局细节见 [docs/sch
 8. 积分、卡片、成就与兑换系统（抽卡按掉率加权、兑换/抽卡事务化、订单仅本人或
    admin 可见）
 9. 新生宿舍分配（问卷 → 管理员按届计算/调整/确认下发）
-10. dub 风格路由与 UI 重构：侧边栏产品外壳 + 移动端抽屉、路径组守卫与
-    `/login?redirect=` 回跳、语义化设计令牌、统一列表/空状态/弹窗体系、中文
-    404/错误页
+10. 路由与 UI 重构：保留路径组守卫与 `/login?redirect=` 回跳；当前采用 Linear
+    参考的侧栏/路径栏外壳、移动抽屉、键盘页面导航、反馈行列表、浅色默认与深色
+    切换，以及统一语义令牌、空状态、弹窗和中文 404/错误页
 11. 管理后台：反馈审核、群组审核、公告/活动/商城/成就管理、宿舍管理、用户统计
 12. 依赖收敛：移除未使用的 jsonwebtoken/JWT_SECRET 等
 
@@ -177,6 +181,11 @@ pnpm seed:all:clean
 ```
 
 ## Deployment
+
+已部署的阿里云服务器支持在本机执行 `npm run deploy` 一键发布当前代码；
+`npm run deploy:check` 只读预检，`npm run deploy:rollback` 回滚上一版本。
+脚本会在独立目录构建并检查新版本，通过后才切换服务；失败自动恢复，不自动改数据库。
+目标配置见 `deploy/aliyun.json`，详细流程与首次搭建说明见下方部署文档。
 
 部署参考 [docs/deployment.md](docs/deployment.md)（systemd + Nginx + HTTPS），
 示例文件在 `deploy/systemd/coeer.service` 与 `deploy/nginx/coeer.conf`。

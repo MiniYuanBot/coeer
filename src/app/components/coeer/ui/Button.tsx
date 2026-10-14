@@ -3,36 +3,32 @@ import { cn } from '../lib/cn'
 import type { ButtonVariant } from '../lib/types'
 
 export function Button({
-    variant = 'primary',
-    size = 'md',
-    loading,
-    className,
-    children,
-    ...props
+    variant = 'primary', size = 'md', loading, asChild, className, children, ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: ButtonVariant
     size?: 'sm' | 'md' | 'lg' | 'icon'
     loading?: boolean
+    asChild?: boolean
 }) {
+    const classes = cn(
+        'coeer-focus inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-[13px] font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
+        size === 'sm' && 'h-8 px-2.5',
+        size === 'md' && 'h-9 px-3.5',
+        size === 'lg' && 'h-11 px-5',
+        size === 'icon' && 'h-8 w-8',
+        variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary/90',
+        variant === 'secondary' && 'border border-border bg-card text-foreground hover:bg-muted',
+        variant === 'outline' && 'border border-border bg-transparent hover:bg-muted',
+        variant === 'ghost' && 'text-muted-foreground hover:bg-muted hover:text-foreground',
+        variant === 'danger' && 'bg-danger text-white hover:bg-danger/90 dark:text-background',
+        className,
+    )
+    if (asChild && React.isValidElement<{ className?: string }>(children)) {
+        return React.cloneElement(children, { ...props, className: cn(classes, children.props.className) })
+    }
     return (
-        <button
-            {...props}
-            disabled={props.disabled || loading}
-            className={cn(
-                'coeer-focus inline-flex shrink-0 items-center justify-center gap-2 rounded-lg text-sm font-medium transition disabled:pointer-events-none disabled:opacity-55',
-                size === 'sm' && 'h-8 px-3',
-                size === 'md' && 'h-10 px-4',
-                size === 'lg' && 'h-11 px-5',
-                size === 'icon' && 'h-10 w-10',
-                variant === 'primary' && 'bg-primary text-primary-foreground shadow-sm hover:opacity-90',
-                variant === 'secondary' && 'border border-border bg-card text-foreground hover:bg-muted',
-                variant === 'outline' && 'border border-border bg-transparent hover:bg-muted',
-                variant === 'ghost' && 'hover:bg-muted',
-                variant === 'danger' && 'bg-danger text-white hover:opacity-90',
-                className,
-            )}
-        >
-            {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : null}
+        <button type="button" {...props} disabled={props.disabled || loading} aria-busy={loading || undefined} className={classes}>
+            {loading ? <span aria-hidden="true" className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" /> : null}
             {children}
         </button>
     )

@@ -51,7 +51,7 @@ function AdminStatsPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
     return (
-        <Card className="rounded-xl p-5">
+        <Card className="rounded-lg p-5">
             <p className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</p>
             <p className="mt-2 text-2xl font-medium tabular-nums">{value}</p>
         </Card>

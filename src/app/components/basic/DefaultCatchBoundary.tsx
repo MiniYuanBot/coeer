@@ -22,7 +22,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
       <div className="mx-auto max-w-md">
-        <div className="mb-6 rounded-xl border border-border bg-card p-5 text-left">
+        <div className="mb-6 rounded-lg border border-border bg-card p-5 text-left">
           <div className="text-sm font-medium text-foreground">页面出错了</div>
           <div className="mt-2 text-sm leading-6 text-muted-foreground">
             <ErrorComponent error={error} />

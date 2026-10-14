@@ -14,7 +14,7 @@ export function ActivityCard({ activity, action }: { activity: any; action?: Rea
             : 'primary'
 
     return (
-        <Card className="rounded-xl p-5">
+        <Card className="p-5">
             <div className="flex items-start justify-between gap-3">
                 <Badge tone={statusTone}>{activityStatusLabels[activity.status] || activity.status}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(activity.startTime)}</span>

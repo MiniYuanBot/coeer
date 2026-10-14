@@ -51,7 +51,7 @@ function AdminAchievementsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="成就管理" description="添加、编辑和删除成就。" />
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <form onSubmit={submit} className="grid gap-3">
                     <div className="grid gap-3 md:grid-cols-2">
                         <input name="code" required defaultValue={editing?.code} placeholder="成就代码" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
@@ -64,7 +64,7 @@ function AdminAchievementsPage() {
                     <div className="flex gap-2"><Button type="submit">{editing ? '保存成就' : '添加成就'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}</div>
                 </form>
             </Card>
-            {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-xl">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[item.conditionType]} · {item.conditionValue}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}
+            {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[item.conditionType]} · {item.conditionValue}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}
         </div>
     )
 }

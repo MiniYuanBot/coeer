@@ -39,7 +39,7 @@ function PostIndexComponent() {
         }
       />
 
-      <Card className="rounded-xl p-5">
+      <Card className="rounded-lg p-5">
         <div className="flex flex-wrap items-center gap-2">
           {post.isPinned ? <Badge tone="primary">置顶</Badge> : null}
           <Badge>{post.type === 'announcement' ? '公告' : '讨论'}</Badge>

@@ -154,7 +154,7 @@ function DormHomePage() {
                         selectedCycleId={selectedCycleId}
                         onChange={(cycleId) => navigate({ to: '/dorms', search: { ...search, cycleId: cycleId || undefined } })}
                     />
-                    <Card className="space-y-4 rounded-xl p-5">
+                    <Card className="space-y-4 rounded-lg p-5">
                         <div className="flex flex-wrap items-center gap-2">
                             <Badge tone="primary">{dormCycleStatusLabels[current.status] || current.status}</Badge>
                             <Badge>{current.cohortLabel}</Badge>
@@ -180,7 +180,7 @@ function DormHomePage() {
                         selectedCycleId={selectedCycleId}
                         onChange={(cycleId) => navigate({ to: '/dorms', search: { ...search, cycleId: cycleId || undefined } })}
                     />
-                    <Card className="space-y-4 rounded-xl p-5">
+                    <Card className="space-y-4 rounded-lg p-5">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <div className="text-sm font-medium">填写问卷</div>
@@ -216,7 +216,7 @@ function DormHomePage() {
 
                                 <div className="space-y-5">
                                     {Object.entries(groupedQuestions).map(([category, items]) => (
-                                        <Card key={category} className="rounded-xl border border-[hsl(var(--border)/0.65)] p-4">
+                                        <Card key={category} className="rounded-lg border border-[hsl(var(--border)/0.65)] p-4">
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="text-sm font-medium">{category}</div>
                                                 <Badge>{items.length} 题</Badge>
@@ -269,7 +269,7 @@ function CycleSelectCard({ cycles, selectedCycleId, onChange }: { cycles: DormCy
 
 function DormResultCard({ room }: { room: DormRoom }) {
     return (
-        <Card className="rounded-xl border border-[hsl(var(--border))] p-4">
+        <Card className="rounded-lg border border-[hsl(var(--border))] p-4">
             <div className="flex items-center justify-between gap-3">
                 <div>
                     <div className="text-sm font-medium">你的宿舍结果</div>
@@ -351,7 +351,7 @@ function CheckField({ name, label, defaultChecked }: { name: string; label: stri
 
 function MiniStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-xl border border-[hsl(var(--border)/0.65)] p-3">
+        <div className="rounded-lg border border-[hsl(var(--border)/0.65)] p-3">
             <div className="text-xs text-[hsl(var(--muted-foreground))]">{label}</div>
             <div className="mt-1 text-sm font-medium">{value}</div>
         </div>

@@ -37,8 +37,8 @@ src/
 │  ├─ routes/                  # 文件式路由（见 §2）
 │  ├─ components/
 │  │  ├─ coeer/                # 产品级 UI 体系
-│  │  │  ├─ ui/                #   Button / Card / Badge / Input / FilterPanel …
-│  │  │  ├─ layout/            #   AppShell / Sidebar / PublicNav / ThemeToggle …
+│  │  │  ├─ ui/                #   Button / Card / Badge / SearchInput / FilterPanel …
+│  │  │  ├─ layout/            #   AppShell / Sidebar / CommandMenu / ThemeToggle …
 │  │  │  ├─ cards/             #   PostCard / GroupCard / ActivityCard …
 │  │  │  ├─ feedback/          #   Modal / Toast
 │  │  │  └─ hooks/lib/         #   useAsyncAction / cn / date / labels / redirect
@@ -67,7 +67,7 @@ src/
 routes/
 ├─ __root.tsx                    # html/head(字体、主题预置脚本)/body + Toast + 路由条
 │                                #   beforeLoad 拉取 session 用户 → context.user
-├─ index.tsx                     # 公共首页（'/'），PublicNav 顶栏 + 动态信息流
+├─ index.tsx                     # '/'：游客品牌页头 + 公开信息流；登录后进入 AppShell
 ├─ login.tsx / signup.tsx        # 认证页：独立版式；已登录访问自动跳 '/'
 │                                #   validateSearch.redirect（内部路径白名单）
 ├─ logout.tsx                    # loader-only：清 session → 回 '/'
@@ -81,8 +81,8 @@ routes/
 **公共区与登录区的划分方式（参考 dub 的做法）**：根路由只负责文档骨架与全局
 上下文；是否进入“产品外壳”由路径组决定——
 
-- `/login`、`/signup` 属于公共认证区（居中卡片式，无顶栏），游客访问 `/` 时
-  显示品牌落地页（无导航链接，仅品牌 + 登录/注册 + 公开动态预览）；
+- `/login`、`/signup` 属于公共认证区（居中窄表单，无外层卡片或工作区导航）；
+  游客访问 `/` 时显示品牌、主题切换和登录/注册页头，接左对齐介绍与公开动态预览；
 - 登录用户访问 `/` 时渲染在 **AppShell 侧边栏外壳**内（与其它内容页完全一致）；
 - `_authed/**` 全部渲染在侧边栏外壳中；`/admin/**` 在 `_authed` 外壳内再叠加
   平台管理员守卫。
@@ -110,74 +110,85 @@ routes/
 - 每个域目录（如 `feedbacks/`）内：`route.tsx` = 布局/守卫（通常 `Outlet`），
   `index.tsx` = 列表页，`create.tsx`、`$id/*` 等 = 子页；
 - 列表页统一骨架：`SectionHeader`（标题/描述/操作）→ `FilterPanel`
-  （搜索 + 过滤组，状态写入 URL search params）→ 卡片网格/表格 →
+  （搜索 + 过滤组，状态写入 URL search params）→ 行列表/卡片网格/表格 →
   `EmptyState` → `Pagination`（上一页/下一页）。
 - 分页、搜索条件都存在 **URL**（`validateSearch` + `loaderDeps`），刷新/分享
   可还原，返回键回到同一状态。
 
 ---
 
-## 3. UI 设计体系（dub-inspired）
+## 3. UI 设计体系（Linear 参考）
+
+视觉规范以根目录 [DESIGN.md](../DESIGN.md) 的 token frontmatter 为准，
+[.impeccable/design.json](../.impeccable/design.json) 补充动效、断点、色阶预览与
+可独立渲染的组件示例。`PRODUCT.md` 记录产品约束；页面策略保留在对应 surface brief。
 
 ### 3.1 设计令牌（`styles/app.css`）
 
-一套语义化 HSL 令牌同时驱动“旧式任意值类”与“新式命名工具类”：
+语义化 HSL 令牌同时驱动现有任意值类和命名工具类，具体值由 `app.css` 的
+`:root` 与 `.dark` 定义，并逐项记录在 DESIGN.md；下表只说明角色。
 
-| 令牌 | 用途 | 亮色 ≈ | 暗色 ≈ |
-| ---- | ---- | ----- | ----- |
-| `--background / --foreground` | 画布 / 正文 | 白纸 / 近黑 | 近黑 / 浅灰 |
-| `--card / --border` | 表面 / 发丝边框 | 白 / gray-200 | gray-900 / gray-800 |
-| `--muted / --muted-foreground` | 次级表面 / 弱文本 | gray-100 / gray-500 | gray-800 / gray-500 |
-| `--primary / --primary-soft` | 强调色（蓝）/ 强调浅底 | blue-600 | blue-400 |
-| `--ring` | 焦点环 | blue-600 | blue-400 |
-| `--danger / --success / --warning` | 语义状态 | — | — |
+| 令牌 | 用途 | 浅色 | 深色 |
+| ---- | ---- | ---- | ---- |
+| `--background / --foreground` | 画布 / 正文 | 白色 / 石墨 | 石墨 / 浅灰 |
+| `--card / --card-foreground` | 独立表面 / 表面文字 | 白色 / 石墨 | 深灰 / 浅灰 |
+| `--sidebar` | 导航区域 | 冷灰 | 更深石墨 |
+| `--muted / --muted-foreground` | 辅助表面 / 弱文本 | 浅灰 / 中灰 | 深灰 / 灰白 |
+| `--border` | 边框与分隔线 | 浅冷灰 | 暗灰 |
+| `--primary / --primary-soft` | 主操作、链接 / 强调浅底 | 低饱和紫 / 极浅紫 | 浅紫 / 深紫灰 |
+| `--primary-foreground / --ring` | 主按钮文字 / 键盘焦点 | 白色 / 主色 | 深色 / 主色 |
+| `--danger / --success / --warning` | 错误 / 完成 / 待处理 | 红 / 绿 / 琥珀 | 提亮后的同语义色 |
+| `--inverted / --inverted-foreground` | 兼容业务页的反相对比 | 石墨 / 白色 | 浅灰 / 石墨 |
 
-`@theme inline` 把令牌映射为 `text-foreground`、`bg-card`、`border-border`、
-`bg-primary-soft`、`text-muted-foreground` 等工具类，新代码一律用命名类；
-`.coeer-card`/`.coeer-container`/`.coeer-focus`/`.coeer-scrollbar`/`.coeer-kbd`
-为跨页公共组件类。字体：Inter（Google Fonts link）+ 中文系统字体回退；
-暗色由 `<html class="dark">` 驱动，`__root` head 内置防闪烁脚本
-（先读 `localStorage.coeer-theme` 再回退系统偏好）。
+`@theme inline` 映射为 `text-foreground`、`bg-card`、`border-border`、
+`bg-primary-soft`、`text-muted-foreground` 等工具类，新代码使用命名类。
+`.coeer-card`、`.coeer-container`、`.coeer-workspace`、`.coeer-focus`、
+`.coeer-scrollbar`、`.coeer-kbd`、`.coeer-nav-link` 为跨页公共类。
+
+字体保留 Inter（Google Fonts link）与中文系统字体回退。首次访问默认浅色；
+`__root` 的防闪烁脚本只在 `localStorage.coeer-theme === 'dark'` 时添加
+`<html class="dark">`，主题切换会保存明确选择，不再默认跟随系统深色偏好。
 
 ### 3.2 外壳（layout 体系）
 
-```
-Desktop (lg+)                        Mobile (< lg)
-┌──────────┬──────────────────┐      ┌───────────────────┐
-│ Sidebar  │  主内容           │      │ 顶栏(品牌+头像+☰) │
-│ (w-64)   │  coeer-container  │      ├───────────────────┤
-│ 品牌      │  页面自身内容      │      │ ☰ → 左侧抽屉(同款  │
-│ 分组导航  │                  │      │     Sidebar)      │
-│ 主题/用户 │                  │      └───────────────────┘
-└──────────┴──────────────────┘
-```
-
-- `AppShell`（`layout/AppShell.tsx`）：桌面固定左侧栏 + 主内容；移动端顶部条 +
-  左侧抽屉（打开时锁定 body 滚动、点击遮罩/选中菜单自动关闭）。
-- `Sidebar`（`layout/Sidebar.tsx`）：品牌块、按“社区 / 服务 / 成长”分组的导航
-  （`layout/navItems.ts` 数据驱动，`NavLink` 带 `active` 策略：`/` 精确匹配，
-  其余前缀匹配），平台管理员额外“管理”分组；底部为主题切换 + 用户卡片
-  （个人中心 / 退出）。
-- 游客首页是“品牌落地页”（无导航顶栏，仅品牌 + 登录/注册 + 动态预览），
-  视觉与登录页一致；登录后同一路径进入 AppShell。
-- 认证页（`/login`、`/signup`）独立版式（左右分栏品牌卡 + 居中表单），
-  不套外壳；页面右上角提供主题切换。
+- `AppShell`：lg（1024px）起固定 232px 左侧栏，内容顶部为 52px sticky 路径栏。
+  主内容采用 `.coeer-workspace`，最大宽度 84rem；手机左右各留 16px 空隙。
+- `Sidebar`：品牌、页面搜索、按“社区 / 服务 / 成长”分组的导航，平台管理员
+  额外显示“管理”；底部为主题切换与用户/退出入口。当前导航用灰底与主色图标标识。
+- 移动导航：lg 以下使用顶部按钮开启原生 dialog 抽屉，宽度 `min(288px, 86vw)`；
+  打开时锁定背景滚动，支持关闭按钮、Esc、遮罩点击与选中页面后关闭。
+- `CommandMenu`：搜索按钮或 Cmd/Ctrl+K 打开，按现有页面名称与路径过滤；支持
+  方向键选择、Enter 跳转、Esc 关闭。它是页面导航，不提供全站内容搜索索引。
+- 登录首页：主信息流与公开反馈使用分隔线；xl（1280px）起搭配 280px 信息侧栏，
+  更窄时顺序堆叠。
+- 游客首页：64px 品牌页头含主题切换与登录/注册，介绍和公开信息流左对齐，
+  xl 起搭配 300px 信息侧栏。
+- 认证页：不套工作区外壳，表单居中且最大宽度 340px，无外层卡片或左右品牌面板，
+  右上角提供主题切换。
 
 ### 3.3 基础组件（`components/coeer/ui`）
 
 | 组件 | 约定 |
 | ---- | ---- |
-| `Button` | variants: primary/secondary/outline/ghost/danger；sizes sm/md/lg/icon；`loading` |
-| `Badge` | tones: default/primary/success/warning/danger |
-| `Card` | 平卡 + 发丝边框，无投影/上浮（dub 风格） |
-| `SectionHeader` | 每页标题区：标题 + 描述 + 右侧操作区 |
-| `FilterPanel` | 搜索框 + 过滤组（**分组标题会渲染**）；选中态高亮 |
-| `SearchInput` | 图标前置输入框 |
-| `EmptyState` | 空状态插图区 + 标题/描述/CTA |
-| `Modal` | 居中弹窗（aria-modal、Esc 关闭、关闭按钮有 label） |
-| `Toast` | Provider + `useToast()`，tone 标签正确、id 自增防碰撞 |
+| `Button` | primary/secondary/outline/ghost/danger；sm/md/lg/icon；默认 36px 高、6px 圆角；loading 禁用重复提交 |
+| `Badge` | default/primary/success/warning/danger/muted；11px 字号、4px 圆角、轻底色与细边框 |
+| `Card` | 8px 圆角、1px 边框，无投影或上浮；内边距由调用方决定 |
+| `SectionHeader` | 23px 页面标题、描述与右侧操作，窄屏允许换行 |
+| `FilterPanel` | 搜索与可换行的过滤组，渲染分组标题；选中项用 muted 背景与 aria-pressed |
+| `SearchInput` | 36px 高、6px 圆角，前置搜索图标与可访问名称 |
+| `EmptyState` | 小图标框、明确标题/说明与适用的下一步操作 |
+| `Modal` | 原生 dialog，最大宽 512px、8px 圆角、20px 内边距；标题关联、Esc/关闭按钮/真正的遮罩点击关闭 |
+| `Toast` | Provider + `useToast()`，沿用 Card 和语义 Badge，位于右下角 |
+| `PageStatus` | hydration 后按真实路由 pending 状态显示顶部进度条 |
 
-列表页与分页是反复出现的模式——新增页面时优先复用这些组件，而不是复制骨架。
+反馈页使用 `FeedbackCard variant="row"`：sm 起对齐状态图标、内容、状态徽章与
+日期；手机将状态与日期移入内容元信息。列表更新提示和 aria-busy 同样在 hydration
+后根据 pending 状态启用，空状态可清除筛选或提交反馈。范围、类型、关键词和分页
+仍写入 URL。
+
+所有交互保留 2px 焦点描边与 3px 间隙；状态同时使用文字或图形表达。色彩过渡通常
+为 120ms，按钮为 150ms，尊重 `prefers-reduced-motion`。新增页面优先复用现有组件；
+本次使用 CSS 与内联 SVG，未生成或新增 raster 视觉资产。
 
 ---
 

@@ -1,40 +1,41 @@
 import * as React from 'react'
 import { Button } from '../ui/Button'
-import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
 
-export function Modal({
-    open,
-    title,
-    children,
-    onOpenChange,
-}: {
+export function Modal({ open, title, children, onOpenChange }: {
     open: boolean
     title: string
     children: React.ReactNode
     onOpenChange: (open: boolean) => void
 }) {
-    if (!open) return null
+    const ref = React.useRef<HTMLDialogElement>(null)
+    const titleId = React.useId()
+    React.useEffect(() => {
+        const dialog = ref.current
+        if (!dialog) return
+        if (open && !dialog.open) dialog.showModal()
+        if (!open && dialog.open) dialog.close()
+        if (!open) return
+        const previous = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = previous }
+    }, [open])
     return (
-        <div
-            className="fixed inset-0 z-[60] grid place-items-center p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
-            onKeyDown={(e) => {
-                if (e.key === 'Escape') onOpenChange(false)
+        <dialog ref={ref} aria-labelledby={titleId} onCancel={() => onOpenChange(false)}
+            onClose={() => { if (open) onOpenChange(false) }}
+            onClick={(event) => {
+                if (event.target !== event.currentTarget) return
+                const bounds = event.currentTarget.getBoundingClientRect()
+                if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) {
+                    onOpenChange(false)
+                }
             }}
-        >
-            <button className="absolute inset-0 bg-slate-950/40" aria-label="关闭弹窗" onClick={() => onOpenChange(false)} />
-            <Card className="relative w-full max-w-lg p-5">
-                <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold">{title}</h2>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="关闭弹窗">
-                        <Icon name="x" />
-                    </Button>
-                </div>
-                <div className="mt-4">{children}</div>
-            </Card>
-        </div>
+            className="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-lg overflow-y-auto rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-3">
+                <h2 id={titleId} className="text-base font-semibold">{title}</h2>
+                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="关闭弹窗"><Icon name="x" /></Button>
+            </div>
+            {open ? <div className="mt-4">{children}</div> : null}
+        </dialog>
     )
 }

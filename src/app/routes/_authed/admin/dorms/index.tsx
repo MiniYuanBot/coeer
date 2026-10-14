@@ -131,7 +131,7 @@ function AdminDormPage() {
                 </div>
             </Card>
 
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <form onSubmit={submitCycle} className="grid gap-3 md:grid-cols-4">
                     <input name="code" required placeholder="届次代码，例如 2026-freshman" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
                     <input name="label" required placeholder="届次名称，例如 2026 新生宿舍" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
@@ -163,7 +163,7 @@ function AdminDormPage() {
                     </div>
 
                     <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                        <Card className="overflow-hidden rounded-xl">
+                        <Card className="overflow-hidden rounded-lg">
                             <div className="border-b border-[hsl(var(--border))] px-4 py-3 text-sm font-medium">分配结果</div>
                             {rooms.length ? (
                                 <div className="divide-y divide-[hsl(var(--border))]">
@@ -195,7 +195,7 @@ function AdminDormPage() {
                             )}
                         </Card>
 
-                        <Card className="overflow-hidden rounded-xl">
+                        <Card className="overflow-hidden rounded-lg">
                             <div className="border-b border-[hsl(var(--border))] px-4 py-3 text-sm font-medium">提交名单</div>
                             {submissions.length ? (
                                 <div className="divide-y divide-[hsl(var(--border))]">

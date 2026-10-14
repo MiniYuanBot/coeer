@@ -1,78 +1,51 @@
 @import 'tailwindcss' source('../');
+@custom-variant dark (&:where(.dark, .dark *));
 
-/*
- * COEER design tokens
- * -----------------------------------------------
- * Palette language is borrowed from Dub's product UI:
- * near-neutral "chrome" surfaces, hairline borders,
- * ink text, and a single blue accent. Light mode is
- * warm-neutral paper on white; dark mode is inverted
- * near-black chrome.
- *
- * Tokens keep the hsl() triplet format so legacy
- * arbitrary classes like `text-[hsl(var(--foreground))]`
- * keep working while the `@theme` block below maps them
- * to first-class Tailwind utilities (`text-foreground`,
- * `bg-card`, `border-border`, …) for new code.
- */
-
+/* HSL triplets preserve compatibility with existing business-page utilities. */
 :root {
-  /* canvas */
-  --background: 0 0% 98%;
-  --foreground: 0 0% 9%;
-  /* surfaces */
+  --background: 0 0% 100%;
+  --foreground: 240 6% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 9%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 42%;
-  /* hairline borders */
-  --border: 0 0% 90%;
-  --ring: 221 83% 53%;
-  /* accent (blue-600) */
-  --primary: 221 83% 53%;
+  --card-foreground: 240 6% 15%;
+  --sidebar: 240 14% 97%;
+  --muted: 240 8% 96%;
+  --muted-foreground: 240 4% 43%;
+  --border: 240 7% 90%;
+  --ring: 243 48% 56%;
+  --primary: 243 48% 56%;
   --primary-foreground: 0 0% 100%;
-  --primary-soft: 221 91% 95%;
-  /* status */
-  --success: 153 62% 38%;
-  --warning: 38 92% 45%;
-  --danger: 0 72% 51%;
-  /* inverted (black pill / brand tile) */
-  --inverted: 0 0% 8%;
+  --primary-soft: 243 55% 96%;
+  --success: 158 64% 30%;
+  --warning: 35 90% 32%;
+  --danger: 0 65% 46%;
+  --inverted: 240 6% 15%;
   --inverted-foreground: 0 0% 100%;
 }
-
 .dark {
-  /* canvas */
-  --background: 0 0% 5%;
-  --foreground: 0 0% 93%;
-  /* surfaces */
-  --card: 0 0% 9%;
-  --card-foreground: 0 0% 93%;
-  --muted: 0 0% 13%;
-  --muted-foreground: 0 0% 62%;
-  /* hairline borders */
-  --border: 0 0% 18%;
-  --ring: 217 91% 60%;
-  /* accent (blue-400) */
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 100%;
-  --primary-soft: 217 60% 14%;
-  /* status */
-  --success: 153 62% 42%;
-  --warning: 43 90% 50%;
-  --danger: 0 72% 56%;
-  /* inverted (white pill / brand tile) */
-  --inverted: 0 0% 96%;
-  --inverted-foreground: 0 0% 5%;
+  --background: 240 7% 10%;
+  --foreground: 240 5% 92%;
+  --card: 240 6% 12%;
+  --card-foreground: 240 5% 92%;
+  --sidebar: 240 7% 8%;
+  --muted: 240 5% 16%;
+  --muted-foreground: 240 5% 64%;
+  --border: 240 5% 21%;
+  --ring: 243 75% 73%;
+  --primary: 243 75% 73%;
+  --primary-foreground: 240 12% 12%;
+  --primary-soft: 243 25% 18%;
+  --success: 158 48% 58%;
+  --warning: 38 85% 65%;
+  --danger: 0 76% 70%;
+  --inverted: 240 5% 92%;
+  --inverted-foreground: 240 7% 10%;
 }
-
-/* Map the semantic tokens to Tailwind theme colors so new
-   code can use utilities like `bg-background text-foreground`. */
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  --color-sidebar: hsl(var(--sidebar));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
@@ -86,149 +59,63 @@
   --color-inverted: hsl(var(--inverted));
   --color-inverted-foreground: hsl(var(--inverted-foreground));
 }
-
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: hsl(var(--border));
-  }
-
-  html {
-    color-scheme: light;
-  }
-
-  html.dark {
-    color-scheme: dark;
-  }
-
-  html,
-  body {
+  *, ::after, ::before, ::backdrop, ::file-selector-button { border-color: hsl(var(--border)); }
+  html { color-scheme: light; scroll-padding-top: 4.5rem; }
+  html.dark { color-scheme: dark; }
+  html, body {
     min-height: 100%;
-    background-color: hsl(var(--background));
+    background: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-      Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    scrollbar-color: hsl(var(--border)) transparent;
+    scrollbar-width: thin;
   }
-
-  /* 移动端防横向溢出：任何超宽内容都不允许撑破视口 */
-  body {
-    overflow-x: hidden;
-  }
-
-  /* 内容图（卡片/活动图等）在窄屏上按容器收缩 */
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  a {
-    text-underline-offset: 4px;
-  }
-
-  button,
-  input,
-  textarea,
-  select {
-    font: inherit;
-  }
-
-  ::selection {
-    background-color: hsl(var(--primary) / 0.18);
-  }
-
-  .using-mouse * {
-    outline: none !important;
+  img { max-width: 100%; height: auto; }
+  body { font-size: 14px; }
+  a { text-underline-offset: 4px; }
+  button, input, textarea, select { font: inherit; }
+  button:not(:disabled), [role='button']:not([aria-disabled='true']) { cursor: pointer; }
+  input, textarea { caret-color: hsl(var(--primary)); }
+  input::placeholder, textarea::placeholder { color: hsl(var(--muted-foreground)); opacity: 1; }
+  input, textarea, select { transition: border-color 120ms ease-out; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: hsl(var(--primary)); }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+  ::selection { background: hsl(var(--primary) / .18); }
+  h1, h2 { text-wrap: balance; }
+  p { overflow-wrap: anywhere; }
+  table, time, .tabular-nums { font-variant-numeric: tabular-nums; }
+  dialog { color: hsl(var(--foreground)); }
+  dialog::backdrop { background: rgb(18 18 24 / .35); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   }
 }
-
 @layer components {
-  .coeer-container {
-    width: min(100% - 2rem, 80rem);
-    margin-inline: auto;
-  }
-
-  /* Card: dub-style flat surface — hairline border, no lift */
-  .coeer-card {
-    border-radius: 0.75rem;
-    border: 1px solid hsl(var(--border));
-    background-color: hsl(var(--card));
-  }
-
-  .coeer-focus {
-    outline: none;
-  }
-
-  .coeer-focus:focus-visible {
-    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.28);
-  }
-
-  /* Slim custom scrollbar for sidebars / drawers */
-  .coeer-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) transparent;
-  }
-
-  .coeer-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .coeer-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .coeer-scrollbar::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--border));
-    border-radius: 8px;
-  }
-
-  /* Keyboard shortcut chip (dub-style `<kbd>`) */
-  .coeer-kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.3rem;
-    border-radius: 0.375rem;
-    border: 1px solid hsl(var(--border));
-    background-color: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
-    font-size: 0.6875rem;
-    font-weight: 500;
-    line-height: 1;
-  }
-
-  /* Entrance used by mobile nav panels */
-  @keyframes coeer-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes coeer-slide-in-left {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  .coeer-anim-backdrop {
-    animation: coeer-fade-in 150ms ease-out;
-  }
-
-  .coeer-anim-panel-left {
-    animation: coeer-slide-in-left 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  .coeer-container { width: min(100% - 3rem, 84rem); margin-inline: auto; }
+  .coeer-workspace { width: min(100% - 5rem, 84rem); margin-inline: auto; padding-block: 2.25rem 4rem; }
+  .coeer-card { border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--card)); }
+  .coeer-focus:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+  .coeer-scrollbar { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+  .coeer-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 1.2rem; height: 1.3rem; padding-inline: .3rem; border: 1px solid hsl(var(--border)); border-radius: 4px; color: hsl(var(--muted-foreground)); font: inherit; font-size: 11px; line-height: 1; }
+  .coeer-nav-link { display: flex; min-height: 34px; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 5px; color: hsl(var(--muted-foreground)); font-size: 13px; transition: background-color 120ms ease-out, color 120ms ease-out; }
+  .coeer-nav-link:hover { background: hsl(var(--foreground) / .04); color: hsl(var(--foreground)); }
+  .coeer-nav-link[data-status='active'] { background: hsl(var(--foreground) / .065); color: hsl(var(--foreground)); font-weight: 550; }
+  .coeer-nav-link[data-status='active'] svg { color: hsl(var(--primary)); }
+  .coeer-skip { position: fixed; left: 1rem; top: -5rem; z-index: 100; border-radius: 5px; background: hsl(var(--primary)); padding: 10px 16px; color: hsl(var(--primary-foreground)); }
+  .coeer-skip:focus { top: 1rem; }
+  .coeer-mobile-drawer { position: fixed; inset: 0 auto 0 0; margin: 0; width: min(288px, 86vw); max-width: none; max-height: none; height: 100dvh; padding: 0; border: 0; border-right: 1px solid hsl(var(--border)); background: hsl(var(--sidebar)); }
+  .coeer-command { position: fixed; inset: 16vh 0 auto; margin-inline: auto; width: min(560px, calc(100% - 2rem)); max-height: 70dvh; padding: 0; overflow: hidden; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--card)); }
+  .coeer-post { padding: 20px; }
+  .coeer-feed > * + * { border-top: 1px solid hsl(var(--border)); }
+  .coeer-feed .coeer-post { border: 0; border-radius: 0; background: transparent; padding: 22px 0; }
+  .coeer-feed > :first-child .coeer-post, .coeer-feed > .coeer-post:first-child { padding-top: 0; }
+  @media (max-width: 639px) {
+    .coeer-container, .coeer-workspace { width: calc(100% - 2rem); }
+    .coeer-workspace { padding-block: 1.5rem 3rem; }
+    .coeer-command { inset-block-start: 10vh; }
   }
 }

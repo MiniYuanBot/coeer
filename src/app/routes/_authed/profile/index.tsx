@@ -28,7 +28,7 @@ function ProfileIndexComponent() {
                 action={<Link to="/logout"><Button variant="outline"><Icon name="logout" /> 退出</Button></Link>}
             />
             <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-                <Card className="rounded-xl p-5">
+                <Card className="rounded-lg p-5">
                     <div className="flex items-center gap-4">
                         <div className="grid h-12 w-12 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xl font-medium text-[hsl(var(--primary))]">
                             {(user.name || user.email).slice(0, 1).toUpperCase()}
@@ -41,15 +41,15 @@ function ProfileIndexComponent() {
                     </div>
 
                     <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
                             <div className="text-2xl font-medium tabular-nums">3</div>
                             <div className="text-[13px] text-[hsl(var(--muted-foreground))]">加入群组</div>
                         </div>
-                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
                             <div className="text-2xl font-medium tabular-nums">8</div>
                             <div className="text-[13px] text-[hsl(var(--muted-foreground))]">提交反馈</div>
                         </div>
-                        <div className="rounded-xl border border-[hsl(var(--border)/0.6)] p-4">
+                        <div className="rounded-lg border border-[hsl(var(--border)/0.6)] p-4">
                             <div className="text-2xl font-medium tabular-nums">2</div>
                             <div className="text-[13px] text-[hsl(var(--muted-foreground))]">成就解锁</div>
                         </div>

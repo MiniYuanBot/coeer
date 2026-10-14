@@ -5,8 +5,8 @@ import { Card } from '../ui/Card'
 
 export function GroupCard({ group }: { group: any }) {
     return (
-        <Link to="/groups/$slug" params={{ slug: group.slug }} className="block">
-            <Card className="h-full rounded-xl p-5">
+        <Link to="/groups/$slug" params={{ slug: group.slug }} className="coeer-focus block rounded-lg">
+            <Card className="h-full p-5 transition-colors hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">

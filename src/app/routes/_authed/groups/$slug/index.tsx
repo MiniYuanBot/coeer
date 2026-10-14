@@ -29,14 +29,14 @@ function GroupHomePage() {
 
     return (
         <div className="space-y-6">
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <h2 className="text-[15px] font-medium">关于群组</h2>
                 <p className="mt-3 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     {group.description || '暂无描述'}
                 </p>
             </Card>
 
-            <Card className="rounded-xl p-5">
+            <Card className="rounded-lg p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-[15px] font-medium">管理员</h2>
                     <Link
@@ -56,7 +56,7 @@ function GroupHomePage() {
             </Card>
 
             {!(isMember || isAdmin) && (
-                <Card className="rounded-xl p-5 text-center">
+                <Card className="rounded-lg p-5 text-center">
                     <p className="mb-4 text-[13px] text-[hsl(var(--muted-foreground))]">加入这个群组，参与讨论</p>
                     <Button
                         onClick={handleJoin}

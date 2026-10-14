@@ -6,7 +6,7 @@ import { Icon } from '../ui/Icon'
 export function AchievementCard({ achievement, unlocked }: { achievement: any; unlocked?: boolean }) {
     const item = achievement.achievement ?? achievement
     return (
-        <Card className={cn('rounded-xl p-5', !unlocked && 'opacity-60 grayscale')}>
+        <Card className={cn('rounded-lg p-5', !unlocked && 'opacity-60 grayscale')}>
             <div className="flex items-start gap-4">
                 <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-[10px]', unlocked ? 'bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]')}>
                     <Icon name="award" className="h-5 w-5" />

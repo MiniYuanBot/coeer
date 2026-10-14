@@ -3,11 +3,90 @@
 This project is a TanStack Start SSR application with Server Functions and PostgreSQL.
 It should be deployed as a Node.js service behind a reverse proxy such as Nginx.
 
+## 一键发布到现有阿里云服务器
+
+本仓库已经适配 `ssh aliyun` 上正在运行的 `/var/www/coeer` 和 `coeer.service`，沿用现有 Nginx 与 PostgreSQL，不需要 Docker。
+
+在本机项目目录执行：
+
+```sh
+npm run deploy
+```
+
+该命令发布**当前工作区代码**，包含尚未提交的改动，不要求先 push 到 GitHub。流程为：
+
+1. 本机 TypeScript 检查、远程服务与运行时检查。
+2. 上传源码包至独立版本目录，使用固定 pnpm 和 `--frozen-lockfile` 安装依赖。
+3. 使用服务器现有 `.env`，再次检查环境、类型并构建。
+4. 在 `127.0.0.1:13000` 临时启动新版本，检查数据库连接、SSR 登录页和实际 CSS 资源；预检进程随后关闭。
+5. 原子切换 `current` 链接，写入专用 systemd drop-in 并重启 `coeer.service`。
+6. 核对线上 `/healthz` 的版本 ID 和数据库状态；失败则恢复此前链接、启动配置并重启旧版本。
+
+这是**带健康检查和自动回滚的重启发布**，切换时可能短暂中断连接，不承诺零停机。失败的构建不会停止当前应用。发布过程中不执行数据库迁移、种子数据或数据库清理；应用回滚也不会回滚数据库。
+
+常用命令：
+
+```sh
+npm run deploy:check               # 只读检查，不上传或重启
+npm run deploy -- --dry-run         # 查看计划，完全不连接服务器
+npm run deploy -- --prepare         # 上传、构建和隔离预检，不切换线上
+npm run deploy -- --activate <ID>   # 再次预检并发布此前准备的版本
+npm run deploy:rollback            # 恢复当前版本记录的上一版本
+npm run test:deploy                # 发布包排除规则、失败恢复及并发锁测试
+```
+
+配置位于 `deploy/aliyun.json`。如服务器目录、服务名或 Node/pnpm 安装位置变化，可新建忽略入 Git 的 `deploy/aliyun.local.json`，只填写需要覆盖的字段：
+
+```json
+{
+  "host": "aliyun",
+  "root": "/var/www/coeer",
+  "service": "coeer.service",
+  "pnpm": "/root/.nvm/versions/node/v20.20.2/bin/pnpm",
+  "pnpmVersion": "10.33.4",
+  "port": 3000,
+  "previewPort": 13000
+}
+```
+
+`pnpm` 同目录下必须存在 `node`。当前配置保留了现有服务器的 Node 20 路径以适配线上；升级至 Node 24 LTS 后需更新此路径，脚本不会自行安装或更换系统运行时。项目固定 pnpm 10.33.4；生产启动使用锁文件中的 srvx 0.11.7，不再在服务启动时执行 `pnpx` 下载。
+
+服务器布局：
+
+```text
+/var/www/coeer/
+  .env                         # 现有服务器配置，原地保留
+  .deploy/
+    lock                       # 发布/回滚互斥锁
+    current -> releases/<ID>   # 首次成功发布后创建
+    releases/<ID>/
+      .env -> /var/www/coeer/.env
+      dist/                    # Linux 服务器构建的产物
+      ready.json               # 通过预检的版本记录
+      previous.json            # 上一版本及启动配置记录
+      previous-unit.conf       # 上一版专用 drop-in（如存在）
+      preview.log              # 该版本的隔离预检日志
+```
+
+原始部署目录的源码、依赖和构建产物保持可用，因此首次发布也能回滚到现有部署。专用覆盖文件为 `/etc/systemd/system/coeer.service.d/90-coeer-release.conf`；其他覆盖文件若修改启动目录或启动命令，预检会停止并要求先核对，不会直接覆盖。版本目录默认保留，脚本不自动清理历史版本。上一版哈希静态资源会复制到新版本，降低已打开页面更新时的资源缺失风险。
+
+本机 `.env*`、SSH/云凭据、`*.pem`、`*.key`、本机配置、`node_modules` 和 `dist` 不会上传。SSH 使用已有 `aliyun` 身份和主机验证设置，不修改 SSH、防火墙或数据库权限。服务器需要 Python 3、无交互 sudo、现有 Node/pnpm，以及能访问依赖仓库的网络。
+
+健康检查的成功响应形如：
+
+```json
+{"status":"ok","release":"<ID>"}
+```
+
+数据库不可用时返回 HTTP 503 与通用状态，不输出连接字符串或错误详情。发布成功意味着应用回环端口与 systemd 检查通过；公网 DNS、证书和 Nginx 配置沿用现状，可另用公网地址检查。
+
+以下为首次搭建服务器的手动流程；已接入一键发布后，请使用上述命令，避免在原始目录手动 `git pull` 后重启。
+
 ## Requirements
 
 - Linux server, Ubuntu 22.04+ recommended
-- Node.js 20+
-- pnpm via Corepack
+- Node.js 24 LTS recommended (minimum 20.19 for the existing deployment)
+- pnpm 10.33.4
 - PostgreSQL 14+
 - Nginx
 - A domain name pointing to the server
@@ -18,11 +97,11 @@ It should be deployed as a Node.js service behind a reverse proxy such as Nginx.
 sudo apt update
 sudo apt install -y nginx postgresql postgresql-contrib
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs
 
 corepack enable
-corepack prepare pnpm@latest --activate
+corepack prepare pnpm@10.33.4 --activate
 ```
 
 ## 2. Prepare PostgreSQL
@@ -110,10 +189,10 @@ sudo cp deploy/systemd/coeer.service /etc/systemd/system/coeer.service
 sudo nano /etc/systemd/system/coeer.service
 ```
 
-Make sure `WorkingDirectory` points to your deployed project directory and `ExecStart` points to pnpm:
+Make sure `WorkingDirectory` points to your deployed project directory and the Node.js path in `ExecStart` matches the installed runtime:
 
 ```sh
-which pnpm
+which node
 ```
 
 Then start the service:
@@ -161,12 +240,13 @@ The session cookie is marked `secure` in production, so HTTPS is required for lo
 
 ## 8. Update Deployment
 
+已接入一键发布的服务器，在本机运行 `npm run deploy`。下列命令仅适用于未接入版本目录管理的手动部署；数据库变更应独立评估、备份并使用迁移，不作为每次 UI 发布步骤。
+
 ```sh
 cd /var/www/coeer
 git pull
 pnpm install --frozen-lockfile
 pnpm check:env
-pnpm db:push
 pnpm build
 sudo systemctl restart coeer
 ```

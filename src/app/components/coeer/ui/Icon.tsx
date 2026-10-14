@@ -1,19 +1,25 @@
 import * as React from 'react'
 import type { IconName } from '../lib/types'
+import { twMerge } from 'tailwind-merge'
 
 export function Icon({ name, className = 'h-4 w-4' }: { name: IconName; className?: string }) {
     const common = {
-        className,
+        className: twMerge('h-4 w-4', className),
         viewBox: '0 0 24 24',
         fill: 'none',
         stroke: 'currentColor',
-        strokeWidth: 1.9,
+        strokeWidth: 1.65,
         strokeLinecap: 'round' as const,
         strokeLinejoin: 'round' as const,
         'aria-hidden': true,
     }
 
     const paths: Record<IconName, React.ReactNode> = {
+        inbox: <><path d="m4 4-2 10v6h20v-6L20 4z" /><path d="M2 14h6l2 3h4l2-3h6" /></>,
+        plus: <path d="M12 5v14M5 12h14" />,
+        panel: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></>,
+        filter: <><path d="M4 7h16M7 12h10M10 17h4" /></>,
+        list: <><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></>,
         activity: <><path d="M3 12h4l2-6 4 12 2-6h6" /></>,
         award: <><circle cx="12" cy="8" r="5" /><path d="M8.5 12.5 7 22l5-3 5 3-1.5-9.5" /></>,
         bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" /><path d="M10 19a2 2 0 0 0 4 0" /></>,

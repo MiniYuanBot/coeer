@@ -20,6 +20,11 @@ dist
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.pnpm-store/
+.impeccable/questions/
+.impeccable/review/
+deploy/*.local.json
+__pycache__/
 
 tmp
 README.pdf

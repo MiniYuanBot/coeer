@@ -4,27 +4,23 @@ import { Icon } from '../ui/Icon'
 
 export function ThemeToggle() {
     const [dark, setDark] = React.useState(false)
-
     React.useEffect(() => {
-        const saved = localStorage.getItem('coeer-theme')
-        const next = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
-        document.documentElement.classList.toggle('dark', next)
-        setDark(next)
+        const sync = () => setDark(document.documentElement.classList.contains('dark'))
+        sync()
+        const observer = new MutationObserver(sync)
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+        return () => observer.disconnect()
     }, [])
-
     return (
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="切换主题"
+        <Button type="button" variant="ghost" size="icon"
+            aria-label={dark ? '切换到浅色主题' : '切换到深色主题'}
+            title={dark ? '切换到浅色主题' : '切换到深色主题'} aria-pressed={dark}
             onClick={() => {
-                const next = !dark
+                const next = !document.documentElement.classList.contains('dark')
                 document.documentElement.classList.toggle('dark', next)
-                localStorage.setItem('coeer-theme', next ? 'dark' : 'light')
                 setDark(next)
-            }}
-        >
+                try { localStorage.setItem('coeer-theme', next ? 'dark' : 'light') } catch { /* Theme still works without storage. */ }
+            }}>
             <Icon name={dark ? 'sun' : 'moon'} />
         </Button>
     )

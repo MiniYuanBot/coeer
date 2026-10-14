@@ -1,22 +1,16 @@
+import { Link } from '@tanstack/react-router'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
 
-export function PointsSummaryCard({ balance = 0, streak = 7 }: { balance?: number; streak?: number }) {
+export function PointsSummaryCard({ balance = 0, streak }: { balance?: number; streak?: number }) {
     return (
-        <Card className="rounded-xl p-5">
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="text-[32px] font-medium tabular-nums leading-none text-[hsl(var(--primary))]">{balance}</div>
-                    <p className="mt-2 text-[13px] text-[hsl(var(--muted-foreground))]">我的积分</p>
-                </div>
-                <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
-                    <Icon name="coins" className="h-5 w-5" />
-                </div>
+        <Card className="p-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Icon name="coins" className="h-3.5 w-3.5" />我的积分</div>
+            <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-[28px] font-semibold tabular-nums leading-none tracking-tight">{balance.toLocaleString('zh-CN')}</span>
+                <Link to="/redeems" className="coeer-focus rounded text-xs text-primary hover:underline">兑换权益</Link>
             </div>
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[hsl(var(--muted))]">
-                <div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: `${Math.min(100, Math.max(12, balance / 8))}%` }} />
-            </div>
-            <p className="mt-3 text-[13px] text-[hsl(var(--muted-foreground))]">连续活跃 {streak} 天，完成反馈和活动可以继续成长。</p>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">{streak !== undefined ? '连续活跃 ' + streak + ' 天。' : '参与活动、提交反馈，积累成长积分。'}</p>
         </Card>
     )
 }

@@ -91,7 +91,7 @@ function AchievementsPage() {
             />
 
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className="rounded-xl p-5">
+                <Card className="rounded-lg p-5">
                     <div className="flex items-center gap-3">
                         <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
                             <Icon name="card" />
@@ -102,7 +102,7 @@ function AchievementsPage() {
                         </div>
                     </div>
                 </Card>
-                <Card className="rounded-xl p-5">
+                <Card className="rounded-lg p-5">
                     <div className="flex items-center gap-3">
                         <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                             <Icon name="award" />
@@ -113,7 +113,7 @@ function AchievementsPage() {
                         </div>
                     </div>
                 </Card>
-                <Card className="rounded-xl p-5">
+                <Card className="rounded-lg p-5">
                     <div className="flex items-center gap-3">
                         <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">
                             <Icon name="spark" />
@@ -171,7 +171,7 @@ function AchievementsPage() {
                     {visibleMyCards.length ? (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             {visibleMyCards.map((item: any) => (
-                                <Card key={item.id} className="overflow-hidden rounded-xl">
+                                <Card key={item.id} className="overflow-hidden rounded-lg">
                                     <img src={item.card.imageUrl} alt={item.card.name} className="aspect-square w-full object-cover" />
                                     <div className="p-4">
                                         <Badge tone="primary">{cardRarityLabels[item.card.rarity] || item.card.rarity}</Badge>
