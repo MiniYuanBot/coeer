@@ -5,6 +5,7 @@ import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { routeGeneratorWatchGuard } from './scripts/vite-route-generator'
+import { spacesStartupPlugin } from './scripts/vite-spaces-startup'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -28,11 +29,13 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       routeGeneratorWatchGuard(path.resolve(__dirname, 'src/app/routeTree.gen.ts')),
+      spacesStartupPlugin(),
       tailwindcss(),
       tsConfigPaths({
         projects: ['./tsconfig.json'],
       }),
       tanstackStart({
+        server: { entry: './server.ts' },
         router: {
           entry: './app/router.tsx',
           routesDirectory: './app/routes',

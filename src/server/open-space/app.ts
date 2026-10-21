@@ -68,6 +68,8 @@ export interface AppOptions {
   horizon?: number;
   publicBookingUserId?: string;
   staleMs?: number;
+  /** Maximum HTTP wait; in-flight official writes remain durable after this expires. */
+  bookingWaitMs?: number;
   /** Serve the persisted cache while the worker performs its startup sync. */
   deferInitialSync?: boolean;
 }
@@ -145,12 +147,13 @@ export async function createApp(options: AppOptions = {}) {
   const service = new BookingService(
     db,
     adapter,
-    options.horizon ?? adapter.defaultHorizon ?? 14,
+    options.horizon ?? adapter.defaultHorizon ?? 7,
     options.staleMs ??
       (adapter.mode === "official"
         ? Math.max(180000, (adapter.syncIntervalMs ?? 300000) * 2)
         : 180000),
     options.publicBookingUserId,
+    options.bookingWaitMs,
   );
   const accounts = new Accounts(db);
   const demo = (options.demo ?? false) && adapter.mode === "mock",
@@ -528,12 +531,15 @@ export async function createApp(options: AppOptions = {}) {
           "IDENTITY_MISMATCH",
           "预约身份必须与当前登录账号一致",
         );
-      res.status(201).json(
-        await service.create(user.id, input, key, {
+      const booking = await service.submit(user.id, input, key, {
           applicantName: user.name,
           studentId: user.studentId!,
-        }),
-      );
+        });
+      if (booking.status === "failed") {
+        res.status(409).json({ error: { code: "BOOKING_FAILED", message: booking.message, bookingId: booking.id } });
+      } else {
+        res.status(booking.status === "confirmed" ? 201 : 202).json(booking);
+      }
     },
   );
   app.post(
@@ -704,9 +710,9 @@ export async function createApp(options: AppOptions = {}) {
       z.strictObject({ decision: z.enum(["approve", "reject"]) }),
       req.body,
     );
-    res.json(
-      await service.review(String(req.params.id), res.locals.user!.id, decision),
-    );
+    const reviewed = await service.review(String(req.params.id), res.locals.user!.id, decision);
+    const booking = decision === "approve" ? await service.waitForResult(reviewed.id) : reviewed;
+    res.status(decision === "approve" && !["confirmed", "failed"].includes(booking.status) ? 202 : 200).json(booking);
   });
   app.post("/api/admin/alerts/:id/ack", csrf, async (req, res: AuthResponse) => {
     parse(z.strictObject({}), req.body);
@@ -1065,6 +1071,7 @@ export async function createApp(options: AppOptions = {}) {
     }, 60000);
     historyTimer.unref();
     let busy = false;
+    let syncBusy = false;
     let lastMonitor = 0;
     let initialSync = options.deferInitialSync && !demo;
     const timer = setInterval(() => {
@@ -1072,13 +1079,8 @@ export async function createApp(options: AppOptions = {}) {
       busy = true;
       void (async () => {
         try {
-          if (initialSync) {
-            initialSync = false;
-            if (await db.setting("sync_enabled") === "true") await service.sync();
-          } else {
-            await service.schedule();
-            await service.runOne();
-          }
+          await service.schedule();
+          await service.runOne({ lane: "booking" });
           if (Date.now() - lastMonitor >= 60000) {
             await monitor(db, adapter);
             lastMonitor = Date.now();
@@ -1094,11 +1096,29 @@ export async function createApp(options: AppOptions = {}) {
       })();
     }, interval);
     timer.unref();
+    const syncTimer = setInterval(() => {
+      if (syncBusy || connectorChecking) return;
+      syncBusy = true;
+      void (async () => {
+        try {
+          if (initialSync) {
+            initialSync = false;
+            if (await db.setting("sync_enabled") === "true") await service.enqueue("sync");
+          }
+          await service.runOne({ lane: "sync" });
+        } catch {
+          await db.audit("system", "worker.error", "system", { code: "SYNC_WORKER_ERROR" }).catch(() => undefined);
+        } finally { syncBusy = false; }
+      })();
+    }, interval);
+    syncTimer.unref();
     return async () => {
       clearInterval(historyTimer);
       clearInterval(timer);
+      clearInterval(syncTimer);
       await historyTask;
-      while (busy) await new Promise((resolve) => setTimeout(resolve, 20));
+      while (busy || syncBusy) await new Promise((resolve) => setTimeout(resolve, 20));
+      await service.drain();
     };
   }
   return { app, db, adapter, service, startWorker };

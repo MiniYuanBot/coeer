@@ -13,7 +13,7 @@ import {
     Textarea,
     cn,
 } from '@/components/coeer'
-import { spaceApi, useSpaces, useSpaceResource } from '@/hooks/useSpaces'
+import { spaceApi, SpaceApiError, useSpaces, useSpaceResource } from '@/hooks/useSpaces'
 import { bookingStatusTone, spaceModuleLabels, syncLabel } from '@/components/coeer/lib/spaces'
 import {
     addDays,
@@ -103,6 +103,10 @@ function SpaceDetailPage() {
             })
             void navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: booking.id } })
         } catch (error) {
+            if (error instanceof SpaceApiError && error.bookingId) {
+                void navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: error.bookingId } })
+                return
+            }
             setMessage((error as Error).message)
         } finally {
             setBusy(false)
@@ -158,7 +162,7 @@ function SpaceDetailPage() {
                             <Input
                                 type="date"
                                 min={today()}
-                                max={config!.horizon === null ? undefined : addDays(today(), config!.horizon)}
+                                max={addDays(today(), config!.horizon)}
                                 value={date}
                                 onChange={(event) =>
                                     event.target.value &&
@@ -171,7 +175,7 @@ function SpaceDetailPage() {
                         </Field>
                     </div>
                     <div className="grid grid-cols-7 gap-1.5">
-                        {Array.from({ length: config!.horizon === null ? 7 : Math.min(7, config!.horizon + 1) }, (_, index) =>
+                        {Array.from({ length: Math.min(7, config!.horizon + 1) }, (_, index) =>
                             addDays(today(), index),
                         ).map((day) => (
                             <Button
@@ -323,7 +327,7 @@ function SpaceDetailPage() {
                                 !user || !user.studentId || !selection || user.bookingPermission === 'blocked'
                             }
                         >
-                            提交预约申请
+                            {busy ? '正在核验官网预约结果…' : '提交预约申请'}
                         </Button>
                     </form>
                     <p className="text-xs leading-6 text-muted-foreground">
@@ -331,7 +335,7 @@ function SpaceDetailPage() {
                             ? '当前仅供查询，暂不接受预约。'
                             : space.policy.kind === 'meeting' && space.policy.approval
                               ? '此空间需要官方审批，请以最终确认结果为准。'
-                              : '申请提交后将核对官方结果，请以最终确认状态为准。'}
+                              : '提交后会实时查询官网并核对预约结果，请等待返回。'}
                     </p>
                 </Card>
             </div>

@@ -54,8 +54,10 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
   }
   let response: Response
   try {
-    // A date outside the local cache may need a full upstream room-list read.
-    const timeout = ['GET', 'HEAD'].includes(request.method) ? 120000 : 30000
+    // Reads use PostgreSQL only. Submission waits for the official write and its
+    // independent result query; a proxy timeout must not masquerade as rejection.
+    const submission = request.method === 'POST' && (path === '/bookings' || /^\/admin\/bookings\/[^/]+\/review$/.test(path))
+    const timeout = submission ? 650000 : 30000
     response = await fetch(target, { method: request.method, headers, body, redirect: 'error', signal: AbortSignal.timeout(timeout) })
   } catch {
     return error(503, 'SPACE_UNAVAILABLE', '空间预约服务暂不可用，请稍后重试')

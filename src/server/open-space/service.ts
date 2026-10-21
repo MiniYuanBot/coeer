@@ -1,4 +1,5 @@
 import { randomUUID, createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 import { DB } from "./db.js";
 import { Accounts } from "./accounts.js";
 import {
@@ -91,19 +92,21 @@ const reserveStatuses =
   "'queued','submitting','accepted','pending_approval','confirmed','uncertain','manual_review','cancel_requested','cancelling','cancel_uncertain'";
 export class BookingService {
   private syncInFlight?: Promise<void>;
-  private availabilityInFlight = new Map<string, Promise<void>>();
+  private submissions = new Map<string, Promise<Booking>>();
+  private executions = new Set<Promise<boolean>>();
   constructor(
     readonly db: DB,
     readonly adapter: OfficialAdapter,
-    readonly horizon = 14,
+    readonly horizon = 7,
     readonly staleMs = 180000,
     readonly publicBookingUserId?: string,
+    readonly bookingWaitMs = (adapter.operationTimeoutMs ?? 5000) * 2 + 10000,
   ) {}
   get followsUpstream() {
     return this.adapter.mode === "official" && this.adapter.rulesSource === "upstream";
   }
   get bookingHorizon() {
-    return this.followsUpstream ? null : this.horizon;
+    return this.horizon;
   }
   async space(id: string): Promise<SpaceRow> {
     const s = await this.db.get<SpaceRow>("SELECT * FROM spaces WHERE id=?", id);
@@ -111,8 +114,8 @@ export class BookingService {
     return s;
   }
   publicSpace(s: SpaceRow, admin = false): Space {
-    const grant = this.adapter.publication?.(s.id);
-    if (!admin && s.provider === "official" && !grant)
+    const grant = this.followsUpstream ? undefined : this.adapter.publication?.(s.id);
+    if (!admin && s.provider === "official" && !this.followsUpstream && !grant)
       throw new AppError(404, "NOT_FOUND", "空间不存在");
     const publicValues =
       !admin && s.provider === "official" ? grant : undefined;
@@ -136,7 +139,7 @@ export class BookingService {
       ...(admin
         ? {
             sourceMetadata: JSON.parse(s.source_metadata),
-            publicationAllowed: s.provider !== "official" || !!grant,
+            publicationAllowed: s.provider !== "official" || (this.followsUpstream ? s.permission === "allowed" : !!grant),
           }
         : {}),
     };
@@ -145,7 +148,7 @@ export class BookingService {
     return (
       s.provider === this.adapter.mode &&
       (s.provider !== "official" ||
-        (!!this.adapter.publication?.(s.id) && s.permission === "allowed"))
+        ((this.followsUpstream || !!this.adapter.publication?.(s.id)) && s.permission === "allowed"))
     );
   }
   async spaces(admin = false): Promise<Space[]> {
@@ -161,45 +164,25 @@ export class BookingService {
     if (
       !validDate(date) ||
       date < today() ||
-      (!this.followsUpstream && date > addDays(today(), this.horizon))
+      date > addDays(today(), this.horizon)
     )
       throw new AppError(
         400,
         "DATE_RANGE",
-        this.followsUpstream ? "请选择有效且未过去的预约日期" : `请选择未来 ${this.horizon} 天内的日期`,
+        `请选择今天至 ${this.horizon} 天后的预约日期`,
       );
   }
-  /** Date queries outside the warm cache use the same live upstream in every environment. */
-  private async refreshAvailability(spaceId: string, date: string) {
-    this.checkDate(date);
-    if (!this.followsUpstream || await this.db.setting("sync_enabled") !== "true") return;
-    const key = `${spaceId}:${date}`;
-    const pending = this.availabilityInFlight.get(key);
-    if (pending) return pending;
-    const operation = (async () => {
-      const snapshot = await this.bounded(signal => this.adapter.availability(spaceId, date, { signal }));
-      await this.db.run(
-        "INSERT INTO snapshots VALUES(?,?,?,?,?) ON CONFLICT(space_id,date) DO UPDATE SET slots=excluded.slots,included_refs=excluded.included_refs,observed_at=excluded.observed_at WHERE excluded.observed_at>=snapshots.observed_at",
-        spaceId, date, JSON.stringify(snapshot.slots), JSON.stringify(snapshot.includedRefs), snapshot.observedAt ?? Date.now(),
-      );
-    })().finally(() => this.availabilityInFlight.delete(key));
-    this.availabilityInFlight.set(key, operation);
-    return operation;
-  }
-  async availability(spaceId: string, date: string, admin = false, refresh = true): Promise<Availability> {
+  /** Page reads use PostgreSQL only, including missing or expired dates. */
+  async availability(spaceId: string, date: string, admin = false): Promise<Availability> {
     this.checkDate(date);
     const space = await this.space(spaceId);
     if (!admin && (!space.published || !this.canPublish(space)))
       throw new AppError(404, "NOT_FOUND", "空间不存在");
-    let row = await this.db.get<SnapshotRow>(
+    const row = await this.db.get<SnapshotRow>(
       "SELECT * FROM snapshots WHERE space_id=? AND date=?",
       spaceId,
       date,
     );
-    if (refresh && this.followsUpstream && (!row || Date.now() - row.observed_at > this.staleMs)) {
-      await this.refreshAvailability(spaceId, date);
-      row = await this.db.get<SnapshotRow>("SELECT * FROM snapshots WHERE space_id=? AND date=?", spaceId, date);
-    }
     const stale = !row || Date.now() - row.observed_at > this.staleMs;
     const refs = new Set<string>(row ? JSON.parse(row.included_refs) : []);
     const local = (await this.db
@@ -302,7 +285,7 @@ export class BookingService {
       id: b.id,
       spaceId: b.space_id,
       spaceName:
-        s.provider === "official"
+        s.provider === "official" && !this.followsUpstream
           ? (this.adapter.publication?.(s.id)?.name ?? "已撤回公开的空间")
           : s.name,
       module: s.module,
@@ -398,10 +381,6 @@ export class BookingService {
     const fingerprint = createHash("sha256")
       .update(JSON.stringify(applicant ? { ...input, ...applicant } : input))
       .digest("hex");
-    // Refresh remote data before taking the capacity/ownership transaction lock.
-    if (this.followsUpstream && !await this.db.get("SELECT id FROM bookings WHERE user_id=? AND idempotency_key=?", userId, key)) {
-      await this.availability(input.spaceId, input.date);
-    }
     return this.db.tx(async () => {
       const account = applicant
         ? await new Accounts(this.db).user(userId)
@@ -428,6 +407,8 @@ export class BookingService {
       }
       if (this.adapter.mode === "official-disabled")
         throw new AppError(503, "ADAPTER_DISABLED", "真实预约接入尚未开放");
+      if (await this.db.setting("paused") === "true" || await this.db.setting("booking_enabled") !== "true")
+        throw new AppError(409, "BOOKING_PAUSED", "预约处理已暂停，请稍后重试");
       if (
         applicant &&
         userId.startsWith("guest-") &&
@@ -465,6 +446,8 @@ export class BookingService {
       const step = policy.stepMinutes;
       if (
         step <= 0 ||
+        !Number.isInteger(input.start) || !Number.isInteger(input.end) ||
+        input.start < 0 || input.end > 1440 ||
         (!this.followsUpstream && (input.start % step || input.end % step)) ||
         input.end <= input.start ||
         slotInstant(input.date, input.start) <= Date.now()
@@ -478,25 +461,31 @@ export class BookingService {
         throw new AppError(400, "QUANTITY", "会议室按整间预约");
       if (policy.kind === "activity" && input.quantity > policy.capacity)
         throw new AppError(400, "QUANTITY", "预约人数超过空间容量");
-      const availability = await this.availability(s.id, input.date, false, false);
-      if (availability.stale)
+      const availability = await this.availability(s.id, input.date);
+      if (!this.followsUpstream && availability.stale)
         throw new AppError(409, "STALE", "空间状态已过期，请等待同步后重试");
       const selected = availability.slots.filter((x) =>
         overlaps(input.start, input.end, x.start, x.end),
       );
-      if (
+      if (!this.followsUpstream && (
         !coversRange(availability.slots, input.start, input.end) ||
         selected.some(
           (x) =>
             x.state !== "available" ||
             (x.kind === "activity" && x.remaining < input.quantity),
         )
-      )
+      ))
         throw new AppError(409, "CONFLICT", "所选时段已不可预约，请重新选择");
+      // A missing/stale upstream snapshot must not prevent live verification on POST.
+      // Local reservations still hold capacity before any official network call.
+      if (this.followsUpstream && await this.db.get(
+        `SELECT id FROM bookings WHERE space_id=? AND date=? AND start<? AND end>? AND status IN (${reserveStatuses}) LIMIT 1`,
+        s.id, input.date, input.end, input.start,
+      )) throw new AppError(409, "CONFLICT", "所选时段已被 COEER 的预约占用，请重新选择");
       const submissionUserId = applicant
         ? (this.publicBookingUserId ?? userId)
         : userId;
-      this.adapter.checkCreate?.({
+      if (!this.followsUpstream) this.adapter.checkCreate?.({
         requestId: "preflight",
         module: s.module,
         ...input,
@@ -545,11 +534,43 @@ export class BookingService {
       return this.project(await this.booking(id), true);
     });
   }
-  async review(id: string, actor: string, decision: "approve" | "reject") {
-    if (this.followsUpstream && decision === "approve") {
+  /** Persist the intent first; only report success after independently verified upstream results. */
+  async submit(...args: Parameters<BookingService["create"]>): Promise<Booking> {
+    const booking = await this.create(...args);
+    return this.waitForResult(booking.id);
+  }
+  async waitForResult(id: string): Promise<Booking> {
+    const booking = await this.booking(id);
+    if (!["queued", "submitting", "accepted", "uncertain"].includes(booking.status)) return this.project(booking, true);
+    const pending = this.submissions.get(booking.id);
+    if (pending) return pending;
+    const operation = this.waitForSubmission(booking.id).finally(() => this.submissions.delete(booking.id));
+    this.submissions.set(booking.id, operation);
+    return operation;
+  }
+  private async waitForSubmission(id: string): Promise<Booking> {
+    const deadline = Date.now() + this.bookingWaitMs;
+    while (Date.now() < deadline) {
       const booking = await this.booking(id);
-      await this.availability(booking.space_id, booking.date);
+      if (!["queued", "submitting", "accepted", "uncertain"].includes(booking.status))
+        return this.project(booking, true);
+      // A targeted durable claim can run beside a long background synchronization.
+      // Other processes share the same PostgreSQL claim, so writes are never replayed.
+      const remaining = deadline - Date.now();
+      // The deadline ends only this HTTP wait, never an in-flight official write.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const result = await Promise.race([
+        this.runOne({ lane: "booking", bookingId: id }),
+        new Promise<"deadline">((resolve) => { timer = setTimeout(() => resolve("deadline"), Math.max(1, remaining)); }),
+      ]).finally(() => { if (timer) clearTimeout(timer); });
+      if (result === "deadline") break;
+      if (!result) await delay(Math.min(50, Math.max(1, deadline - Date.now())));
     }
+    // An HTTP deadline cannot establish failure of an official write. Preserve its
+    // durable state and booking ID for subsequent database-only status reads.
+    return this.project(await this.booking(id), true);
+  }
+  async review(id: string, actor: string, decision: "approve" | "reject") {
     return this.db.tx(async () => {
       const b = await this.booking(id);
       if (b.status !== "pending_review")
@@ -581,8 +602,8 @@ export class BookingService {
             "NOT_BOOKABLE",
             "空间或时间已不可预约，请驳回申请",
           );
-        const a = await this.availability(s.id, b.date, false, false);
-        if (
+        const a = await this.availability(s.id, b.date);
+        if (!this.followsUpstream && (
           a.stale ||
           !coversRange(a.slots, b.start, b.end) ||
           a.slots
@@ -592,13 +613,17 @@ export class BookingService {
                 x.state !== "available" ||
                 (x.kind === "activity" && x.remaining < b.quantity),
             )
-        )
+        ))
           throw new AppError(
             409,
             "CONFLICT",
             "时段状态已变化，请等待同步或驳回申请",
           );
-        this.adapter.checkCreate?.({
+        if (this.followsUpstream && await this.db.get(
+          `SELECT id FROM bookings WHERE id<>? AND space_id=? AND date=? AND start<? AND end>? AND status IN (${reserveStatuses}) LIMIT 1`,
+          b.id, s.id, b.date, b.end, b.start,
+        )) throw new AppError(409, "CONFLICT", "所选时段已被 COEER 的预约占用，请驳回申请");
+        if (!this.followsUpstream) this.adapter.checkCreate?.({
           requestId: b.id,
           spaceId: b.space_id,
           module: s.module,
@@ -673,13 +698,6 @@ export class BookingService {
       const catalog = await this.bounded((signal) =>
         this.adapter.listSpaces({ signal }),
       );
-      const snapshots: Array<{
-        spaceId: string;
-        date: string;
-        slots: Slot[];
-        includedRefs: string[];
-        observedAt?: number;
-      }> = [];
       const publishIds = new Set(
         (await this.db
           .all<{ id: string }>(
@@ -694,34 +712,18 @@ export class BookingService {
           (this.adapter.mode !== "official" ||
             this.adapter.publication?.(space.id)),
       );
-      // Date-first iteration reuses the official paginated HTML/JSON batch for all spaces.
-      // This is prefetching only. Other upstream dates are loaded on demand.
-      const warmDays = this.followsUpstream ? Math.min(this.horizon, 1) : this.horizon;
-      for (let i = 0; i <= warmDays; i++) {
-        for (const space of published) {
-          const date = addDays(firstDate, i);
-          const data = await this.bounded((signal) =>
-            this.adapter.availability(space.id, date, { signal }),
-          );
-          snapshots.push({
-            spaceId: space.id,
-            date,
-            ...data,
-            observedAt: data.observedAt ?? Date.now(),
-          });
-        }
-      }
       await this.db.tx(async () => {
         if (this.adapter.catalogComplete !== false)
           await this.db.run(
-            "UPDATE spaces SET upstream_enabled=0 WHERE provider=?",
+            "UPDATE spaces SET upstream_enabled=0,published=CASE WHEN ?=1 THEN 0 ELSE published END,bookable=CASE WHEN ?=1 THEN 0 ELSE bookable END WHERE provider=?",
+            Number(this.followsUpstream), Number(this.followsUpstream),
             this.adapter.mode,
           );
         for (const s of catalog) {
           const published = this.followsUpstream && s.permission === "allowed" && !!this.adapter.publication?.(s.id);
           const bookable = published && s.enabled && s.module === "meeting" && s.policy.rulesVerified === true && s.metadata?.reservationCost === 0;
           await this.db.run(
-            "INSERT INTO spaces(id,module,official_id,name,location,description,capacity,amenities,policy,upstream_enabled,provider,permission,source_metadata,published,bookable) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET official_id=excluded.official_id,upstream_enabled=excluded.upstream_enabled,policy=excluded.policy,permission=excluded.permission,source_metadata=excluded.source_metadata,capacity=CASE WHEN excluded.provider='official' THEN excluded.capacity ELSE spaces.capacity END,amenities=CASE WHEN excluded.provider='official' THEN excluded.amenities ELSE spaces.amenities END,published=CASE WHEN ?=1 THEN excluded.published ELSE spaces.published END,bookable=CASE WHEN ?=1 THEN excluded.bookable ELSE spaces.bookable END",
+            "INSERT INTO spaces(id,module,official_id,name,location,description,capacity,amenities,policy,upstream_enabled,provider,permission,source_metadata,published,bookable) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET official_id=excluded.official_id,upstream_enabled=excluded.upstream_enabled,policy=excluded.policy,permission=excluded.permission,source_metadata=excluded.source_metadata,name=CASE WHEN ?=1 THEN excluded.name ELSE spaces.name END,location=CASE WHEN ?=1 THEN excluded.location ELSE spaces.location END,description=CASE WHEN ?=1 THEN excluded.description ELSE spaces.description END,capacity=CASE WHEN excluded.provider='official' THEN excluded.capacity ELSE spaces.capacity END,amenities=CASE WHEN excluded.provider='official' THEN excluded.amenities ELSE spaces.amenities END,published=CASE WHEN ?=1 THEN excluded.published ELSE spaces.published END,bookable=CASE WHEN ?=1 THEN excluded.bookable ELSE spaces.bookable END",
             s.id,
             s.module,
             s.officialId,
@@ -739,22 +741,41 @@ export class BookingService {
             Number(bookable),
             Number(this.followsUpstream),
             Number(this.followsUpstream),
+            Number(this.followsUpstream),
+            Number(this.followsUpstream),
+            Number(this.followsUpstream),
           );
         }
-        for (const s of snapshots)
-          await this.db.run(
+      });
+      let snapshotCount = 0;
+      // Cover every bookable date, not just today. Date-first reads share a single
+      // official room-list batch; each completed date becomes visible immediately.
+      for (let offset = 0; offset <= this.horizon; offset++) {
+        const date = addDays(firstDate, offset);
+        const snapshots: Array<{ spaceId: string; slots: Slot[]; includedRefs: string[]; observedAt?: number }> = [];
+        for (const space of published) {
+          // Yield between bounded reads so an interactive submission does not wait
+          // behind the rest of this multi-date synchronization.
+          while (this.submissions.size) await delay(25);
+          if (await this.db.setting("sync_enabled") !== "true") throw new AppError(409, "SYNC_PAUSED", "同步已暂停");
+          const data = await this.bounded((signal) => this.adapter.availability(space.id, date, { signal }));
+          snapshots.push({ spaceId: space.id, ...data });
+        }
+        await this.db.tx(async () => {
+          for (const snapshot of snapshots) await this.db.run(
             "INSERT INTO snapshots VALUES(?,?,?,?,?) ON CONFLICT(space_id,date) DO UPDATE SET slots=excluded.slots,included_refs=excluded.included_refs,observed_at=excluded.observed_at WHERE excluded.observed_at>=snapshots.observed_at",
-            s.spaceId,
-            s.date,
-            JSON.stringify(s.slots),
-            JSON.stringify(s.includedRefs),
-            s.observedAt ?? Date.now(),
+            snapshot.spaceId, date, JSON.stringify(snapshot.slots), JSON.stringify(snapshot.includedRefs), snapshot.observedAt ?? Date.now(),
           );
+          snapshotCount += snapshots.length;
+          await this.db.run("UPDATE sync_runs SET snapshot_count=? WHERE id=?", snapshotCount, id);
+        });
+      }
+      await this.db.tx(async () => {
         await this.db.run(
           "UPDATE sync_runs SET status=?,finished_at=?,snapshot_count=? WHERE id=?",
           "success",
           Date.now(),
-          snapshots.length,
+          snapshotCount,
           id,
         );
         await this.db.run("DELETE FROM snapshots WHERE date<?", today());
@@ -855,18 +876,31 @@ export class BookingService {
       }
     });
   }
-  async runOne(): Promise<boolean> {
+  runOne(options: { lane?: "sync" | "booking"; bookingId?: string } = {}): Promise<boolean> {
+    const execution = this.performOne(options);
+    this.executions.add(execution);
+    return execution.finally(() => this.executions.delete(execution));
+  }
+  /** HTTP deadlines never cancel official writes; shutdown waits for their persisted results. */
+  async drain(): Promise<void> {
+    while (this.executions.size) await Promise.allSettled([...this.executions]);
+  }
+  private async performOne(options: { lane?: "sync" | "booking"; bookingId?: string }): Promise<boolean> {
     await this.recoverExpired();
     const job = await this.db.tx(async () => {
-      if (await this.db.get("SELECT id FROM jobs WHERE state='running'"))
-        return undefined;
       const paused =
         await this.db.setting("paused") === "true" ||
         await this.db.setting("booking_enabled") !== "true";
       const j = await this.db.get<Job>(
-        `SELECT * FROM jobs WHERE state='pending' AND run_at<=? AND (booking_id IS NULL OR booking_id IN (SELECT id FROM bookings WHERE provider=?)) ${await this.db.setting("sync_enabled") !== "true" ? "AND type<>'sync'" : ""} ${paused ? "AND type NOT IN ('create','cancel')" : ""} ORDER BY id LIMIT 1`,
+        `SELECT * FROM jobs WHERE state='pending' AND run_at<=? AND (booking_id IS NULL OR booking_id IN (SELECT id FROM bookings WHERE provider=?))
+         AND NOT EXISTS (SELECT 1 FROM jobs active WHERE active.state='running' AND (active.type='sync')=(jobs.type='sync'))
+         ${options.lane === "sync" ? "AND type='sync'" : options.lane === "booking" ? "AND type<>'sync'" : ""}
+         ${options.bookingId ? "AND booking_id=?" : ""}
+         ${await this.db.setting("sync_enabled") !== "true" ? "AND type<>'sync'" : ""} ${paused ? "AND type NOT IN ('create','cancel')" : ""}
+         ORDER BY CASE WHEN type='sync' THEN 1 ELSE 0 END,id LIMIT 1`,
         Date.now(),
         this.adapter.mode,
+        ...(options.bookingId ? [options.bookingId] : []),
       );
       if (j)
         await this.db.run(
@@ -899,6 +933,10 @@ export class BookingService {
           });
         }
         if (job.booking_id) {
+          if (e instanceof AdapterError && e.ref) await this.db.run(
+            "UPDATE bookings SET official_ref=? WHERE id=? AND official_ref IS NULL",
+            e.ref, job.booking_id,
+          );
           const b = await this.booking(job.booking_id);
           if (!terminal(b.status)) {
             if (
@@ -1010,6 +1048,10 @@ export class BookingService {
         }
         if (slotInstant(b.date, b.start) <= Date.now()) {
           await this.setStatus(b.id, "failed", "预约开始时间已过，申请未提交");
+          return;
+        }
+        if (!validDate(b.date) || b.date < today() || b.date > addDays(today(), this.horizon)) {
+          await this.setStatus(b.id, "failed", `预约日期已超出可提前 ${this.horizon} 天的范围，申请未提交`);
           return;
         }
         await this.setStatus(b.id, "submitting", "正在提交预约系统");

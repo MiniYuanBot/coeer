@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { SpaceConfig, SpaceSession } from '@shared/contracts/spaces'
 
 let csrf: string | null = null
+export class SpaceApiError extends Error {
+    constructor(message: string, readonly bookingId?: string) { super(message) }
+}
 export async function spaceApi<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(`/api/open-space${path}`, {
         ...options,
@@ -18,7 +21,7 @@ export async function spaceApi<T>(path: string, options: RequestInit = {}): Prom
             window.location.assign(
                 `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`,
             )
-        throw new Error(body?.error?.message ?? '预约服务暂不可用，请稍后重试')
+        throw new SpaceApiError(body?.error?.message ?? '预约服务暂不可用，请稍后重试', body?.error?.bookingId)
     }
     if (body === null) throw new Error('服务返回的结果无法识别，请刷新后查看')
     return body as T

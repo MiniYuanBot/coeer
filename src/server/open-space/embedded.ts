@@ -10,20 +10,29 @@ import { communityIdentitySecret } from './coeer-identity'
 import { AuthenticationRecovery, loadAccountCredentials, loginAuthorizedAccount } from './adapters/official/recovery'
 import { AuthenticatedOfficialAdapter } from './adapters/official/authenticated'
 import type { LiveOfficialAdapter } from './adapters/official/live'
+import { createRuntimeLifecycle, type EmbeddedSpaceRuntime } from './runtime-lifecycle'
 
 // Keep the booking worker independent of route-module reloads in development.
 const key = Symbol.for('coeer.open-space.runtime')
-type Embedded = { url: string; close: () => Promise<void> }
-const state = globalThis as typeof globalThis & { [key]?: Promise<Embedded> }
+const state = globalThis as typeof globalThis & { [key]?: ReturnType<typeof createRuntimeLifecycle> }
 
-export function getEmbeddedSpaceServer(): Promise<Embedded> {
-  return state[key] ??= start().catch((error) => {
-    delete state[key]
-    throw error
+export function startEmbeddedSpaceServer(): Promise<EmbeddedSpaceRuntime> {
+  const lifecycle = state[key] ??= createRuntimeLifecycle(start, (error) => {
+    const code = (error as { code?: unknown })?.code
+    console.error(JSON.stringify({ event: 'spaces.runtime.start_failed', code: typeof code === 'string' && /^[A-Z0-9_]{1,64}$/.test(code) ? code : 'STARTUP_FAILED' }))
   })
+  return lifecycle.start()
 }
 
-async function start(): Promise<Embedded> {
+export function getEmbeddedSpaceServer(): Promise<EmbeddedSpaceRuntime> {
+  return state[key]?.get() ?? Promise.reject(new Error('Space background runtime has not started'))
+}
+
+export function stopEmbeddedSpaceServer(): Promise<void> {
+  return state[key]?.stop() ?? Promise.resolve()
+}
+
+async function start(): Promise<EmbeddedSpaceRuntime> {
   // Prefix every booking setting so its database/port/secrets cannot collide with COEER.
   const values = spaceEnvironment(process.env)
   const settings = runtime(values)
@@ -77,6 +86,7 @@ async function start(): Promise<Embedded> {
     adminPassword: settings.adminPassword,
     publicBookingUserId: values.PUBLIC_BOOKING_USER_ID || undefined,
     syncEnabled: values.SYNC_ENABLED === undefined ? undefined : values.SYNC_ENABLED === 'true',
+    horizon: Number(values.BOOKING_DAYS ?? 7),
     bookingEnabled: values.BOOKING_ENABLED === undefined ? undefined : values.BOOKING_ENABLED === 'true',
     deferInitialSync: settings.mode === 'official',
     serveClient: false,
@@ -102,10 +112,12 @@ async function start(): Promise<Embedded> {
   return {
     url: `http://127.0.0.1:${address.port}`,
     close: async () => {
-      await stopWorker()
-      await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+      // Refuse new work before draining timers, requests and any operation whose
+      // client deadline expired while the official request was still in flight.
+      const listenerClosed = new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+      await Promise.all([stopWorker(), listenerClosed])
+      await context.service.drain()
       await context.db.close()
-      delete state[key]
     },
   }
 }

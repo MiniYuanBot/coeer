@@ -69,6 +69,25 @@ function fixture(rulesSource: 'upstream' | 'contract' = 'upstream') {
 }
 
 describe('COEER official server rules', () => {
+    it('submits a persisted room after a cold process start using one fresh target-room read', async () => {
+        const { adapter, command, calls } = fixture()
+        expect(adapter.catalogComplete).toBe(false)
+        expect(await adapter.create(command)).toEqual({ ref: 'synthetic-reference' })
+        expect(calls.filter(call => call.operation === 'meetingList')).toHaveLength(1)
+        expect(calls.filter(call => call.operation === 'meetingSlots').map(call => call.form.ROOMMEETING_ID)).toEqual(['additional-room'])
+        expect(calls.filter(call => call.operation === 'profile')).toHaveLength(2)
+        expect(calls.filter(call => call.operation === 'verify')).toHaveLength(1)
+        expect(calls.filter(call => call.operation === 'create')).toHaveLength(1)
+        expect(calls.filter(call => call.operation === 'meetingDetail')).toHaveLength(1)
+        expect(adapter.publication(command.spaceId)?.officialId).toBe('additional-room')
+        expect(adapter.catalogComplete).toBe(false)
+    })
+    it.each(['denied-room', 'missing-room'])('rejects a cold-start submission for %s before initialization or save', async roomId => {
+        const { adapter, command, calls } = fixture()
+        await expect(adapter.create({ ...command, spaceId: spaceKey('meeting', roomId) })).rejects.toMatchObject({ code: 'CONFLICT' })
+        expect(calls.filter(call => ['meetingSlots', 'initialize', 'verify', 'create'].includes(call.operation))).toHaveLength(0)
+        expect(adapter.publication(spaceKey('meeting', roomId))).toBeUndefined()
+    })
     it('uses every permitted meeting room, the official grid, and final verify without static date or duration limits', async () => {
         const { adapter, command, calls } = fixture()
         const sources = await adapter.listSpaces()
@@ -77,7 +96,9 @@ describe('COEER official server rules', () => {
         expect(adapter.publication(spaceKey('meeting', 'denied-room'))).toBeUndefined()
         expect(sources.find(source => source.id === command.spaceId)?.policy).toMatchObject({ rulesSource: 'upstream', stepMinutes: 45, maxMinutes: 0, rulesVerified: true, approvalKnown: false })
         expect(() => adapter.checkCreate(command)).not.toThrow()
+        calls.length = 0
         expect(await adapter.create(command)).toEqual({ ref: 'synthetic-reference' })
+        expect(calls.filter(call => call.operation === 'meetingSlots').map(call => call.form.ROOMMEETING_ID)).toEqual(['additional-room'])
         expect(calls.find(call => call.operation === 'verify')?.form).toMatchObject({ START_DATE: targetDate(), START_TIME: '10:15', END_TIME: '12:30' })
         expect(calls.filter(call => call.operation === 'create')).toHaveLength(1)
     })
@@ -92,9 +113,25 @@ describe('COEER official server rules', () => {
     it('rechecks current official permissions before initialization even after an earlier allowed catalog', async () => {
         const { adapter, command, calls, control } = fixture()
         await adapter.listSpaces()
+        await adapter.availability(command.spaceId, command.date)
+        calls.length = 0
         control.revoked = true
         await expect(adapter.create(command)).rejects.toMatchObject({ code: 'CONFLICT' })
+        expect(calls.filter(call => call.operation === 'meetingList')).toHaveLength(1)
+        expect(calls.filter(call => call.operation === 'meetingSlots')).toHaveLength(0)
         expect(calls.filter(call => ['initialize', 'create'].includes(call.operation))).toHaveLength(0)
+    })
+    it('never treats a single-room preflight as a complete date batch for background synchronization', async () => {
+        const { adapter, command, calls, control } = fixture()
+        await adapter.listSpaces()
+        control.verifyCode = '0'
+        await expect(adapter.create(command)).rejects.toMatchObject({ code: 'RULE_REJECTED' })
+        calls.length = 0
+        await adapter.availability(spaceKey('meeting', 'room-one'), command.date)
+        expect(calls.filter(call => call.operation === 'meetingSlots').map(call => call.form.ROOMMEETING_ID)).toEqual(roomIds.slice(0, 4))
+        const count = calls.length
+        await adapter.availability(spaceKey('meeting', 'room-two'), command.date)
+        expect(calls).toHaveLength(count)
     })
     it('marks fresh upstream-disabled rooms unavailable without waiting for a catalog sync', async () => {
         const { adapter, command, control, calls } = fixture()

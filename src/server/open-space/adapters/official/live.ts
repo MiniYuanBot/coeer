@@ -151,11 +151,13 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     module: Module,
     date: string,
     options?: OperationOptions,
-    force = false,
+    targetSpaceId?: string,
   ): Promise<CachedPage> {
     const key = `${module}:${date}`,
       cached = this.#cache.get(key);
-    if (!force && cached && cached.expires > Date.now()) return cached;
+    // A write preflight always rereads the list, but only enriches its target room.
+    // Such a partial batch must neither reuse nor replace the background batch cache.
+    if (!targetSpaceId && cached && cached.expires > Date.now()) return cached;
     if (!this.config.modules.includes(module))
       throw new AdapterError("FORBIDDEN");
     try {
@@ -210,6 +212,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       for (const card of result.cards) {
         if (
           module !== "meeting" ||
+          (targetSpaceId !== undefined && card.source.id !== targetSpaceId) ||
           card.source.permission !== "allowed" ||
           !card.source.enabled
         )
@@ -250,11 +253,11 @@ export class LiveOfficialAdapter implements OfficialAdapter {
         }
       }
       result.expires = Date.now() + this.config.cacheMs;
-      this.#cache.set(key, result);
+      if (!targetSpaceId) this.#cache.set(key, result);
       this.#error = null;
       return result;
     } catch (e) {
-      this.#cache.delete(key);
+      if (!targetSpaceId) this.#cache.delete(key);
       this.#error = e instanceof AdapterError ? e.code : "INVALID_RESPONSE";
       throw e;
     }
@@ -475,12 +478,26 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     command: CreateCommand,
     options?: OperationOptions,
   ): Promise<{ ref: string }> {
-    this.checkCreate(command);
+    const cachedSource = this.#sources.get(command.spaceId);
+    const coldStart = this.rulesSource === "upstream" && !cachedSource;
+    if (!coldStart) this.checkCreate(command);
+    else if (!this.config.writes.enabled || !this.config.writes.contract ||
+             !this.config.account.profileUserId || !this.config.account.bookingPersonId ||
+             command.module !== "meeting" || !validDate(command.date))
+      throw new AdapterError("AUTHORIZATION_REQUIRED");
     if (await this.bindings.byRequest(command.requestId))
       throw new AdapterError("AUTHORIZATION_REQUIRED");
+    const fresh = await this.pages(cachedSource?.module ?? command.module, command.date, options, command.spaceId),
+      card = fresh.cards.find((c) => c.source.id === command.spaceId);
+    if (coldStart) {
+      if (!card || card.source.permission !== "allowed" || !card.source.enabled)
+        throw new AdapterError("CONFLICT");
+      // PostgreSQL can outlive this process. Bootstrap only the freshly verified
+      // target; a full catalog sync remains the background worker's responsibility.
+      this.#sources.set(card.source.id, card.source);
+      this.checkCreate(command);
+    }
     const source = this.#sources.get(command.spaceId)!;
-    const fresh = await this.pages(source.module, command.date, options, true),
-      card = fresh.cards.find((c) => c.source.id === source.id);
     const selected =
       card?.slots.filter(
         (s) => s.start < command.end && command.start < s.end,

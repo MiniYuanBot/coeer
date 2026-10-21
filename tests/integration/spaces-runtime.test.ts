@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { getEmbeddedSpaceServer } from '../../src/server/open-space/embedded'
+import { getEmbeddedSpaceServer, startEmbeddedSpaceServer } from '../../src/server/open-space/embedded'
 import { spaceEnvironment } from '../../src/server/open-space/environment'
 import { communityIdentitySecret, signCommunityIdentity } from '../../src/server/open-space/coeer-identity'
 import { createTestDatabase, databaseUrl } from '../support/postgres'
@@ -140,7 +140,8 @@ it('starts exactly one embedded engine and serves its API without a sibling proj
     vi.stubEnv('DATABASE_URL', databaseUrl!)
     vi.stubEnv('OPENSPACE_DATABASE_SCHEMA', scope.name)
     vi.stubEnv('OPENSPACE_ADAPTER_MODE', 'mock')
-    const first = getEmbeddedSpaceServer()
+    await expect(getEmbeddedSpaceServer()).rejects.toThrow('has not started')
+    const first = startEmbeddedSpaceServer()
     expect(getEmbeddedSpaceServer()).toBe(first)
     running = await first
     expect(new URL(running.url).hostname).toBe('127.0.0.1')

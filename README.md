@@ -35,8 +35,10 @@ loader、写入走 Server Functions。
 普通用户注册须使用 `xxxxxxxxxx@stu.pku.edu.cn`（10 位数字学号），管理员由服务端创建，
 可使用其他邮箱。空间预约共用 COEER 登录身份，管理员直接拥有预约管理权限；
 白名单按学号维护，昵称和密码统一在 `/profile` 修改。
-开发与部署默认使用官方预约，正常配置采用 `rulesSource: "upstream"`，空间权限、日期和
-时段跟随官网；本机校园网直连与生产 Connector 配置，参见
+开发与部署默认使用官方预约，正常配置采用 `rulesSource: "upstream"`，空间权限和时段
+跟随官网。最多提前 7 天预约（今天至第 7 天，共 8 个日期），可通过
+`OPENSPACE_BOOKING_DAYS` 修改并重启。后台每 5 分钟完整同步，页面查询只访问 PostgreSQL；
+提交先本地排除冲突，再实时核对官网并等待提交结果。本机校园网直连与生产 Connector 配置，参见
 [空间预约配置与使用](docs/open-space.md)。
 
 ### 项目检查
@@ -84,13 +86,16 @@ pnpm check
    pnpm dev          # 开发模式，默认 http://localhost:3000
    ```
 
-   社区与预约复用 `DATABASE_URL`。预约表首次使用时自动初始化到 `coeer_spaces`
+   社区与预约复用 `DATABASE_URL`。预约后台启动时自动初始化表到 `coeer_spaces`
    schema，可通过 `OPENSPACE_DATABASE_SCHEMA` 调整；旧 SQLite 文件不会自动导入。
    官方预约的共用私密路径与开关放在忽略的 `.env.local`，实际账号、密钥、会话和表单
    协议放在仓库外 `../.coeer-local`。开发与部署使用同一业务规则；本机通过校园网直连，
    生产通过隔离 Connector 访问官网。`pnpm spaces:campus login` 登录，
    `pnpm spaces:campus probe` 只读检查，不使用 VPN。
    配置细节见 [空间预约](docs/open-space.md#本机校园网直连)。
+
+   开发服务开始监听后后台即启动，不依赖页面访问；生产服务在服务端入口启动后台。
+   构建和静态预渲染不会启动同步。启动失败时预约 API 返回 503，查询不会反复重启后台。
 
    生产模式：
 

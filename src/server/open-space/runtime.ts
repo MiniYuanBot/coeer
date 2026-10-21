@@ -35,6 +35,8 @@ export function runtime(env: NodeJS.ProcessEnv) {
   if (!env.DATABASE_URL || !/^postgres(?:ql)?:\/\//.test(env.DATABASE_URL))
     throw new Error("Reservations require a PostgreSQL DATABASE_URL");
   const port = Number(env.PORT ?? 3001);
+  if (env.BOOKING_DAYS !== undefined)
+    z.coerce.number().int().min(1).max(366).parse(env.BOOKING_DAYS);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error("Invalid PORT");
   for (const name of [
