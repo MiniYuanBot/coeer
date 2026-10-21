@@ -29,9 +29,10 @@ functions）→ `services` → `queries` → DB；输入在 `shared/contracts` �
 
 空间预约直接使用 `app/routes/_authed/spaces` 与 `app/routes/_authed/admin/spaces`
 文件路由，复用 `components/coeer` 的公共组件，不设置独立 UI、CSS 或路由适配器。
-`app/hooks/useSpaces` 只管理数据与预约身份；后端通过登录守卫下的
+`app/hooks/useSpaces` 只管理预约数据与当前 COEER 账号状态；后端通过登录守卫下的
 `/api/open-space/*` 进入保留的预约引擎。共享接口位于 `shared/contracts/spaces.ts`，
-原预约领域类型保留在 `shared/open-space`。配置与运维见 [空间预约](open-space.md)。
+原预约领域类型保留在 `shared/open-space`。预约与社区共用 `DATABASE_URL`，表位于独立
+`coeer_spaces` schema；不再使用 SQLite。配置与运维见 [空间预约](open-space.md)。
 
 ### 1.1 目录导览
 
@@ -227,6 +228,14 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
   - 用户被停用（`isActive=false`）或已删除 → 立即清 session 并返回未授权；
   - role/name 以 DB 为准 → 角色降级、改名立即生效，不再受 7 天 cookie 影响。
 - 登录时检查 `isActive`，停用账号无法登录。
+- 普通注册只接受 `10 位学号@stu.pku.edu.cn`；其他邮箱仅可用于服务端创建的管理员。
+  `/profile` 可修改昵称与密码；改密需验证当前密码，更新后其他设备的旧会话失效。
+- 空间预约直接从当前学生邮箱提取学号，白名单按学号与预约权限维护；显示昵称时采用
+  COEER 当前昵称，不要求管理员录入姓名。COEER 管理员直接拥有预约管理权限。
+  独立预约身份页面已移除，旧路径仅做重定向。
+- 网关只转发服务端生成的短期 HMAC 身份签名，不转发社区 Cookie，也不信任客户端
+  身份头；预约引擎校验签名、CSRF、归属与白名单。未加入白名单的学生仍可查询和管理
+  自己的已有预约，但不能创建新预约。
 
 ### 4.3 权限核查清单（Server Service = 安全边界）
 
@@ -243,6 +252,7 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 | 积分 | `earn/spend` 授权目标用户=本人（admin 例外），内部统一走 `PointService.spendInTx` |
 | 宿舍 | 问卷提交/计算/确认均需登录；管理操作需 admin（状态机与并发仍有改进空间，见 §6） |
 | 用户统计 | `getUserStatsFn` 仅 admin（service 内抛权限拒绝） |
+| 空间预约 | 查询需 COEER 登录；提交需学生邮箱对应学号在白名单且未被禁止；审核/配置/白名单管理仅平台 admin，前后端双重校验；预约详情与取消检查归属 |
 
 ### 4.4 数据库（Drizzle, PostgreSQL）
 
@@ -263,6 +273,12 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 | 卡片/成就 | `cards`, `user_cards`（userId+cardId 唯一）, `achievements`, `user_achievements` |
 | 商城 | `redeem_items`, `redeem_orders`（含 `quantity`） |
 | 宿舍 | `dorm_cycles`, `dorm_questionnaires`, `dorm_rooms`, `dorm_student_profiles` |
+| 空间预约（`coeer_spaces`） | `spaces`, `snapshots`, `bookings`, `booking_events`, `booking_allowlist`, `user_accounts`, `jobs`, `audit`, `sync_runs`, `official_bindings` 等 |
+
+社区表继续使用 Drizzle schema；预约表由 `server/open-space/postgres-schema.ts` 初始化，
+使用异步 `pg` 查询并复用 `DATABASE_URL`。`OPENSPACE_DATABASE_SCHEMA` 可调整预约表的
+命名空间。旧 SQLite 文件保留供单独迁移，不自动导入。自动测试创建并清理带随机 UUID 的
+`coeer_test_*` schema，使用真实 PostgreSQL，不再使用 PGlite 或 SQLite。
 
 > 注意：最近新增了 `redeem_orders.quantity` 列；部署升级请先执行 `pnpm db:push`。
 
@@ -310,6 +326,8 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 - 抽卡在事务内重读奖池、按权重逐张抽取并 upsert；奖池为空在扣分前拒绝。
 - Drizzle executor 类型：`DbClient | DbTransaction`（`database/client.ts`），
   查询函数把 `executor` 作为末位参数（默认 `db`），保证事务内读写同源。
+- 空间预约事务使用 PostgreSQL schema 级事务锁，串行化容量、限额和任务领取，
+  防止多连接同时占用同一房间；数据库调用均异步执行，嵌套调用复用当前事务连接。
 
 ---
 

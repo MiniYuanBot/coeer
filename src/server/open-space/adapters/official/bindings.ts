@@ -5,11 +5,11 @@ export interface OfficialBinding extends CreateCommand {
   accountAlias: string;
 }
 export interface BindingStore {
-  get(ref: string): OfficialBinding | undefined;
-  byRequest(id: string): OfficialBinding | undefined;
-  put(value: OfficialBinding): void;
+  get(ref: string): Promise<OfficialBinding | undefined>;
+  byRequest(id: string): Promise<OfficialBinding | undefined>;
+  put(value: OfficialBinding): Promise<void>;
 }
-export class SQLiteBindings implements BindingStore {
+export class PostgresBindings implements BindingStore {
   constructor(private db: DB) {}
   get(ref: string) {
     return this.read("official_ref", ref);
@@ -17,29 +17,29 @@ export class SQLiteBindings implements BindingStore {
   byRequest(id: string) {
     return this.read("request_id", id);
   }
-  private read(
+  private async read(
     key: "official_ref" | "request_id",
     value: string,
-  ): OfficialBinding | undefined {
-    const row = this.db.get<{ payload: string }>(
+  ): Promise<OfficialBinding | undefined> {
+    const row = await this.db.get<{ payload: string }>(
       `SELECT payload FROM official_bindings WHERE ${key}=?`,
       value,
     );
     return row ? JSON.parse(row.payload) : undefined;
   }
-  put(value: OfficialBinding) {
-    this.db.tx(() => {
-      const old = this.byRequest(value.requestId);
+  async put(value: OfficialBinding) {
+    await this.db.tx(async () => {
+      const old = await this.byRequest(value.requestId);
       if (old && old.ref !== value.ref)
         throw new Error("OFFICIAL_BINDING_CONFLICT");
-      this.db.run(
+      await this.db.run(
         "INSERT INTO official_bindings(request_id,official_ref,account_alias,payload) VALUES(?,?,?,?) ON CONFLICT(request_id) DO UPDATE SET payload=excluded.payload",
         value.requestId,
         value.ref,
         value.accountAlias,
         JSON.stringify(value),
       );
-      this.db.run(
+      await this.db.run(
         "UPDATE bookings SET official_ref=? WHERE id=? AND provider='official'",
         value.ref,
         value.requestId,

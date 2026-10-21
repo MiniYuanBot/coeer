@@ -4,6 +4,7 @@ import tsConfigPaths from 'vite-tsconfig-paths'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { routeGeneratorWatchGuard } from './scripts/vite-route-generator'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -15,8 +16,18 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       port: parseInt(env.PORT) || 3000,
+      strictPort: true,
+      watch: {
+        // Router-generator scratch writes and local QA artifacts must not retrigger HMR.
+        ignored: ['**/.tanstack/**', '**/tmp/**'],
+      },
+    },
+    optimizeDeps: {
+      // The campus login browser runs only inside server-side reservation code.
+      exclude: ['playwright-core'],
     },
     plugins: [
+      routeGeneratorWatchGuard(path.resolve(__dirname, 'src/app/routeTree.gen.ts')),
       tailwindcss(),
       tsConfigPaths({
         projects: ['./tsconfig.json'],

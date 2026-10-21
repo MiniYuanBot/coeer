@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_authed/spaces')({
 })
 
 function SpacesLayout() {
-    const { config, user, loading, error, reload } = useSpaces()
+    const { config, loading, error, reload } = useSpaces()
     const { user: communityUser } = Route.useRouteContext()
     return (
         <div className="space-y-6">
@@ -36,14 +36,6 @@ function SpacesLayout() {
                 >
                     我的预约
                 </Link>
-                <Link
-                    to="/spaces/identity"
-                    search={{}}
-                    className={navTabClass}
-                    activeProps={{ className: activeNavTabClass }}
-                >
-                    预约身份
-                </Link>
                 {communityUser?.role === 'admin' && (
                     <Link
                         to="/admin/spaces"
@@ -58,14 +50,6 @@ function SpacesLayout() {
             {config && !config.writesEnabled && <Alert>当前仅开放空间状态查询，预约提交尚未启用。</Alert>}
             {config?.paused && config.writesEnabled && (
                 <Alert tone="warning">自动处理已暂停，提交的申请将在恢复后继续处理。</Alert>
-            )}
-            {user?.passwordIsDefault && (
-                <Alert tone="warning">
-                    你正在使用初始预约密码。
-                    <Link to="/spaces/identity" className="ml-1 text-primary underline">
-                        前往修改
-                    </Link>
-                </Alert>
             )}
             {error && (
                 <Alert tone="danger">

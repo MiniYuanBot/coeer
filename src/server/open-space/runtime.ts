@@ -3,14 +3,14 @@ import { readPrivateJSON } from "./adapters/official/config.js";
 import { existsSync } from "node:fs";
 export type Environment = "mock" | "staging" | "production";
 export function runtime(env: NodeJS.ProcessEnv) {
+  const mode = z
+    .enum(["mock", "official", "official-disabled"])
+    .parse(env.ADAPTER_MODE ?? "official");
   const environment = z
     .enum(["mock", "staging", "production"])
     .parse(
-      env.APP_ENV ?? (env.NODE_ENV === "production" ? "production" : "mock"),
+      env.APP_ENV ?? (mode === "mock" ? "mock" : env.NODE_ENV === "production" ? "production" : "staging"),
     );
-  const mode = z
-    .enum(["mock", "official", "official-disabled"])
-    .parse(env.ADAPTER_MODE ?? "mock");
   const hardened = environment !== "mock";
   if (env.NODE_ENV === "production" && environment === "mock")
     throw new Error("NODE_ENV=production requires a deployed APP_ENV");
@@ -27,13 +27,13 @@ export function runtime(env: NodeJS.ProcessEnv) {
     origin.search ||
     origin.hash ||
     origin.pathname !== "/" ||
-    (hardened && origin.protocol !== "https:")
+    (hardened && origin.protocol !== "https:" && !(environment === "staging" && origin.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname)))
   )
     throw new Error(
       "Deployed environments require an explicit HTTPS APP_ORIGIN",
     );
-  if (hardened && (!env.DATABASE_PATH || env.DATABASE_PATH === ":memory:"))
-    throw new Error("Deployed environments require a persistent DATABASE_PATH");
+  if (!env.DATABASE_URL || !/^postgres(?:ql)?:\/\//.test(env.DATABASE_URL))
+    throw new Error("Reservations require a PostgreSQL DATABASE_URL");
   const port = Number(env.PORT ?? 3001);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error("Invalid PORT");
@@ -45,6 +45,8 @@ export function runtime(env: NodeJS.ProcessEnv) {
     "TRUST_PROXY",
     "REGISTRATION_ENABLED",
     "OFFICIAL_OPERATOR_LOGIN_APPROVED",
+    "OFFICIAL_AUTOMATIC_LOGIN_APPROVED",
+    "OFFICIAL_SESSION_RENEWAL",
     "OFFICIAL_HTTP_NETWORK_APPROVED",
   ])
     if (env[name] !== undefined && !["true", "false"].includes(env[name]!))

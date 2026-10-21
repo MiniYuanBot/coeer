@@ -17,12 +17,12 @@ export function AuthForm({ actionText, onSubmit, status, afterSubmit }: {
                 </Link>
                 <h1 className="mt-9 text-center text-[25px] font-semibold tracking-[-0.025em]">{isLogin ? '欢迎回来' : '创建 COEER 账号'}</h1>
                 <p className="mt-2 text-center text-[13px] leading-6 text-muted-foreground">{isLogin ? '继续你的社区协作和成长记录。' : '加入你的学院内部社区。'}</p>
-                <form onSubmit={(event) => { event.preventDefault(); onSubmit(event) }} className="mt-8 space-y-5">
-                    <Field label="邮箱">
-                        <Input type="email" name="email" id="email" autoComplete="email" required placeholder="you@school.edu" className="h-11 text-sm" />
+                <form method="post" onSubmit={(event) => { event.preventDefault(); onSubmit(event) }} className="mt-8 space-y-5">
+                    <Field label="邮箱" description={isLogin ? undefined : '使用 10 位学号的 @stu.pku.edu.cn 邮箱注册；管理员请使用已有账号登录。'}>
+                        <Input type="email" name="email" id="email" autoComplete="email" required pattern={isLogin ? undefined : '[0-9]{10}@stu\\.pku\\.edu\\.cn'} placeholder={isLogin ? '你的邮箱' : '2026201234@stu.pku.edu.cn'} className="h-11 text-sm" />
                     </Field>
                     <Field label="密码">
-                        <Input type="password" name="password" id="password" autoComplete={isLogin ? 'current-password' : 'new-password'} required minLength={6} placeholder="至少 6 位" className="h-11 text-sm" />
+                        <Input type="password" name="password" id="password" autoComplete={isLogin ? 'current-password' : 'new-password'} required minLength={8} placeholder="至少 8 位" className="h-11 text-sm" />
                     </Field>
                     {afterSubmit ? <Alert tone="danger">{afterSubmit}</Alert> : null}
                     <Button type="submit" loading={status === 'pending'} className="h-11 w-full">{isLogin ? '登录' : '注册'}</Button>

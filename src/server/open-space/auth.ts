@@ -21,10 +21,10 @@ export async function checkPassword(password: string, encoded: string) {
 }
 export const digest = (token: string) =>
   createHash("sha256").update(token).digest("hex");
-export function newSession(db: DB, userId: string, lifetime = 7 * 86400000) {
+export async function newSession(db: DB, userId: string, lifetime = 7 * 86400000) {
   const token = randomBytes(32).toString("base64url"),
     csrf = randomBytes(24).toString("base64url");
-  db.run(
+  await db.run(
     "INSERT INTO sessions VALUES(?,?,?,?)",
     digest(token),
     userId,
@@ -33,12 +33,12 @@ export function newSession(db: DB, userId: string, lifetime = 7 * 86400000) {
   );
   return { token, csrf };
 }
-export function session(
+export async function session(
   db: DB,
   token: unknown,
-): { user: User; csrf: string } | null {
+): Promise<{ user: User; csrf: string } | null> {
   if (typeof token !== "string" || token.length > 100) return null;
-  const row = db.get<User & { csrf: string }>(
+  const row = await db.get<User & { csrf: string }>(
     `SELECT u.id,u.email,u.name,u.role,a.student_id AS studentId,a.booking_permission AS bookingPermission,
     (a.password_changed_at IS NULL AND u.role='user') AS passwordIsDefault,s.csrf
     FROM sessions s JOIN users u ON u.id=s.user_id JOIN user_accounts a ON a.user_id=u.id

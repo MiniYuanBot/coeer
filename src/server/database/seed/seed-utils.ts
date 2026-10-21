@@ -41,12 +41,12 @@ export function isMainModule(importMetaUrl: string) {
 
 export async function getSeedUsers() {
     const rows = await db.query.users.findMany({
-        where: inArray(users.email, ['test@example.com', 'admin@example.com', 'demo@example.com']),
+        where: inArray(users.email, ['0000000001@stu.pku.edu.cn', 'admin@example.com', '0000000002@stu.pku.edu.cn']),
     })
 
-    const testUser = rows.find((user) => user.email === 'test@example.com')
+    const testUser = rows.find((user) => user.email === '0000000001@stu.pku.edu.cn')
     const adminUser = rows.find((user) => user.email === 'admin@example.com')
-    const demoUser = rows.find((user) => user.email === 'demo@example.com')
+    const demoUser = rows.find((user) => user.email === '0000000002@stu.pku.edu.cn')
 
     if (!testUser || !adminUser || !demoUser) {
         throw new Error('Missing seed users. Please run pnpm seed:users first.')

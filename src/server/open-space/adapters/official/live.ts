@@ -13,6 +13,7 @@ import {
   addDays,
   timeLabel,
   slotInstant,
+  validDate,
   type Module,
 } from "@shared/open-space/domain.js";
 import type { OfficialConfig, FieldBinding } from "./config.js";
@@ -50,7 +51,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     readonly config: OfficialConfig,
     private transport: OfficialTransport,
     readonly bindings: BindingStore,
-    private writeGuard?: () => void,
+    private writeGuard?: () => void | Promise<void>,
   ) {
     this.operationTimeoutMs = config.operationTimeoutMs;
     this.syncIntervalMs = config.syncIntervalMs;
@@ -60,19 +61,41 @@ export class LiveOfficialAdapter implements OfficialAdapter {
   get catalogComplete() {
     return this.#complete;
   }
+  get rulesSource() {
+    return this.config.rulesSource;
+  }
   beginSync() {
     this.#cache.clear();
   }
   publication(id: string): PublicationGrant | undefined {
+    if (this.rulesSource === "upstream") {
+      const source = this.#sources.get(id);
+      if (!source || source.module !== "meeting" || source.permission !== "allowed")
+        return undefined;
+      return {
+        module: "meeting", officialId: source.officialId, approvalRef: "official-account-access",
+        expiresAt: new Date(Date.now() + this.config.syncIntervalMs).toISOString(),
+        name: source.name.slice(0, 80), location: source.location.slice(0, 100),
+        description: "官方会议空间，预约规则由官方系统实时校验。",
+        capacity: source.capacity, amenities: source.amenities,
+        syncFields: ["capacity", "amenities"],
+      };
+    }
     return this.config.publications.find(
       (p) =>
         spaceKey(p.module, p.officialId) === id &&
         Date.parse(p.expiresAt) > Date.now(),
     );
   }
+  publicationGrants(): PublicationGrant[] {
+    return this.rulesSource === "upstream"
+      ? [...this.#sources.keys()].map(id => this.publication(id)).filter((grant): grant is PublicationGrant => !!grant)
+      : this.config.publications;
+  }
   diagnostics() {
     return {
       mode: this.mode,
+      rulesSource: this.rulesSource,
       writeConfigured: this.config.writes.enabled,
       catalogComplete: this.#complete,
       identifiedSpaces: this.#sources.size,
@@ -114,7 +137,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
         id !== this.config.account.profileUserId
       )
         throw new AdapterError("FORBIDDEN");
-      if (write && id !== this.config.writes.authorization?.profileUserId)
+      if (write && this.rulesSource === "contract" && id !== this.config.writes.authorization?.profileUserId)
         throw new AdapterError("FORBIDDEN");
       this.transport.verified?.();
     } catch (e) {
@@ -218,6 +241,13 @@ export class LiveOfficialAdapter implements OfficialAdapter {
           ...card.source.metadata,
           ...configuration.metadata,
         };
+        if (this.rulesSource === "upstream") {
+          card.source.policy = {
+            kind: "meeting", rulesSource: "upstream", approval: true, approvalKnown: false,
+            stepMinutes: configuration.metadata.stepMinutes as number,
+            maxMinutes: 0, rulesVerified: true,
+          };
+        }
       }
       result.expires = Date.now() + this.config.cacheMs;
       this.#cache.set(key, result);
@@ -242,7 +272,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
               source.module === "meeting" && r.officialId === source.officialId,
           );
         if (
-          rule &&
+          this.rulesSource === "contract" && rule &&
           source.policy.kind === "meeting" &&
           source.policy.stepMinutes === rule.stepMinutes
         )
@@ -252,6 +282,8 @@ export class LiveOfficialAdapter implements OfficialAdapter {
             stepMinutes: rule.stepMinutes,
             maxMinutes: rule.maxMinutes,
             rulesVerified: true,
+            rulesSource: "contract",
+            approvalKnown: true,
           };
         sources.push(source);
       }
@@ -272,7 +304,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       card = page.cards.find((c) => c.source.id === spaceId);
     if (!card) throw new AdapterError("INVALID_RESPONSE");
     const slots = card.slots.map((s) =>
-      card.source.permission !== "allowed" && s.state === "available"
+      (card.source.permission !== "allowed" || !card.source.enabled) && s.state === "available"
         ? { ...s, state: "unopened" as const }
         : s,
     );
@@ -291,6 +323,15 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       throw new AdapterError("AUTHORIZATION_REQUIRED");
     if (source.metadata?.reservationCost !== 0)
       throw new AdapterError("UNSUPPORTED");
+    if (this.rulesSource === "upstream") {
+      if (!validDate(command.date) || !Number.isInteger(command.start) || !Number.isInteger(command.end) ||
+          command.start < 0 || command.end > 1440 || command.start >= command.end ||
+          command.quantity !== 1 || !command.purpose)
+        throw new AdapterError("RULE_REJECTED");
+      // The fresh slot grid and the official verify endpoint enforce step, date,
+      // duration and account policy. No synthetic room/date/duration limit is added.
+      return;
+    }
     const rule = this.config.writes.contract!.rules.find(
       (r) => r.officialId === source.officialId,
     );
@@ -315,19 +356,18 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       source = this.#sources.get(command.spaceId);
     if (
       !this.config.writes.enabled ||
-      !a ||
       !c ||
+      !this.config.account.profileUserId ||
+      !this.config.account.bookingPersonId ||
       command.module !== "meeting" ||
       !source ||
       source.module !== command.module ||
-      Date.now() < Date.parse(a.validFrom) ||
-      Date.now() >= Date.parse(a.validUntil) ||
       !command.externalUserId ||
-      !a.externalUserIds.includes(command.externalUserId) ||
       (operation !== "cancel" &&
         (!this.publication(command.spaceId) ||
           slotInstant(command.date, command.start) <= Date.now())) ||
-      !a.scopes.some(
+      (this.rulesSource === "contract" && (!a || Date.now() < Date.parse(a.validFrom) ||
+      Date.now() >= Date.parse(a.validUntil) || !a.externalUserIds.includes(command.externalUserId) || !a.scopes.some(
         (s) =>
           s.module === command.module &&
           s.officialId === source.officialId &&
@@ -336,7 +376,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
           s.start <= command.start &&
           s.end >= command.end &&
           s.operations.includes(operation),
-      )
+      )))
     )
       throw new AdapterError("AUTHORIZATION_REQUIRED");
   }
@@ -436,7 +476,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     options?: OperationOptions,
   ): Promise<{ ref: string }> {
     this.checkCreate(command);
-    if (this.bindings.byRequest(command.requestId))
+    if (await this.bindings.byRequest(command.requestId))
       throw new AdapterError("AUTHORIZATION_REQUIRED");
     const source = this.#sources.get(command.spaceId)!;
     const fresh = await this.pages(source.module, command.date, options, true),
@@ -449,7 +489,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       !card ||
       card.source.permission !== "allowed" ||
       !card.source.enabled ||
-      card.source.policy.stepMinutes !== source.policy.stepMinutes ||
+      (this.rulesSource === "contract" && card.source.policy.stepMinutes !== source.policy.stepMinutes) ||
       !selected.length ||
       selected[0].start !== command.start ||
       selected.at(-1)!.end !== command.end ||
@@ -471,9 +511,9 @@ export class LiveOfficialAdapter implements OfficialAdapter {
           {},
           {
             ...options,
-            beforeSend: () => {
+            beforeSend: async () => {
+              await this.writeGuard?.();
               this.authorize(command, "initialize");
-              this.writeGuard?.();
             },
           },
         ),
@@ -488,7 +528,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
         throw new AdapterError("FORBIDDEN");
       if (draft.PCRF_COST !== 0 && draft.PCRF_COST !== "0")
         throw new AdapterError("UNSUPPORTED");
-      this.bindings.put({
+      await this.bindings.put({
         ...command,
         ref,
         accountAlias: this.config.account.alias,
@@ -523,13 +563,13 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       this.authorize(command, "create");
       const saved = await http.request("create", {}, payload, {
         ...options,
-        beforeSend: () => {
+        beforeSend: async () => {
+          await this.writeGuard?.();
           this.authorize(command, "create");
-          this.writeGuard?.();
         },
       });
       if (contract.receiptMode === "independent_query") {
-        const binding = this.bindings.byRequest(command.requestId);
+        const binding = await this.bindings.byRequest(command.requestId);
         const record = await this.read(ref, http, options);
         if (
           !binding ||
@@ -601,7 +641,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     ref: string,
     options?: OperationOptions,
   ): Promise<OfficialRecord | null> {
-    const b = this.bindings.get(ref);
+    const b = await this.bindings.get(ref);
     if (
       !b ||
       b.module !== "meeting" ||
@@ -615,7 +655,7 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     return record;
   }
   async cancel(ref: string, options?: OperationOptions): Promise<void> {
-    const b = this.bindings.get(ref);
+    const b = await this.bindings.get(ref);
     if (!b || b.accountAlias !== this.config.account.alias)
       throw new AdapterError("FORBIDDEN");
     this.authorize(b, "cancel");
@@ -633,9 +673,9 @@ export class LiveOfficialAdapter implements OfficialAdapter {
       { MEETING_APPLY_ID: ref },
       {
         ...options,
-        beforeSend: () => {
+        beforeSend: async () => {
+          await this.writeGuard?.();
           this.authorize(b, "cancel");
-          this.writeGuard?.();
         },
       },
     );
@@ -653,6 +693,6 @@ export class LiveOfficialAdapter implements OfficialAdapter {
     const record = await this.read(ref, http, options),
       b = { ...command, ref, accountAlias: this.config.account.alias };
     if (!this.match(record, b)) throw new AdapterError("INVALID_RESPONSE");
-    this.bindings.put(b);
+    await this.bindings.put(b);
   }
 }

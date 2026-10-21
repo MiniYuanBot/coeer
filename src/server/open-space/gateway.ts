@@ -1,18 +1,14 @@
-import { createHash } from 'node:crypto'
+import { communityIdentitySecret, signCommunityIdentity, type CommunityIdentity } from './coeer-identity'
 
 export const SPACE_API_PREFIX = '/api/open-space'
-type Identity = { id: string; role: string }
+type Identity = Omit<CommunityIdentity, 'name'> & { name: string | null }
 
 function error(status: number, code: string, message: string) {
   return Response.json({ error: { code, message } }, { status, headers: { 'Cache-Control': 'no-store' } })
 }
 
-export function spaceCookieName(userId: string) {
-  return `coeer_spaces_${createHash('sha256').update(userId).digest('hex').slice(0, 24)}`
-}
-
-/** Both the COEER session and booking engine enforce their own authorization. */
-export async function forwardSpaceRequest(request: Request, user: Identity | null | undefined, backend: string) {
+/** The gateway alone signs the current account; browser identity headers are discarded. */
+export async function forwardSpaceRequest(request: Request, user: Identity | null | undefined, backend: string, secret = communityIdentitySecret()) {
   if (!user) return error(401, 'COEER_UNAUTHORIZED', '请先登录 COEER')
   const url = new URL(request.url)
   if (!url.pathname.startsWith(SPACE_API_PREFIX + '/')) return error(404, 'NOT_FOUND', '接口不存在')
@@ -32,14 +28,11 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
   target.search = url.search
   const headers = new Headers()
   headers.set('x-coeer-account', user.id)
+  headers.set('x-coeer-identity', signCommunityIdentity({ ...user, name: user.name?.trim() || user.email.split('@')[0] }, secret))
   for (const name of ['content-type', 'x-csrf-token', 'idempotency-key']) {
     const value = request.headers.get(name)
     if (value) headers.set(name, value)
   }
-  // Translate only this COEER user's booking cookie; never forward community credentials.
-  const cookieName = spaceCookieName(user.id)
-  const token = request.headers.get('cookie')?.split(';').map(value => value.trim()).find(value => value.startsWith(cookieName + '='))?.slice(cookieName.length + 1)
-  if (token && /^[A-Za-z0-9_-]{1,100}$/.test(token)) headers.set('cookie', `openspace_session=${token}`)
   // Origin is checked above; identify the configured upstream to its own origin guard.
   if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) headers.set('origin', process.env.OPENSPACE_APP_ORIGIN ?? (process.env.OPENSPACE_BACKEND_URL ? target.origin : process.env.CLIENT_URL ?? url.origin))
   let body: ArrayBuffer | undefined
@@ -61,17 +54,14 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
   }
   let response: Response
   try {
-    response = await fetch(target, { method: request.method, headers, body, redirect: 'error', signal: AbortSignal.timeout(30000) })
+    // A date outside the local cache may need a full upstream room-list read.
+    const timeout = ['GET', 'HEAD'].includes(request.method) ? 120000 : 30000
+    response = await fetch(target, { method: request.method, headers, body, redirect: 'error', signal: AbortSignal.timeout(timeout) })
   } catch {
     return error(503, 'SPACE_UNAVAILABLE', '空间预约服务暂不可用，请稍后重试')
   }
   const resultHeaders = new Headers({ 'Content-Type': response.headers.get('content-type') ?? 'application/json', 'Cache-Control': 'no-store' })
   const retry = response.headers.get('retry-after')
   if (retry) resultHeaders.set('retry-after', retry)
-  for (const cookie of response.headers.getSetCookie()) {
-    if (!cookie.startsWith('openspace_session=')) continue
-    const translated = cookie.replace('openspace_session=', cookieName + '=').replace(/;\s*Path=[^;]*/i, `; Path=${SPACE_API_PREFIX}`).replace(/;\s*Domain=[^;]*/ig, '')
-    resultHeaders.append('set-cookie', translated)
-  }
   return new Response(request.method === 'HEAD' ? null : response.body, { status: response.status, headers: resultHeaders })
 }

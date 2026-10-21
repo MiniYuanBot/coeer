@@ -64,7 +64,7 @@ export class AdapterError extends Error {
 export interface OperationOptions {
   signal?: AbortSignal;
   /** Internal transport guard, evaluated after throttling immediately before dispatch. */
-  beforeSend?: () => void;
+  beforeSend?: () => void | Promise<void>;
 }
 export interface PublicationGrant {
   module: Module;
@@ -81,6 +81,7 @@ export interface PublicationGrant {
 }
 export interface OfficialAdapter {
   readonly mode: "mock" | "official-disabled" | "official";
+  readonly rulesSource?: "upstream" | "contract";
   readonly operationTimeoutMs?: number;
   readonly syncIntervalMs?: number;
   readonly reconcileIntervalMs?: number;

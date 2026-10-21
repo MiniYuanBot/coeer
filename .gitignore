@@ -4,6 +4,7 @@ yarn.lock
 dist
 
 .env
+.env.local
 .env.*.local
 !.env.example
 

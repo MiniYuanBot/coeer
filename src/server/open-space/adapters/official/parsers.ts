@@ -267,6 +267,7 @@ export function parseMeetingConfiguration(body: string, officialId: string) {
     openTime: String(j.OPEN_TIME),
     closeTime: String(j.CLOSE_TIME),
     stepMinutes: j.SCALE_VALUE,
+    slotGridVerified: true,
     configurationCodesVerified: false,
     reservationCost:
       typeof j.PCRF_COST === "number" &&
@@ -283,8 +284,8 @@ export function parseMeetingConfiguration(body: string, officialId: string) {
     "TIME_LIMIT",
   ])
     metadata[`configuration_${key}`] =
-      typeof j[key] === "string" && /^[A-Za-z0-9_-]{1,30}$/.test(j[key])
-        ? j[key]
+      ["string", "number"].includes(typeof j[key]) && /^[A-Za-z0-9_-]{1,30}$/.test(String(j[key]))
+        ? String(j[key])
         : null;
   for (const key of ["DIS_START_TIME", "DIS_END_TIME"])
     metadata[`configuration_${key}`] =

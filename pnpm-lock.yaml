@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@libsql/client':
-        specifier: ^0.15.15
-        version: 0.15.15
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.4)
@@ -25,7 +22,7 @@ importers:
         version: 1.161.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@26.6.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.23.1))
       '@tanstack/react-start-router-manifest':
         specifier: ^1.120.19
-        version: 1.120.19(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)
+        version: 1.120.19(@electric-sql/pglite@0.3.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -34,7 +31,7 @@ importers:
         version: 1.4.7
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0)
+        version: 0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0)
       express:
         specifier: ^5.1.0
         version: 5.3.0
@@ -69,9 +66,6 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@electric-sql/pglite':
-        specifier: ^0.3.15
-        version: 0.3.15
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.2.0(vite@7.3.1(@types/node@26.6.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.23.1))
@@ -1014,74 +1008,10 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@libsql/client@0.15.15':
-    resolution: {integrity: sha512-twC0hQxPNHPKfeOv3sNT6u2pturQjLcI+CnpTM0SjRpocEGgfiZ7DWKXLNnsothjyJmDqEsBQJ5ztq9Wlu470w==}
-
-  '@libsql/core@0.15.15':
-    resolution: {integrity: sha512-C88Z6UKl+OyuKKPwz224riz02ih/zHYI3Ho/LAcVOgjsunIRZoBw7fjRfaH9oPMmSNeQfhGklSG2il1URoOIsA==}
-
-  '@libsql/darwin-arm64@0.5.22':
-    resolution: {integrity: sha512-4B8ZlX3nIDPndfct7GNe0nI3Yw6ibocEicWdC4fvQbSs/jdq/RC2oCsoJxJ4NzXkvktX70C1J4FcmmoBy069UA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@libsql/darwin-x64@0.5.22':
-    resolution: {integrity: sha512-ny2HYWt6lFSIdNFzUFIJ04uiW6finXfMNJ7wypkAD8Pqdm6nAByO+Fdqu8t7sD0sqJGeUCiOg480icjyQ2/8VA==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@libsql/hrana-client@0.7.0':
-    resolution: {integrity: sha512-OF8fFQSkbL7vJY9rfuegK1R7sPgQ6kFMkDamiEccNUvieQ+3urzfDFI616oPl8V7T9zRmnTkSjMOImYCAVRVuw==}
-
-  '@libsql/isomorphic-fetch@0.3.1':
-    resolution: {integrity: sha512-6kK3SUK5Uu56zPq/Las620n5aS9xJq+jMBcNSOmjhNf/MUvdyji4vrMTqD7ptY7/4/CAVEAYDeotUz60LNQHtw==}
-    engines: {node: '>=18.0.0'}
-
-  '@libsql/isomorphic-ws@0.1.5':
-    resolution: {integrity: sha512-DtLWIH29onUYR00i0GlQ3UdcTRC6EP4u9w/h9LxpUZJWRMARk6dQwZ6Jkd+QdwVpuAOrdxt18v0K2uIYR3fwFg==}
-
-  '@libsql/linux-arm-gnueabihf@0.5.22':
-    resolution: {integrity: sha512-3Uo3SoDPJe/zBnyZKosziRGtszXaEtv57raWrZIahtQDsjxBVjuzYQinCm9LRCJCUT5t2r5Z5nLDPJi2CwZVoA==}
-    cpu: [arm]
-    os: [linux]
-
-  '@libsql/linux-arm-musleabihf@0.5.22':
-    resolution: {integrity: sha512-LCsXh07jvSojTNJptT9CowOzwITznD+YFGGW+1XxUr7fS+7/ydUrpDfsMX7UqTqjm7xG17eq86VkWJgHJfvpNg==}
-    cpu: [arm]
-    os: [linux]
-
-  '@libsql/linux-arm64-gnu@0.5.22':
-    resolution: {integrity: sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@libsql/linux-arm64-musl@0.5.22':
-    resolution: {integrity: sha512-mCHSMAsDTLK5YH//lcV3eFEgiR23Ym0U9oEvgZA0667gqRZg/2px+7LshDvErEKv2XZ8ixzw3p1IrBzLQHGSsw==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@libsql/linux-x64-gnu@0.5.22':
-    resolution: {integrity: sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==}
-    cpu: [x64]
-    os: [linux]
-
-  '@libsql/linux-x64-musl@0.5.22':
-    resolution: {integrity: sha512-UZ4Xdxm4pu3pQXjvfJiyCzZop/9j/eA2JjmhMaAhe3EVLH2g11Fy4fwyUp9sT1QJYR1kpc2JLuybPM0kuXv/Tg==}
-    cpu: [x64]
-    os: [linux]
-
-  '@libsql/win32-x64-msvc@0.5.22':
-    resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
-    cpu: [x64]
-    os: [win32]
-
   '@mapbox/node-pre-gyp@2.0.3':
     resolution: {integrity: sha512-uwPAhccfFJlsfCxMYTwOdVfOz3xqyj8xYL3zJj8f0pb30tLohnnFPhLuqp4/qoEz8sNxe4SESZedcBojRefIzg==}
     engines: {node: '>=18'}
     hasBin: true
-
-  '@neon-rs/load@0.0.4':
-    resolution: {integrity: sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1756,9 +1686,6 @@ packages:
   '@types/serve-static@2.2.0':
     resolution: {integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==}
 
-  '@types/ws@8.18.1':
-    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
-
   '@vercel/nft@1.3.1':
     resolution: {integrity: sha512-ihNT1rswiq3cy4WKQAV5kJi6UjWX1vLUzlLc+Vvq83G8CU9nMgfDWz5f1tOnSlS8LeC4Wp4qTB3+HGj/ccUrFQ==}
     engines: {node: '>=20'}
@@ -2169,10 +2096,6 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  data-uri-to-buffer@4.0.1:
-    resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
-    engines: {node: '>= 12'}
-
   dax-sh@0.39.2:
     resolution: {integrity: sha512-gpuGEkBQM+5y6p4cWaw9+ePy5TNon+fdwFVtTI8leU3UhwhsBfPewRxMXGuQNC+M2b/MDGMlfgpqynkcd0C3FQ==}
 
@@ -2253,10 +2176,6 @@ packages:
   destroy@1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-
-  detect-libc@2.0.2:
-    resolution: {integrity: sha512-UX6sGumvvqSaXgdKGUsgZWqcUyIXZ/vZTrlRT/iobiKhGL0zL4d3osHj3uqllWJK+i+sixDS/3COVEOFbupFyw==}
-    engines: {node: '>=8'}
 
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
@@ -2573,10 +2492,6 @@ packages:
       picomatch:
         optional: true
 
-  fetch-blob@3.2.0:
-    resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
-    engines: {node: ^12.20 || >= 14.13}
-
   file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
@@ -2600,10 +2515,6 @@ packages:
   foreground-child@3.3.1:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
     engines: {node: '>=14'}
-
-  formdata-polyfill@4.0.10:
-    resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
-    engines: {node: '>=12.20.0'}
 
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -2877,9 +2788,6 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
-  js-base64@3.7.8:
-    resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
-
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2914,11 +2822,6 @@ packages:
   lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
-
-  libsql@0.5.22:
-    resolution: {integrity: sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==}
-    cpu: [x64, arm64, wasm32, arm]
-    os: [darwin, linux, win32]
 
   lightningcss-android-arm64@1.31.1:
     resolution: {integrity: sha512-HXJF3x8w9nQ4jbXRiNppBCqeZPIAfUo8zE/kOEGbW5NZvGc/K7nMxbhIr+YlFlHW5mpbg/YFPdbnCh1wAXCKFg==}
@@ -3155,11 +3058,6 @@ packages:
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
-  node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-    deprecated: Use your platform's native DOMException instead
-
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
 
@@ -3171,10 +3069,6 @@ packages:
     peerDependenciesMeta:
       encoding:
         optional: true
-
-  node-fetch@3.3.2:
-    resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   node-forge@1.3.3:
     resolution: {integrity: sha512-rLvcdSyRCyouf6jcOIPe/BgwG/d7hKjzMKOas33/pHEr6gbq18IK9zV7DiPvzsz0oBJPme6qr6H6kGZuI9/DZg==}
@@ -3388,9 +3282,6 @@ packages:
   process@0.11.10:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
     engines: {node: '>= 0.6.0'}
-
-  promise-limit@2.7.0:
-    resolution: {integrity: sha512-7nJ6v5lnJsXwGprnGXga4wx6d1POjvi5Qmf1ivTRxTjH4Z/9Czja/UCMLVmB9N93GeWOU93XaFaEt6jbuoagNw==}
 
   proxy-addr@2.0.8:
     resolution: {integrity: sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ==}
@@ -4095,10 +3986,6 @@ packages:
       jsdom:
         optional: true
 
-  web-streams-polyfill@3.3.3:
-    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
-    engines: {node: '>= 8'}
-
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -4149,18 +4036,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  ws@8.19.0:
-    resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   wsl-utils@0.1.0:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
@@ -4350,7 +4225,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@electric-sql/pglite@0.3.15': {}
+  '@electric-sql/pglite@0.3.15':
+    optional: true
 
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
@@ -4770,68 +4646,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@libsql/client@0.15.15':
-    dependencies:
-      '@libsql/core': 0.15.15
-      '@libsql/hrana-client': 0.7.0
-      js-base64: 3.7.8
-      libsql: 0.5.22
-      promise-limit: 2.7.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@libsql/core@0.15.15':
-    dependencies:
-      js-base64: 3.7.8
-
-  '@libsql/darwin-arm64@0.5.22':
-    optional: true
-
-  '@libsql/darwin-x64@0.5.22':
-    optional: true
-
-  '@libsql/hrana-client@0.7.0':
-    dependencies:
-      '@libsql/isomorphic-fetch': 0.3.1
-      '@libsql/isomorphic-ws': 0.1.5
-      js-base64: 3.7.8
-      node-fetch: 3.3.2
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@libsql/isomorphic-fetch@0.3.1': {}
-
-  '@libsql/isomorphic-ws@0.1.5':
-    dependencies:
-      '@types/ws': 8.18.1
-      ws: 8.19.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@libsql/linux-arm-gnueabihf@0.5.22':
-    optional: true
-
-  '@libsql/linux-arm-musleabihf@0.5.22':
-    optional: true
-
-  '@libsql/linux-arm64-gnu@0.5.22':
-    optional: true
-
-  '@libsql/linux-arm64-musl@0.5.22':
-    optional: true
-
-  '@libsql/linux-x64-gnu@0.5.22':
-    optional: true
-
-  '@libsql/linux-x64-musl@0.5.22':
-    optional: true
-
-  '@libsql/win32-x64-msvc@0.5.22':
-    optional: true
-
   '@mapbox/node-pre-gyp@2.0.3':
     dependencies:
       consola: 3.4.2
@@ -4844,8 +4658,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  '@neon-rs/load@0.0.4': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -5218,11 +5030,11 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  '@tanstack/react-start-router-manifest@1.120.19(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)':
+  '@tanstack/react-start-router-manifest@1.120.19(@electric-sql/pglite@0.3.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)':
     dependencies:
       '@tanstack/router-core': 1.161.3
       tiny-invariant: 1.3.3
-      vinxi: 0.5.3(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)
+      vinxi: 0.5.3(@electric-sql/pglite@0.3.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -5532,10 +5344,6 @@ snapshots:
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 26.6.5
-
-  '@types/ws@8.18.1':
-    dependencies:
       '@types/node': 26.6.5
 
   '@vercel/nft@1.3.1(rollup@4.58.0)':
@@ -6004,18 +5812,15 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  data-uri-to-buffer@4.0.1: {}
-
   dax-sh@0.39.2:
     dependencies:
       '@deno/shim-deno': 0.19.2
       undici-types: 5.28.4
 
-  db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3):
+  db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3):
     optionalDependencies:
       '@electric-sql/pglite': 0.3.15
-      '@libsql/client': 0.15.15
-      drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0)
+      drizzle-orm: 0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0)
       mysql2: 3.15.3
 
   debug@2.6.9:
@@ -6048,8 +5853,6 @@ snapshots:
   destr@2.0.5: {}
 
   destroy@1.2.0: {}
-
-  detect-libc@2.0.2: {}
 
   detect-libc@2.1.2: {}
 
@@ -6106,10 +5909,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0):
+  drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0):
     optionalDependencies:
       '@electric-sql/pglite': 0.3.15
-      '@libsql/client': 0.15.15
       '@types/pg': 8.16.0
       mysql2: 3.15.3
       pg: 8.18.0
@@ -6406,11 +6208,6 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
-  fetch-blob@3.2.0:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
-
   file-uri-to-path@1.0.0: {}
 
   fill-range@7.1.1:
@@ -6434,10 +6231,6 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
-
-  formdata-polyfill@4.0.10:
-    dependencies:
-      fetch-blob: 3.2.0
 
   forwarded@0.2.0: {}
 
@@ -6715,8 +6508,6 @@ snapshots:
 
   jiti@2.6.1: {}
 
-  js-base64@3.7.8: {}
-
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -6738,21 +6529,6 @@ snapshots:
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
-
-  libsql@0.5.22:
-    dependencies:
-      '@neon-rs/load': 0.0.4
-      detect-libc: 2.0.2
-    optionalDependencies:
-      '@libsql/darwin-arm64': 0.5.22
-      '@libsql/darwin-x64': 0.5.22
-      '@libsql/linux-arm-gnueabihf': 0.5.22
-      '@libsql/linux-arm-musleabihf': 0.5.22
-      '@libsql/linux-arm64-gnu': 0.5.22
-      '@libsql/linux-arm64-musl': 0.5.22
-      '@libsql/linux-x64-gnu': 0.5.22
-      '@libsql/linux-x64-musl': 0.5.22
-      '@libsql/win32-x64-msvc': 0.5.22
 
   lightningcss-android-arm64@1.31.1:
     optional: true
@@ -6952,7 +6728,7 @@ snapshots:
     dependencies:
       content-type: 2.1.0
 
-  nitropack@2.13.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3):
+  nitropack@2.13.1(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
       '@rollup/plugin-alias': 6.0.0(rollup@4.58.0)
@@ -6973,7 +6749,7 @@ snapshots:
       cookie-es: 2.0.0
       croner: 9.1.0
       crossws: 0.3.5
-      db0: 0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
+      db0: 0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
       defu: 6.1.4
       destr: 2.0.5
       dot-prop: 10.1.0
@@ -7019,7 +6795,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       unimport: 5.6.0
       unplugin-utils: 0.3.1
-      unstorage: 1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3)
+      unstorage: 1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3)
       untyped: 2.0.0
       unwasm: 0.5.3
       youch: 4.1.0-beta.14
@@ -7056,19 +6832,11 @@ snapshots:
 
   node-addon-api@7.1.1: {}
 
-  node-domexception@1.0.0: {}
-
   node-fetch-native@1.6.7: {}
 
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
-
-  node-fetch@3.3.2:
-    dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
 
   node-forge@1.3.3: {}
 
@@ -7256,8 +7024,6 @@ snapshots:
   process-nextick-args@2.0.1: {}
 
   process@0.11.10: {}
-
-  promise-limit@2.7.0: {}
 
   proxy-addr@2.0.8:
     dependencies:
@@ -7785,7 +7551,7 @@ snapshots:
       picomatch: 4.0.3
       webpack-virtual-modules: 0.6.2
 
-  unstorage@1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3):
+  unstorage@1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3):
     dependencies:
       anymatch: 3.1.3
       chokidar: 5.0.0
@@ -7796,7 +7562,7 @@ snapshots:
       ofetch: 1.5.1
       ufo: 1.6.3
     optionalDependencies:
-      db0: 0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
+      db0: 0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
       ioredis: 5.9.3
 
   untun@0.1.3:
@@ -7838,7 +7604,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vinxi@0.5.3(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1):
+  vinxi@0.5.3(@electric-sql/pglite@0.3.15)(@types/node@26.6.5)(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(ioredis@5.9.3)(jiti@2.6.1)(lightningcss@1.31.1)(mysql2@3.15.3)(terser@5.46.0)(tsx@4.23.1):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
@@ -7860,7 +7626,7 @@ snapshots:
       hookable: 5.5.3
       http-proxy: 1.18.1
       micromatch: 4.0.8
-      nitropack: 2.13.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
+      nitropack: 2.13.1(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3)
       node-fetch-native: 1.6.7
       path-to-regexp: 6.3.0
       pathe: 1.1.2
@@ -7871,7 +7637,7 @@ snapshots:
       ufo: 1.6.3
       unctx: 2.5.0
       unenv: 1.10.0
-      unstorage: 1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@libsql/client@0.15.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3)
+      unstorage: 1.17.4(db0@0.3.4(@electric-sql/pglite@0.3.15)(drizzle-orm@0.45.1(@electric-sql/pglite@0.3.15)(@types/pg@8.16.0)(mysql2@3.15.3)(pg@8.18.0))(mysql2@3.15.3))(ioredis@5.9.3)
       vite: 6.4.1(@types/node@26.6.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.23.1)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -8028,8 +7794,6 @@ snapshots:
       - tsx
       - yaml
 
-  web-streams-polyfill@3.3.3: {}
-
   webidl-conversions@3.0.1: {}
 
   webpack-virtual-modules@0.6.2: {}
@@ -8081,8 +7845,6 @@ snapshots:
       strip-ansi: 7.1.2
 
   wrappy@1.0.2: {}
-
-  ws@8.19.0: {}
 
   wsl-utils@0.1.0:
     dependencies:

@@ -14,7 +14,6 @@ export async function spaceApi<T>(path: string, options: RequestInit = {}): Prom
     })
     const body = await response.json().catch(() => null)
     if (!response.ok) {
-        if (body?.error?.code === 'UNAUTHORIZED') window.dispatchEvent(new Event('booking-session-expired'))
         if (body?.error?.code === 'COEER_UNAUTHORIZED')
             window.location.assign(
                 `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`,
@@ -70,7 +69,6 @@ type SpaceState = {
     user: SpaceSession['user']
     loading: boolean
     error: string
-    updateSession: (session: SpaceSession) => void
     reload: () => void
 }
 const Context = createContext<SpaceState | null>(null)
@@ -96,8 +94,6 @@ export function SpacesProvider({ children }: { children: ReactNode }) {
         const controller = new AbortController()
         csrf = null
         setLoading(true)
-        const expire = () => updateSession({ user: null, csrf: null })
-        window.addEventListener('booking-session-expired', expire)
         void spaceApi<SpaceSession>('/auth/me', { signal: controller.signal })
             .then((value) => {
                 if (active) {
@@ -115,7 +111,6 @@ export function SpacesProvider({ children }: { children: ReactNode }) {
             active = false
             controller.abort()
             csrf = null
-            window.removeEventListener('booking-session-expired', expire)
         }
     }, [version])
     return (
@@ -125,7 +120,6 @@ export function SpacesProvider({ children }: { children: ReactNode }) {
                 user: session.user,
                 loading: loading || configuration.loading,
                 error: error || configuration.error,
-                updateSession,
                 reload: () => {
                     configuration.reload()
                     setVersion((value) => value + 1)

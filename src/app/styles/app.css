@@ -61,7 +61,8 @@
 }
 @layer base {
   *, ::after, ::before, ::backdrop, ::file-selector-button { border-color: hsl(var(--border)); }
-  html { color-scheme: light; scroll-padding-top: 4.5rem; }
+  /* Keep the workspace width stable when a modal drawer locks body scrolling. */
+  html { color-scheme: light; scroll-padding-top: 4.5rem; scrollbar-gutter: stable; }
   html.dark { color-scheme: dark; }
   html, body {
     min-height: 100%;

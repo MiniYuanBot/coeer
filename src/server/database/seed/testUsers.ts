@@ -3,7 +3,7 @@ import { UserRole } from '@shared/constants'
 
 export const testUsers = [
     {
-        email: 'test@example.com',
+        email: '0000000001@stu.pku.edu.cn',
         name: '林小测试',
         bio: '编程与桌游爱好者，正在攒积分换 COEER 周边。',
         passwordHash: await hashPassword('test1234'),
@@ -21,7 +21,7 @@ export const testUsers = [
         createdAt: new Date(),
     },
     {
-        email: 'demo@example.com',
+        email: '0000000002@stu.pku.edu.cn',
         name: '陈协管',
         bio: '宿舍与后勤反馈协管，负责线上意见跟进。',
         passwordHash: await hashPassword('demo1234'),

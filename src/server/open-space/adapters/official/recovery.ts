@@ -112,13 +112,15 @@ export async function loginAuthorizedAccount(
     credentials.accountAlias !== config.account.alias
   )
     throw new AdapterError("CONFIGURATION");
-  const browser = await chromium.launch({ headless: true });
+  const executablePath = process.env.OFFICIAL_BROWSER_EXECUTABLE_PATH
+    || process.env.OPENSPACE_OFFICIAL_BROWSER_EXECUTABLE_PATH;
+  const browser = await chromium.launch({ headless: true, executablePath });
   const timeout = setTimeout(() => void browser.close().catch(() => {}), 90000);
   try {
     const context = await browser.newContext({ acceptDownloads: false });
     context.setDefaultTimeout(10000);
-    // The namespace fail-closed firewall is the transport boundary. Restrict
-    // browser HTTP(S) to the two already approved official business origins too.
+    // Connect through the host's campus network. Restrict automatic login
+    // to the two official business origins.
     await context.route("**/*", (route) => {
       const url = new URL(route.request().url());
       return [

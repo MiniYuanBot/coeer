@@ -19,7 +19,7 @@ import {
   OfficialHTTP,
   type CredentialProvider,
 } from "./adapters/official/http.js";
-import { SQLiteBindings } from "./adapters/official/bindings.js";
+import { PostgresBindings } from "./adapters/official/bindings.js";
 import type { OfficialConfig } from "./adapters/official/config.js";
 import {
   checkPassword,
@@ -34,13 +34,17 @@ import { Accounts } from "./accounts.js";
 import { operationalStatus, monitor } from "./operations.js";
 import { pruneHistory } from "./retention.js";
 import type { Environment } from "./runtime.js";
+import { communityCsrf, verifyCommunityIdentity } from "./coeer-identity.js";
 
 export interface AppOptions {
+  /** Server-only signing key; enables COEER authentication without a second login. */
+  communityIdentitySecret?: string;
   /** The COEER integration renders its own UI. */
   serveClient?: boolean;
   /** Trusted embedding host may isolate rate limits by its authenticated account. */
   rateLimitKey?: (request: Request) => string | undefined;
-  dbPath?: string;
+  databaseUrl?: string;
+  databaseSchema?: string;
   demo?: boolean;
   production?: boolean;
   environment?: Environment;
@@ -53,6 +57,8 @@ export interface AppOptions {
     config: OfficialConfig;
     credentials: CredentialProvider;
     fetcher?: typeof fetch;
+    /** Optional host integration; preserves the adapter's database write guard. */
+    wrapAdapter?: (adapter: LiveOfficialAdapter) => OfficialAdapter;
   };
   syncEnabled?: boolean;
   bookingEnabled?: boolean;
@@ -98,13 +104,13 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 }
 export async function createApp(options: AppOptions = {}) {
   let connectorChecking = false;
-  const db = new DB(options.dbPath ?? ":memory:");
+  const db = await DB.open(options.databaseUrl, options.databaseSchema);
   // Only this Web worker owns synchronization; rows left running by a prior process
   // have no live request. Keep their last known activity for history expiration.
-  db.run(
+  await db.run(
     "UPDATE sync_runs SET status='failed',error_code='WORKER_INTERRUPTED',finished_at=started_at WHERE status='running'",
   );
-  const adapter: OfficialAdapter =
+  let adapter: OfficialAdapter =
     options.adapter ??
     (options.adapterMode === "official" && options.official
       ? new LiveOfficialAdapter(
@@ -114,11 +120,11 @@ export async function createApp(options: AppOptions = {}) {
             options.official.credentials,
             options.official.fetcher,
           ),
-          new SQLiteBindings(db),
-          () => {
+          new PostgresBindings(db),
+          async () => {
             if (
-              db.setting("paused") === "true" ||
-              db.setting("booking_enabled") !== "true"
+              await db.setting("paused") === "true" ||
+              await db.setting("booking_enabled") !== "true"
             )
               throw new AdapterError("AUTHORIZATION_REQUIRED");
           },
@@ -126,14 +132,16 @@ export async function createApp(options: AppOptions = {}) {
       : options.adapterMode === "official-disabled"
         ? new DisabledOfficialAdapter()
         : new MockAdapter(db));
+  if (options.official?.wrapAdapter && adapter instanceof LiveOfficialAdapter)
+    adapter = options.official.wrapAdapter(adapter);
   if (options.adapterMode === "official" && adapter.mode !== "official") {
-    db.close();
+    await db.close();
     throw new Error("Official configuration required; refusing mock fallback");
   }
   if (options.syncEnabled !== undefined)
-    db.set("sync_enabled", String(options.syncEnabled));
+    await db.set("sync_enabled", String(options.syncEnabled));
   if (options.bookingEnabled !== undefined)
-    db.set("booking_enabled", String(options.bookingEnabled));
+    await db.set("booking_enabled", String(options.bookingEnabled));
   const service = new BookingService(
     db,
     adapter,
@@ -154,13 +162,13 @@ export async function createApp(options: AppOptions = {}) {
   if (
     adminStudentId &&
     adminPassword &&
-    db.setting("account_login_enabled") !== "true" &&
-    !db.get("SELECT id FROM users WHERE role='admin'")
+    await db.setting("account_login_enabled") !== "true" &&
+    !await db.get("SELECT id FROM users WHERE role='admin'")
   ) {
     const studentId = parse(studentIdSchema, adminStudentId),
       pass = parse(password, adminPassword),
       id = randomUUID();
-    db.run(
+    await db.run(
       "INSERT INTO users VALUES(?,?,?,?,?)",
       id,
       `${studentId}@admins.openspace.invalid`,
@@ -168,7 +176,7 @@ export async function createApp(options: AppOptions = {}) {
       await hashPassword(pass),
       "admin",
     );
-    db.run(
+    await db.run(
       "INSERT INTO user_accounts VALUES(?,?,?,?,?)",
       id,
       studentId,
@@ -179,7 +187,7 @@ export async function createApp(options: AppOptions = {}) {
   }
   if (
     demo &&
-    !db.get(
+    !await db.get(
       "SELECT student_id FROM booking_allowlist WHERE student_id='0000000001'",
     )
   )
@@ -187,9 +195,10 @@ export async function createApp(options: AppOptions = {}) {
   if (
     production &&
     !demo &&
-    !db.get("SELECT id FROM users WHERE role=?", "admin")
+    !options.communityIdentitySecret &&
+    !await db.get("SELECT id FROM users WHERE role=?", "admin")
   ) {
-    db.close();
+    await db.close();
     throw new Error(
       "Configure ADMIN_STUDENT_ID and a private admin password for first deployment",
     );
@@ -204,14 +213,14 @@ export async function createApp(options: AppOptions = {}) {
   if (
     demo &&
     adapter.mode === "mock" &&
-    db.setting("demo_initialized") !== "true"
+    await db.setting("demo_initialized") !== "true"
   ) {
-    db.tx(() => {
-      db.run(
+    await db.tx(async () => {
+      await db.run(
         "UPDATE spaces SET published=1,bookable=1 WHERE id IN ('mock-meeting-harbor','mock-meeting-grove','mock-activity-studio')",
       );
-      db.set("demo_initialized", "true");
-      db.audit("system", "demo.publish", "demo", { synthetic: true });
+      await db.set("demo_initialized", "true");
+      await db.audit("system", "demo.publish", "demo", { synthetic: true });
     });
     await service.sync();
   }
@@ -235,8 +244,19 @@ export async function createApp(options: AppOptions = {}) {
     }
     next();
   });
-  app.use("/api", (req: Request, res: AuthResponse, next: NextFunction) => {
-    const current = session(db, req.cookies?.openspace_session);
+  app.use("/api", async (req: Request, res: AuthResponse, next: NextFunction) => {
+    if (options.communityIdentitySecret) {
+      if (["/health", "/ready"].includes(req.path)) return next();
+      const identity = verifyCommunityIdentity(req.header("x-coeer-identity"), options.communityIdentitySecret);
+      if (!identity) return next(new AppError(401, "COEER_UNAUTHORIZED", "请先登录 COEER"));
+      const current = await accounts.communityUser(identity);
+      if (current) {
+        res.locals.user = current;
+        res.locals.csrf = communityCsrf(identity, options.communityIdentitySecret);
+      }
+      return next();
+    }
+    const current = await session(db, req.cookies?.openspace_session);
     if (current) {
       res.locals.user = current.user;
       res.locals.csrf = current.csrf;
@@ -259,22 +279,22 @@ export async function createApp(options: AppOptions = {}) {
       : next(new AppError(403, "CSRF", "会话验证失效，请刷新后重试"));
   const limit =
     (label: string, max: number, window: number) =>
-    (req: Request, _res: Response, next: NextFunction) => {
+    async (req: Request, _res: Response, next: NextFunction) => {
       const now = Date.now(),
         key = digest(
           `${label}:${options.rateLimitKey?.(req) ?? (["register", "login", "visitor_session", "booking", "cancel"].includes(label) ? req.ip : (_res.locals.user?.id ?? req.ip))}`,
         );
-      const entry = db.tx(() => {
-        db.run("DELETE FROM rate_limits WHERE until<=?", now);
-        db.run(
-          "INSERT INTO rate_limits VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1",
+      const entry = await db.tx(async () => {
+        await db.run("DELETE FROM rate_limits WHERE until<=?", now);
+        await db.run(
+          "INSERT INTO rate_limits VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=rate_limits.count+1",
           key,
           now + window,
         );
-        return db.get<{ count: number; until: number }>(
+        return (await db.get<{ count: number; until: number }>(
           "SELECT count,until FROM rate_limits WHERE key=?",
           key,
-        )!;
+        ))!;
       });
       if (entry.count > max) {
         _res.setHeader(
@@ -300,7 +320,7 @@ export async function createApp(options: AppOptions = {}) {
     path: "/",
     maxAge: 7 * 86400000,
   };
-  app.get("/api/config", (_req, res) =>
+  app.get("/api/config", async (_req, res) =>
     res.json({
       adapter: adapter.mode,
       environment: options.environment ?? "mock",
@@ -308,27 +328,28 @@ export async function createApp(options: AppOptions = {}) {
       bookingRequiresLogin: true,
       demo,
       paused:
-        db.setting("paused") === "true" ||
-        db.setting("booking_enabled") !== "true",
-      syncEnabled: db.setting("sync_enabled") === "true",
+        await db.setting("paused") === "true" ||
+        await db.setting("booking_enabled") !== "true",
+      syncEnabled: await db.setting("sync_enabled") === "true",
       writesEnabled:
         adapter.mode === "mock" ||
         (adapter.mode === "official" &&
           adapter.diagnostics?.().writeConfigured === true),
       timezone: "Asia/Shanghai",
-      horizon: service.horizon,
+      horizon: service.bookingHorizon,
+      rulesSource: adapter.rulesSource,
     }),
   );
-  app.get("/api/health", (_req, res) => {
-    db.get("SELECT 1");
+  app.get("/api/health", async (_req, res) => {
+    await db.get("SELECT 1");
     res.json({
       status: "ok",
       adapter: adapter.mode,
-      paused: db.setting("paused") === "true",
+      paused: await db.setting("paused") === "true",
     });
   });
-  app.get("/api/ready", (_req, res) => {
-    const status = operationalStatus(db, adapter);
+  app.get("/api/ready", async (_req, res) => {
+    const status = await operationalStatus(db, adapter);
     res
       .status(status.ready ? 200 : 503)
       .json({ status: status.ready ? "ready" : "degraded" });
@@ -336,6 +357,9 @@ export async function createApp(options: AppOptions = {}) {
   app.get("/api/auth/me", (_req, res: AuthResponse) =>
     res.json({ user: res.locals.user ?? null, csrf: res.locals.csrf ?? null }),
   );
+  app.use("/api/auth", (_req, _res, next) => options.communityIdentitySecret
+    ? next(new AppError(410, "COMMUNITY_AUTH", "请在 COEER 个人资料中管理账号，空间预约共用社区身份"))
+    : next());
   app.post("/api/auth/register", limit("register", 10, 3600000), () => {
     throw new AppError(
       403,
@@ -355,7 +379,7 @@ export async function createApp(options: AppOptions = {}) {
         }),
         req.body,
       );
-      const row = db.get<{ id: string; password_hash: string }>(
+      const row = await db.get<{ id: string; password_hash: string }>(
         "SELECT u.id,u.password_hash FROM users u JOIN user_accounts a ON a.user_id=u.id WHERE a.student_id=?",
         input.studentId,
       );
@@ -363,28 +387,28 @@ export async function createApp(options: AppOptions = {}) {
         input.password,
         row?.password_hash ?? dummyHash,
       );
-      const current = row && accounts.user(row.id);
+      const current = row && await accounts.user(row.id);
       if (!row || !valid || !current)
         throw new AppError(
           401,
           "LOGIN_FAILED",
           "学号或密码不正确，或账号尚未获准登录",
         );
-      const result = db.tx(() => {
+      const result = await db.tx(async () => {
         // A permission removal or password change during scrypt must not issue a fresh session.
         if (
-          !accounts.user(row.id) ||
-          db.get<{ password_hash: string }>(
+          !await accounts.user(row.id) ||
+          (await db.get<{ password_hash: string }>(
             "SELECT password_hash FROM users WHERE id=?",
             row.id,
-          )?.password_hash !== row.password_hash
+          ))?.password_hash !== row.password_hash
         )
           throw new AppError(401, "LOGIN_FAILED", "账号状态已变化，请重试");
         const old = req.cookies?.openspace_session;
         if (typeof old === "string")
-          db.run("DELETE FROM sessions WHERE digest=?", digest(old));
-        const next = newSession(db, row.id);
-        db.audit(row.id, "auth.login", row.id);
+          await db.run("DELETE FROM sessions WHERE digest=?", digest(old));
+        const next = await newSession(db, row.id);
+        await db.audit(row.id, "auth.login", row.id);
         return next;
       });
       res.cookie("openspace_session", result.token, cookie);
@@ -406,10 +430,10 @@ export async function createApp(options: AppOptions = {}) {
         req.body,
       );
       const userId = res.locals.user!.id;
-      const row = db.get<{ password_hash: string }>(
+      const row = (await db.get<{ password_hash: string }>(
         "SELECT password_hash FROM users WHERE id=?",
         userId,
-      )!;
+      ))!;
       if (!(await checkPassword(input.currentPassword, row.password_hash)))
         throw new AppError(400, "PASSWORD_INCORRECT", "当前密码不正确");
       if (input.currentPassword === input.newPassword)
@@ -419,60 +443,60 @@ export async function createApp(options: AppOptions = {}) {
           "新密码不能与当前密码相同",
         );
       const hash = await hashPassword(input.newPassword);
-      const next = db.tx(() => {
+      const next = await db.tx(async () => {
         if (
-          !accounts.user(userId) ||
-          db.get<{ password_hash: string }>(
+          !await accounts.user(userId) ||
+          (await db.get<{ password_hash: string }>(
             "SELECT password_hash FROM users WHERE id=?",
             userId,
-          )?.password_hash !== row.password_hash
+          ))?.password_hash !== row.password_hash
         )
           throw new AppError(
             409,
             "ACCOUNT_CHANGED",
             "账号状态已变化，请重新登录",
           );
-        db.run("UPDATE users SET password_hash=? WHERE id=?", hash, userId);
-        db.run(
+        await db.run("UPDATE users SET password_hash=? WHERE id=?", hash, userId);
+        await db.run(
           "UPDATE user_accounts SET password_changed_at=? WHERE user_id=?",
           Date.now(),
           userId,
         );
-        db.run("DELETE FROM sessions WHERE user_id=?", userId);
-        db.audit(userId, "auth.password_changed", userId);
+        await db.run("DELETE FROM sessions WHERE user_id=?", userId);
+        await db.audit(userId, "auth.password_changed", userId);
         return newSession(db, userId);
       });
       res.cookie("openspace_session", next.token, cookie);
-      res.json({ user: accounts.user(userId), csrf: next.csrf });
+      res.json({ user: await accounts.user(userId), csrf: next.csrf });
     },
   );
-  app.post("/api/auth/logout", auth, csrf, (req, res: AuthResponse) => {
-    db.run(
+  app.post("/api/auth/logout", auth, csrf, async (req, res: AuthResponse) => {
+    await db.run(
       "DELETE FROM sessions WHERE digest=?",
       digest(req.cookies.openspace_session),
     );
     res.clearCookie("openspace_session", { ...cookie, maxAge: undefined });
     res.json({ ok: true });
   });
-  app.get("/api/spaces", (_req, res) => res.json(service.spaces()));
-  app.get("/api/spaces/:id", (req, res) => {
-    const s = service.space(String(req.params.id));
+  app.get("/api/spaces", async (_req, res) => res.json(await service.spaces()));
+  app.get("/api/spaces/:id", async (req, res) => {
+    const s = await service.space(String(req.params.id));
     if (!s.published || !service.canPublish(s))
       throw new AppError(404, "NOT_FOUND", "空间不存在");
     res.json(service.publicSpace(s));
   });
-  app.get("/api/spaces/:id/availability", (req, res) =>
+  app.get("/api/spaces/:id/availability", async (req, res) =>
     res.json(
-      service.availability(String(req.params.id), String(req.query.date ?? "")),
+      await service.availability(String(req.params.id), String(req.query.date ?? "")),
     ),
   );
-  app.get("/api/bookings", bookingAuth, (_req, res: AuthResponse) =>
-    res.json(service.list(bookingOwner(res))),
+  app.get("/api/bookings", bookingAuth, async (_req, res: AuthResponse) =>
+    res.json(await service.list(bookingOwner(res))),
   );
-  app.get("/api/bookings/:id", bookingAuth, (req, res: AuthResponse) =>
+  app.get("/api/bookings/:id", bookingAuth, async (req, res: AuthResponse) =>
     res.json(
-      service.project(
-        service.owned(String(req.params.id), bookingOwner(res)),
+      await service.project(
+        await service.owned(String(req.params.id), bookingOwner(res)),
         true,
         false,
         true,
@@ -484,7 +508,7 @@ export async function createApp(options: AppOptions = {}) {
     bookingAuth,
     csrf,
     limit("booking", 60, 60000),
-    (req, res: AuthResponse) => {
+    async (req, res: AuthResponse) => {
       const { applicantName, studentId, ...input } = parse(
           createSchema,
           req.body,
@@ -493,6 +517,8 @@ export async function createApp(options: AppOptions = {}) {
       if (!key || !/^[-A-Za-z0-9]{16,80}$/.test(key))
         throw new AppError(400, "IDEMPOTENCY_KEY", "缺少有效的申请标识");
       const user = res.locals.user!;
+      if (!user.studentId)
+        throw new AppError(403, "STUDENT_ID_REQUIRED", "此管理员账号未关联学生学号，请使用学生账号提交预约");
       if (
         (studentId && studentId !== user.studentId) ||
         (applicantName && applicantName !== user.name)
@@ -503,7 +529,7 @@ export async function createApp(options: AppOptions = {}) {
           "预约身份必须与当前登录账号一致",
         );
       res.status(201).json(
-        service.create(user.id, input, key, {
+        await service.create(user.id, input, key, {
           applicantName: user.name,
           studentId: user.studentId!,
         }),
@@ -515,15 +541,15 @@ export async function createApp(options: AppOptions = {}) {
     bookingAuth,
     csrf,
     limit("cancel", 30, 60000),
-    (req, res: AuthResponse) => {
+    async (req, res: AuthResponse) => {
       parse(z.strictObject({}), req.body);
-      res.json(service.cancel(String(req.params.id), bookingOwner(res)));
+      res.json(await service.cancel(String(req.params.id), bookingOwner(res)));
     },
   );
   app.use("/api/admin", auth, admin);
   // Page the retained history; active work is never removed by history cleanup.
   for (const kind of ["jobs", "sync-runs", "audit"] as const) {
-    app.get(`/api/admin/history/${kind}`, (req, res) => {
+    app.get(`/api/admin/history/${kind}`, async (req, res) => {
       const { page, size, state, q } = parse(
         z.object({
           page: z.coerce.number().int().min(1).max(1000000).default(1),
@@ -568,14 +594,14 @@ export async function createApp(options: AppOptions = {}) {
       const where = conditions.length
         ? ` WHERE ${conditions.join(" AND ")}`
         : "";
-      const total = db.get<{ total: number }>(
+      const total = (await db.get<{ total: number }>(
         `SELECT COUNT(*) total FROM ${from}${where}`,
         ...args,
-      )!.total;
+      ))!.total;
       const current = Math.min(page, Math.max(1, Math.ceil(total / size)));
       const order =
         kind === "sync-runs" ? "t.started_at DESC,t.id DESC" : "t.id DESC";
-      const rows = db.all(
+      const rows = await db.all(
         `SELECT t.*${kind === "audit" ? ",u.name actor_name" : ""} FROM ${from}${where} ORDER BY ${order} LIMIT ? OFFSET ?`,
         ...args,
         size,
@@ -584,31 +610,31 @@ export async function createApp(options: AppOptions = {}) {
       res.json({ items: rows, total, page: current, size });
     });
   }
-  app.get("/api/admin/overview", (_req, res) =>
+  app.get("/api/admin/overview", async (_req, res) =>
     res.json({
-      spaces: service.spaces(true),
-      bookings: service.list(),
-      allowlist: accounts.list(),
-      jobs: db.all(
+      spaces: await service.spaces(true),
+      bookings: await service.list(),
+      allowlist: await accounts.list(),
+      jobs: await db.all(
         "SELECT id,type,booking_id,state,run_at,attempts,error_code FROM jobs ORDER BY id DESC LIMIT 100",
       ),
-      syncRuns: db.all(
+      syncRuns: await db.all(
         "SELECT * FROM sync_runs ORDER BY started_at DESC LIMIT 30",
       ),
-      audit: db.all("SELECT * FROM audit ORDER BY id DESC LIMIT 100"),
-      paused: db.setting("paused") === "true",
+      audit: await db.all("SELECT * FROM audit ORDER BY id DESC LIMIT 100"),
+      paused: await db.setting("paused") === "true",
       adapter: adapter.mode,
       scenarios:
         adapter instanceof MockAdapter
-          ? db.all("SELECT * FROM mock_scenarios")
+          ? await db.all("SELECT * FROM mock_scenarios")
           : [],
-      mockSyncFailure: db.setting("mock_sync_failure") === "true",
-      syncEnabled: db.setting("sync_enabled") === "true",
-      bookingEnabled: db.setting("booking_enabled") === "true",
+      mockSyncFailure: await db.setting("mock_sync_failure") === "true",
+      syncEnabled: await db.setting("sync_enabled") === "true",
+      bookingEnabled: await db.setting("booking_enabled") === "true",
       adapterDiagnostics: adapter.diagnostics?.() ?? { mode: adapter.mode },
       environment: options.environment ?? "mock",
-      operations: operationalStatus(db, adapter),
-      alerts: db.all("SELECT * FROM alerts ORDER BY id DESC LIMIT 50"),
+      operations: await operationalStatus(db, adapter),
+      alerts: await db.all("SELECT * FROM alerts ORDER BY id DESC LIMIT 50"),
     }),
   );
   app.put(
@@ -616,9 +642,8 @@ export async function createApp(options: AppOptions = {}) {
     csrf,
     async (req, res: AuthResponse) => {
       const studentId = parse(studentIdSchema, String(req.params.studentId));
-      const { name, bookingPermission } = parse(
+      const { bookingPermission } = parse(
         z.strictObject({
-          name: z.string().trim().min(1).max(40),
           bookingPermission: z
             .enum(["allowed", "review", "blocked"])
             .optional(),
@@ -626,13 +651,13 @@ export async function createApp(options: AppOptions = {}) {
         req.body,
       );
       try {
-        await accounts.save(studentId, name, bookingPermission);
+        await accounts.save(studentId, undefined, bookingPermission);
       } catch (e) {
         if ((e as Error).message === "ADMIN_STUDENT_ID")
           throw new AppError(409, "ADMIN_STUDENT_ID", "该学号已用于管理员账号");
         throw e;
       }
-      db.audit(res.locals.user!.id, "allowlist.save", digest(studentId), {
+      await db.audit(res.locals.user!.id, "allowlist.save", digest(studentId), {
         bookingPermission,
       });
       res.json({ ok: true });
@@ -641,11 +666,11 @@ export async function createApp(options: AppOptions = {}) {
   app.delete(
     "/api/admin/allowlist/:studentId",
     csrf,
-    (req, res: AuthResponse) => {
+    async (req, res: AuthResponse) => {
       const studentId = parse(studentIdSchema, String(req.params.studentId));
       parse(z.strictObject({}), req.body);
-      accounts.remove(studentId);
-      db.audit(res.locals.user!.id, "allowlist.remove", digest(studentId));
+      await accounts.remove(studentId);
+      await db.audit(res.locals.user!.id, "allowlist.remove", digest(studentId));
       res.json({ ok: true });
     },
   );
@@ -653,11 +678,13 @@ export async function createApp(options: AppOptions = {}) {
     "/api/admin/allowlist/:studentId/reset-password",
     csrf,
     async (req, res: AuthResponse) => {
+      if (options.communityIdentitySecret)
+        throw new AppError(410, "COMMUNITY_AUTH", "请在 COEER 个人资料中修改账号密码");
       const studentId = parse(studentIdSchema, String(req.params.studentId));
       parse(z.strictObject({}), req.body);
       if (!(await accounts.resetPassword(studentId)))
         throw new AppError(404, "NOT_FOUND", "白名单用户不存在");
-      db.audit(
+      await db.audit(
         res.locals.user!.id,
         "account.password_reset",
         digest(studentId),
@@ -665,34 +692,35 @@ export async function createApp(options: AppOptions = {}) {
       res.json({ ok: true });
     },
   );
-  app.post("/api/admin/bookings/:id/cancel", csrf, (req, res: AuthResponse) => {
+  app.post("/api/admin/bookings/:id/cancel", csrf, async (req, res: AuthResponse) => {
     parse(z.strictObject({}), req.body);
-    const b = service.booking(String(req.params.id));
-    res.json(service.cancel(b.id, b.user_id));
-    db.audit(res.locals.user!.id, "admin.booking_cancel", b.id);
+    const b = await service.booking(String(req.params.id));
+    const cancelled = await service.cancel(b.id, b.user_id);
+    await db.audit(res.locals.user!.id, "admin.booking_cancel", b.id);
+    res.json(cancelled);
   });
-  app.post("/api/admin/bookings/:id/review", csrf, (req, res: AuthResponse) => {
+  app.post("/api/admin/bookings/:id/review", csrf, async (req, res: AuthResponse) => {
     const { decision } = parse(
       z.strictObject({ decision: z.enum(["approve", "reject"]) }),
       req.body,
     );
     res.json(
-      service.review(String(req.params.id), res.locals.user!.id, decision),
+      await service.review(String(req.params.id), res.locals.user!.id, decision),
     );
   });
-  app.post("/api/admin/alerts/:id/ack", csrf, (req, res: AuthResponse) => {
+  app.post("/api/admin/alerts/:id/ack", csrf, async (req, res: AuthResponse) => {
     parse(z.strictObject({}), req.body);
     const id = Number(req.params.id);
     if (!Number.isSafeInteger(id) || id < 1)
       throw new AppError(400, "VALIDATION", "告警编号无效");
-    db.tx(() => {
-      db.run(
+    await db.tx(async () => {
+      await db.run(
         "UPDATE alerts SET ack_at=?,ack_by=? WHERE id=? AND ack_at IS NULL",
         Date.now(),
         res.locals.user!.id,
         id,
       );
-      db.audit(res.locals.user!.id, "alert.acknowledged", String(id));
+      await db.audit(res.locals.user!.id, "alert.acknowledged", String(id));
     });
     res.json({ ok: true });
   });
@@ -707,30 +735,32 @@ export async function createApp(options: AppOptions = {}) {
       // Serialize a recovery probe with worker operations. Recovery never enables writes.
       if (
         connectorChecking ||
-        db.get("SELECT id FROM jobs WHERE state='running'")
+        await db.get("SELECT id FROM jobs WHERE state='running'")
       )
         throw new AppError(409, "CONNECTOR_BUSY", "任务正在运行，请稍后检查");
       connectorChecking = true;
-      db.set("paused", "true");
-      db.audit(res.locals.user!.id, "connector.check", "system");
+      await db.set("paused", "true");
+      await db.audit(res.locals.user!.id, "connector.check", "system");
       try {
         const result = await adapter.checkConnection({
           signal: AbortSignal.timeout(adapter.operationTimeoutMs ?? 120000),
         });
-        for (const b of db.all<{ id: string }>(
+        for (const b of await db.all<{ id: string }>(
           "SELECT id FROM bookings WHERE provider='official' AND official_ref IS NOT NULL AND status IN ('uncertain','cancel_uncertain','manual_review')",
         ))
-          service.enqueue("reconcile", b.id);
+          await service.enqueue("reconcile", b.id);
         res.json(result);
       } catch (e) {
-        db.alert("CONNECTOR_CHECK_FAILED");
+        await db.alert("CONNECTOR_CHECK_FAILED");
         throw e;
       } finally {
         connectorChecking = false;
       }
     },
   );
-  app.patch("/api/admin/spaces/:id", csrf, (req, res: AuthResponse) => {
+  app.patch("/api/admin/spaces/:id", csrf, async (req, res: AuthResponse) => {
+    if (service.followsUpstream)
+      throw new AppError(409, "UPSTREAM_CATALOG", "空间展示、权限和预约规则由官方系统同步，请在官方系统调整");
     const input = parse(
         z.strictObject({
           published: z.boolean().optional(),
@@ -741,7 +771,7 @@ export async function createApp(options: AppOptions = {}) {
         req.body,
       ),
       id = String(req.params.id);
-    const s = service.space(id);
+    const s = await service.space(id);
     if (input.published && !service.canPublish(s))
       throw new AppError(
         403,
@@ -768,21 +798,21 @@ export async function createApp(options: AppOptions = {}) {
         "RULES_UNVERIFIED",
         "当前账号权限或预约规则尚未核实",
       );
-    db.tx(() => {
+    await db.tx(async () => {
       for (const [key, value] of Object.entries(input))
-        db.run(
+        await db.run(
           `UPDATE spaces SET ${key}=? WHERE id=?`,
           typeof value === "boolean" ? Number(value) : value,
           id,
         );
-      db.audit(res.locals.user!.id, "space.update", id, {
+      await db.audit(res.locals.user!.id, "space.update", id, {
         fields: Object.keys(input),
       });
-      service.enqueue("sync");
+      await service.enqueue("sync");
     });
-    res.json(service.publicSpace(service.space(id), true));
+    res.json(service.publicSpace(await service.space(id), true));
   });
-  app.patch("/api/admin/settings", csrf, (req, res: AuthResponse) => {
+  app.patch("/api/admin/settings", csrf, async (req, res: AuthResponse) => {
     const input = parse(
         z.strictObject({
           paused: z.boolean().optional(),
@@ -806,13 +836,13 @@ export async function createApp(options: AppOptions = {}) {
           "请先完成合法认证和连接检查",
         );
     }
-    db.tx(() => {
-      if (paused !== undefined) db.set("paused", String(paused));
+    await db.tx(async () => {
+      if (paused !== undefined) await db.set("paused", String(paused));
       if (input.syncEnabled !== undefined)
-        db.set("sync_enabled", String(input.syncEnabled));
+        await db.set("sync_enabled", String(input.syncEnabled));
       if (input.bookingEnabled !== undefined)
-        db.set("booking_enabled", String(input.bookingEnabled));
-      db.audit(
+        await db.set("booking_enabled", String(input.bookingEnabled));
+      await db.audit(
         res.locals.user!.id,
         paused === undefined
           ? "automation.settings"
@@ -825,51 +855,51 @@ export async function createApp(options: AppOptions = {}) {
     });
     res.json({ paused });
   });
-  app.post("/api/admin/sync", csrf, (_req, res: AuthResponse) => {
-    if (db.setting("sync_enabled") !== "true")
+  app.post("/api/admin/sync", csrf, async (_req, res: AuthResponse) => {
+    if (await db.setting("sync_enabled") !== "true")
       throw new AppError(409, "SYNC_PAUSED", "同步已暂停");
-    service.enqueue("sync");
-    db.audit(res.locals.user!.id, "sync.request", "system");
+    await service.enqueue("sync");
+    await db.audit(res.locals.user!.id, "sync.request", "system");
     res.status(202).json({ ok: true });
   });
   app.post(
     "/api/admin/bookings/:id/reconcile",
     csrf,
-    (req, res: AuthResponse) => {
+    async (req, res: AuthResponse) => {
       const id = String(req.params.id);
-      service.booking(id);
-      service.enqueue("reconcile", id);
-      db.audit(res.locals.user!.id, "booking.reconcile", id);
+      await service.booking(id);
+      await service.enqueue("reconcile", id);
+      await db.audit(res.locals.user!.id, "booking.reconcile", id);
       res.status(202).json({ ok: true });
     },
   );
-  app.patch("/api/admin/mock/scenario/:id", csrf, (req, res: AuthResponse) => {
+  app.patch("/api/admin/mock/scenario/:id", csrf, async (req, res: AuthResponse) => {
     if (!(adapter instanceof MockAdapter))
       throw new AppError(409, "MOCK_ONLY", "仅模拟模式可用");
     const id = String(req.params.id);
-    service.space(id);
+    await service.space(id);
     const { scenario } = parse(
       z.strictObject({ scenario: z.enum(scenarios) }),
       req.body,
     );
-    db.run(
+    await db.run(
       "INSERT INTO mock_scenarios VALUES(?,?) ON CONFLICT(space_id) DO UPDATE SET scenario=excluded.scenario",
       id,
       scenario,
     );
-    db.audit(res.locals.user!.id, "mock.scenario", id, { scenario });
+    await db.audit(res.locals.user!.id, "mock.scenario", id, { scenario });
     res.json({ ok: true });
   });
-  app.patch("/api/admin/mock/sync", csrf, (req, res: AuthResponse) => {
+  app.patch("/api/admin/mock/sync", csrf, async (req, res: AuthResponse) => {
     if (!(adapter instanceof MockAdapter))
       throw new AppError(409, "MOCK_ONLY", "仅模拟模式可用");
     const { failure } = parse(
       z.strictObject({ failure: z.boolean() }),
       req.body,
     );
-    db.set("mock_sync_failure", String(failure));
-    db.audit(res.locals.user!.id, "mock.sync", "system", { failure });
-    service.enqueue("sync");
+    await db.set("mock_sync_failure", String(failure));
+    await db.audit(res.locals.user!.id, "mock.sync", "system", { failure });
+    await service.enqueue("sync");
     res.json({ ok: true });
   });
   app.post(
@@ -885,8 +915,8 @@ export async function createApp(options: AppOptions = {}) {
           }),
           req.body,
         ),
-        b = service.booking(String(req.params.id)),
-        s = service.space(b.space_id);
+        b = await service.booking(String(req.params.id)),
+        s = await service.space(b.space_id);
       if (
         b.provider !== "official" ||
         !["manual_review", "uncertain"].includes(b.status)
@@ -911,9 +941,9 @@ export async function createApp(options: AppOptions = {}) {
         officialRef,
         { signal: AbortSignal.timeout(adapter.operationTimeoutMs ?? 120000) },
       );
-      service.enqueue("reconcile", b.id);
+      await service.enqueue("reconcile", b.id);
       // A free-text reason may accidentally contain official personal data; audit only its presence.
-      db.audit(res.locals.user!.id, "official.link_verified", b.id, {
+      await db.audit(res.locals.user!.id, "official.link_verified", b.id, {
         evidenceProvided: note.length >= 8,
       });
       res.status(202).json({ ok: true });
@@ -929,11 +959,11 @@ export async function createApp(options: AppOptions = {}) {
           z.strictObject({ decision: z.enum(["approve", "reject", "cancel"]) }),
           req.body,
         ),
-        b = service.booking(String(req.params.id));
-      if (!b.official_ref || !adapter.decide(b.official_ref, decision))
+        b = await service.booking(String(req.params.id));
+      if (!b.official_ref || !await adapter.decide(b.official_ref, decision))
         throw new AppError(409, "DECISION", "当前模拟记录无法执行该操作");
-      service.enqueue("reconcile", b.id);
-      db.audit(res.locals.user!.id, "mock.decision", b.id, { decision });
+      await service.enqueue("reconcile", b.id);
+      await db.audit(res.locals.user!.id, "mock.decision", b.id, { decision });
       res.json({ ok: true });
     },
   );
@@ -947,7 +977,7 @@ export async function createApp(options: AppOptions = {}) {
           z.strictObject({ note: z.string().trim().min(8).max(200) }),
           req.body,
         ),
-        b = service.booking(String(req.params.id));
+        b = await service.booking(String(req.params.id));
       if (
         !["manual_review", "uncertain"].includes(b.status) ||
         (await adapter.findByRequest(b.id))
@@ -957,13 +987,13 @@ export async function createApp(options: AppOptions = {}) {
           "RESOLUTION",
           "无法证明模拟记录未创建，请先核对",
         );
-      db.tx(() => {
-        service.setStatus(
+      await db.tx(async () => {
+        await service.setStatus(
           b.id,
           "failed",
           "管理员已核对模拟系统，本次申请未创建",
         );
-        db.audit(res.locals.user!.id, "mock.resolve_not_created", b.id, {
+        await db.audit(res.locals.user!.id, "mock.resolve_not_created", b.id, {
           note,
         });
       });
@@ -1019,18 +1049,20 @@ export async function createApp(options: AppOptions = {}) {
     },
   );
   function startWorker(interval = 800) {
-    const cleanupHistory = () => {
+    const cleanupHistory = async () => {
       try {
-        pruneHistory(db);
+        await pruneHistory(db);
       } catch {
-        db.audit("system", "worker.error", "system", {
+        await db.audit("system", "worker.error", "system", {
           code: "HISTORY_CLEANUP_FAILED",
-        });
+        }).catch(() => undefined);
       }
     };
-    cleanupHistory();
+    let historyTask = cleanupHistory();
     // Separate from upstream work so failures, pauses and slow syncs cannot stop retention.
-    const historyTimer = setInterval(cleanupHistory, 60000);
+    const historyTimer = setInterval(() => {
+      historyTask = historyTask.then(cleanupHistory);
+    }, 60000);
     historyTimer.unref();
     let busy = false;
     let lastMonitor = 0;
@@ -1042,20 +1074,20 @@ export async function createApp(options: AppOptions = {}) {
         try {
           if (initialSync) {
             initialSync = false;
-            if (db.setting("sync_enabled") === "true") await service.sync();
+            if (await db.setting("sync_enabled") === "true") await service.sync();
           } else {
-            service.schedule();
+            await service.schedule();
             await service.runOne();
           }
           if (Date.now() - lastMonitor >= 60000) {
-            monitor(db, adapter);
+            await monitor(db, adapter);
             lastMonitor = Date.now();
           }
-          db.run("DELETE FROM sessions WHERE expires_at<?", Date.now());
+          await db.run("DELETE FROM sessions WHERE expires_at<?", Date.now());
         } catch {
-          db.audit("system", "worker.error", "system", {
+          await db.audit("system", "worker.error", "system", {
             code: "WORKER_ERROR",
-          });
+          }).catch(() => undefined);
         } finally {
           busy = false;
         }
@@ -1065,6 +1097,7 @@ export async function createApp(options: AppOptions = {}) {
     return async () => {
       clearInterval(historyTimer);
       clearInterval(timer);
+      await historyTask;
       while (busy) await new Promise((resolve) => setTimeout(resolve, 20));
     };
   }

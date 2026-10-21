@@ -137,13 +137,14 @@ export function createConnectorApp(
       res.json({
         data,
         diagnostics: { ...adapter.diagnostics(), authenticationRecovery: authentication?.diagnostics() },
-        publications: adapter.config.publications,
+        publications: adapter.publicationGrants(),
         settings: {
           operationTimeoutMs: adapter.operationTimeoutMs,
           syncIntervalMs: adapter.syncIntervalMs,
           reconcileIntervalMs: adapter.reconcileIntervalMs,
           defaultHorizon: adapter.defaultHorizon,
           catalogComplete: adapter.catalogComplete,
+          rulesSource: adapter.rulesSource,
         },
       });
     } catch (e) {
@@ -193,6 +194,7 @@ export class RemoteOfficialAdapter implements OfficialAdapter {
   reconcileIntervalMs = 60000;
   defaultHorizon = 7;
   catalogComplete = false;
+  rulesSource: "upstream" | "contract" = "contract";
   #diagnostics: Record<string, unknown> = {
     writeConfigured: false,
     connector: { authentication: "unchecked" },
@@ -237,7 +239,7 @@ export class RemoteOfficialAdapter implements OfficialAdapter {
   publication(spaceId: string) {
     return this.#publications.find(
       (p) =>
-        Date.parse(p.expiresAt) > Date.now() &&
+        (this.rulesSource === "upstream" || Date.parse(p.expiresAt) > Date.now()) &&
         spaceId === spaceKey(p.module, p.officialId),
     );
   }
@@ -315,6 +317,7 @@ export class RemoteOfficialAdapter implements OfficialAdapter {
               reconcileIntervalMs: z.number().int().min(10000),
               defaultHorizon: z.number().int().min(0).max(30),
               catalogComplete: z.boolean(),
+              rulesSource: z.enum(["upstream", "contract"]).default("contract"),
             })
             .optional(),
         })

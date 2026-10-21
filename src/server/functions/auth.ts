@@ -2,7 +2,7 @@ import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { useAppSession } from '~/utils/session'
 import { AuthService } from '~/services'
-import { loginSchema, signupSchema } from '@shared/contracts'
+import { loginSchema, signupSchema, updateProfileSchema, changePasswordSchema } from '@shared/contracts'
 
 /**
  * Returns the current session user (or null). Used by the root route to
@@ -45,3 +45,11 @@ export const logoutFn = createServerFn()
         session.clear()
         throw redirect({ to: '/' })
     })
+
+export const updateProfileFn = createServerFn({ method: 'POST' })
+    .inputValidator(updateProfileSchema)
+    .handler(async ({ data }) => AuthService.updateProfile(data))
+
+export const changePasswordFn = createServerFn({ method: 'POST' })
+    .inputValidator(changePasswordSchema)
+    .handler(async ({ data }) => AuthService.changePassword(data))

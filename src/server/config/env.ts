@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import 'dotenv/config'
+import { loadEnvironmentFiles } from './environment-files'
+
+loadEnvironmentFiles()
 
 // Server environment virable schema
 const envSchema = z.object({

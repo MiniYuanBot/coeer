@@ -85,15 +85,8 @@ function SpaceAdminLayout() {
                 <LoadingState />
             ) : user?.role !== 'admin' ? (
                 <EmptyState
-                    title="需要验证预约管理员身份"
-                    description="COEER 管理员还需验证原预约系统的管理员账号。"
-                    action={
-                        <Button asChild>
-                            <Link to="/spaces/identity" search={{ next: '/admin/spaces' }}>
-                                验证预约身份
-                            </Link>
-                        </Button>
-                    }
+                    title="无法读取管理员权限"
+                    description="请刷新页面重试，预约管理直接使用 COEER 管理员权限。"
                 />
             ) : (
                 <Outlet />

@@ -74,8 +74,8 @@ const authorization = z.strictObject({
   accountAlias: z.string().min(1).max(60),
   profileUserId: identifier,
   bookingPersonId: identifier,
-  externalUserIds: z.array(z.string().min(1).max(100)).min(1),
-  scopes: z.array(scope).min(1),
+  externalUserIds: z.array(z.string().min(1).max(100)).default([]),
+  scopes: z.array(scope).default([]),
 });
 const contract = z.strictObject({
   version: z.literal(1),
@@ -106,7 +106,7 @@ const contract = z.strictObject({
       ]),
     )
     .default({}),
-  rules: z.array(rule).min(1),
+  rules: z.array(rule).default([]),
 });
 export const publication = z.strictObject({
   module: z.enum(["meeting", "activity"]),
@@ -126,6 +126,8 @@ export const officialConfigSchema = z
   .strictObject({
     baseURL: z.string().url(),
     allowHTTP: z.boolean().default(false),
+    /** Upstream mode delegates booking limits to the official account and verify API. */
+    rulesSource: z.enum(["upstream", "contract"]).default("contract"),
     account: z.strictObject({
       alias: z.string().min(1).max(60),
       profileUserId: identifier.optional(),
@@ -185,9 +187,11 @@ export const officialConfigSchema = z
       bad("Duplicate module or publication");
     if (
       value.writes.enabled &&
-      (!value.writes.authorization || !value.writes.contract)
+      (!value.writes.contract ||
+        (value.rulesSource === "contract" && !value.writes.authorization) ||
+        (value.rulesSource === "upstream" && (!value.account.profileUserId || !value.account.bookingPersonId)))
     )
-      bad("Reviewed authorization and contract required");
+      bad("Pinned account and form contract required");
     const a = value.writes.authorization;
     if (
       a &&
@@ -199,6 +203,9 @@ export const officialConfigSchema = z
     )
       bad("Authorization account or range mismatch");
     const c = value.writes.contract;
+    if (value.rulesSource === "contract" && value.writes.enabled &&
+        (!a?.externalUserIds.length || !a.scopes.length || !c?.rules.length))
+      bad("Static booking scopes and rules required in contract mode");
     if (c) {
       if (
         value.writes.enabled &&
@@ -274,7 +281,7 @@ export function loadOfficialConfig(
       .strictObject({
         version: z.literal(1),
         contact: z.string().trim().min(1).max(200),
-        authorization,
+        authorization: authorization.optional(),
         contract,
       })
       .safeParse(readPrivateJSON(writesPath));

@@ -15,7 +15,7 @@ export const EmailSchema = z.object({
 
 export const UpdateUserSchema = z.object({
     id: z.uuid(),
-    name: z.string().min(1).max(200).optional(),
+    name: z.string().min(1).max(63).optional(),
     passwordHash: z.string().min(50).max(60).optional(),
     role: z.enum(USER_ROLE_ARRAY).optional(),
     updatedAt: z.date().optional(),

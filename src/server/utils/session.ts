@@ -1,10 +1,10 @@
 // server only
 import { useSession } from '@tanstack/react-start/server'
-import { SessionUser } from '@shared/contracts'
+import type { AppSessionData } from '@shared/contracts'
 import { env } from '../config'
 
 export function useAppSession() {
-  return useSession<SessionUser>({
+  return useSession<AppSessionData>({
     name: 'coeer_session',
     password: env.SESSION_SECRET,
     cookie: {

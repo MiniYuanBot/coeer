@@ -1,0 +1,14 @@
+{
+  "baseURL": "http://smart.coe.pku.edu.cn:9091/meeting/",
+  "allowHTTP": true,
+  "rulesSource": "upstream",
+  "account": {
+    "alias": "coeer-campus-service",
+    "profileUserId": "REPLACE_OBSERVED_PROFILE_ID",
+    "bookingPersonId": "REPLACE_OBSERVED_OPERATOR_ID"
+  },
+  "modules": ["meeting"],
+  "writes": {
+    "enabled": false
+  }
+}

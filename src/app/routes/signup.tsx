@@ -50,7 +50,9 @@ function SignupComp() {
                 status={signupMutation.status}
                 onSubmit={handleSubmit}
                 afterSubmit={
-                    signupMutation.data && !signupMutation.data.success ? (
+                    signupMutation.error ? (
+                        <div className="text-danger">注册失败，请检查学生邮箱及密码格式后重试。</div>
+                    ) : signupMutation.data && !signupMutation.data.success ? (
                         <div className="text-danger">{signupMutation.data.state.message}</div>
                     ) : null
                 }

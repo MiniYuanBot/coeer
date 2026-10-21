@@ -5,7 +5,7 @@ import { loadOfficialConfig } from "./adapters/official/config.js";
 import { ManagedSession } from "./adapters/official/session.js";
 import { OfficialHTTP } from "./adapters/official/http.js";
 import { LiveOfficialAdapter } from "./adapters/official/live.js";
-import { SQLiteBindings } from "./adapters/official/bindings.js";
+import { PostgresBindings } from "./adapters/official/bindings.js";
 import {
   AuthenticationRecovery,
   loadAccountCredentials,
@@ -23,7 +23,7 @@ if (
   !process.env.OFFICIAL_SESSION_FILE ||
   !process.env.OFFICIAL_SESSION_KEY_FILE ||
   !process.env.OFFICIAL_CONNECTOR_KEY_FILE ||
-  !process.env.DATABASE_PATH
+  !process.env.DATABASE_URL
 )
   throw new Error("Private connector configuration required");
 const cfg = loadOfficialConfig(
@@ -37,7 +37,7 @@ if (cfg.allowHTTP && process.env.OFFICIAL_HTTP_NETWORK_APPROVED !== "true")
   throw new Error("Protected HTTP network approval required");
 cfg.writes.enabled =
   cfg.writes.enabled && process.env.OFFICIAL_WRITES_ENABLED === "true";
-const db = new DB(process.env.DATABASE_PATH),
+const db = await DB.open(process.env.DATABASE_URL, process.env.DATABASE_SCHEMA),
   manager = new ManagedSession(
     cfg,
     process.env.OFFICIAL_SESSION_FILE,
@@ -47,11 +47,11 @@ const db = new DB(process.env.DATABASE_PATH),
 const adapter = new LiveOfficialAdapter(
   cfg,
   new OfficialHTTP(cfg, manager.provider),
-  new SQLiteBindings(db),
-  () => {
+  new PostgresBindings(db),
+  async () => {
     if (
-      db.setting("paused") === "true" ||
-      db.setting("booking_enabled") !== "true"
+      await db.setting("paused") === "true" ||
+      await db.setting("booking_enabled") !== "true"
     )
       throw new AdapterError("AUTHORIZATION_REQUIRED");
   },
@@ -104,7 +104,6 @@ for (const signal of ["SIGTERM", "SIGINT"] as const)
     closing = true;
     setTimeout(() => process.exit(1), 135000).unref();
     server.close(() => {
-      db.close();
-      process.exit(0);
+      void db.close().then(() => process.exit(0), () => process.exit(1));
     });
   });

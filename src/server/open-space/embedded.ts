@@ -6,6 +6,10 @@ import { privateSessionFile } from './adapters/official/http'
 import { ManagedSession } from './adapters/official/session'
 import { RemoteOfficialAdapter, connectorKey } from './adapters/official/remote'
 import { spaceEnvironment } from './environment'
+import { communityIdentitySecret } from './coeer-identity'
+import { AuthenticationRecovery, loadAccountCredentials, loginAuthorizedAccount } from './adapters/official/recovery'
+import { AuthenticatedOfficialAdapter } from './adapters/official/authenticated'
+import type { LiveOfficialAdapter } from './adapters/official/live'
 
 // Keep the booking worker independent of route-module reloads in development.
 const key = Symbol.for('coeer.open-space.runtime')
@@ -39,12 +43,29 @@ async function start(): Promise<Embedded> {
     const mode = values.OFFICIAL_AUTH_MODE ?? 'operator_sso'
     if (!['operator_sso', 'approved_headers'].includes(mode)) throw new Error('Invalid official authentication mode')
     if (mode === 'operator_sso' && !values.OFFICIAL_SESSION_KEY_FILE) throw new Error('Encrypted session key required')
-    official = { config, credentials: mode === 'operator_sso'
-      ? new ManagedSession(config, values.OFFICIAL_SESSION_FILE, values.OFFICIAL_SESSION_KEY_FILE!).provider
-      : privateSessionFile(values.OFFICIAL_SESSION_FILE) }
+    const automatic = values.OFFICIAL_AUTOMATIC_LOGIN_APPROVED === 'true'
+    if (automatic && (mode !== 'operator_sso' || !values.OFFICIAL_ACCOUNT_CREDENTIALS_FILE || !values.OFFICIAL_ACCOUNT_KEY_FILE || !values.OFFICIAL_RECOVERY_STATE_FILE))
+      throw new Error('Private automatic authentication configuration required')
+    const manager = mode === 'operator_sso'
+      ? new ManagedSession(config, values.OFFICIAL_SESSION_FILE, values.OFFICIAL_SESSION_KEY_FILE!, values.OFFICIAL_SESSION_RENEWAL === 'true')
+      : undefined
+    official = {
+      config,
+      credentials: manager?.provider ?? privateSessionFile(values.OFFICIAL_SESSION_FILE),
+      wrapAdapter: automatic ? (direct: LiveOfficialAdapter) => new AuthenticatedOfficialAdapter(direct, new AuthenticationRecovery({
+        config,
+        manager: manager!,
+        sessionPath: values.OFFICIAL_SESSION_FILE!,
+        keyPath: values.OFFICIAL_SESSION_KEY_FILE!,
+        statePath: values.OFFICIAL_RECOVERY_STATE_FILE!,
+        probe: () => direct.checkConnection(),
+        login: () => loginAuthorizedAccount(config, loadAccountCredentials(values.OFFICIAL_ACCOUNT_CREDENTIALS_FILE!, values.OFFICIAL_ACCOUNT_KEY_FILE!, config.account.alias)),
+      })) : undefined,
+    }
   }
   const context = await createApp({
-    dbPath: values.DATABASE_PATH,
+    databaseUrl: values.DATABASE_URL,
+    databaseSchema: values.DATABASE_SCHEMA,
     origin: settings.origin,
     production: settings.hardened,
     environment: settings.environment,
@@ -59,6 +80,7 @@ async function start(): Promise<Embedded> {
     bookingEnabled: values.BOOKING_ENABLED === undefined ? undefined : values.BOOKING_ENABLED === 'true',
     deferInitialSync: settings.mode === 'official',
     serveClient: false,
+    communityIdentitySecret: communityIdentitySecret(),
     rateLimitKey: request => request.header('x-coeer-account'),
   })
   let server: Server
@@ -68,7 +90,7 @@ async function start(): Promise<Embedded> {
       listener.once('error', reject)
     })
   } catch (error) {
-    context.db.close()
+    await context.db.close()
     throw error
   }
   server.unref()
@@ -82,7 +104,7 @@ async function start(): Promise<Embedded> {
     close: async () => {
       await stopWorker()
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
-      context.db.close()
+      await context.db.close()
       delete state[key]
     },
   }

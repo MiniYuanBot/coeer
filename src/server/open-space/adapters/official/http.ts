@@ -154,6 +154,9 @@ export class OfficialHTTP implements OfficialTransport {
       "application/x-www-form-urlencoded;charset=UTF-8",
     );
     headers.set("X-Requested-With", "XMLHttpRequest");
+    // The campus server can stall the next POST on a reused HTTP/1.1 connection.
+    // Keep official operations serialized and open a fresh connection per request.
+    headers.set("Connection", "close");
     headers.set("Origin", url.origin);
     headers.set("Referer", new URL("main/index", this.config.baseURL).href);
     const signal = AbortSignal.any([
@@ -163,7 +166,9 @@ export class OfficialHTTP implements OfficialTransport {
     try {
       if (signal.aborted) throw new AdapterError("TIMEOUT");
       this.provider.assert?.();
-      options?.beforeSend?.();
+      await options?.beforeSend?.();
+      if (signal.aborted) throw new AdapterError("TIMEOUT");
+      this.provider.assert?.();
       const r = await this.fetcher(url, {
         method,
         headers,

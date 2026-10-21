@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Badge, Button, Card, Icon, PointsSummaryCard, SectionHeader } from '@/components/coeer'
-import { getMyPointBalanceFn, getMyPointHistoryFn } from '~/functions'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useState, type FormEvent } from 'react'
+import { Alert, Badge, Button, Card, Field, Icon, Input, PointsSummaryCard, SectionHeader } from '@/components/coeer'
+import { changePasswordFn, getMyPointBalanceFn, getMyPointHistoryFn, updateProfileFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/profile/')({
     loader: async ({ context }) => {
@@ -19,12 +20,58 @@ export const Route = createFileRoute('/_authed/profile/')({
 
 function ProfileIndexComponent() {
     const { user, balance, history } = Route.useLoaderData()
+    const router = useRouter()
+    const [profilePending, setProfilePending] = useState(false)
+    const [passwordPending, setPasswordPending] = useState(false)
+    const [profileNotice, setProfileNotice] = useState<{ success: boolean; message: string }>()
+    const [passwordError, setPasswordError] = useState<string>()
+
+    async function updateProfile(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        const data = new FormData(event.currentTarget)
+        setProfilePending(true)
+        setProfileNotice(undefined)
+        try {
+            const result = await updateProfileFn({ data: { name: String(data.get('name') ?? '') } })
+            setProfileNotice({ success: result.success, message: result.state.message ?? '更新失败，请稍后再试' })
+            if (result.success) await router.invalidate()
+        } catch {
+            setProfileNotice({ success: false, message: '昵称更新失败，请检查输入或稍后再试' })
+        } finally {
+            setProfilePending(false)
+        }
+    }
+
+    async function changePassword(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        const data = new FormData(event.currentTarget)
+        const newPassword = String(data.get('newPassword') ?? '')
+        if (newPassword !== data.get('confirmPassword')) {
+            setPasswordError('两次输入的新密码不一致')
+            return
+        }
+        setPasswordPending(true)
+        setPasswordError(undefined)
+        try {
+            const result = await changePasswordFn({ data: { currentPassword: String(data.get('currentPassword') ?? ''), newPassword } })
+            if (!result.success) {
+                setPasswordError(result.state.message ?? '密码修改失败，请稍后再试')
+                return
+            }
+            await router.invalidate()
+            await router.navigate({ to: '/login', search: { redirect: '/profile' } })
+        } catch {
+            setPasswordError('密码修改失败，请检查输入或稍后再试')
+        } finally {
+            setPasswordPending(false)
+        }
+    }
 
     return (
         <div className="space-y-6">
             <SectionHeader
                 title="个人中心"
-                description="查看账户、积分流水和成长状态。"
+                description="管理账户资料、密码和积分记录。"
                 action={<Link to="/logout"><Button variant="outline"><Icon name="logout" /> 退出</Button></Link>}
             />
             <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -57,6 +104,31 @@ function ProfileIndexComponent() {
                 </Card>
 
                 <PointsSummaryCard balance={balance} />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="p-5">
+                    <h2 className="text-[15px] font-medium">昵称</h2>
+                    <p className="mt-2 text-[13px] leading-6 text-muted-foreground">昵称会显示在社区内容和预约管理中。</p>
+                    <form method="post" onSubmit={(event) => void updateProfile(event)} className="mt-5 space-y-4">
+                        <Field label="昵称">
+                            <Input key={user.name} name="name" defaultValue={user.name ?? ''} required maxLength={63} autoComplete="nickname" placeholder="输入你的昵称" disabled={profilePending} />
+                        </Field>
+                        {profileNotice && <Alert tone={profileNotice.success ? 'success' : 'danger'}>{profileNotice.message}</Alert>}
+                        <Button type="submit" loading={profilePending}>保存昵称</Button>
+                    </form>
+                </Card>
+                <Card className="p-5">
+                    <h2 className="text-[15px] font-medium">修改密码</h2>
+                    <p className="mt-2 text-[13px] leading-6 text-muted-foreground">修改后所有设备需要重新登录。新密码至少 8 位，不超过 72 字节。</p>
+                    <form method="post" onSubmit={(event) => void changePassword(event)} className="mt-5 space-y-4">
+                        <Field label="当前密码"><Input type="password" name="currentPassword" autoComplete="current-password" required disabled={passwordPending} /></Field>
+                        <Field label="新密码"><Input type="password" name="newPassword" autoComplete="new-password" required minLength={8} disabled={passwordPending} /></Field>
+                        <Field label="确认新密码"><Input type="password" name="confirmPassword" autoComplete="new-password" required minLength={8} disabled={passwordPending} /></Field>
+                        {passwordError && <Alert tone="danger">{passwordError}</Alert>}
+                        <Button type="submit" loading={passwordPending}>修改密码并重新登录</Button>
+                    </form>
+                </Card>
             </div>
 
             <Card className="p-5">

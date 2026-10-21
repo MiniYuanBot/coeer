@@ -1,4 +1,5 @@
 import { useAppSession } from '../utils/session'
+import { createHash } from 'node:crypto'
 import { userQueries } from '../database/queries/users'
 import { verifyPassword, hashPassword } from '../utils/password'
 import type {
@@ -9,7 +10,11 @@ import type {
     LogoutResponse,
     SessionUserResponse,
     SessionUser,
+    AppSessionData,
+    UpdateProfileInput,
+    ChangePasswordInput,
 } from '@shared/contracts'
+import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_PATTERN } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
 
 /**
@@ -30,6 +35,14 @@ function toSessionUser(user: {
     }
 }
 
+function passwordVersion(passwordHash: string): string {
+    return createHash('sha256').update(passwordHash).digest('hex')
+}
+
+function toAppSessionData(user: Parameters<typeof toSessionUser>[0] & { passwordHash: string }): AppSessionData {
+    return { ...toSessionUser(user), passwordVersion: passwordVersion(user.passwordHash) }
+}
+
 export class AuthService {
     /**
      * Returns the current session user, re-validated against the database.
@@ -48,7 +61,7 @@ export class AuthService {
             }
 
             const dbUser = await userQueries.findById({ id })
-            if (!dbUser || !dbUser.isActive) {
+            if (!dbUser || !dbUser.isActive || session.data.passwordVersion !== passwordVersion(dbUser.passwordHash)) {
                 // Stale or deactivated session — drop it.
                 await session.clear()
                 return { success: false, state: AUTH.UNAUTHORIZED }
@@ -84,7 +97,7 @@ export class AuthService {
             }
 
             const session = await useAppSession()
-            await session.update(toSessionUser(user))
+            await session.update(toAppSessionData(user))
 
             return { success: true, state: AUTH.LOGIN_SUCCESS }
         } catch (err) {
@@ -95,6 +108,11 @@ export class AuthService {
 
     static async signup(data: SignupInput): Promise<SignupResponse<void>> {
         try {
+            const parsed = signupSchema.safeParse(data)
+            if (!parsed.success) {
+                return { success: false, state: STUDENT_EMAIL_PATTERN.test(data.email) ? AUTH.INVALID_INPUT : AUTH.INVALID_STUDENT_EMAIL }
+            }
+            data = parsed.data
             const existing = await userQueries.findByEmail(data)
 
             if (existing) {
@@ -110,7 +128,7 @@ export class AuthService {
 
                 // If the password matched, log in automatically.
                 const session = await useAppSession()
-                await session.update(toSessionUser(existing))
+                await session.update(toAppSessionData(existing))
 
                 return { success: true, state: AUTH.LOGIN_SUCCESS }
             }
@@ -118,17 +136,59 @@ export class AuthService {
             const passwordHash = await hashPassword(data.password)
             const user = await userQueries.create({
                 email: data.email,
-                name: null,
+                name: data.email.slice(0, 10),
                 passwordHash,
                 role: 'student',
             })
 
             const session = await useAppSession()
-            await session.update(toSessionUser(user))
+            await session.update(toAppSessionData(user))
 
             return { success: true, state: AUTH.SIGNUP_SUCCESS }
         } catch (err) {
             console.error('Signup error:', err)
+            return { success: false, state: AUTH.SERVER_ERROR }
+        }
+    }
+
+    static async updateProfile(input: UpdateProfileInput): Promise<SessionUserResponse<SessionUser>> {
+        try {
+            const current = await this.getCurrentUser()
+            if (!current.success || !current.data) return { success: false, state: AUTH.UNAUTHORIZED }
+            const parsed = updateProfileSchema.safeParse(input)
+            if (!parsed.success) return { success: false, state: AUTH.INVALID_INPUT }
+            const user = await userQueries.update({ id: current.data.id, name: parsed.data.name, updatedAt: new Date() })
+            const session = await useAppSession()
+            // Keep the original credential version if a concurrent password change revoked this session.
+            await session.update({ ...toSessionUser(user), passwordVersion: session.data.passwordVersion! })
+            return { success: true, data: toSessionUser(user), state: AUTH.PROFILE_UPDATED }
+        } catch (err) {
+            console.error('Update profile error:', err)
+            return { success: false, state: AUTH.SERVER_ERROR }
+        }
+    }
+
+    static async changePassword(input: ChangePasswordInput): Promise<SessionUserResponse<void>> {
+        try {
+            const current = await this.getCurrentUser()
+            if (!current.success || !current.data) return { success: false, state: AUTH.UNAUTHORIZED }
+            const parsed = changePasswordSchema.safeParse(input)
+            if (!parsed.success) return { success: false, state: AUTH.INVALID_INPUT }
+            const user = await userQueries.findById({ id: current.data.id })
+            if (!user || !await verifyPassword(parsed.data.currentPassword, user.passwordHash)) {
+                return { success: false, state: AUTH.INVALID_CURRENT_PASSWORD }
+            }
+            const changed = await userQueries.changePassword({
+                id: user.id,
+                currentPasswordHash: user.passwordHash,
+                passwordHash: await hashPassword(parsed.data.newPassword),
+            })
+            if (!changed) return { success: false, state: AUTH.INVALID_CURRENT_PASSWORD }
+            const session = await useAppSession()
+            await session.clear()
+            return { success: true, state: AUTH.PASSWORD_CHANGED }
+        } catch (err) {
+            console.error('Change password error:', err)
             return { success: false, state: AUTH.SERVER_ERROR }
         }
     }

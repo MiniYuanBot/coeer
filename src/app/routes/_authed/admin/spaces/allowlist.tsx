@@ -23,22 +23,18 @@ const labels = { allowed: '自动提交', review: '每次需审核', blocked: '�
 
 function SpaceAllowlistPage() {
     const { data, loading, error, pending, mutate } = useSpaceAdmin()
-    const [name, setName] = useState('')
     const [studentId, setStudentId] = useState('')
     const [permission, setPermission] = useState<BookingPermission>('allowed')
     const [query, setQuery] = useState('')
     const [page, setPage] = useState(1)
-    const [confirm, setConfirm] = useState<{ id: string; name: string; action: 'remove' | 'reset' } | null>(
-        null,
-    )
+    const [confirm, setConfirm] = useState<{ id: string; name: string } | null>(null)
     const rows = paginate(
         (data?.allowlist ?? []).filter((row) => `${row.name} ${row.studentId}`.includes(query.trim())),
         page,
     )
     async function save(event: FormEvent) {
         event.preventDefault()
-        if (await mutate(`/admin/allowlist/${studentId}`, { name, bookingPermission: permission }, 'PUT')) {
-            setName('')
+        if (await mutate(`/admin/allowlist/${studentId}`, { bookingPermission: permission }, 'PUT')) {
             setStudentId('')
             setPermission('allowed')
         }
@@ -47,9 +43,9 @@ function SpaceAllowlistPage() {
         if (!confirm) return
         if (
             await mutate(
-                `/admin/allowlist/${confirm.id}${confirm.action === 'reset' ? '/reset-password' : ''}`,
+                `/admin/allowlist/${confirm.id}`,
                 {},
-                confirm.action === 'reset' ? 'POST' : 'DELETE',
+                'DELETE',
             )
         )
             setConfirm(null)
@@ -57,23 +53,14 @@ function SpaceAllowlistPage() {
     return (
         <div className="space-y-6">
             <Alert>
-                白名单同时控制预约账号的登录和预约权限。新用户的初始密码为“学号@114514”；移除用户会立即撤销其预约会话。
+                输入 10 位学号即可设置预约权限，系统从 COEER 学生邮箱自动识别学号。移除后立即停止新的预约提交，已有记录会保留。
             </Alert>
             {error && <Alert tone="danger">{error}</Alert>}
             <Card className="p-5">
                 <form
                     onSubmit={(event) => void save(event)}
-                    className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto]"
+                    className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]"
                 >
-                    <Field label="姓名">
-                        <Input
-                            value={name}
-                            onChange={(event) => setName(event.target.value)}
-                            minLength={1}
-                            maxLength={40}
-                            required
-                        />
-                    </Field>
                     <Field label="学号">
                         <Input
                             value={studentId}
@@ -105,7 +92,7 @@ function SpaceAllowlistPage() {
             <div className="max-w-sm">
                 <SearchInput
                     aria-label="搜索白名单"
-                    placeholder="搜索姓名或学号"
+                    placeholder="搜索昵称或学号"
                     value={query}
                     onChange={(event) => {
                         setQuery(event.target.value)
@@ -148,7 +135,6 @@ function SpaceAllowlistPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                        setName(row.name)
                                         setStudentId(row.studentId)
                                         setPermission(row.bookingPermission)
                                     }}
@@ -156,21 +142,11 @@ function SpaceAllowlistPage() {
                                     编辑
                                 </Button>
                                 <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={pending}
-                                    onClick={() =>
-                                        setConfirm({ id: row.studentId, name: row.name, action: 'reset' })
-                                    }
-                                >
-                                    重置密码
-                                </Button>
-                                <Button
                                     variant="ghost"
                                     size="sm"
                                     disabled={pending}
                                     onClick={() =>
-                                        setConfirm({ id: row.studentId, name: row.name, action: 'remove' })
+                                        setConfirm({ id: row.studentId, name: row.name })
                                     }
                                 >
                                     移除
@@ -185,16 +161,14 @@ function SpaceAllowlistPage() {
             {rows.total > rows.size && <Pagination {...rows} onChange={setPage} />}
             <Modal
                 open={!!confirm}
-                title={confirm?.action === 'reset' ? '重置预约密码' : '移除预约权限'}
+                title="移除预约权限"
                 onOpenChange={(open) => {
                     if (!open && !pending) setConfirm(null)
                 }}
             >
                 <p className="text-[13px] leading-6 text-muted-foreground">
                     {confirm?.name}（{confirm?.id}）
-                    {confirm?.action === 'reset'
-                        ? '的密码将恢复为初始密码，所有预约会话将退出。'
-                        : '将失去预约账号访问权限，已有预约记录会保留。'}
+                    将无法提交新的预约，已有预约记录会保留。
                 </p>
                 <div className="mt-5 flex justify-end gap-2">
                     <Button variant="secondary" disabled={pending} onClick={() => setConfirm(null)}>

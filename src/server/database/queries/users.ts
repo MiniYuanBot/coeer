@@ -60,6 +60,15 @@ export const userQueries = {
         return user
     },
 
+    // Compare-and-swap prevents concurrent password changes from accepting a stale password.
+    async changePassword(data: { id: string; currentPasswordHash: string; passwordHash: string }): Promise<boolean> {
+        const result = await db.update(users)
+            .set({ passwordHash: data.passwordHash, updatedAt: new Date() })
+            .where(and(eq(users.id, data.id), eq(users.passwordHash, data.currentPasswordHash), eq(users.isActive, true)))
+            .returning({ id: users.id })
+        return result.length === 1
+    },
+
     // Delete user
     async delete(data: UserIdInput): Promise<void> {
         await db.delete(users).where(eq(users.id, data.id))

@@ -45,6 +45,7 @@ function SpaceEditor({
     save: (body: unknown) => Promise<boolean>
     setScenario: (value: string) => void
 }) {
+    const followsUpstream = space.policy.kind === 'meeting' && space.policy.rulesSource === 'upstream'
     const [name, setName] = useState(space.name)
     const [description, setDescription] = useState(space.description)
     useEffect(() => {
@@ -69,7 +70,7 @@ function SpaceEditor({
                             className="accent-primary"
                             type="checkbox"
                             checked={space.published}
-                            disabled={pending || (official && !space.publicationAllowed)}
+                            disabled={pending || followsUpstream || (official && !space.publicationAllowed)}
                             onChange={(event) => void save({ published: event.target.checked })}
                         />
                         公开展示
@@ -80,7 +81,7 @@ function SpaceEditor({
                             type="checkbox"
                             checked={space.bookable}
                             disabled={
-                                pending ||
+                                pending || followsUpstream ||
                                 (official && (space.permission !== 'allowed' || !space.policy.rulesVerified))
                             }
                             onChange={(event) => void save({ bookable: event.target.checked })}
@@ -89,7 +90,9 @@ function SpaceEditor({
                     </label>
                 </div>
             </div>
-            {official ? (
+            {followsUpstream ? (
+                <Alert>场地信息、开放状态和可预约时段与官方系统同步，具体日期及连续时长由官方系统校验。</Alert>
+            ) : official ? (
                 <Alert>
                     公开资料由独立白名单管理；
                     {space.publicationAllowed ? '已纳入公开白名单' : '尚未纳入公开白名单'}，空间权限

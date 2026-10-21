@@ -106,23 +106,23 @@ type Row = {
 export class MockAdapter implements OfficialAdapter {
   readonly mode = "mock" as const;
   constructor(private db: DB) {}
-  scenario(id: string): Scenario {
+  async scenario(id: string): Promise<Scenario> {
     return (
-      this.db.get<{ scenario: Scenario }>(
+      (await this.db.get<{ scenario: Scenario }>(
         "SELECT scenario FROM mock_scenarios WHERE space_id=?",
         id,
-      )?.scenario ?? "success"
+      ))?.scenario ?? "success"
     );
   }
   async listSpaces() {
-    if (this.db.setting("mock_sync_failure") === "true")
+    if (await this.db.setting("mock_sync_failure") === "true")
       throw new AdapterError("NETWORK");
     return mockCatalog;
   }
   async availability(spaceId: string, date: string): Promise<Snapshot> {
     const space = mockCatalog.find((s) => s.id === spaceId);
     if (!space) throw new AdapterError("UNSUPPORTED");
-    const records = this.db.all<Row>(
+    const records = await this.db.all<Row>(
       "SELECT * FROM mock_reservations WHERE space_id=? AND date=? AND status NOT IN ('failed','cancelled')",
       spaceId,
       date,
@@ -175,13 +175,13 @@ export class MockAdapter implements OfficialAdapter {
     return { slots, includedRefs: records.map((r) => r.ref) };
   }
   async create(command: CreateCommand): Promise<{ ref: string }> {
-    this.db.run(
+    await this.db.run(
       "INSERT INTO adapter_calls(operation,request_id,at) VALUES(?,?,?)",
       "create",
       command.requestId,
       Date.now(),
     );
-    const scenario = this.scenario(command.spaceId);
+    const scenario = await this.scenario(command.spaceId);
     if (scenario === "auth_expired") throw new AdapterError("AUTH_EXPIRED");
     if (scenario === "network") throw new AdapterError("NETWORK");
     if (scenario === "timeout_before_create") throw new AdapterError("TIMEOUT");
@@ -208,7 +208,7 @@ export class MockAdapter implements OfficialAdapter {
             (space.policy.kind === "meeting" && space.policy.approval)
           ? "pending_approval"
           : "confirmed";
-    this.db.run(
+    await this.db.run(
       "INSERT INTO mock_reservations VALUES(?,?,?,?,?,?,?,?)",
       ref,
       command.requestId,
@@ -225,30 +225,30 @@ export class MockAdapter implements OfficialAdapter {
   async cancel(ref: string) {
     const record = await this.get(ref);
     if (!record) throw new AdapterError("INVALID_RESPONSE");
-    this.db.run(
+    await this.db.run(
       "INSERT INTO adapter_calls(operation,request_id,at) VALUES(?,?,?)",
       "cancel",
       record.requestId!,
       Date.now(),
     );
-    if (this.scenario(record.spaceId) === "auth_expired")
+    if (await this.scenario(record.spaceId) === "auth_expired")
       throw new AdapterError("AUTH_EXPIRED");
-    this.db.run(
+    await this.db.run(
       "UPDATE mock_reservations SET status='cancelled' WHERE ref=?",
       ref,
     );
-    if (this.scenario(record.spaceId) === "cancel_timeout")
+    if (await this.scenario(record.spaceId) === "cancel_timeout")
       throw new AdapterError("TIMEOUT");
   }
   async get(ref: string): Promise<OfficialRecord | null> {
-    const row = this.db.get<Row>(
+    const row = await this.db.get<Row>(
       "SELECT * FROM mock_reservations WHERE ref=?",
       ref,
     );
     return row ? this.project(row) : null;
   }
   async findByRequest(id: string) {
-    const row = this.db.get<Row>(
+    const row = await this.db.get<Row>(
       "SELECT * FROM mock_reservations WHERE request_id=?",
       id,
     );
@@ -267,15 +267,15 @@ export class MockAdapter implements OfficialAdapter {
       status: r.status,
     };
   }
-  decide(ref: string, decision: "approve" | "reject" | "cancel") {
-    const row = this.db.get<Row>(
+  async decide(ref: string, decision: "approve" | "reject" | "cancel") {
+    const row = await this.db.get<Row>(
       "SELECT * FROM mock_reservations WHERE ref=?",
       ref,
     );
     if (!row) return false;
     if (decision !== "cancel" && row.status !== "pending_approval")
       return false;
-    this.db.run(
+    await this.db.run(
       "UPDATE mock_reservations SET status=? WHERE ref=?",
       decision === "approve"
         ? "confirmed"

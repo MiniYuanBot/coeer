@@ -117,7 +117,7 @@ async function main() {
         },
       );
       if (process.argv.includes("--account-form")) {
-        if (!proxy || !config.allowHTTP)
+        if (!config.allowHTTP)
           throw new AdapterError("AUTHORIZATION_REQUIRED");
         await page
           .locator('input[placeholder="学号/职工号/北大邮箱/手机号"]')

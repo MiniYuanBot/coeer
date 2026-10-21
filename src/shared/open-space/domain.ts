@@ -40,9 +40,13 @@ export const slotLabels: Record<SlotState, string> = {
 export type MeetingPolicy = {
   kind: "meeting";
   approval: boolean;
+  /** Unknown upstream approval codes must not be presented as a verified policy. */
+  approvalKnown?: boolean;
   stepMinutes: number;
+  /** Zero in upstream mode means that no local duration cap is asserted. */
   maxMinutes: number;
   rulesVerified?: boolean;
+  rulesSource?: "upstream" | "contract";
 };
 // Capacity semantics here are synthetic Mock rules, never inferred official rules.
 export type ActivityPolicy = {

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { z } from "zod";
 import {
   activateAccounts,
@@ -18,23 +18,24 @@ import { activateReadOnlyAllowlist } from "./publication-operations.js";
 if (process.env.CONFIG_ENV_FILE)
   process.loadEnvFile(process.env.CONFIG_ENV_FILE);
 const command = process.argv[2],
-  path = process.env.DATABASE_PATH,
+  path = process.env.DATABASE_URL,
+  schema = process.env.DATABASE_SCHEMA || 'coeer_spaces',
   target = process.argv[3];
 try {
   if (command === "keygen" && target) {
     ensureSessionKey(target);
     console.log('{"event":"ops.key_created"}');
   } else {
-    if (!path || path === ":memory:") throw new Error();
+    if (!path || !/^postgres(?:ql)?:\/\//.test(path)) throw new Error();
     if (
       ["accounts-export", "accounts-activate", "accounts-restore"].includes(
         command,
       )
     ) {
-      const db = new DB(path);
+      const db = await DB.open(path, schema);
       try {
         if (command === "accounts-export")
-          process.stdout.write(JSON.stringify(exportAccountState(db)));
+          process.stdout.write(JSON.stringify(await exportAccountState(db)));
         else {
           const raw = readFileSync(0, "utf8");
           if (Buffer.byteLength(raw) > 5 * 1024 * 1024) throw new Error();
@@ -57,21 +58,21 @@ try {
               typeof state.loginEnabled !== "string"
             )
               throw new Error();
-            restoreAccountState(db, state);
+            await restoreAccountState(db, state);
             process.stdout.write(
               JSON.stringify({ authenticationRestored: true }),
             );
           }
         }
       } finally {
-        db.close();
+        await db.close();
       }
     } else if (command === "backup" && target)
-      await backupDatabase(path, target);
+      await backupDatabase(path, target, schema);
     else if (command === "restore" && target)
-      await restoreDatabase(target, path);
+      await restoreDatabase(target, path, schema);
     else if (command === "check")
-      console.log(JSON.stringify(verifyDatabase(path)));
+      console.log(JSON.stringify(await verifyDatabase(path, schema)));
     else if (command === "publish-allowlist") {
       if (
         process.env.ADAPTER_MODE !== "official" ||
@@ -86,27 +87,26 @@ try {
         false,
       );
       await adapter.initialize();
-      const db = new DB(path);
+      const db = await DB.open(path, schema);
       try {
         const service = new BookingService(db, adapter, adapter.defaultHorizon);
         await service.sync();
-        const result = activateReadOnlyAllowlist(service);
+        const result = await activateReadOnlyAllowlist(service);
         await service.sync();
         console.log(JSON.stringify(result));
       } finally {
-        db.close();
+        await db.close();
       }
     } else if (command === "migrate" || command === "pause") {
-      if (command === "pause" && !existsSync(path)) throw new Error();
-      const db = new DB(path);
+      const db = await DB.open(path, schema);
       try {
         if (command === "pause")
-          db.tx(() => {
-            db.set("paused", "true");
-            db.audit("operator", "automation.emergency_pause", "system");
+          await db.tx(async () => {
+            await db.set("paused", "true");
+            await db.audit("operator", "automation.emergency_pause", "system");
           });
       } finally {
-        db.close();
+        await db.close();
       }
     } else throw new Error();
   }

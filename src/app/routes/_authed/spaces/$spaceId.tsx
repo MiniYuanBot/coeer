@@ -87,7 +87,7 @@ function SpaceDetailPage() {
     async function submit(event: FormEvent) {
         event.preventDefault()
         if (!user) {
-            void navigate({ to: '/spaces/identity', search: { next: `/spaces/${spaceId}?date=${date}` } })
+            setMessage('请使用 10 位学号的学生邮箱账号预约。')
             return
         }
         if (!selection) return
@@ -158,7 +158,7 @@ function SpaceDetailPage() {
                             <Input
                                 type="date"
                                 min={today()}
-                                max={addDays(today(), config!.horizon)}
+                                max={config!.horizon === null ? undefined : addDays(today(), config!.horizon)}
                                 value={date}
                                 onChange={(event) =>
                                     event.target.value &&
@@ -171,7 +171,7 @@ function SpaceDetailPage() {
                         </Field>
                     </div>
                     <div className="grid grid-cols-7 gap-1.5">
-                        {Array.from({ length: Math.min(7, config!.horizon + 1) }, (_, index) =>
+                        {Array.from({ length: config!.horizon === null ? 7 : Math.min(7, config!.horizon + 1) }, (_, index) =>
                             addDays(today(), index),
                         ).map((day) => (
                             <Button
@@ -274,13 +274,13 @@ function SpaceDetailPage() {
                         <p className="text-xs leading-6 text-muted-foreground">
                             预约人：{user.name}
                             <br />
-                            学号：{user.studentId}
+                            {user.studentId ? `学号：${user.studentId}` : '管理员账号未关联学生学号'}
                         </p>
                     ) : (
-                        <Alert>验证预约身份后，姓名和学号将自动带入申请。</Alert>
+                        <Alert>请使用 10 位学号的学生邮箱账号预约，昵称和学号将自动带入申请。</Alert>
                     )}
                     {user?.bookingPermission === 'blocked' && (
-                        <Alert tone="danger">当前账号已被禁止预约，请联系管理员。</Alert>
+                        <Alert tone="danger">当前账号没有预约权限，请联系管理员将你的学号加入预约白名单。</Alert>
                     )}
                     {user?.bookingPermission === 'review' && (
                         <Alert tone="warning">每笔预约需管理员审核，审核前不占用时段。</Alert>
@@ -320,10 +320,10 @@ function SpaceDetailPage() {
                                 availability.data?.stale ||
                                 !!availability.error ||
                                 !availability.data ||
-                                (!!user && (!selection || user.bookingPermission === 'blocked'))
+                                !user || !user.studentId || !selection || user.bookingPermission === 'blocked'
                             }
                         >
-                            {user ? '提交预约申请' : '验证身份后预约'}
+                            提交预约申请
                         </Button>
                     </form>
                     <p className="text-xs leading-6 text-muted-foreground">

@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "evidenceRef": "CHROME-MEETING-LIVE-2026-10-14",
+  "initializedIdIsStable": true,
+  "initializationDoesNotConfirm": true,
+  "receiptMode": "independent_query",
+  "verifyFields": {
+    "ROOMMEETING_ID": {
+      "from": "draft",
+      "field": "ROOMMEETING_ID"
+    },
+    "START_DATE": {
+      "from": "command",
+      "field": "date"
+    },
+    "END_DATE": {
+      "from": "command",
+      "field": "date"
+    },
+    "START_TIME": {
+      "from": "command",
+      "field": "start"
+    },
+    "END_TIME": {
+      "from": "command",
+      "field": "end"
+    },
+    "CYCLE": {
+      "from": "constant",
+      "value": "2"
+    },
+    "CYCLE_TYPE": {
+      "from": "constant",
+      "value": "day"
+    },
+    "CYCLE_TIME": {
+      "from": "constant",
+      "value": ""
+    }
+  },
+  "createFields": {
+    "MEETING_APPLY_ID": {
+      "from": "draft",
+      "field": "MEETING_APPLY_ID"
+    },
+    "ROOMMEETING_ID": {
+      "from": "draft",
+      "field": "ROOMMEETING_ID"
+    },
+    "CYCLE_TIME": {
+      "from": "constant",
+      "value": ""
+    },
+    "viewUrl": {
+      "from": "constant",
+      "value": "reList.do?"
+    },
+    "MEETING_SIKA": {
+      "from": "constant",
+      "value": ""
+    },
+    "showCount": {
+      "from": "constant",
+      "value": "50"
+    },
+    "currentPage": {
+      "from": "constant",
+      "value": "1"
+    },
+    "MEETING_DATE": {
+      "from": "command",
+      "field": "date"
+    },
+    "MEETING_PERSON": {
+      "from": "draft",
+      "field": "MEETING_PERSON"
+    },
+    "PERSON_NAME": {
+      "from": "draft",
+      "field": "NAME"
+    },
+    "LEADERSHIP1": {
+      "from": "draft",
+      "field": "deptName"
+    },
+    "ROOM_NAME": {
+      "from": "draft",
+      "field": "roomName"
+    },
+    "PLACE": {
+      "from": "initialization",
+      "field": "meetingPlace"
+    },
+    "ACTUAL_USER_NAME": {
+      "from": "draft",
+      "field": "name"
+    },
+    "ACTUAL_USER": {
+      "from": "draft",
+      "field": "username"
+    },
+    "MEETING_HOST_NAME": {
+      "from": "draft",
+      "field": "name"
+    },
+    "MEETING_HOST": {
+      "from": "draft",
+      "field": "username"
+    },
+    "MEETING_TITLE": {
+      "from": "command",
+      "field": "purpose"
+    },
+    "TYPE": {
+      "from": "constant",
+      "value": "0"
+    },
+    "MEETING_KEY": {
+      "from": "constant",
+      "value": ""
+    },
+    "CYCLE": {
+      "from": "constant",
+      "value": "2"
+    },
+    "CYCLE_TYPE": {
+      "from": "constant",
+      "value": "day"
+    },
+    "START_DATE": {
+      "from": "command",
+      "field": "date"
+    },
+    "END_DATE": {
+      "from": "command",
+      "field": "date"
+    },
+    "START_TIME": {
+      "from": "command",
+      "field": "start"
+    },
+    "END_TIME": {
+      "from": "command",
+      "field": "end"
+    },
+    "DEPARTMENT_IDS": {
+      "from": "constant",
+      "value": ""
+    },
+    "EXTERNALSTAFF_IDS": {
+      "from": "constant",
+      "value": ""
+    },
+    "MEETING_LABEL": {
+      "from": "initialization",
+      "field": "defaultMeetingLabel"
+    },
+    "REMARK": {
+      "from": "account",
+      "field": "contact"
+    },
+    "PCRF_COST": {
+      "from": "draft",
+      "field": "PCRF_COST"
+    },
+    "PCRF_TIME": {
+      "from": "draft",
+      "field": "PCRF_TIME"
+    }
+  },
+  "verifySuccessCodes": ["1"],
+  "verifyRejectCodes": ["0"],
+  "statusMap": {},
+  "rules": []
+}

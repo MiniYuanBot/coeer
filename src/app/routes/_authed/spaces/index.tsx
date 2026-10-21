@@ -48,7 +48,7 @@ function SpacesPage() {
                             type="date"
                             value={date}
                             min={today()}
-                            max={addDays(today(), config!.horizon)}
+                            max={config!.horizon === null ? undefined : addDays(today(), config!.horizon)}
                             onChange={(event) => event.target.value && update({ date: event.target.value })}
                         />
                     </Field>

@@ -34,15 +34,8 @@ function MyBookingsPage() {
             />
             {!user ? (
                 <EmptyState
-                    title="尚未验证预约身份"
-                    description="使用白名单学号账号验证后，即可查看你的预约记录。"
-                    action={
-                        <Button asChild>
-                            <Link to="/spaces/identity" search={{ next: '/spaces/bookings' }}>
-                                验证预约身份
-                            </Link>
-                        </Button>
-                    }
+                    title="此账号尚未关联学生学号"
+                    description="预约使用 COEER 登录身份，请使用 10 位学号的学生邮箱账号。"
                 />
             ) : (
                 <>

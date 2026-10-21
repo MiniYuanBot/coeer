@@ -32,7 +32,11 @@ loader、写入走 Server Functions。
 白名单与审核管理；页面直接使用主站路由和公共组件，管理入口为 `/admin/spaces`。
 运行环境统一为 **Node.js 26.x、npm 11.x、pnpm 10.33.4**（见 `package.json`）；
 `.nvmrc` 与 `.node-version` 固定推荐版本 `26.7.0`。
-默认本地 Mock 无需另启 OpenSpace；接入既有服务或官方 Connector，参见
+普通用户注册须使用 `xxxxxxxxxx@stu.pku.edu.cn`（10 位数字学号），管理员由服务端创建，
+可使用其他邮箱。空间预约共用 COEER 登录身份，管理员直接拥有预约管理权限；
+白名单按学号维护，昵称和密码统一在 `/profile` 修改。
+开发与部署默认使用官方预约，正常配置采用 `rulesSource: "upstream"`，空间权限、日期和
+时段跟随官网；本机校园网直连与生产 Connector 配置，参见
 [空间预约配置与使用](docs/open-space.md)。
 
 ### 项目检查
@@ -46,7 +50,8 @@ pnpm check
 ```
 
 统一测试覆盖社区账号、权限、内容可见性、活动报名、积分兑换、空间接入和发布脚本；
-数据库测试使用内存 PostgreSQL 与临时 SQLite，不需要启动本机数据库。详见
+数据库测试连接 `.env` 的真实 PostgreSQL，在随机独立 schema 中建表并清理；
+数据库账号需有创建 schema 权限。测试不会清理开发数据。详见
 [测试说明](docs/testing.md)。
 
 ### 安装与启动
@@ -79,6 +84,14 @@ pnpm check
    pnpm dev          # 开发模式，默认 http://localhost:3000
    ```
 
+   社区与预约复用 `DATABASE_URL`。预约表首次使用时自动初始化到 `coeer_spaces`
+   schema，可通过 `OPENSPACE_DATABASE_SCHEMA` 调整；旧 SQLite 文件不会自动导入。
+   官方预约的共用私密路径与开关放在忽略的 `.env.local`，实际账号、密钥、会话和表单
+   协议放在仓库外 `../.coeer-local`。开发与部署使用同一业务规则；本机通过校园网直连，
+   生产通过隔离 Connector 访问官网。`pnpm spaces:campus login` 登录，
+   `pnpm spaces:campus probe` 只读检查，不使用 VPN。
+   配置细节见 [空间预约](docs/open-space.md#本机校园网直连)。
+
    生产模式：
 
    ```sh
@@ -103,11 +116,11 @@ pnpm check
 
    测试账号：
 
-   | 角色      | 邮箱                | 密码       |
-   | --------- | ------------------- | ---------- |
-   | student   | `test@example.com`  | `test1234` |
-   | moderator | `demo@example.com`  | `demo1234` |
-   | admin     | `admin@example.com` | `admin123` |
+   | 角色      | 邮箱                        | 密码       |
+   | --------- | --------------------------- | ---------- |
+   | student   | `0000000001@stu.pku.edu.cn` | `test1234` |
+   | moderator | `0000000002@stu.pku.edu.cn` | `demo1234` |
+   | admin     | `admin@example.com`         | `admin123` |
 
    > 种子账号仅用于开发/演示，禁止指向生产库；`--clean` 会删除业务表数据。
 
@@ -152,7 +165,7 @@ src/
 - 统一响应 `{ success, data, state:{code,message} }`；动作型 Server Function
   失败会抛 `state.message`（前端不弹假成功）；
 - Session cookie httpOnly/secure/sameSite=lax；**`getCurrentUser` 每次回源校验**
-  （停用账号、已删除用户、角色变更即时生效）；
+  （停用账号、已删除用户、角色变更与密码版本校验即时生效）；
 - 服务端 Service 是唯一安全边界：群组/帖子/反馈/活动/商城/卡片各自有角色与归属
   规则；兑换与抽卡在**单事务 + 用户行锁**内完成（防双花/超卖/假掉率）；
 - 主要漏洞清单与修复说明、以及已知待办见 [docs/schema.md §5](docs/schema.md)。

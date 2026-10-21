@@ -13,7 +13,9 @@ export type SpaceConfig = {
     adapter: string
     demo: boolean
     paused: boolean
-    horizon: number
+    /** null delegates the date window to the official server. */
+    horizon: number | null
+    rulesSource?: 'upstream' | 'contract'
     syncEnabled: boolean
     writesEnabled: boolean
     environment: 'mock' | 'staging' | 'production'

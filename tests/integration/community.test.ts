@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
-import type { SessionUser } from '@shared/contracts/auth'
+import { createHash } from 'node:crypto'
+import type { AppSessionData } from '@shared/contracts/auth'
+import { signupSchema, studentIdFromEmail } from '@shared/contracts/auth'
 
-const session = vi.hoisted(() => ({ data: {} as Partial<SessionUser>, update: vi.fn(), clear: vi.fn() }))
+const session = vi.hoisted(() => ({ data: {} as Partial<AppSessionData>, update: vi.fn(), clear: vi.fn() }))
 vi.mock('~/utils/session', () => ({ useAppSession: async () => session }))
 vi.mock('~/database/client', async () => ({ db: (await import('../support/database')).db }))
 
@@ -36,7 +38,7 @@ const ids = {
 }
 let passwordHash: string
 function signIn(id: string = ids.student) {
-    session.data = { id }
+    session.data = { id, passwordVersion: createHash('sha256').update(passwordHash).digest('hex') }
 }
 beforeAll(async () => {
     await initializeDatabase()
@@ -77,7 +79,8 @@ describe('COEER accounts and server permissions', () => {
         expect(session.data).toEqual({})
     })
     it('revalidates roles and immediately revokes disabled accounts', async () => {
-        session.data = { id: ids.student, role: 'admin' }
+        signIn()
+        session.data.role = 'admin'
         expect((await AuthService.getCurrentUser()).data?.role).toBe('student')
         await db.update(users).set({ isActive: false }).where(eq(users.id, ids.student))
         expect((await AuthService.getCurrentUser()).success).toBe(false)
@@ -88,19 +91,80 @@ describe('COEER accounts and server permissions', () => {
     })
     it('registers a student and rejects an existing email with another password', async () => {
         expect(
-            (await AuthService.signup({ email: 'new@example.test', password: 'new-password-2026' })).success,
+            (await AuthService.signup({ email: '2026201234@stu.pku.edu.cn', password: 'new-password-2026' })).success,
         ).toBe(true)
         expect(session.data.role).toBe('student')
         const id = session.data.id
         await AuthService.logout()
         expect(
-            (await AuthService.signup({ email: 'new@example.test', password: 'wrong-password' })).success,
+            (await AuthService.signup({ email: '2026201234@stu.pku.edu.cn', password: 'wrong-password' })).success,
         ).toBe(false)
         expect(session.data.id).toBeUndefined()
         expect(
-            (await AuthService.login({ email: 'new@example.test', password: 'new-password-2026' })).success,
+            (await AuthService.login({ email: '2026201234@stu.pku.edu.cn', password: 'new-password-2026' })).success,
         ).toBe(true)
         expect(session.data.id).toBe(id)
+    })
+    it('only registers exact student email addresses and never accepts a supplied admin role', async () => {
+        for (const email of ['new@example.test', '123456789@stu.pku.edu.cn', '12345678901@stu.pku.edu.cn', 'abcdefghij@stu.pku.edu.cn', '2026201234@pku.edu.cn', '2026201234@stu.pku.edu.cn.attacker.test']) {
+            expect(signupSchema.safeParse({ email, password: 'test1234' }).success).toBe(false)
+            expect((await AuthService.signup({ email, password: 'test1234' })).success).toBe(false)
+        }
+        expect(studentIdFromEmail('2026201234@stu.pku.edu.cn')).toBe('2026201234')
+        expect(studentIdFromEmail('admin@example.test')).toBeUndefined()
+        expect(await db.select().from(users)).toHaveLength(3)
+        const input = { email: '2026201234@stu.pku.edu.cn', password: 'test1234', role: 'admin' }
+        expect((await AuthService.signup(input)).success).toBe(true)
+        expect(session.data.role).toBe('student')
+        expect((await db.select().from(users).where(eq(users.email, input.email)))[0].role).toBe('student')
+    })
+    it('allows existing administrators to log in with a non-student email', async () => {
+        expect((await AuthService.login({ email: 'admin@example.test', password: 'test1234' })).success).toBe(true)
+        expect((await AuthService.getCurrentUser()).data?.role).toBe('admin')
+        expect((await AuthService.getCurrentUser()).data).not.toHaveProperty('passwordVersion')
+    })
+    it('updates only the signed-in account nickname, keeping its role and password private', async () => {
+        signIn()
+        const result = await AuthService.updateProfile({ name: '  新昵称  ', id: ids.other, role: 'admin' } as { name: string })
+        expect(result.success).toBe(true)
+        expect(result.data).toMatchObject({ id: ids.student, name: '新昵称', role: 'student' })
+        expect(result.data).not.toHaveProperty('passwordHash')
+        expect(result.data).not.toHaveProperty('passwordVersion')
+        expect(session.data.name).toBe('新昵称')
+        expect((await AuthService.getCurrentUser()).data?.name).toBe('新昵称')
+        expect((await db.select().from(users).where(eq(users.id, ids.other)))[0].name).toBe('其他学生')
+        expect((await AuthService.updateProfile({ name: '  ' })).success).toBe(false)
+        expect((await AuthService.updateProfile({ name: '名'.repeat(64) })).success).toBe(false)
+    })
+    it('requires the current password and validates bcrypt byte limits before changing credentials', async () => {
+        signIn()
+        expect((await AuthService.changePassword({ currentPassword: 'wrong-password', newPassword: 'new-password-2026' })).state.code).toBe('INVALID_CURRENT_PASSWORD')
+        expect((await AuthService.changePassword({ currentPassword: 'test1234', newPassword: 'short' })).success).toBe(false)
+        expect((await AuthService.changePassword({ currentPassword: 'test1234', newPassword: '密'.repeat(25) })).success).toBe(false)
+        expect(session.clear).not.toHaveBeenCalled()
+        expect((await db.select().from(users).where(eq(users.id, ids.student)))[0].passwordHash).toBe(passwordHash)
+    })
+    it('changes the password, signs out the caller and revokes every previously issued session', async () => {
+        signIn()
+        const oldSession = { ...session.data }
+        expect((await AuthService.changePassword({ currentPassword: 'test1234', newPassword: 'new-password-2026' })).success).toBe(true)
+        expect(session.data).toEqual({})
+        const [user] = await db.select().from(users).where(eq(users.id, ids.student))
+        expect(user.passwordHash).not.toBe('new-password-2026')
+        expect(await bcrypt.compare('new-password-2026', user.passwordHash)).toBe(true)
+        session.data = oldSession
+        expect((await AuthService.getCurrentUser()).success).toBe(false)
+        expect(session.data).toEqual({})
+        expect((await AuthService.login({ email: 'student@example.test', password: 'test1234' })).success).toBe(false)
+        expect((await AuthService.login({ email: 'student@example.test', password: 'new-password-2026' })).success).toBe(true)
+        expect((await AuthService.getCurrentUser()).success).toBe(true)
+    })
+    it('rejects unauthenticated account edits and sessions without a credential version', async () => {
+        expect((await AuthService.updateProfile({ name: '越权昵称' })).success).toBe(false)
+        expect((await AuthService.changePassword({ currentPassword: 'test1234', newPassword: 'new-password-2026' })).success).toBe(false)
+        session.data = { id: ids.student }
+        expect((await AuthService.getCurrentUser()).success).toBe(false)
+        expect(session.clear).toHaveBeenCalledOnce()
     })
     it('rejects unauthenticated writes across feedback, activities and the store', async () => {
         expect(
@@ -291,7 +355,7 @@ describe('COEER points and store transactions', () => {
         const item = await storeItem()
         await givePoints(100)
         signIn()
-        await client.exec('ALTER TABLE redeem_orders ADD CONSTRAINT reject_test_order CHECK (quantity < 0)')
+        await db.execute(sql`ALTER TABLE redeem_orders ADD CONSTRAINT reject_test_order CHECK (quantity < 0)`)
         const log = vi.spyOn(console, 'error').mockImplementation(() => {})
         try {
             expect((await RedeemService.redeem({ itemId: item.id, quantity: 1 })).success).toBe(false)
@@ -300,7 +364,7 @@ describe('COEER points and store transactions', () => {
             expect(await db.select().from(redeemOrders)).toHaveLength(0)
         } finally {
             log.mockRestore()
-            await client.exec('ALTER TABLE redeem_orders DROP CONSTRAINT reject_test_order')
+            await db.execute(sql`ALTER TABLE redeem_orders DROP CONSTRAINT reject_test_order`)
         }
     })
     it('preserves unlimited stock and prevents cross-account point adjustment', async () => {
