@@ -56,7 +56,12 @@
     "helmet": "^8.1.0",
     "cookie-parser": "^1.4.7",
     "linkedom": "^0.18.12",
-    "playwright-core": "^1.56.0"
+    "playwright-core": "^1.56.0",
+    "katex": "^0.16.47",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

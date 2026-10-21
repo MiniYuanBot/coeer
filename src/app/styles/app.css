@@ -1,5 +1,35 @@
 @import 'tailwindcss' source('../');
+@import 'katex/dist/katex.min.css';
 @custom-variant dark (&:where(.dark, .dark *));
+
+.coeer-markdown { overflow-wrap: anywhere; }
+.coeer-markdown > :first-child { margin-top: 0; }
+.coeer-markdown > :last-child { margin-bottom: 0; }
+.coeer-markdown p { margin-block: .75em; white-space: pre-wrap; }
+.coeer-markdown :is(h1, h2, h3, h4, h5, h6) { margin-block: 1.2em .5em; font-weight: 600; line-height: 1.5; }
+.coeer-markdown h1 { font-size: 1.4em; }
+.coeer-markdown h2 { font-size: 1.25em; }
+.coeer-markdown h3 { font-size: 1.1em; }
+.coeer-markdown :is(ul, ol) { padding-left: 1.6em; margin-block: .75em; }
+.coeer-markdown ul { list-style: disc; }
+.coeer-markdown ol { list-style: decimal; }
+.coeer-markdown a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 3px; }
+.coeer-markdown a:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+.coeer-markdown blockquote { border-left: 3px solid hsl(var(--border)); padding-left: 1em; color: hsl(var(--muted-foreground)); }
+.coeer-markdown :not(pre) > code { padding: .15em .35em; border-radius: 4px; background: hsl(var(--muted)); font-size: .9em; }
+.coeer-markdown pre { max-width: 100%; overflow-x: auto; padding: 1em; border-radius: 6px; background: hsl(var(--muted)); line-height: 1.6; }
+.coeer-markdown table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.coeer-markdown :is(th, td) { border: 1px solid hsl(var(--border)); padding: .4em .8em; }
+.coeer-markdown hr { margin-block: 1.5em; border-top: 1px solid hsl(var(--border)); }
+/* KaTeX sizes its struts and rules using content boxes, independently of Preflight. */
+.coeer-markdown .katex { white-space: normal; overflow-wrap: normal; word-break: normal; font-synthesis: none; }
+.coeer-markdown .katex * { box-sizing: content-box; }
+.coeer-markdown .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: .5em .125em; }
+
+.coeer-post-content-viewport[data-collapsed] { max-height: var(--post-preview-height); overflow: hidden; }
+.coeer-post-content-viewport[data-collapsed][data-overflow] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
+}
 
 /* HSL triplets preserve compatibility with existing business-page utilities. */
 :root {

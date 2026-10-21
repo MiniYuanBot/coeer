@@ -1,3 +1,4 @@
+import { PostContent } from '@/components/coeer/cards/PostContent'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import z from 'zod'
 import { listPostsByGroupFn } from '~/functions'
@@ -55,9 +56,7 @@ function AnnouncementsPage() {
                             <Link to="/groups/$slug/posts/$postId" params={{ slug, postId: post.id }} className="mt-3 block">
                                 <h3 className="text-[15px] font-medium hover:text-[hsl(var(--primary))]">{post.title}</h3>
                             </Link>
-                            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
-                                {post.content.replace(/[#*`]/g, '')}
-                            </p>
+                            <PostContent content={post.content} className="mt-2 text-muted-foreground" />
                             <div className="mt-4 flex items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
                                 <div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xs font-medium text-[hsl(var(--primary))]">
                                     {(post.author?.name || '未知用户').charAt(0).toUpperCase()}

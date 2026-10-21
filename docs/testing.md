@@ -6,6 +6,10 @@
 
 ## 覆盖范围
 
+- `tests/markdown.test.ts`：Markdown 与 LaTeX 渲染、错误公式降级、HTML 与危险链接防护。
+- `tests/post-content.test.ts`：真实 Chromium 检查长帖展开/收起、底部渐变、短帖完整显示、
+  上下标位置、分数线厚度、公式字体，以及 390px 窄屏与深色模式。可通过
+  `COEER_TEST_BROWSER` 指定浏览器；未安装 Chrome/Chromium/Edge 时跳过。
 - `tests/integration/community.test.ts`：学生邮箱注册、登录、退出、昵称与密码修改、角色回源校验和停用即时生效；
   反馈审核、匿名作者保护；私密群组的成员审批与内容可见性；活动容量、名单隐私和签到
   权限；兑换数量、积分扣减、库存、订单归属及数据库错误时的事务回滚。

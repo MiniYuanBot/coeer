@@ -1,3 +1,4 @@
+import { PostContent } from './PostContent'
 import { Link } from '@tanstack/react-router'
 import * as React from 'react'
 import { formatDate } from '../lib/date'
@@ -12,14 +13,13 @@ export function PostCard({ post, to }: { post: any; to?: string }) {
                 <Badge tone={post.isPinned ? 'primary' : 'default'}>{post.isPinned ? '置顶' : post.type === 'announcement' ? '公告' : post.type === 'discussion' ? '讨论' : post.type}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</span>
             </div>
-            <h3 className="mt-3 text-[15px] font-medium">{post.title}</h3>
-            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{post.content}</p>
+            <h3 className="mt-3 text-[15px] font-medium">{to ? <Link to={to as any} className="coeer-focus rounded hover:text-primary">{post.title}</Link> : post.title}</h3>
+            <PostContent key={post.id} content={post.content} className="mt-2 text-muted-foreground" />
             <div className="mt-4 flex items-center gap-4 text-sm text-[hsl(var(--muted-foreground))]">
                 <span className="inline-flex items-center gap-1"><Icon name="heart" /> 点赞</span>
                 <span className="inline-flex items-center gap-1"><Icon name="comment" /> 回复</span>
             </div>
         </Card>
     )
-    if (!to) return content
-    return <Link to={to as any} className="coeer-focus block">{content}</Link>
+    return content
 }
