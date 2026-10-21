@@ -28,6 +28,7 @@ export const navSections: NavSection[] = [
         label: '服务',
         items: [
             { to: '/feedbacks', label: '反馈', icon: 'feedback', active: 'prefix' },
+            { to: '/spaces', label: '空间预约', icon: 'calendar', active: 'prefix' },
             { to: '/dorms', label: '宿舍', icon: 'bed', active: 'prefix' },
         ],
     },

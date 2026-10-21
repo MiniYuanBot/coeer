@@ -6,7 +6,7 @@ export const Route = createFileRoute('/_authed')({
         if (!context.user) {
             // dub-style gate: bounce to the auth screen and remember the
             // original destination so we can return after login.
-            const next = `${location.pathname}${location.search}`
+            const next = `${location.pathname}${location.searchStr}`
             throw redirect({
                 to: '/login',
                 search: next !== '/' ? { redirect: next } : {},

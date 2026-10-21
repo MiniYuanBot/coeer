@@ -27,6 +27,12 @@ functions）→ `services` → `queries` → DB；输入在 `shared/contracts` �
 路径别名：`@/*` = `src/app/*`，`~/*` = `src/server/*`，`@shared/*` = `src/shared/*`
 （见 `tsconfig.json` 与 `vite.config.ts`）。
 
+空间预约直接使用 `app/routes/_authed/spaces` 与 `app/routes/_authed/admin/spaces`
+文件路由，复用 `components/coeer` 的公共组件，不设置独立 UI、CSS 或路由适配器。
+`app/hooks/useSpaces` 只管理数据与预约身份；后端通过登录守卫下的
+`/api/open-space/*` 进入保留的预约引擎。共享接口位于 `shared/contracts/spaces.ts`，
+原预约领域类型保留在 `shared/open-space`。配置与运维见 [空间预约](open-space.md)。
+
 ### 1.1 目录导览
 
 ```

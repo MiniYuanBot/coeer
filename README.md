@@ -1,7 +1,7 @@
 # COEER
 
 学院/组织内部的**社区与成长激励系统**：群组与帖子、反馈闭环、公告订阅、活动报名、
-积分 / 卡片 / 成就 / 兑换，以及新生宿舍分配。
+积分 / 卡片 / 成就 / 兑换、新生宿舍分配，以及空间预约。
 
 目前仍处于开发阶段（尚未正式部署，本地数据库为 PostgreSQL）。整体采用
 **分层架构**（数据层 → 业务层 → 应用层 → 表现层）。路由与布局守卫最初借鉴
@@ -14,19 +14,42 @@
 
 ## Tech Stack
 
-| 层级 | 技术 |
-| ---- | ---- |
-| Frontend | React 19, TanStack Router (SSR), TailwindCSS v4 |
-| Backend | TanStack Start `createServerFn`（服务端函数） |
-| Auth | httpOnly Cookie + Session（会话每次回源校验角色/停用状态） |
-| Database | PostgreSQL, Drizzle ORM |
-| Shared | Zod（同一 schema 约束前后端类型与输入） |
-| DevOps | pnpm, TypeScript, Vite |
+| 层级     | 技术                                                       |
+| -------- | ---------------------------------------------------------- |
+| Frontend | React 19, TanStack Router (SSR), TailwindCSS v4            |
+| Backend  | TanStack Start `createServerFn`（服务端函数）              |
+| Auth     | httpOnly Cookie + Session（会话每次回源校验角色/停用状态） |
+| Database | PostgreSQL, Drizzle ORM                                    |
+| Shared   | Zod（同一 schema 约束前后端类型与输入）                    |
+| DevOps   | pnpm, TypeScript, Vite                                     |
 
 TanStack Query、shadcn/ui、限流中间件仍属于预留能力；当前前端读取走路由
 loader、写入走 Server Functions。
 
 ## Getting Started
+
+空间预约已集成为“服务 → 空间预约”（`/spaces`），包含目录、时段选择、预约跟踪、取消、
+白名单与审核管理；页面直接使用主站路由和公共组件，管理入口为 `/admin/spaces`。
+运行环境统一为 **Node.js 26.x、npm 11.x、pnpm 10.33.4**（见 `package.json`）；
+`.nvmrc` 与 `.node-version` 固定推荐版本 `26.7.0`。
+默认本地 Mock 无需另启 OpenSpace；接入既有服务或官方 Connector，参见
+[空间预约配置与使用](docs/open-space.md)。
+
+### 项目检查
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+# 或统一运行
+pnpm check
+```
+
+统一测试覆盖社区账号、权限、内容可见性、活动报名、积分兑换、空间接入和发布脚本；
+数据库测试使用内存 PostgreSQL 与临时 SQLite，不需要启动本机数据库。详见
+[测试说明](docs/testing.md)。
+
+### 安装与启动
 
 1. **克隆**：
 
@@ -80,11 +103,11 @@ loader、写入走 Server Functions。
 
    测试账号：
 
-   | 角色 | 邮箱 | 密码 |
-   | ---- | ---- | ---- |
-   | student | `test@example.com` | `test1234` |
-   | moderator | `demo@example.com` | `demo1234` |
-   | admin | `admin@example.com` | `admin123` |
+   | 角色      | 邮箱                | 密码       |
+   | --------- | ------------------- | ---------- |
+   | student   | `test@example.com`  | `test1234` |
+   | moderator | `demo@example.com`  | `demo1234` |
+   | admin     | `admin@example.com` | `admin123` |
 
    > 种子账号仅用于开发/演示，禁止指向生产库；`--clean` 会删除业务表数据。
 

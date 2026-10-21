@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HealthzRouteImport } from './routes/healthz'
 import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedSpacesRouteRouteImport } from './routes/_authed/spaces/route'
 import { Route as AuthedRedeemsRouteRouteImport } from './routes/_authed/redeems/route'
 import { Route as AuthedProfileRouteRouteImport } from './routes/_authed/profile/route'
 import { Route as AuthedGroupsRouteRouteImport } from './routes/_authed/groups/route'
@@ -24,6 +25,7 @@ import { Route as AuthedBulletinsRouteRouteImport } from './routes/_authed/bulle
 import { Route as AuthedAdminRouteRouteImport } from './routes/_authed/admin/route'
 import { Route as AuthedActivitiesRouteRouteImport } from './routes/_authed/activities/route'
 import { Route as AuthedAchievementsRouteRouteImport } from './routes/_authed/achievements/route'
+import { Route as AuthedSpacesIndexRouteImport } from './routes/_authed/spaces/index'
 import { Route as AuthedRedeemsIndexRouteImport } from './routes/_authed/redeems/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
 import { Route as AuthedFeedbacksIndexRouteImport } from './routes/_authed/feedbacks/index'
@@ -32,6 +34,12 @@ import { Route as AuthedBulletinsIndexRouteImport } from './routes/_authed/bulle
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
 import { Route as AuthedActivitiesIndexRouteImport } from './routes/_authed/activities/index'
 import { Route as AuthedAchievementsIndexRouteImport } from './routes/_authed/achievements/index'
+import { Route as ApiOpenSpaceSplatRouteImport } from './routes/api/open-space/$'
+import { Route as AuthedSpacesLoginRouteImport } from './routes/_authed/spaces/login'
+import { Route as AuthedSpacesIdentityRouteImport } from './routes/_authed/spaces/identity'
+import { Route as AuthedSpacesAdminRouteImport } from './routes/_authed/spaces/admin'
+import { Route as AuthedSpacesAccountRouteImport } from './routes/_authed/spaces/account'
+import { Route as AuthedSpacesSpaceIdRouteImport } from './routes/_authed/spaces/$spaceId'
 import { Route as AuthedGroupsCreateRouteImport } from './routes/_authed/groups/create'
 import { Route as AuthedFeedbacksCreateRouteImport } from './routes/_authed/feedbacks/create'
 import { Route as AuthedAdminStatsRouteImport } from './routes/_authed/admin/stats'
@@ -39,22 +47,31 @@ import { Route as AuthedAdminRedeemsRouteImport } from './routes/_authed/admin/r
 import { Route as AuthedAdminBulletinsRouteImport } from './routes/_authed/admin/bulletins'
 import { Route as AuthedAdminActivitiesRouteImport } from './routes/_authed/admin/activities'
 import { Route as AuthedAdminAchievementsRouteImport } from './routes/_authed/admin/achievements'
+import { Route as AuthedSpacesBookingsRouteRouteImport } from './routes/_authed/spaces/bookings/route'
 import { Route as AuthedGroupsSlugRouteRouteImport } from './routes/_authed/groups/$slug/route'
 import { Route as AuthedFeedbacksFeedbackIdRouteRouteImport } from './routes/_authed/feedbacks/$feedbackId/route'
+import { Route as AuthedAdminSpacesRouteRouteImport } from './routes/_authed/admin/spaces/route'
 import { Route as AuthedAdminGroupsRouteRouteImport } from './routes/_authed/admin/groups/route'
 import { Route as AuthedAdminFeedbacksRouteRouteImport } from './routes/_authed/admin/feedbacks/route'
 import { Route as AuthedAdminDormsRouteRouteImport } from './routes/_authed/admin/dorms/route'
+import { Route as AuthedSpacesBookingsIndexRouteImport } from './routes/_authed/spaces/bookings/index'
 import { Route as AuthedGroupsSlugIndexRouteImport } from './routes/_authed/groups/$slug/index'
 import { Route as AuthedFeedbacksFeedbackIdIndexRouteImport } from './routes/_authed/feedbacks/$feedbackId/index'
 import { Route as AuthedBulletinsBulletinIdIndexRouteImport } from './routes/_authed/bulletins/$bulletinId/index'
+import { Route as AuthedAdminSpacesIndexRouteImport } from './routes/_authed/admin/spaces/index'
 import { Route as AuthedAdminGroupsIndexRouteImport } from './routes/_authed/admin/groups/index'
 import { Route as AuthedAdminFeedbacksIndexRouteImport } from './routes/_authed/admin/feedbacks/index'
 import { Route as AuthedAdminDormsIndexRouteImport } from './routes/_authed/admin/dorms/index'
 import { Route as AuthedActivitiesActivityIdIndexRouteImport } from './routes/_authed/activities/$activityId/index'
+import { Route as AuthedSpacesBookingsBookingIdRouteImport } from './routes/_authed/spaces/bookings/$bookingId'
 import { Route as AuthedGroupsSlugSettingsRouteImport } from './routes/_authed/groups/$slug/settings'
 import { Route as AuthedGroupsSlugMembersRouteImport } from './routes/_authed/groups/$slug/members'
 import { Route as AuthedGroupsSlugAdminRouteImport } from './routes/_authed/groups/$slug/admin'
 import { Route as AuthedFeedbacksFeedbackIdLogsRouteImport } from './routes/_authed/feedbacks/$feedbackId/logs'
+import { Route as AuthedAdminSpacesHistoryRouteImport } from './routes/_authed/admin/spaces/history'
+import { Route as AuthedAdminSpacesCatalogRouteImport } from './routes/_authed/admin/spaces/catalog'
+import { Route as AuthedAdminSpacesBookingsRouteImport } from './routes/_authed/admin/spaces/bookings'
+import { Route as AuthedAdminSpacesAllowlistRouteImport } from './routes/_authed/admin/spaces/allowlist'
 import { Route as AuthedAdminGroupsPendingRouteImport } from './routes/_authed/admin/groups/pending'
 import { Route as AuthedAdminFeedbacksPendingRouteImport } from './routes/_authed/admin/feedbacks/pending'
 import { Route as AuthedGroupsSlugPostsRouteRouteImport } from './routes/_authed/groups/$slug/posts/route'
@@ -93,6 +110,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedSpacesRouteRoute = AuthedSpacesRouteRouteImport.update({
+  id: '/spaces',
+  path: '/spaces',
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedRedeemsRouteRoute = AuthedRedeemsRouteRouteImport.update({
   id: '/redeems',
@@ -139,6 +161,11 @@ const AuthedAchievementsRouteRoute = AuthedAchievementsRouteRouteImport.update({
   path: '/achievements',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedSpacesIndexRoute = AuthedSpacesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
 const AuthedRedeemsIndexRoute = AuthedRedeemsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -179,6 +206,36 @@ const AuthedAchievementsIndexRoute = AuthedAchievementsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedAchievementsRouteRoute,
 } as any)
+const ApiOpenSpaceSplatRoute = ApiOpenSpaceSplatRouteImport.update({
+  id: '/api/open-space/$',
+  path: '/api/open-space/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedSpacesLoginRoute = AuthedSpacesLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
+const AuthedSpacesIdentityRoute = AuthedSpacesIdentityRouteImport.update({
+  id: '/identity',
+  path: '/identity',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
+const AuthedSpacesAdminRoute = AuthedSpacesAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
+const AuthedSpacesAccountRoute = AuthedSpacesAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
+const AuthedSpacesSpaceIdRoute = AuthedSpacesSpaceIdRouteImport.update({
+  id: '/$spaceId',
+  path: '/$spaceId',
+  getParentRoute: () => AuthedSpacesRouteRoute,
+} as any)
 const AuthedGroupsCreateRoute = AuthedGroupsCreateRouteImport.update({
   id: '/create',
   path: '/create',
@@ -214,6 +271,12 @@ const AuthedAdminAchievementsRoute = AuthedAdminAchievementsRouteImport.update({
   path: '/achievements',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
+const AuthedSpacesBookingsRouteRoute =
+  AuthedSpacesBookingsRouteRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthedSpacesRouteRoute,
+  } as any)
 const AuthedGroupsSlugRouteRoute = AuthedGroupsSlugRouteRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -225,6 +288,11 @@ const AuthedFeedbacksFeedbackIdRouteRoute =
     path: '/$feedbackId',
     getParentRoute: () => AuthedFeedbacksRouteRoute,
   } as any)
+const AuthedAdminSpacesRouteRoute = AuthedAdminSpacesRouteRouteImport.update({
+  id: '/spaces',
+  path: '/spaces',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
 const AuthedAdminGroupsRouteRoute = AuthedAdminGroupsRouteRouteImport.update({
   id: '/groups',
   path: '/groups',
@@ -241,6 +309,12 @@ const AuthedAdminDormsRouteRoute = AuthedAdminDormsRouteRouteImport.update({
   path: '/dorms',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
+const AuthedSpacesBookingsIndexRoute =
+  AuthedSpacesBookingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedSpacesBookingsRouteRoute,
+  } as any)
 const AuthedGroupsSlugIndexRoute = AuthedGroupsSlugIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -258,6 +332,11 @@ const AuthedBulletinsBulletinIdIndexRoute =
     path: '/$bulletinId/',
     getParentRoute: () => AuthedBulletinsRouteRoute,
   } as any)
+const AuthedAdminSpacesIndexRoute = AuthedAdminSpacesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminSpacesRouteRoute,
+} as any)
 const AuthedAdminGroupsIndexRoute = AuthedAdminGroupsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -280,6 +359,12 @@ const AuthedActivitiesActivityIdIndexRoute =
     path: '/$activityId/',
     getParentRoute: () => AuthedActivitiesRouteRoute,
   } as any)
+const AuthedSpacesBookingsBookingIdRoute =
+  AuthedSpacesBookingsBookingIdRouteImport.update({
+    id: '/$bookingId',
+    path: '/$bookingId',
+    getParentRoute: () => AuthedSpacesBookingsRouteRoute,
+  } as any)
 const AuthedGroupsSlugSettingsRoute =
   AuthedGroupsSlugSettingsRouteImport.update({
     id: '/settings',
@@ -301,6 +386,30 @@ const AuthedFeedbacksFeedbackIdLogsRoute =
     id: '/logs',
     path: '/logs',
     getParentRoute: () => AuthedFeedbacksFeedbackIdRouteRoute,
+  } as any)
+const AuthedAdminSpacesHistoryRoute =
+  AuthedAdminSpacesHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthedAdminSpacesRouteRoute,
+  } as any)
+const AuthedAdminSpacesCatalogRoute =
+  AuthedAdminSpacesCatalogRouteImport.update({
+    id: '/catalog',
+    path: '/catalog',
+    getParentRoute: () => AuthedAdminSpacesRouteRoute,
+  } as any)
+const AuthedAdminSpacesBookingsRoute =
+  AuthedAdminSpacesBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthedAdminSpacesRouteRoute,
+  } as any)
+const AuthedAdminSpacesAllowlistRoute =
+  AuthedAdminSpacesAllowlistRouteImport.update({
+    id: '/allowlist',
+    path: '/allowlist',
+    getParentRoute: () => AuthedAdminSpacesRouteRoute,
   } as any)
 const AuthedAdminGroupsPendingRoute =
   AuthedAdminGroupsPendingRouteImport.update({
@@ -372,11 +481,14 @@ export interface FileRoutesByFullPath {
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/profile': typeof AuthedProfileRouteRouteWithChildren
   '/redeems': typeof AuthedRedeemsRouteRouteWithChildren
+  '/spaces': typeof AuthedSpacesRouteRouteWithChildren
   '/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/admin/spaces': typeof AuthedAdminSpacesRouteRouteWithChildren
   '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
+  '/spaces/bookings': typeof AuthedSpacesBookingsRouteRouteWithChildren
   '/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/admin/activities': typeof AuthedAdminActivitiesRoute
   '/admin/bulletins': typeof AuthedAdminBulletinsRoute
@@ -384,6 +496,12 @@ export interface FileRoutesByFullPath {
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
+  '/spaces/$spaceId': typeof AuthedSpacesSpaceIdRoute
+  '/spaces/account': typeof AuthedSpacesAccountRoute
+  '/spaces/admin': typeof AuthedSpacesAdminRoute
+  '/spaces/identity': typeof AuthedSpacesIdentityRoute
+  '/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/achievements/': typeof AuthedAchievementsIndexRoute
   '/activities/': typeof AuthedActivitiesIndexRoute
   '/admin/': typeof AuthedAdminIndexRoute
@@ -392,20 +510,28 @@ export interface FileRoutesByFullPath {
   '/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
   '/redeems/': typeof AuthedRedeemsIndexRoute
+  '/spaces/': typeof AuthedSpacesIndexRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
+  '/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
+  '/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
+  '/admin/spaces/history': typeof AuthedAdminSpacesHistoryRoute
   '/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/activities/$activityId/': typeof AuthedActivitiesActivityIdIndexRoute
   '/admin/dorms/': typeof AuthedAdminDormsIndexRoute
   '/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/admin/spaces/': typeof AuthedAdminSpacesIndexRoute
   '/bulletins/$bulletinId/': typeof AuthedBulletinsBulletinIdIndexRoute
   '/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
+  '/spaces/bookings/': typeof AuthedSpacesBookingsIndexRoute
   '/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
   '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
@@ -427,6 +553,12 @@ export interface FileRoutesByTo {
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
+  '/spaces/$spaceId': typeof AuthedSpacesSpaceIdRoute
+  '/spaces/account': typeof AuthedSpacesAccountRoute
+  '/spaces/admin': typeof AuthedSpacesAdminRoute
+  '/spaces/identity': typeof AuthedSpacesIdentityRoute
+  '/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/achievements': typeof AuthedAchievementsIndexRoute
   '/activities': typeof AuthedActivitiesIndexRoute
   '/admin': typeof AuthedAdminIndexRoute
@@ -435,19 +567,27 @@ export interface FileRoutesByTo {
   '/feedbacks': typeof AuthedFeedbacksIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
   '/redeems': typeof AuthedRedeemsIndexRoute
+  '/spaces': typeof AuthedSpacesIndexRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
+  '/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
+  '/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
+  '/admin/spaces/history': typeof AuthedAdminSpacesHistoryRoute
   '/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/activities/$activityId': typeof AuthedActivitiesActivityIdIndexRoute
   '/admin/dorms': typeof AuthedAdminDormsIndexRoute
   '/admin/feedbacks': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups': typeof AuthedAdminGroupsIndexRoute
+  '/admin/spaces': typeof AuthedAdminSpacesIndexRoute
   '/bulletins/$bulletinId': typeof AuthedBulletinsBulletinIdIndexRoute
   '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug': typeof AuthedGroupsSlugIndexRoute
+  '/spaces/bookings': typeof AuthedSpacesBookingsIndexRoute
   '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsIndexRoute
@@ -471,11 +611,14 @@ export interface FileRoutesById {
   '/_authed/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/_authed/profile': typeof AuthedProfileRouteRouteWithChildren
   '/_authed/redeems': typeof AuthedRedeemsRouteRouteWithChildren
+  '/_authed/spaces': typeof AuthedSpacesRouteRouteWithChildren
   '/_authed/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/_authed/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/_authed/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
+  '/_authed/admin/spaces': typeof AuthedAdminSpacesRouteRouteWithChildren
   '/_authed/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/_authed/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
+  '/_authed/spaces/bookings': typeof AuthedSpacesBookingsRouteRouteWithChildren
   '/_authed/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/_authed/admin/activities': typeof AuthedAdminActivitiesRoute
   '/_authed/admin/bulletins': typeof AuthedAdminBulletinsRoute
@@ -483,6 +626,12 @@ export interface FileRoutesById {
   '/_authed/admin/stats': typeof AuthedAdminStatsRoute
   '/_authed/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/_authed/groups/create': typeof AuthedGroupsCreateRoute
+  '/_authed/spaces/$spaceId': typeof AuthedSpacesSpaceIdRoute
+  '/_authed/spaces/account': typeof AuthedSpacesAccountRoute
+  '/_authed/spaces/admin': typeof AuthedSpacesAdminRoute
+  '/_authed/spaces/identity': typeof AuthedSpacesIdentityRoute
+  '/_authed/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/_authed/achievements/': typeof AuthedAchievementsIndexRoute
   '/_authed/activities/': typeof AuthedActivitiesIndexRoute
   '/_authed/admin/': typeof AuthedAdminIndexRoute
@@ -491,20 +640,28 @@ export interface FileRoutesById {
   '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/redeems/': typeof AuthedRedeemsIndexRoute
+  '/_authed/spaces/': typeof AuthedSpacesIndexRoute
   '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
   '/_authed/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/_authed/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
+  '/_authed/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
+  '/_authed/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
+  '/_authed/admin/spaces/history': typeof AuthedAdminSpacesHistoryRoute
   '/_authed/feedbacks/$feedbackId/logs': typeof AuthedFeedbacksFeedbackIdLogsRoute
   '/_authed/groups/$slug/admin': typeof AuthedGroupsSlugAdminRoute
   '/_authed/groups/$slug/members': typeof AuthedGroupsSlugMembersRoute
   '/_authed/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
+  '/_authed/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/_authed/activities/$activityId/': typeof AuthedActivitiesActivityIdIndexRoute
   '/_authed/admin/dorms/': typeof AuthedAdminDormsIndexRoute
   '/_authed/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/_authed/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/_authed/admin/spaces/': typeof AuthedAdminSpacesIndexRoute
   '/_authed/bulletins/$bulletinId/': typeof AuthedBulletinsBulletinIdIndexRoute
   '/_authed/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/_authed/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
+  '/_authed/spaces/bookings/': typeof AuthedSpacesBookingsIndexRoute
   '/_authed/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
   '/_authed/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/_authed/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
@@ -529,11 +686,14 @@ export interface FileRouteTypes {
     | '/groups'
     | '/profile'
     | '/redeems'
+    | '/spaces'
     | '/admin/dorms'
     | '/admin/feedbacks'
     | '/admin/groups'
+    | '/admin/spaces'
     | '/feedbacks/$feedbackId'
     | '/groups/$slug'
+    | '/spaces/bookings'
     | '/admin/achievements'
     | '/admin/activities'
     | '/admin/bulletins'
@@ -541,6 +701,12 @@ export interface FileRouteTypes {
     | '/admin/stats'
     | '/feedbacks/create'
     | '/groups/create'
+    | '/spaces/$spaceId'
+    | '/spaces/account'
+    | '/spaces/admin'
+    | '/spaces/identity'
+    | '/spaces/login'
+    | '/api/open-space/$'
     | '/achievements/'
     | '/activities/'
     | '/admin/'
@@ -549,20 +715,28 @@ export interface FileRouteTypes {
     | '/feedbacks/'
     | '/profile/'
     | '/redeems/'
+    | '/spaces/'
     | '/groups/$slug/posts'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/admin/spaces/allowlist'
+    | '/admin/spaces/bookings'
+    | '/admin/spaces/catalog'
+    | '/admin/spaces/history'
     | '/feedbacks/$feedbackId/logs'
     | '/groups/$slug/admin'
     | '/groups/$slug/members'
     | '/groups/$slug/settings'
+    | '/spaces/bookings/$bookingId'
     | '/activities/$activityId/'
     | '/admin/dorms/'
     | '/admin/feedbacks/'
     | '/admin/groups/'
+    | '/admin/spaces/'
     | '/bulletins/$bulletinId/'
     | '/feedbacks/$feedbackId/'
     | '/groups/$slug/'
+    | '/spaces/bookings/'
     | '/groups/$slug/posts/$postId'
     | '/groups/$slug/posts/announcements'
     | '/groups/$slug/posts/create'
@@ -584,6 +758,12 @@ export interface FileRouteTypes {
     | '/admin/stats'
     | '/feedbacks/create'
     | '/groups/create'
+    | '/spaces/$spaceId'
+    | '/spaces/account'
+    | '/spaces/admin'
+    | '/spaces/identity'
+    | '/spaces/login'
+    | '/api/open-space/$'
     | '/achievements'
     | '/activities'
     | '/admin'
@@ -592,19 +772,27 @@ export interface FileRouteTypes {
     | '/feedbacks'
     | '/profile'
     | '/redeems'
+    | '/spaces'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/admin/spaces/allowlist'
+    | '/admin/spaces/bookings'
+    | '/admin/spaces/catalog'
+    | '/admin/spaces/history'
     | '/feedbacks/$feedbackId/logs'
     | '/groups/$slug/admin'
     | '/groups/$slug/members'
     | '/groups/$slug/settings'
+    | '/spaces/bookings/$bookingId'
     | '/activities/$activityId'
     | '/admin/dorms'
     | '/admin/feedbacks'
     | '/admin/groups'
+    | '/admin/spaces'
     | '/bulletins/$bulletinId'
     | '/feedbacks/$feedbackId'
     | '/groups/$slug'
+    | '/spaces/bookings'
     | '/groups/$slug/posts/announcements'
     | '/groups/$slug/posts/create'
     | '/groups/$slug/posts'
@@ -627,11 +815,14 @@ export interface FileRouteTypes {
     | '/_authed/groups'
     | '/_authed/profile'
     | '/_authed/redeems'
+    | '/_authed/spaces'
     | '/_authed/admin/dorms'
     | '/_authed/admin/feedbacks'
     | '/_authed/admin/groups'
+    | '/_authed/admin/spaces'
     | '/_authed/feedbacks/$feedbackId'
     | '/_authed/groups/$slug'
+    | '/_authed/spaces/bookings'
     | '/_authed/admin/achievements'
     | '/_authed/admin/activities'
     | '/_authed/admin/bulletins'
@@ -639,6 +830,12 @@ export interface FileRouteTypes {
     | '/_authed/admin/stats'
     | '/_authed/feedbacks/create'
     | '/_authed/groups/create'
+    | '/_authed/spaces/$spaceId'
+    | '/_authed/spaces/account'
+    | '/_authed/spaces/admin'
+    | '/_authed/spaces/identity'
+    | '/_authed/spaces/login'
+    | '/api/open-space/$'
     | '/_authed/achievements/'
     | '/_authed/activities/'
     | '/_authed/admin/'
@@ -647,20 +844,28 @@ export interface FileRouteTypes {
     | '/_authed/feedbacks/'
     | '/_authed/profile/'
     | '/_authed/redeems/'
+    | '/_authed/spaces/'
     | '/_authed/groups/$slug/posts'
     | '/_authed/admin/feedbacks/pending'
     | '/_authed/admin/groups/pending'
+    | '/_authed/admin/spaces/allowlist'
+    | '/_authed/admin/spaces/bookings'
+    | '/_authed/admin/spaces/catalog'
+    | '/_authed/admin/spaces/history'
     | '/_authed/feedbacks/$feedbackId/logs'
     | '/_authed/groups/$slug/admin'
     | '/_authed/groups/$slug/members'
     | '/_authed/groups/$slug/settings'
+    | '/_authed/spaces/bookings/$bookingId'
     | '/_authed/activities/$activityId/'
     | '/_authed/admin/dorms/'
     | '/_authed/admin/feedbacks/'
     | '/_authed/admin/groups/'
+    | '/_authed/admin/spaces/'
     | '/_authed/bulletins/$bulletinId/'
     | '/_authed/feedbacks/$feedbackId/'
     | '/_authed/groups/$slug/'
+    | '/_authed/spaces/bookings/'
     | '/_authed/groups/$slug/posts/$postId'
     | '/_authed/groups/$slug/posts/announcements'
     | '/_authed/groups/$slug/posts/create'
@@ -676,6 +881,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
+  ApiOpenSpaceSplatRoute: typeof ApiOpenSpaceSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -721,6 +927,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/spaces': {
+      id: '/_authed/spaces'
+      path: '/spaces'
+      fullPath: '/spaces'
+      preLoaderRoute: typeof AuthedSpacesRouteRouteImport
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/redeems': {
       id: '/_authed/redeems'
@@ -785,6 +998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAchievementsRouteRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/spaces/': {
+      id: '/_authed/spaces/'
+      path: '/'
+      fullPath: '/spaces/'
+      preLoaderRoute: typeof AuthedSpacesIndexRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
     '/_authed/redeems/': {
       id: '/_authed/redeems/'
       path: '/'
@@ -841,6 +1061,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAchievementsIndexRouteImport
       parentRoute: typeof AuthedAchievementsRouteRoute
     }
+    '/api/open-space/$': {
+      id: '/api/open-space/$'
+      path: '/api/open-space/$'
+      fullPath: '/api/open-space/$'
+      preLoaderRoute: typeof ApiOpenSpaceSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/spaces/login': {
+      id: '/_authed/spaces/login'
+      path: '/login'
+      fullPath: '/spaces/login'
+      preLoaderRoute: typeof AuthedSpacesLoginRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
+    '/_authed/spaces/identity': {
+      id: '/_authed/spaces/identity'
+      path: '/identity'
+      fullPath: '/spaces/identity'
+      preLoaderRoute: typeof AuthedSpacesIdentityRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
+    '/_authed/spaces/admin': {
+      id: '/_authed/spaces/admin'
+      path: '/admin'
+      fullPath: '/spaces/admin'
+      preLoaderRoute: typeof AuthedSpacesAdminRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
+    '/_authed/spaces/account': {
+      id: '/_authed/spaces/account'
+      path: '/account'
+      fullPath: '/spaces/account'
+      preLoaderRoute: typeof AuthedSpacesAccountRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
+    '/_authed/spaces/$spaceId': {
+      id: '/_authed/spaces/$spaceId'
+      path: '/$spaceId'
+      fullPath: '/spaces/$spaceId'
+      preLoaderRoute: typeof AuthedSpacesSpaceIdRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
     '/_authed/groups/create': {
       id: '/_authed/groups/create'
       path: '/create'
@@ -890,6 +1152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminAchievementsRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
     }
+    '/_authed/spaces/bookings': {
+      id: '/_authed/spaces/bookings'
+      path: '/bookings'
+      fullPath: '/spaces/bookings'
+      preLoaderRoute: typeof AuthedSpacesBookingsRouteRouteImport
+      parentRoute: typeof AuthedSpacesRouteRoute
+    }
     '/_authed/groups/$slug': {
       id: '/_authed/groups/$slug'
       path: '/$slug'
@@ -903,6 +1172,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/feedbacks/$feedbackId'
       preLoaderRoute: typeof AuthedFeedbacksFeedbackIdRouteRouteImport
       parentRoute: typeof AuthedFeedbacksRouteRoute
+    }
+    '/_authed/admin/spaces': {
+      id: '/_authed/admin/spaces'
+      path: '/spaces'
+      fullPath: '/admin/spaces'
+      preLoaderRoute: typeof AuthedAdminSpacesRouteRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/admin/groups': {
       id: '/_authed/admin/groups'
@@ -925,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminDormsRouteRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
     }
+    '/_authed/spaces/bookings/': {
+      id: '/_authed/spaces/bookings/'
+      path: '/'
+      fullPath: '/spaces/bookings/'
+      preLoaderRoute: typeof AuthedSpacesBookingsIndexRouteImport
+      parentRoute: typeof AuthedSpacesBookingsRouteRoute
+    }
     '/_authed/groups/$slug/': {
       id: '/_authed/groups/$slug/'
       path: '/'
@@ -945,6 +1228,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/bulletins/$bulletinId/'
       preLoaderRoute: typeof AuthedBulletinsBulletinIdIndexRouteImport
       parentRoute: typeof AuthedBulletinsRouteRoute
+    }
+    '/_authed/admin/spaces/': {
+      id: '/_authed/admin/spaces/'
+      path: '/'
+      fullPath: '/admin/spaces/'
+      preLoaderRoute: typeof AuthedAdminSpacesIndexRouteImport
+      parentRoute: typeof AuthedAdminSpacesRouteRoute
     }
     '/_authed/admin/groups/': {
       id: '/_authed/admin/groups/'
@@ -974,6 +1264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedActivitiesActivityIdIndexRouteImport
       parentRoute: typeof AuthedActivitiesRouteRoute
     }
+    '/_authed/spaces/bookings/$bookingId': {
+      id: '/_authed/spaces/bookings/$bookingId'
+      path: '/$bookingId'
+      fullPath: '/spaces/bookings/$bookingId'
+      preLoaderRoute: typeof AuthedSpacesBookingsBookingIdRouteImport
+      parentRoute: typeof AuthedSpacesBookingsRouteRoute
+    }
     '/_authed/groups/$slug/settings': {
       id: '/_authed/groups/$slug/settings'
       path: '/settings'
@@ -1001,6 +1298,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/feedbacks/$feedbackId/logs'
       preLoaderRoute: typeof AuthedFeedbacksFeedbackIdLogsRouteImport
       parentRoute: typeof AuthedFeedbacksFeedbackIdRouteRoute
+    }
+    '/_authed/admin/spaces/history': {
+      id: '/_authed/admin/spaces/history'
+      path: '/history'
+      fullPath: '/admin/spaces/history'
+      preLoaderRoute: typeof AuthedAdminSpacesHistoryRouteImport
+      parentRoute: typeof AuthedAdminSpacesRouteRoute
+    }
+    '/_authed/admin/spaces/catalog': {
+      id: '/_authed/admin/spaces/catalog'
+      path: '/catalog'
+      fullPath: '/admin/spaces/catalog'
+      preLoaderRoute: typeof AuthedAdminSpacesCatalogRouteImport
+      parentRoute: typeof AuthedAdminSpacesRouteRoute
+    }
+    '/_authed/admin/spaces/bookings': {
+      id: '/_authed/admin/spaces/bookings'
+      path: '/bookings'
+      fullPath: '/admin/spaces/bookings'
+      preLoaderRoute: typeof AuthedAdminSpacesBookingsRouteImport
+      parentRoute: typeof AuthedAdminSpacesRouteRoute
+    }
+    '/_authed/admin/spaces/allowlist': {
+      id: '/_authed/admin/spaces/allowlist'
+      path: '/allowlist'
+      fullPath: '/admin/spaces/allowlist'
+      preLoaderRoute: typeof AuthedAdminSpacesAllowlistRouteImport
+      parentRoute: typeof AuthedAdminSpacesRouteRoute
     }
     '/_authed/admin/groups/pending': {
       id: '/_authed/admin/groups/pending'
@@ -1142,10 +1467,33 @@ const AuthedAdminGroupsRouteRouteWithChildren =
     AuthedAdminGroupsRouteRouteChildren,
   )
 
+interface AuthedAdminSpacesRouteRouteChildren {
+  AuthedAdminSpacesAllowlistRoute: typeof AuthedAdminSpacesAllowlistRoute
+  AuthedAdminSpacesBookingsRoute: typeof AuthedAdminSpacesBookingsRoute
+  AuthedAdminSpacesCatalogRoute: typeof AuthedAdminSpacesCatalogRoute
+  AuthedAdminSpacesHistoryRoute: typeof AuthedAdminSpacesHistoryRoute
+  AuthedAdminSpacesIndexRoute: typeof AuthedAdminSpacesIndexRoute
+}
+
+const AuthedAdminSpacesRouteRouteChildren: AuthedAdminSpacesRouteRouteChildren =
+  {
+    AuthedAdminSpacesAllowlistRoute: AuthedAdminSpacesAllowlistRoute,
+    AuthedAdminSpacesBookingsRoute: AuthedAdminSpacesBookingsRoute,
+    AuthedAdminSpacesCatalogRoute: AuthedAdminSpacesCatalogRoute,
+    AuthedAdminSpacesHistoryRoute: AuthedAdminSpacesHistoryRoute,
+    AuthedAdminSpacesIndexRoute: AuthedAdminSpacesIndexRoute,
+  }
+
+const AuthedAdminSpacesRouteRouteWithChildren =
+  AuthedAdminSpacesRouteRoute._addFileChildren(
+    AuthedAdminSpacesRouteRouteChildren,
+  )
+
 interface AuthedAdminRouteRouteChildren {
   AuthedAdminDormsRouteRoute: typeof AuthedAdminDormsRouteRouteWithChildren
   AuthedAdminFeedbacksRouteRoute: typeof AuthedAdminFeedbacksRouteRouteWithChildren
   AuthedAdminGroupsRouteRoute: typeof AuthedAdminGroupsRouteRouteWithChildren
+  AuthedAdminSpacesRouteRoute: typeof AuthedAdminSpacesRouteRouteWithChildren
   AuthedAdminAchievementsRoute: typeof AuthedAdminAchievementsRoute
   AuthedAdminActivitiesRoute: typeof AuthedAdminActivitiesRoute
   AuthedAdminBulletinsRoute: typeof AuthedAdminBulletinsRoute
@@ -1158,6 +1506,7 @@ const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
   AuthedAdminDormsRouteRoute: AuthedAdminDormsRouteRouteWithChildren,
   AuthedAdminFeedbacksRouteRoute: AuthedAdminFeedbacksRouteRouteWithChildren,
   AuthedAdminGroupsRouteRoute: AuthedAdminGroupsRouteRouteWithChildren,
+  AuthedAdminSpacesRouteRoute: AuthedAdminSpacesRouteRouteWithChildren,
   AuthedAdminAchievementsRoute: AuthedAdminAchievementsRoute,
   AuthedAdminActivitiesRoute: AuthedAdminActivitiesRoute,
   AuthedAdminBulletinsRoute: AuthedAdminBulletinsRoute,
@@ -1320,6 +1669,45 @@ const AuthedRedeemsRouteRouteChildren: AuthedRedeemsRouteRouteChildren = {
 const AuthedRedeemsRouteRouteWithChildren =
   AuthedRedeemsRouteRoute._addFileChildren(AuthedRedeemsRouteRouteChildren)
 
+interface AuthedSpacesBookingsRouteRouteChildren {
+  AuthedSpacesBookingsBookingIdRoute: typeof AuthedSpacesBookingsBookingIdRoute
+  AuthedSpacesBookingsIndexRoute: typeof AuthedSpacesBookingsIndexRoute
+}
+
+const AuthedSpacesBookingsRouteRouteChildren: AuthedSpacesBookingsRouteRouteChildren =
+  {
+    AuthedSpacesBookingsBookingIdRoute: AuthedSpacesBookingsBookingIdRoute,
+    AuthedSpacesBookingsIndexRoute: AuthedSpacesBookingsIndexRoute,
+  }
+
+const AuthedSpacesBookingsRouteRouteWithChildren =
+  AuthedSpacesBookingsRouteRoute._addFileChildren(
+    AuthedSpacesBookingsRouteRouteChildren,
+  )
+
+interface AuthedSpacesRouteRouteChildren {
+  AuthedSpacesBookingsRouteRoute: typeof AuthedSpacesBookingsRouteRouteWithChildren
+  AuthedSpacesSpaceIdRoute: typeof AuthedSpacesSpaceIdRoute
+  AuthedSpacesAccountRoute: typeof AuthedSpacesAccountRoute
+  AuthedSpacesAdminRoute: typeof AuthedSpacesAdminRoute
+  AuthedSpacesIdentityRoute: typeof AuthedSpacesIdentityRoute
+  AuthedSpacesLoginRoute: typeof AuthedSpacesLoginRoute
+  AuthedSpacesIndexRoute: typeof AuthedSpacesIndexRoute
+}
+
+const AuthedSpacesRouteRouteChildren: AuthedSpacesRouteRouteChildren = {
+  AuthedSpacesBookingsRouteRoute: AuthedSpacesBookingsRouteRouteWithChildren,
+  AuthedSpacesSpaceIdRoute: AuthedSpacesSpaceIdRoute,
+  AuthedSpacesAccountRoute: AuthedSpacesAccountRoute,
+  AuthedSpacesAdminRoute: AuthedSpacesAdminRoute,
+  AuthedSpacesIdentityRoute: AuthedSpacesIdentityRoute,
+  AuthedSpacesLoginRoute: AuthedSpacesLoginRoute,
+  AuthedSpacesIndexRoute: AuthedSpacesIndexRoute,
+}
+
+const AuthedSpacesRouteRouteWithChildren =
+  AuthedSpacesRouteRoute._addFileChildren(AuthedSpacesRouteRouteChildren)
+
 interface AuthedRouteRouteChildren {
   AuthedAchievementsRouteRoute: typeof AuthedAchievementsRouteRouteWithChildren
   AuthedActivitiesRouteRoute: typeof AuthedActivitiesRouteRouteWithChildren
@@ -1330,6 +1718,7 @@ interface AuthedRouteRouteChildren {
   AuthedGroupsRouteRoute: typeof AuthedGroupsRouteRouteWithChildren
   AuthedProfileRouteRoute: typeof AuthedProfileRouteRouteWithChildren
   AuthedRedeemsRouteRoute: typeof AuthedRedeemsRouteRouteWithChildren
+  AuthedSpacesRouteRoute: typeof AuthedSpacesRouteRouteWithChildren
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
@@ -1342,6 +1731,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedGroupsRouteRoute: AuthedGroupsRouteRouteWithChildren,
   AuthedProfileRouteRoute: AuthedProfileRouteRouteWithChildren,
   AuthedRedeemsRouteRoute: AuthedRedeemsRouteRouteWithChildren,
+  AuthedSpacesRouteRoute: AuthedSpacesRouteRouteWithChildren,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
@@ -1355,6 +1745,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
+  ApiOpenSpaceSplatRoute: ApiOpenSpaceSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

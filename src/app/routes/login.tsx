@@ -9,10 +9,10 @@ export const Route = createFileRoute('/login')({
     validateSearch: z.object({
         redirect: z.string().optional(),
     }),
-    beforeLoad: ({ context }) => {
+    beforeLoad: ({ context, search }) => {
         // Already signed in → send back to the app.
         if (context.user) {
-            throw redirect({ to: '/' })
+            throw redirect({ href: safeRedirect(search.redirect) })
         }
     },
     component: LoginComp,

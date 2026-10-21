@@ -42,14 +42,17 @@ npm run test:deploy                # 发布包排除规则、失败恢复及并�
   "host": "aliyun",
   "root": "/var/www/coeer",
   "service": "coeer.service",
-  "pnpm": "/root/.nvm/versions/node/v20.20.2/bin/pnpm",
+  "pnpm": "/root/.nvm/versions/node/v26.7.0/bin/pnpm",
   "pnpmVersion": "10.33.4",
   "port": 3000,
   "previewPort": 13000
 }
 ```
 
-`pnpm` 同目录下必须存在 `node`。当前配置保留了现有服务器的 Node 20 路径以适配线上；升级至 Node 24 LTS 后需更新此路径，脚本不会自行安装或更换系统运行时。项目固定 pnpm 10.33.4；生产启动使用锁文件中的 srvx 0.11.7，不再在服务启动时执行 `pnpx` 下载。
+`pnpm` 同目录下必须存在 `node`。项目现在要求 Node 26.x、npm 11.x 和 pnpm 10.33.4；
+服务器应先升级运行时，并在 `deploy/aliyun.local.json` 填入实际安装路径。仓库中的
+`deploy/aliyun.json` 仍记录原服务器的 Node 20 路径，不能直接用于发布新版。
+脚本不会安装或切换服务器运行时；生产启动使用锁文件中的 srvx 0.11.7。
 
 服务器布局：
 
@@ -85,7 +88,7 @@ npm run test:deploy                # 发布包排除规则、失败恢复及并�
 ## Requirements
 
 - Linux server, Ubuntu 22.04+ recommended
-- Node.js 24 LTS recommended (minimum 20.19 for the existing deployment)
+- Node.js 26.x and npm 11.x (recommended Node 26.7.0)
 - pnpm 10.33.4
 - PostgreSQL 14+
 - Nginx
@@ -97,7 +100,7 @@ npm run test:deploy                # 发布包排除规则、失败恢复及并�
 sudo apt update
 sudo apt install -y nginx postgresql postgresql-contrib
 
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_26.x | sudo -E bash -
 sudo apt install -y nodejs
 
 corepack enable
