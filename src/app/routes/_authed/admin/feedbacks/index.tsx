@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { TableScroll } from '@/components/coeer/ui/TableScroll'
+import { createFileRoute, Link, useHydrated, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
 import z from 'zod'
 import { deleteFeedbackFn, getFeedbacksFn, updateFeedbackStatusFn } from '~/functions'
@@ -37,11 +38,12 @@ function AdminFeedbacksPage() {
     const { feedbacks, total, pageSize } = Route.useLoaderData()
     const { status, search, page } = Route.useSearch()
     const navigate = useNavigate()
-    const router = useRouter()
+    const hydrated = useHydrated()
+    const isPending = useRouterState({ select: state => state.status === 'pending' })
     const [reviewingId, setReviewingId] = useState<string | null>(null)
     const [workingId, setWorkingId] = useState<string | null>(null)
     const totalPages = Math.ceil(total / pageSize)
-    const isLoading = router.state.status === 'pending'
+    const isLoading = hydrated && isPending
 
     const refresh = () => navigate({ to: '/admin/feedbacks', search: { status, search, page } })
 
@@ -87,9 +89,10 @@ function AdminFeedbacksPage() {
 
             <Card className="grid gap-3 p-4 md:grid-cols-[1fr_12rem]">
                 <form onSubmit={handleSearch}>
-                    <SearchInput name="search" defaultValue={search} placeholder="搜索反馈标题或内容" />
+                    <SearchInput key={search || ''} name="search" defaultValue={search} placeholder="搜索反馈标题或内容" />
                 </form>
                 <select
+                    aria-label="按反馈状态筛选"
                     value={status || ''}
                     onChange={(e) => navigate({ to: '/admin/feedbacks', search: { status: e.target.value as FeedbackStatus || undefined, search, page: 1 } })}
                     className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
@@ -109,7 +112,7 @@ function AdminFeedbacksPage() {
 
             <Card className="overflow-hidden">
                 {feedbacks.length ? (
-                    <div className="overflow-x-auto">
+                    <TableScroll label="反馈管理表">
                         <table className="w-full min-w-[760px] text-sm">
                             <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
                                 <tr>
@@ -152,7 +155,7 @@ function AdminFeedbacksPage() {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </TableScroll>
                 ) : (
                     <div className="p-8">
                         <EmptyState title="没有匹配的反馈" description="调整筛选条件后再试试。" />

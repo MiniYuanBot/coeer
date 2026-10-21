@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { updateGroupPostFn } from '~/functions'
@@ -38,8 +39,8 @@ function EditPostPage() {
     }
 
     return (
-        <div className="mx-auto max-w-2xl space-y-6">
-            <SectionHeader title="编辑帖子" description={`更新 ${group.name} 中的帖子内容。`} />
+        <PageLayout width="form">
+            <SectionHeader level="h2" title="编辑帖子" description={`更新 ${group.name} 中的帖子内容。`} />
 
             <Card className="rounded-lg p-5">
                 {error ? <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</div> : null}
@@ -65,6 +66,6 @@ function EditPostPage() {
                     </div>
                 </form>
             </Card>
-        </div>
+        </PageLayout>
     )
 }

@@ -1,8 +1,9 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createGroupFn } from '~/functions'
 import { GroupCategory, GROUP_CATEGORY } from '@shared/constants'
-import { Button, Card, Icon, SectionHeader } from '@/components/coeer'
+import { Alert, Button, Card, Field, Icon, Input, SectionHeader, Select, Textarea } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/create')({
     component: CreateGroupComponent,
@@ -43,70 +44,54 @@ function CreateGroupComponent() {
     }
 
     return (
-        <div className="mx-auto max-w-2xl space-y-6">
+        <PageLayout width="form">
             <SectionHeader title="创建群组" description="提交群组名称、分类和简介，创建后将进入审核流程。" />
 
             <Card className="rounded-lg p-5">
             <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                    <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">
+                    <Alert tone="danger">
                         {error}
-                    </div>
+                    </Alert>
                 )}
 
-                <div>
-                    <label className="mb-2 block text-sm font-medium">
-                        群组名称 <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                <Field label="群组名称">
+                    <Input
                         name="name"
                         required
                         minLength={2}
                         maxLength={100}
-                        className="coeer-focus h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
                         placeholder="例如：人工智能学习小组"
                     />
-                </div>
+                </Field>
 
-                <div>
-                    <label className="mb-2 block text-sm font-medium">
-                        URL 标识 <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                <Field label="URL 标识" description="只能包含小写字母、数字和连字符，将用于群组访问链接。">
+                    <Input
                         name="slug"
                         required
                         pattern="[a-z0-9-]+"
-                        className="coeer-focus h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
                         placeholder="例如：ai-study-group"
                     />
-                    <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                        只能包含小写字母、数字和连字符，将用于群组访问链接
-                    </p>
-                </div>
+                </Field>
 
-                <div>
-                    <label className="mb-2 block text-sm font-medium">
-                        分类 <span className="text-rose-500">*</span>
-                    </label>
-                    <select name="category" required className="coeer-focus h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                <Field label="分类">
+                    <Select name="category" required>
                         <option value={GROUP_CATEGORY.CLUB}>社团</option>
                         <option value={GROUP_CATEGORY.COURSE}>课程</option>
                         <option value={GROUP_CATEGORY.INTEREST}>兴趣</option>
                         <option value={GROUP_CATEGORY.ORGANIZATION}>组织</option>
                         <option value={GROUP_CATEGORY.PROJECT}>项目</option>
-                    </select>
-                </div>
+                    </Select>
+                </Field>
 
-                <div>
-                    <label className="mb-2 block text-sm font-medium">描述</label>
-                    <textarea
+                <Field label="描述（选填）">
+                    <Textarea
                         name="description"
                         maxLength={500}
                         rows={4}
-                        className="coeer-focus w-full resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6"
                         placeholder="介绍一下这个群组..."
                     />
-                </div>
+                </Field>
 
                 <div className="flex items-center gap-2">
                     <input type="checkbox" name="isPublic" id="isPublic" defaultChecked className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />
@@ -115,22 +100,17 @@ function CreateGroupComponent() {
                     </label>
                 </div>
 
-                <div className="flex flex-wrap justify-end gap-3 pt-2">
+                <div className="coeer-form-actions">
+                    <Button asChild variant="outline"><Link to="/groups">取消</Link></Button>
                     <Button
                         type="submit"
                         loading={loading}
                     >
                         <Icon name="group" /> 创建群组
                     </Button>
-                    <Link
-                        to='/groups'
-                        className="coeer-focus inline-flex h-10 items-center rounded-lg border border-[hsl(var(--border))] px-4 text-sm font-medium hover:bg-[hsl(var(--muted))]"
-                    >
-                        取消
-                    </Link>
                 </div>
             </form>
             </Card>
-        </div>
+        </PageLayout>
     )
 }

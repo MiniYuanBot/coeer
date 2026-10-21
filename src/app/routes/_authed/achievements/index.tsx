@@ -1,3 +1,4 @@
+import { MediaPreview, StatsBar } from '@/components/coeer'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
@@ -90,41 +91,11 @@ function AchievementsPage() {
                 }
             />
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card className="rounded-lg p-5">
-                    <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
-                            <Icon name="card" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-medium tabular-nums">{myCards.length}</div>
-                            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">我的卡片</p>
-                        </div>
-                    </div>
-                </Card>
-                <Card className="rounded-lg p-5">
-                    <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                            <Icon name="award" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-medium tabular-nums">{unlocked.length}</div>
-                            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">已解锁成就</p>
-                        </div>
-                    </div>
-                </Card>
-                <Card className="rounded-lg p-5">
-                    <div className="flex items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">
-                            <Icon name="spark" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-medium tabular-nums">{cards.length}</div>
-                            <p className="text-[13px] text-[hsl(var(--muted-foreground))]">卡池</p>
-                        </div>
-                    </div>
-                </Card>
-            </div>
+            <StatsBar label="我的成长概览" items={[
+                { label: '我的卡片', value: myCards.length, icon: 'card' },
+                { label: '已解锁成就', value: unlocked.length, icon: 'award' },
+                { label: '卡池种类', value: cards.length, icon: 'spark' },
+            ]} />
 
             <FilterPanel
                 searchValue={search}
@@ -138,7 +109,7 @@ function AchievementsPage() {
                             { key: 'achievements', label: '成就进度', active: view === 'achievements', onClick: () => go({ view: 'achievements' }) },
                         ],
                     },
-                    {
+                    ...(view === 'achievements' ? [{
                         title: '成就类型',
                         items: [
                             { key: 'all-achievements', label: '全部成就', active: !conditionType, onClick: () => go({ conditionType: undefined }) },
@@ -149,8 +120,8 @@ function AchievementsPage() {
                                 onClick: () => go({ conditionType: item as AchievementConditionType, view: 'achievements' }),
                             })),
                         ],
-                    },
-                    {
+                    }] : []),
+                    ...(view === 'cards' ? [{
                         title: '卡片稀有度',
                         items: [
                             { key: 'all-cards', label: '全部卡片', active: !rarity, onClick: () => go({ rarity: undefined }) },
@@ -161,7 +132,7 @@ function AchievementsPage() {
                                 onClick: () => go({ rarity: item as CardRarity, view: 'cards' }),
                             })),
                         ],
-                    },
+                    }] : []),
                 ]}
             />
 
@@ -169,10 +140,10 @@ function AchievementsPage() {
                 <section className="space-y-3">
                     <h2 className="text-[15px] font-medium">我的卡片</h2>
                     {visibleMyCards.length ? (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="coeer-grid">
                             {visibleMyCards.map((item: any) => (
                                 <Card key={item.id} className="overflow-hidden rounded-lg">
-                                    <img src={item.card.imageUrl} alt={item.card.name} className="aspect-square w-full object-cover" />
+                                    <MediaPreview src={item.card.imageUrl} alt={item.card.name} icon="card" />
                                     <div className="p-4">
                                         <Badge tone="primary">{cardRarityLabels[item.card.rarity] || item.card.rarity}</Badge>
                                         <h3 className="mt-2 text-[15px] font-medium">{item.card.name}</h3>

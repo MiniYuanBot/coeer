@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Badge, Card, Icon, SectionHeader, type BadgeTone, type IconName } from '@/components/coeer'
+import { Card, Icon, SectionHeader, StatsBar, type BadgeTone, type IconName } from '@/components/coeer'
 import { getFeedbacksFn, listActivitiesFn, listAllGroupsFn, listRedeemItemsFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/admin/')({
@@ -74,41 +74,24 @@ function AdminDashboardPage() {
                 title="管理工作台"
                 description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就与宿舍。"
             />
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {metricCards.map((item) => (
-                    <Card key={item.label} className="rounded-lg p-5">
-                        <div className="flex items-center gap-3">
-                            <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
-                                <Icon name={item.icon} />
-                            </div>
-                            <div>
-                                <div className="text-2xl font-medium tabular-nums">{item.value}</div>
-                                <div className="text-[13px] text-[hsl(var(--muted-foreground))]">{item.label}</div>
-                            </div>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+            <StatsBar label="管理概览" items={metricCards} />
 
             {adminGroups.map((group, index) => (
                 <section key={group.title} className="space-y-4">
                     {index > 0 ? <div className="h-px bg-[hsl(var(--border))]" /> : null}
                     <h2 className="text-[15px] font-medium">{group.title}</h2>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="coeer-grid">
                         {group.links.map((item) => (
-                            <Link key={item.to} to={item.to} className="block">
-                                <Card className="group h-full rounded-lg p-5">
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]">
+                            <Link key={item.to} to={item.to} className="coeer-focus group block rounded-lg">
+                                <Card className="flex h-full items-start gap-3 p-4 transition-colors group-hover:bg-muted/40">
+                                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border bg-muted/50 text-muted-foreground">
                                             <Icon name={item.icon} />
                                         </div>
-                                        <Badge tone={item.tone}>{item.badge}</Badge>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-[13px] font-medium">{item.title}</h3>
+                                        <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.description}</p>
                                     </div>
-                                    <div className="mt-4 flex items-start justify-between gap-3">
-                                        <h3 className="text-[15px] font-medium">{item.title}</h3>
-                                        <Icon name="chevron" className="h-4 w-4 text-[hsl(var(--muted-foreground))] opacity-0 transition-opacity group-hover:opacity-100" />
-                                    </div>
-                                    <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{item.description}</p>
+                                    <Icon name="chevron" className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 </Card>
                             </Link>
                         ))}

@@ -154,7 +154,7 @@ src/
 - 列表页复用 `SectionHeader` → `FilterPanel`（筛选写入 URL）→ 行列表、卡片网格或
   表格 → `EmptyState` → 分页；反馈使用对齐行列表，首页信息流使用分隔线；
   详情/表单页复用 `Card + Modal + Toast`；
-- 桌面外壳为 232px 侧栏与 52px 路径栏，移动端切换为抽屉；页面搜索支持
+- 桌面外壳为 224px 侧栏与 52px 路径栏，移动端切换为抽屉；页面搜索支持
   Cmd/Ctrl+K、方向键和 Enter 跳转。
 
 视觉令牌与组件规则以 [DESIGN.md](DESIGN.md) 为准，机器可读扩展与组件预览位于

@@ -158,15 +158,15 @@ routes/
 
 ### 3.2 外壳（layout 体系）
 
-- `AppShell`：lg（1024px）起固定 232px 左侧栏，内容顶部为 52px sticky 路径栏。
-  主内容采用 `.coeer-workspace`，最大宽度 84rem；手机左右各留 16px 空隙。
+- `AppShell`：lg（1024px）起固定 224px 左侧栏，内容顶部为 52px sticky 路径栏。
+  主内容采用 `.coeer-workspace`，最大宽度 1440px；桌面左右各留 32px，手机各留 16px。
 - `Sidebar`：品牌、页面搜索、按“社区 / 服务 / 成长”分组的导航，平台管理员
-  额外显示“管理”；底部为主题切换与用户/退出入口。当前导航用灰底与主色图标标识。
+  额外显示“管理”；进入后台后显示管理模块和返回社区入口。底部为主题切换与用户/退出入口。当前导航用灰底与主色图标标识。
 - 移动导航：lg 以下使用顶部按钮开启原生 dialog 抽屉，宽度 `min(288px, 86vw)`；
   打开时锁定背景滚动，支持关闭按钮、Esc、遮罩点击与选中页面后关闭。
 - `CommandMenu`：搜索按钮或 Cmd/Ctrl+K 打开，按现有页面名称与路径过滤；支持
   方向键选择、Enter 跳转、Esc 关闭。它是页面导航，不提供全站内容搜索索引。
-- 登录首页：主信息流与公开反馈使用分隔线；xl（1280px）起搭配 280px 信息侧栏，
+- 登录首页：主信息流与公开反馈使用分隔线；内容区宽度达到 880px 时搭配 264px 信息侧栏，
   更窄时顺序堆叠。
 - 游客首页：64px 品牌页头含主题切换与登录/注册，介绍和公开信息流左对齐，
   xl 起搭配 300px 信息侧栏。
@@ -177,12 +177,18 @@ routes/
 
 | 组件 | 约定 |
 | ---- | ---- |
-| `Button` | primary/secondary/outline/ghost/danger；sm/md/lg/icon；默认 36px 高、6px 圆角；loading 禁用重复提交 |
+| `Button` | primary/secondary/outline/ghost/danger；sm/md/lg/icon；默认 36px 高、6px 圆角；手机最小高度 44px；loading 禁用重复提交 |
 | `Badge` | default/primary/success/warning/danger/muted；11px 字号、4px 圆角、轻底色与细边框 |
 | `Card` | 8px 圆角、1px 边框，无投影或上浮；内边距由调用方决定 |
-| `SectionHeader` | 23px 页面标题、描述与右侧操作，窄屏允许换行 |
-| `FilterPanel` | 搜索与可换行的过滤组，渲染分组标题；选中项用 muted 背景与 aria-pressed |
+| `PageLayout` | full、reading（896px）、form（704px）；左对齐，分区间距 24px |
+| `SectionHeader` | 22px 页面标题、描述与右侧操作；手机说明独占一行，日期字段另起一行；群组子页用 h2 |
+| `FilterPanel` | 搜索与过滤组随可用宽度并排或换行；选中项用 muted 背景、边框与 aria-pressed |
 | `SearchInput` | 36px 高、6px 圆角，前置搜索图标与可访问名称 |
+| `Field / Input / Select / Textarea` | 持久标签、统一字段样式；手机字号 16px，输入框与选择器最小高度 44px |
+| `NavTabs` | 页面内下划线导航；自身横向滚动，激活态读取 data-status |
+| `StatsBar` | 真实同类数值共用容器与分隔线 |
+| `MediaPreview` | 图片加载失败时稳定占位；集合图片限制高度 |
+| `TableScroll` | 表格局部横向滚动；超宽时提供提示、可聚焦并使用方向键 |
 | `EmptyState` | 小图标框、明确标题/说明与适用的下一步操作 |
 | `Modal` | 原生 dialog，最大宽 512px、8px 圆角、20px 内边距；标题关联、Esc/关闭按钮/真正的遮罩点击关闭 |
 | `Toast` | Provider + `useToast()`，沿用 Card 和语义 Badge，位于右下角 |

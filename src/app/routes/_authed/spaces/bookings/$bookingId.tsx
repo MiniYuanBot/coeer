@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
@@ -50,7 +51,7 @@ function BookingDetailPage() {
             <EmptyState title="无法读取预约" description={resource.error || '预约不存在或你没有查看权限。'} />
         )
     return (
-        <div className="max-w-4xl space-y-6">
+        <PageLayout width="reading">
             <Link
                 to="/spaces/bookings"
                 className="coeer-focus rounded text-xs text-muted-foreground hover:text-foreground"
@@ -154,6 +155,6 @@ function BookingDetailPage() {
                     </Button>
                 </div>
             </Modal>
-        </div>
+        </PageLayout>
     )
 }

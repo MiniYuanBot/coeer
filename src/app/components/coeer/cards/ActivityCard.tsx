@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Link } from '@tanstack/react-router'
 import { formatDate, formatDateTime } from '../lib/date'
 import { activityStatusLabels } from '../lib/labels'
 import type { BadgeTone } from '../lib/types'
@@ -14,18 +15,18 @@ export function ActivityCard({ activity, action }: { activity: any; action?: Rea
             : 'primary'
 
     return (
-        <Card className="p-5">
+        <Card className="flex h-full min-w-0 flex-col p-5">
             <div className="flex items-start justify-between gap-3">
                 <Badge tone={statusTone}>{activityStatusLabels[activity.status] || activity.status}</Badge>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(activity.startTime)}</span>
             </div>
-            <h3 className="mt-3 text-[15px] font-medium">{activity.title}</h3>
+            <h3 className="mt-3 text-[15px] font-medium leading-6"><Link to="/activities/$activityId" params={{ activityId: activity.id }} className="coeer-focus rounded hover:text-primary">{activity.title}</Link></h3>
             <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{activity.description}</p>
             <div className="mt-4 grid gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
                 <span className="inline-flex items-center gap-2"><Icon name="calendar" /> {formatDateTime(activity.startTime)}</span>
                 <span className="inline-flex items-center gap-2"><Icon name="bookmark" /> {activity.location || '待定地点'}</span>
             </div>
-            {action ? <div className="mt-5">{action}</div> : null}
+            {action ? <div className="mt-auto pt-5">{action}</div> : null}
         </Card>
     )
 }

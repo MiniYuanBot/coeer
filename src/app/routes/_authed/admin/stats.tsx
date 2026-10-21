@@ -1,3 +1,4 @@
+import { TableScroll } from '@/components/coeer/ui/TableScroll'
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, SectionHeader } from '@/components/coeer'
 import { getUserStatsFn } from '~/functions'
@@ -22,7 +23,7 @@ function AdminStatsPage() {
                 <StatCard label="管理员" value={stats.admins} />
             </div>
             <Card className="overflow-hidden">
-                <div className="overflow-x-auto">
+                <TableScroll label="用户统计表">
                     <table className="w-full min-w-[680px] text-sm">
                         <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
                             <tr>
@@ -43,7 +44,7 @@ function AdminStatsPage() {
                             ))}
                         </tbody>
                     </table>
-                </div>
+                </TableScroll>
             </Card>
         </div>
     )

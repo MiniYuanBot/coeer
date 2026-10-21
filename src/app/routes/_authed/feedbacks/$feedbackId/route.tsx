@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link } from '@tanstack/react-router'
+import { Icon, PageLayout } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId')({
     component: FeedbackDetailLayout,
@@ -6,13 +7,14 @@ export const Route = createFileRoute('/_authed/feedbacks/$feedbackId')({
 
 function FeedbackDetailLayout() {
     return (
-        <div className="space-y-6">
-            <div className="mb-4 flex items-center gap-4 text-sm text-[hsl(var(--muted-foreground))]">
-                <Link to="/feedbacks" className="hover:text-[hsl(var(--primary))]">
+        <PageLayout width="reading">
+            <div>
+                <Link to="/feedbacks" className="coeer-focus inline-flex min-h-9 items-center gap-1.5 rounded text-xs text-muted-foreground hover:text-foreground">
+                    <Icon name="chevron" className="h-3.5 w-3.5 rotate-180" />
                     返回反馈列表
                 </Link>
             </div>
             <Outlet />
-        </div>
+        </PageLayout>
     )
 }

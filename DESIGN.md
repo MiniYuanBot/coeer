@@ -45,7 +45,7 @@ typography:
     letterSpacing: "-0.03em"
   headline:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "23px"
+    fontSize: "22px"
     fontWeight: 600
     lineHeight: 1.25
     letterSpacing: "-0.025em"
@@ -158,7 +158,7 @@ components:
     rounded: "{rounded.lg}"
   feedback-row:
     textColor: "{colors.foreground}"
-    padding: "16px 12px"
+    padding: "12px 12px"
 ---
 
 # Design System: COEER
@@ -224,11 +224,15 @@ Inter 是已确认 Linear 界面方向的一部分；不新增第二套展示字
 
 ## Layout
 
-桌面在 lg（1024px）起固定左侧导航（232px），内容区上方固定高度路径栏（52px）随页面滚动保持可见。工作区宽度为 `min(100% - 5rem, 84rem)`，上下内边距分别为（36px / 64px）。内容左对齐，标题与主操作允许换行。
+桌面在 lg（1024px）起固定左侧导航（224px），内容区上方为（52px）sticky 路径栏。`--sidebar-width`、`--workspace-gutter` 与 `--workspace-width` 统一控制外壳尺寸；桌面左右各留（32px），内容最大（1440px），上下内边距为（28px / 64px）。路径栏、页面标题、筛选和内容共用左边界。
+
+`PageLayout` 提供 full、reading（896px）、form（704px）三种宽度，均左对齐；列表使用完整画布，详情限制阅读长度，填写任务限制字段长度。分区间距统一（24px）。`SectionHeader` 用两列网格排列标题与操作，说明位于下一行；手机上说明占满整行，日期字段另起一行。群组内的子页面使用 h2，避免重复的页面主标题。
+
+包含辅助信息的详情和填写任务可采用 `.coeer-detail-page`（最大 1200px）配合 `DetailLayout`：内容区达到 880px 时，正文与 280px 辅助栏并排，更窄时顺序堆叠。正文限制约 76ch，避免为填满画布而拉长文本。活动可将时间、地点和报名在窄屏上排到说明前；帖子信息和反馈提示排在主要内容后。多按钮的页面头使用 `actionLayout="stack-on-mobile"`，在可用宽度小于 640px 时将操作独立成行。
 
 手机低于（640px）时，工作区与公开页容器保留左右各（16px）空隙，工作区上下内边距为（24px / 48px）。lg 以下使用顶部导航触发器和原生 dialog 抽屉，抽屉宽度为 `min(288px, 86vw)`。sm（640px）起反馈行显示独立的状态、日期列；更窄时它们进入标题下方元信息行。
 
-首页在 xl（1280px）起使用弹性主栏加（280px）信息侧栏，栏间距（40px）；更窄时顺序堆叠。游客首页保留品牌、主题切换和登录/注册的（64px）页头，公开介绍与动态左对齐；公开信息侧栏为（300px）。认证页不套工作区外壳，使用宽度最多（340px）的居中窄表单，没有外层卡片或左右品牌面板。
+登录首页在内容区达到（880px）时使用弹性主栏和（264px）信息侧栏，栏间距（32px），侧栏以细线分隔并保留（24px）内边距；更窄时顺序堆叠。集合网格使用 `.coeer-grid`，按内容区自动排列最小（280px）的列，避免桌面侧栏挤压三列卡片。游客首页保留品牌、主题切换和登录/注册的（64px）页头，公开介绍与动态左对齐；公开信息侧栏为（300px）。认证页保持最大（340px）的居中表单。
 
 空间以现有的（4px）节奏为主，紧凑控件也使用（6px / 10px / 14px）微调。内容块通常间隔（24px / 32px / 40px）；卡片本身不规定统一内边距，由用途采用（16px / 20px）。
 
@@ -250,11 +254,13 @@ Inter 是已确认 Linear 界面方向的一部分；不新增第二套展示字
 
 紧凑、清晰的任务操作。默认高度（36px）、水平内边距（14px）；sm 为（32px / 10px），lg 为（44px / 20px），icon 为（32px）正方形。文字采用 label，圆角采用 md。
 
-primary 用主色实底；secondary 用 card 与细边框；outline 透明底带边框；ghost 透明底加弱文字；danger 用错误色。hover 使用透明度或 muted 背景变化。focus-visible 使用 ring 的（2px）描边与（3px）间隙。disabled 降至（50%）不透明度，loading 显示旋转标记、禁用重复提交并暴露 aria-busy。
+primary 用主色实底；secondary 用 card 与细边框；outline 透明底带边框；ghost 透明底加弱文字；danger 用错误色。hover 使用透明度或 muted 背景变化。focus-visible 使用 ring 的（2px）描边与（3px）间隙。disabled 降至（50%）不透明度，loading 保留标签、显示旋转标记、禁用重复提交并暴露 aria-busy。手机按钮最小高度（44px）。表单先放取消，再放提交，操作靠右。
 
 ### Chips
 
 Badge 是（11px）短状态标签，内边距（2px 6px），边框（1px）。primary 使用浅紫底；success、warning、danger 使用各自颜色的轻透明底与边框。筛选按钮采用（32px）最小高度、muted 选中底色与 aria-pressed；反馈范围切换以底部主色线表示当前范围。
+
+Badge 不换行、不收缩，避免“已通过”等短状态被挤成多行。`FilterPanel` 的搜索组宽度上限（288px），与筛选组按可用空间并排或换行；手机搜索独占一行，筛选按钮最小高度（40px）。`NavTabs` 使用一致的下划线激活态，超出宽度时只滚动导航自身。
 
 ### Cards / Containers
 
@@ -264,19 +270,27 @@ Card 提供表面、细边框与 lg 圆角，不内置投影或内边距。内�
 
 SearchInput 高度（36px），圆角 md，background 底与细边框；前置搜索图标、左内边距（32px）与右内边距（12px）。认证字段高度（44px）、水平内边距（12px），标签置于字段上方。placeholder 使用 muted-foreground；focus-visible 同时保留可见 ring 和主色边框。错误提示采用 danger 文字、轻透明底与边框，并保留 alert 语义。
 
+手机输入框、选择器和文本域使用（16px）文字，输入框和选择器最小高度（44px），保留浏览器缩放。管理表单使用持久标签，切换编辑对象时重建非受控字段，确保显示值对应当前对象。个人中心采用 `.coeer-settings-section` 分区，内容区达到（720px）后将说明与字段分为两栏。
+
 ### Navigation
 
 侧栏链接最小高度（34px），内边距（7px 10px），图标与文字间隔（10px）。默认弱文字；hover 使用 foreground 的（4%）背景，active 使用（6.5%）背景、（550）字重与主色图标。侧栏含品牌、页面搜索、分组导航与底部主题/用户区。主图标默认（16px）；上下文可使用（14px）。
 
+手机侧栏链接最小高度（44px）。进入管理后台后，导航区显示管理模块与“返回学院社区”，用户与主题区仍固定于底部。路径栏展示可点击父级及当前页面，不直接显示数据库 ID。
+
 ### Feedback rows
 
-反馈列表按状态图标、内容、状态徽章、提交日期排列，桌面列宽为 `20px minmax(0, 1fr) 84px 64px`，列间距（12px）。整行可进入详情，hover 使用 muted 的（50%）底色，标题改为 primary。手机保留图标与内容两列，将状态、日期移至内容元信息；标题截断、简介限制行数，行间用细线分隔。
+反馈列表按状态图标、内容、状态徽章、提交日期排列，桌面列宽为 `20px minmax(0, 1fr) 84px 64px`，列间距（12px），上下留白（12px）。整行可进入详情，hover 使用 muted 的（50%）底色，标题改为 primary。手机保留图标与内容两列，将状态、日期移至内容元信息；简介最多两行，桌面最多一行，行间用细线分隔。
+
+### Shared data surfaces
+
+`StatsBar` 用一个有分隔线的容器呈现同类真实数值，避免大块图标与重复卡片抢占层级。`MediaPreview` 限制集合图片高度；缺图或加载失败时以中性图标占位，不留下破图标记。`TableScroll` 将表格横向滚动限制在容器内；内容超宽时提供滚动提示与键盘焦点。个人中心不显示写死的群组、反馈或成就数量。
 
 ### Dialogs and command menu
 
 Modal 使用带标题关联的原生 dialog，宽度最多（512px）、距视口至少（16px），内边距（20px），内容超高可滚动。Esc、关闭按钮和真正位于弹窗边界外的遮罩点击关闭；点击弹窗内边距保留打开。开启时锁定背景滚动。
 
-页面搜索是导航命令菜单，由 Cmd/Ctrl+K 或搜索按钮触发。宽度最多（560px），桌面顶距（16vh），手机（10vh）；支持输入过滤、方向键选择、Enter 跳转和 Esc 关闭。它按现有页面名称与路径过滤，不代表全站内容搜索能力。
+页面搜索是导航命令菜单，由 Cmd/Ctrl+K 或搜索按钮触发。宽度最多（560px），桌面顶距（16vh），手机（10vh）；支持输入过滤、方向键选择、Enter 跳转和 Esc 关闭。点击菜单内部留白保留打开，真正点击外部遮罩才关闭。它按现有页面名称与路径过滤，不代表全站内容搜索能力。
 
 ### Empty states and notifications
 

@@ -21,11 +21,11 @@ export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; va
     const tone: BadgeTone = feedback.status === 'resolved' ? 'success' : feedback.status === 'processing' ? 'primary' : feedback.status === 'invalid' ? 'danger' : 'warning'
     if (variant === 'row') {
         return (
-            <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus group grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-4 transition-colors hover:bg-muted/50 sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:items-center sm:px-4">
+            <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus group grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-3 transition-colors hover:bg-muted/50 sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:items-center sm:px-4">
                 <span className="mt-0.5 sm:mt-0"><StatusIcon status={feedback.status} /></span>
                 <span className="min-w-0">
                     <span className="block truncate text-[13px] font-medium group-hover:text-primary">{feedback.title}</span>
-                    <span className="mt-1 block line-clamp-1 text-xs leading-5 text-muted-foreground">{feedback.content}</span>
+                    <span className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground sm:line-clamp-1">{feedback.content}</span>
                     <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                         <span>{feedbackTargetLabels[feedback.targetType] || '综合建议'}</span>
                         {feedback.isAnonymous ? <span className="rounded border border-border px-1">匿名</span> : null}

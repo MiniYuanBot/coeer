@@ -1,3 +1,4 @@
+import { Field } from '@/components/coeer/ui/Field'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -52,15 +53,15 @@ function AdminAchievementsPage() {
         <div className="space-y-6">
             <SectionHeader title="成就管理" description="添加、编辑和删除成就。" />
             <Card className="rounded-lg p-5">
-                <form onSubmit={submit} className="grid gap-3">
+                <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
                     <div className="grid gap-3 md:grid-cols-2">
-                        <input name="code" required defaultValue={editing?.code} placeholder="成就代码" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                        <input name="name" required defaultValue={editing?.name} placeholder="成就名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                        <select name="conditionType" defaultValue={editing?.conditionType || 'count'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{ACHIEVEMENT_CONDITION_TYPE_ARRAY.map((type) => <option key={type} value={type}>{achievementConditionTypeLabels[type]}</option>)}</select>
-                        <input name="conditionValue" required type="number" min={1} defaultValue={editing?.conditionValue} placeholder="达成数值" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                        <Field label="成就代码"><input name="code" required defaultValue={editing?.code} placeholder="成就代码" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="名称"><input name="name" required defaultValue={editing?.name} placeholder="成就名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="解锁条件"><select name="conditionType" defaultValue={editing?.conditionType || 'count'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{ACHIEVEMENT_CONDITION_TYPE_ARRAY.map((type) => <option key={type} value={type}>{achievementConditionTypeLabels[type]}</option>)}</select></Field>
+                        <Field label="条件数值"><input name="conditionValue" required type="number" min={1} defaultValue={editing?.conditionValue} placeholder="达成数值" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     </div>
-                    <input name="iconUrl" defaultValue={editing?.iconUrl} placeholder="图标 URL" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <textarea name="description" required defaultValue={editing?.description} placeholder="成就说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" />
+                    <Field label="图标地址（选填）"><input name="iconUrl" defaultValue={editing?.iconUrl} placeholder="图标 URL" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                    <Field label="说明"><textarea name="description" required defaultValue={editing?.description} placeholder="成就说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
                     <div className="flex gap-2"><Button type="submit">{editing ? '保存成就' : '添加成就'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}</div>
                 </form>
             </Card>

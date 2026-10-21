@@ -43,7 +43,7 @@ function SpacesPage() {
                 title="空间预约"
                 description="查询空间空闲情况，选择连续时段提交预约。时间均采用北京时间。"
                 action={
-                    <Field label="预约日期">
+                    <Field label="预约日期" className="coeer-space-date">
                         <Input
                             type="date"
                             value={date}

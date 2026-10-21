@@ -1,3 +1,4 @@
+import { TableScroll } from '@/components/coeer/ui/TableScroll'
 import { createFileRoute, type SearchSchemaInput } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
@@ -109,7 +110,7 @@ function SpaceHistoryPage() {
                 <LoadingState />
             ) : resource.data?.items.length ? (
                 <Card className="overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <TableScroll label="任务与审计表">
                         <table className="w-full min-w-[620px] text-left text-xs">
                             <thead className="border-b border-border bg-muted/40 text-muted-foreground">
                                 <tr>
@@ -213,7 +214,7 @@ function SpaceHistoryPage() {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </TableScroll>
                 </Card>
             ) : (
                 <EmptyState title="暂无匹配记录" description="调整类型、状态或搜索条件后重试。" />

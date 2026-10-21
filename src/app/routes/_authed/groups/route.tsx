@@ -126,7 +126,7 @@ function GroupsHomePage() {
             />
 
             {groups.length ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="coeer-grid">
                     {groups.map((group) => <GroupCard key={group.id} group={group} />)}
                 </div>
             ) : (

@@ -11,7 +11,7 @@ export function Button({
     asChild?: boolean
 }) {
     const classes = cn(
-        'coeer-focus inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-[13px] font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
+        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-[13px] font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
         size === 'sm' && 'h-8 px-2.5',
         size === 'md' && 'h-9 px-3.5',
         size === 'lg' && 'h-11 px-5',

@@ -7,8 +7,8 @@ import { Icon } from '../ui/Icon'
 
 export function BulletinCard({ bulletin }: { bulletin: any }) {
     return (
-        <Link to="/bulletins/$bulletinId" params={{ bulletinId: bulletin.id }} className="group block">
-            <Card className="rounded-lg p-5">
+        <Link to="/bulletins/$bulletinId" params={{ bulletinId: bulletin.id }} className="coeer-focus group block rounded-lg">
+            <Card className="h-full p-5 transition-colors group-hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3">
                     <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(bulletin.createdAt)}</span>

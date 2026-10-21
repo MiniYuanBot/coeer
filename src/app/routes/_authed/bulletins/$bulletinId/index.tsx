@@ -15,11 +15,11 @@ function BulletinDetailPage() {
     if (!bulletin) return <EmptyState title="公告不存在" />
 
     return (
-        <article className="mx-auto max-w-3xl space-y-6">
+        <article className="coeer-page max-w-4xl">
             <SectionHeader title={bulletin.title} description={formatDateTime(bulletin.createdAt)} />
             <Card className="rounded-lg p-5">
                 <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
-                <p className="mt-5 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{bulletin.content}</p>
+                <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{bulletin.content}</p>
             </Card>
         </article>
     )

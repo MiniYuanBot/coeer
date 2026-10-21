@@ -83,7 +83,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <PageStatus />
           {children}
         </ToastProvider>
-        {import.meta.env.DEV ? <TanStackRouterDevtools position="bottom-right" /> : null}
+        {import.meta.env.DEV && import.meta.env.VITE_ROUTER_DEVTOOLS === 'true' ? <TanStackRouterDevtools position="bottom-right" /> : null}
         <Scripts />
       </body>
     </html>

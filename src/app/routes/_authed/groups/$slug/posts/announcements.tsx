@@ -37,7 +37,7 @@ function AnnouncementsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader
+            <SectionHeader level="h2"
                 title="群组公告"
                 description={`${group.name} 的正式通知。`}
                 action={<Link to="/groups/$slug/posts" params={{ slug }}><Button variant="outline"><Icon name="chevron" className="h-4 w-4 rotate-180" /> 全部帖子</Button></Link>}

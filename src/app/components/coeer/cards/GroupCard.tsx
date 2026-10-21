@@ -9,17 +9,15 @@ export function GroupCard({ group }: { group: any }) {
             <Card className="h-full p-5 transition-colors hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <div className="flex min-w-0 items-center gap-2">
-                            <h3 className="truncate text-[15px] font-medium">{group.name}</h3>
-                            <Badge className="shrink-0 rounded-md">{groupCategoryLabels[group.category] || group.category}</Badge>
-                        </div>
+                        <h3 className="break-words text-[15px] font-medium leading-6">{group.name}</h3>
                         <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{group.description || '暂无简介'}</p>
                     </div>
                     <Badge tone={group.status === 'approved' ? 'success' : 'warning'}>{groupStatusLabels[group.status] || group.status}</Badge>
                 </div>
-                <div className="mt-5 flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-                    <span>{group.memberCount ?? 0} 名成员</span>
-                    <span>{group.isPublic ? '公开' : '私密'}</span>
+                <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <Badge>{groupCategoryLabels[group.category] || group.category}</Badge>
+                    <span className="ml-auto">{group.memberCount ?? 0} 名成员</span>
+                    <span aria-hidden="true">·</span><span>{group.isPublic ? '公开' : '私密'}</span>
                 </div>
             </Card>
         </Link>

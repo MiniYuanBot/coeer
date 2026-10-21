@@ -1,3 +1,4 @@
+import { Field } from '@/components/coeer/ui/Field'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -51,12 +52,12 @@ function AdminBulletinsPage() {
         <div className="space-y-6">
             <SectionHeader title="公告管理" description="发布、编辑和删除公告。" />
             <Card className="rounded-lg p-5">
-                <form onSubmit={submit} className="grid gap-3">
-                    <select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
+                    <Field label="类型"><select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
                         {BULLETIN_TYPE_ARRAY.map((type) => <option key={type} value={type}>{bulletinTypeLabels[type]}</option>)}
-                    </select>
-                    <input name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <textarea name="content" required defaultValue={editing?.content} placeholder="公告内容" rows={4} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" />
+                    </select></Field>
+                    <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                    <Field label="内容"><textarea name="content" required defaultValue={editing?.content} placeholder="公告内容" rows={4} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
                     <label className="flex items-center gap-2 text-sm"><input name="isPinned" type="checkbox" defaultChecked={editing?.isPinned} className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />置顶</label>
                     <div className="flex gap-2">
                         <Button type="submit">{editing ? '保存公告' : '发布公告'}</Button>

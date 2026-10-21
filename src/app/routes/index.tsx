@@ -88,7 +88,7 @@ function HomeContent({ data }: { data: HomeData }) {
   const { groups, myGroups, posts, bulletins, activities, feedbacks, balance, user } = data
   const officialGroup = groups.find((group: any) => group.slug === 'coeer-official') ?? groups[0]
   return (
-    <div className="space-y-8">
+    <div className="coeer-page">
       <SectionHeader title="动态" description="关注学院社区里的活动、公告、帖子和反馈进展。"
         action={<Button asChild><Link to="/feedbacks/create"><Icon name="plus" />提交反馈</Link></Button>} />
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-border py-3">
@@ -97,7 +97,7 @@ function HomeContent({ data }: { data: HomeData }) {
         <Link to="/activities" className="coeer-focus inline-flex items-center gap-2 rounded text-xs text-muted-foreground hover:text-foreground"><Icon name="calendar" className="h-3.5 w-3.5" />参与活动</Link>
         <Link to="/redeems" className="coeer-focus inline-flex items-center gap-2 rounded text-xs text-muted-foreground hover:text-foreground"><Icon name="gift" className="h-3.5 w-3.5" />兑换权益</Link>
       </div>
-      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="coeer-home-columns">
         <div className="min-w-0 space-y-10">
           <section aria-labelledby="community-feed-title">
             <div className="mb-5 flex items-center justify-between gap-3">
@@ -118,7 +118,7 @@ function HomeContent({ data }: { data: HomeData }) {
               <p className="py-5 text-[13px] text-muted-foreground">暂时没有公开反馈。</p>}
           </section>
         </div>
-        <div className="min-w-0 space-y-7 xl:sticky xl:top-20">
+        <div className="coeer-home-rail min-w-0 space-y-7">
           <PointsSummaryCard balance={balance} />
           <section>
             <div className="mb-3 flex items-center justify-between">

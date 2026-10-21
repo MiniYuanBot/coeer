@@ -30,7 +30,11 @@ export function CommandMenu({ open, onClose, user }: { open: boolean; onClose: (
     const choose = (to: string) => { onClose(); void navigate({ to: to as any }) }
     return (
         <dialog ref={dialog} className="coeer-command" aria-label="搜索页面" onCancel={onClose} onClose={onClose}
-            onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
+            onClick={(event) => {
+                if (event.target !== event.currentTarget) return
+                const bounds = event.currentTarget.getBoundingClientRect()
+                if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose()
+            }}>
             <div className="flex items-center gap-3 border-b border-border px-4">
                 <Icon name="search" className="h-4 w-4 text-muted-foreground" />
                 <input ref={input} value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0) }}

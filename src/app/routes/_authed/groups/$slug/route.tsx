@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
 import { getGroupBySlugFn, checkRoleFn } from '~/functions'
-import { Badge, Card, groupCategoryLabels } from '@/components/coeer'
+import { Badge, NavTabs, navTabClass, activeNavTabClass, groupCategoryLabels } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug')({
     beforeLoad: async ({ params, context }) => {
@@ -31,15 +31,14 @@ function GroupLayout() {
 
     return (
         <div className="space-y-6">
-            <Card className="overflow-hidden rounded-lg">
-                <div className="p-5">
+            <section aria-label="群组信息" className="space-y-5">
                     <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="grid h-12 w-12 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xl font-medium text-[hsl(var(--primary))]">
+                        <div className="flex min-w-0 items-start gap-3">
+                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted text-base font-medium">
                                 {group.name[0]}
                             </div>
-                            <div>
-                                <h1 className="text-[28px] font-medium leading-tight">{group.name}</h1>
+                            <div className="min-w-0">
+                                <h1 className="break-words text-[22px] font-semibold leading-snug tracking-tight">{group.name}</h1>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
                                     <Badge>{groupCategoryLabels[group.category] || group.category}</Badge>
                                     <Badge tone={group.isPublic ? 'success' : 'default'}>{group.isPublic ? '公开' : '私密'}</Badge>
@@ -49,29 +48,29 @@ function GroupLayout() {
                         </div>
                     </div>
 
-                    <nav className="mt-5 flex gap-2 overflow-x-auto border-t border-[hsl(var(--border))] pt-4">
+                    <NavTabs label="群组导航">
                         <Link
                             to="/groups/$slug"
                             params={{ slug }}
                             activeOptions={{ exact: true }}
-                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
-                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                            activeProps={{ className: activeNavTabClass }}
+                            className={navTabClass}
                         >
                             主页
                         </Link>
                         <Link
                             to="/groups/$slug/members"
                             params={{ slug }}
-                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
-                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                            activeProps={{ className: activeNavTabClass }}
+                            className={navTabClass}
                         >
                             成员
                         </Link>
                         <Link
                             to="/groups/$slug/posts"
                             params={{ slug }}
-                            activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
-                            className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                            activeProps={{ className: activeNavTabClass }}
+                            className={navTabClass}
                         >
                             帖子
                         </Link>
@@ -80,24 +79,23 @@ function GroupLayout() {
                                 <Link
                                     to="/groups/$slug/admin"
                                     params={{ slug }}
-                                    activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
-                                    className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                                    activeProps={{ className: activeNavTabClass }}
+                                    className={navTabClass}
                                 >
                                     管理
                                 </Link>
                                 <Link
                                     to="/groups/$slug/settings"
                                     params={{ slug }}
-                                    activeProps={{ className: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.24)]' }}
-                                    className="shrink-0 rounded-md border border-[hsl(var(--border))] px-3 py-1.5 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                                    activeProps={{ className: activeNavTabClass }}
+                                    className={navTabClass}
                                 >
                                     设置
                                 </Link>
                             </>
                         )}
-                    </nav>
-                </div>
-            </Card>
+                    </NavTabs>
+            </section>
 
             <Outlet />
         </div>

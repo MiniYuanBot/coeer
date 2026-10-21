@@ -1,11 +1,10 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
     Button,
     EmptyState,
     FilterPanel,
     Icon,
-    PointsSummaryCard,
     RedeemItemCard,
     SectionHeader,
     redeemItemTypeLabels,
@@ -56,9 +55,10 @@ function RedeemsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="积分商城" description="用参与、反馈和贡献积累的积分兑换校园权益与周边。" />
-
-            <PointsSummaryCard balance={balance} />
+            <SectionHeader title="积分商城" description="用参与、反馈和贡献积累的积分兑换校园权益与周边。"
+                action={<Link to="/profile" className="coeer-focus inline-flex min-h-9 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground hover:bg-muted">
+                    <Icon name="coins" className="h-3.5 w-3.5" />可用积分<span className="text-sm font-semibold tabular-nums text-foreground">{balance.toLocaleString('zh-CN')}</span>
+                </Link>} />
 
             <FilterPanel
                 searchValue={search}
@@ -81,7 +81,7 @@ function RedeemsPage() {
             />
 
             {items.length ? (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="coeer-grid">
                     {items.map((item: any) => (
                         <RedeemItemCard
                             key={item.id}

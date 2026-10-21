@@ -1,13 +1,12 @@
 import * as React from 'react'
 
-export function SectionHeader({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
+export function SectionHeader({ title, description, action, level = 'h1', actionLayout = 'inline' }: { title: string; description?: string; action?: React.ReactNode; level?: 'h1' | 'h2'; actionLayout?: 'inline' | 'stack-on-mobile' }) {
+    const Heading = level
     return (
-        <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-4">
-            <div className="min-w-0 flex-1 basis-48">
-                <h1 className="text-[23px] font-semibold leading-tight tracking-[-0.025em] text-foreground">{title}</h1>
-                {description ? <p className="mt-2 max-w-[70ch] text-[13px] leading-6 text-muted-foreground">{description}</p> : null}
-            </div>
-            {action}
+        <div className="coeer-page-header" data-action-layout={actionLayout}>
+            <Heading className={'break-words font-semibold leading-snug tracking-[-0.025em] text-foreground ' + (level === 'h1' ? 'text-[22px]' : 'text-lg')}>{title}</Heading>
+            {description ? <p className="coeer-page-description max-w-[70ch] text-[13px] leading-6 text-muted-foreground">{description}</p> : null}
+            {action ? <div className="coeer-page-actions flex max-w-full flex-wrap items-center gap-2">{action}</div> : null}
         </div>
     )
 }

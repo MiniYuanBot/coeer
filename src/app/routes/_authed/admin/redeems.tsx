@@ -1,3 +1,4 @@
+import { Field } from '@/components/coeer/ui/Field'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -59,15 +60,15 @@ function AdminRedeemsPage() {
         <div className="space-y-6">
             <SectionHeader title="商城管理" description="添加、编辑、删除商城物品，并查看兑换详情。" />
             <Card className="rounded-lg p-5">
-                <form onSubmit={submit} className="grid gap-3">
-                    <input name="name" required defaultValue={editing?.name} placeholder="物品名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <textarea name="description" defaultValue={editing?.description} placeholder="物品说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" />
-                    <input name="imageUrl" defaultValue={editing?.imageUrl} placeholder="图片 URL" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
+                    <Field label="名称"><input name="name" required defaultValue={editing?.name} placeholder="物品名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                    <Field label="说明"><textarea name="description" defaultValue={editing?.description} placeholder="物品说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
+                    <Field label="图片地址（选填）"><input name="imageUrl" defaultValue={editing?.imageUrl} placeholder="图片 URL" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     <div className="grid gap-3 md:grid-cols-2">
-                        <input name="pointsCost" required type="number" min={1} defaultValue={editing?.pointsCost} placeholder="积分价格" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                        <input name="stock" required type="number" min={-1} defaultValue={editing?.stock ?? -1} placeholder="库存" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                        <select name="type" defaultValue={editing?.type || 'physical'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_TYPE_ARRAY.map((type) => <option key={type} value={type}>{redeemItemTypeLabels[type]}</option>)}</select>
-                        <select name="status" defaultValue={editing?.status || 'active'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_STATUS_ARRAY.map((status) => <option key={status} value={status}>{redeemItemStatusLabels[status]}</option>)}</select>
+                        <Field label="所需积分"><input name="pointsCost" required type="number" min={1} defaultValue={editing?.pointsCost} placeholder="积分价格" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="库存（−1 表示不限）"><input name="stock" required type="number" min={-1} defaultValue={editing?.stock ?? -1} placeholder="库存" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="类型"><select name="type" defaultValue={editing?.type || 'physical'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_TYPE_ARRAY.map((type) => <option key={type} value={type}>{redeemItemTypeLabels[type]}</option>)}</select></Field>
+                        <Field label="状态"><select name="status" defaultValue={editing?.status || 'active'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_STATUS_ARRAY.map((status) => <option key={status} value={status}>{redeemItemStatusLabels[status]}</option>)}</select></Field>
                     </div>
                     <div className="flex gap-2"><Button type="submit">{editing ? '保存物品' : '添加物品'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}</div>
                 </form>

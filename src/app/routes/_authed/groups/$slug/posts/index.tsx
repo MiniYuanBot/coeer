@@ -66,15 +66,13 @@ function PostsListPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader
+            <SectionHeader level="h2"
                 title="帖子"
                 description="查看群组讨论与公告。"
                 action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button><Icon name="send" /> 发布帖子</Button></Link>}
             />
 
             <FilterPanel
-                searchPlaceholder="帖子页暂不支持搜索"
-                onSearch={() => undefined}
                 groups={[
                     {
                         items: [

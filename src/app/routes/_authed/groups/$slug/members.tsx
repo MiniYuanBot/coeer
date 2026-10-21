@@ -95,11 +95,9 @@ function GroupMembersPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="群组成员" description={`共 ${total} 名成员或申请记录。`} />
+            <SectionHeader level="h2" title="群组成员" description={`共 ${total} 名成员或申请记录。`} />
 
             <FilterPanel
-                searchPlaceholder="成员页暂不支持搜索"
-                onSearch={() => undefined}
                 groups={[
                     {
                         items: [

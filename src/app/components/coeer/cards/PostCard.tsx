@@ -21,5 +21,5 @@ export function PostCard({ post, to }: { post: any; to?: string }) {
         </Card>
     )
     if (!to) return content
-    return <Link to={to as any} className="coeer-focus block rounded-md">{content}</Link>
+    return <Link to={to as any} className="coeer-focus block">{content}</Link>
 }
