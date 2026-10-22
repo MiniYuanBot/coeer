@@ -6,12 +6,13 @@ export function Button({
     variant = 'primary', size = 'md', loading, asChild, className, children, ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: ButtonVariant
-    size?: 'sm' | 'md' | 'lg' | 'icon'
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon'
     loading?: boolean
     asChild?: boolean
 }) {
     const classes = cn(
-        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-[13px] font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
+        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
+        size === 'xs' ? 'h-7 gap-1.5 px-1.5 text-xs' : 'gap-2 text-[13px]',
         size === 'sm' && 'h-8 px-2.5',
         size === 'md' && 'h-9 px-3.5',
         size === 'lg' && 'h-11 px-5',

@@ -2,6 +2,7 @@
 import type {
     GroupPostWithAuthor,
     GroupPostWithGroup,
+    PublicGroupPost,
     GroupPostResponse,
     PaginatedGroupPostResponse,
     CreateGroupPostInput,
@@ -28,11 +29,27 @@ import { groupMemberQueries } from '../database/queries'
 import { groupQueries } from '../database/queries/groups'
 import { reactionQueries } from '../database/queries/reactions'
 import { bookmarkQueries } from '../database/queries/bookmarks'
+import { groups } from '../database/schemas'
+import { eq } from 'drizzle-orm'
 
 // Maximum number of pinned posts per group
-const MAX_PINNED_POSTS = 3
+const MAX_PINNED_POSTS = 5
 
 export class GroupPostService {
+    static async listRecentPublic(): Promise<GroupPostResponse<PublicGroupPost[]>> {
+        const payload = await AuthService.getCurrentUser()
+        const posts = await groupPostQueries.findRecentPublic()
+        const ids = posts.map((post) => post.id)
+        const [summaries, saved] = await Promise.all([
+            reactionQueries.summarizePosts(ids, payload.data?.id),
+            bookmarkQueries.summarizePosts(ids, payload.data?.id),
+        ])
+        return {
+            success: true,
+            data: posts.map((post) => ({ ...post, reactionCount: 0, hasReacted: false, ...summaries.get(post.id), isBookmarked: saved.has(post.id) })),
+            state: GROUP_POST.GET_SUCCESS,
+        }
+    }
     /**
      * Whether the given group's content may be read by the current viewer.
      * Approved + public groups are readable by everyone; everything else
@@ -363,26 +380,20 @@ export class GroupPostService {
                 }
             }
 
-            // Check max pinned limit when pinning
-            if (data.isPinned && !post.isPinned) {
-                const pinnedCount = await groupPostQueries.countByGroup({ groupId: post.groupId, isPinned: true })
-                if (pinnedCount >= MAX_PINNED_POSTS) {
-                    return {
-                        success: false,
-                        state: {
-                            ...GROUP_POST.PIN_LIMIT_REACHED,
-                            message: `Maximum ${MAX_PINNED_POSTS} pinned posts allowed`,
-                        },
+            return await db.transaction(async (tx) => {
+                // One lock per group keeps simultaneous pin requests within the limit.
+                await tx.select({ id: groups.id }).from(groups).where(eq(groups.id, post.groupId)).for('update')
+                const current = await groupPostQueries.findById({ id: post.id }, tx)
+                if (!current) return { success: false, state: GROUP_POST.NOT_FOUND }
+                if (data.isPinned && !current.isPinned) {
+                    const pinnedCount = await groupPostQueries.countByGroup({ groupId: post.groupId, isPinned: true }, tx)
+                    if (pinnedCount >= MAX_PINNED_POSTS) {
+                        return { success: false, state: { ...GROUP_POST.PIN_LIMIT_REACHED, message: `每个群组最多置顶 ${MAX_PINNED_POSTS} 条帖子，请先取消其他帖子的置顶。` } }
                     }
                 }
-            }
-
-            await groupPostQueries.togglePin(data)
-
-            return {
-                success: true,
-                state: data.isPinned ? GROUP_POST.PIN_SUCCESS : GROUP_POST.UNPIN_SUCCESS,
-            }
+                await groupPostQueries.togglePin(data, tx)
+                return { success: true, state: data.isPinned ? GROUP_POST.PIN_SUCCESS : GROUP_POST.UNPIN_SUCCESS }
+            })
         } catch (err) {
             console.error('Toggle pin error:', err)
             return {

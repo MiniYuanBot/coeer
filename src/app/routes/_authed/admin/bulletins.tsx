@@ -61,7 +61,7 @@ function AdminBulletinsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="公告管理" description="发布、编辑和删除公告。" />
+            <SectionHeader title="公告管理" description="发布、编辑和删除公告。最多置顶 5 条公告。" />
             <Card className="rounded-lg p-5">
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">

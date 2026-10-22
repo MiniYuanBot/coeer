@@ -9,6 +9,13 @@ import {
     ListPostsByAuthorSchema,
 } from '@shared/contracts'
 
+export const getRecentPublicPostsFn = createServerFn({ method: 'GET' })
+    .handler(async () => {
+        const result = await GroupPostService.listRecentPublic()
+        if (!result.success) throw new Error(result.state.message)
+        return result.data ?? []
+    })
+
 // Create a new post
 export const createGroupPostFn = createServerFn({ method: 'POST' })
     .inputValidator(CreateGroupPostSchema)

@@ -18,14 +18,14 @@ function StatusIcon({ status }: { status: string }) {
     )
 }
 
-export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; variant?: 'card' | 'row' }) {
+export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; variant?: 'card' | 'row' | 'home' }) {
     const tone: BadgeTone = feedback.status === 'resolved' ? 'success' : feedback.status === 'processing' ? 'primary' : feedback.status === 'invalid' ? 'danger' : 'warning'
-    if (variant === 'row') {
+    if (variant !== 'card') {
         return (
             <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus group grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-3 transition-colors hover:bg-muted/50 sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:items-center sm:px-4">
                 <span className="mt-0.5 sm:mt-0"><StatusIcon status={feedback.status} /></span>
                 <div className="min-w-0">
-                    <span className="block truncate text-[13px] font-medium group-hover:text-primary">{feedback.title}</span>
+                    <span className={'block truncate font-medium group-hover:text-primary ' + (variant === 'home' ? 'text-[15px]' : 'text-[13px]')}>{feedback.title}</span>
                     <MarkdownSummary content={feedback.content} className="mt-1 max-h-16 text-xs leading-5 text-muted-foreground" />
                     <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                         <span>{feedbackTargetLabels[feedback.targetType] || '综合建议'}</span>

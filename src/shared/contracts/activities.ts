@@ -37,6 +37,8 @@ export const UpdateActivitySchema = z.object({
 })
 
 export const ListActivitiesSchema = z.object({
+    sort: z.enum(['startTime', 'latest']).optional(),
+    publicOnly: z.boolean().optional(),
     type: z.enum(ACTIVITY_TYPE_ARRAY).optional(),
     organizerType: z.enum(ORGANIZER_TYPE_ARRAY).optional(),
     organizerId: z.uuid().optional(),

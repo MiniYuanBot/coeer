@@ -1,7 +1,7 @@
 // groupPostQueries.ts
 import { db, type DbExecutor } from '../client'
-import { groupPosts, reactions, replies } from '../schemas'
-import { eq, desc, and, count, SQL } from 'drizzle-orm'
+import { groupPosts, groups, reactions, replies } from '../schemas'
+import { eq, desc, and, count, inArray, SQL } from 'drizzle-orm'
 import type { NewGroupPost } from '../schemas'
 import {
     CountPostsByAuthorInput,
@@ -9,6 +9,7 @@ import {
     FeedbackIdInput,
     GroupPostWithAuthor,
     GroupPostWithGroup,
+    PublicGroupPost,
     ListPostsByAuthorInput,
     ListPostsByGroupInput,
     GroupPostIdInput,
@@ -91,8 +92,8 @@ export const groupPostQueries = {
     },
 
     // Find a post with author by its id
-    async findById(data: FeedbackIdInput): Promise<GroupPostWithAuthor | undefined> {
-        const post = await db.query.groupPosts.findFirst({
+    async findById(data: FeedbackIdInput, executor: DbExecutor = db): Promise<GroupPostWithAuthor | undefined> {
+        const post = await executor.query.groupPosts.findFirst({
             where: eq(groupPosts.id, data.id),
             with: {
                 author: {
@@ -102,6 +103,20 @@ export const groupPostQueries = {
         })
 
         return post
+    },
+
+    // Filter all groups before limiting; membership and group pins do not affect this feed.
+    async findRecentPublic(): Promise<PublicGroupPost[]> {
+        return db.query.groupPosts.findMany({
+            where: inArray(groupPosts.groupId, db.select({ id: groups.id }).from(groups)
+                .where(and(eq(groups.isPublic, true), eq(groups.status, 'approved')))),
+            with: {
+                author: { columns: { id: true, name: true } },
+                group: { columns: { id: true, name: true, slug: true } },
+            },
+            orderBy: [desc(groupPosts.createdAt), desc(groupPosts.id)],
+            limit: 5,
+        })
     },
 
     // Find all posts by group id with optional filters
@@ -116,7 +131,7 @@ export const groupPostQueries = {
                 },
             },
             orderBy: [
-                desc(groupPosts.isPinned), // pinned post first
+                desc(groupPosts.isPinned), // pinned post first within the group
                 desc(groupPosts.createdAt),
                 desc(groupPosts.id),
             ],
@@ -143,8 +158,8 @@ export const groupPostQueries = {
     },
 
     // Pin/Unpin the post
-    async togglePin(data: TogglePinInput): Promise<void> {
-        const [post] = await db
+    async togglePin(data: TogglePinInput, executor: DbExecutor = db): Promise<void> {
+        const [post] = await executor
             .update(groupPosts)
             .set({
                 isPinned: data.isPinned,
@@ -159,8 +174,8 @@ export const groupPostQueries = {
     },
 
     // Count posts by group id with optional filters
-    async countByGroup(data: CountPostsByGroupInput): Promise<number> {
-        const [result] = await db
+    async countByGroup(data: CountPostsByGroupInput, executor: DbExecutor = db): Promise<number> {
+        const [result] = await executor
             .select({ value: count() })
             .from(groupPosts)
             .where(buildWhereClause(data))

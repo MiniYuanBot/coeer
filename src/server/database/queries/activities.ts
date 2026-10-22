@@ -1,6 +1,6 @@
-import { and, count, desc, eq, ilike, inArray, or, sql, SQL } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, inArray, ne, or, sql, SQL } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
-import { activities, activityParticipants, NewActivity, NewActivityParticipant } from '../schemas'
+import { activities, activityParticipants, groups, NewActivity, NewActivityParticipant } from '../schemas'
 import type {
     ActivityIdInput,
     ActivityParticipantIdInput,
@@ -12,6 +12,11 @@ import type {
 
 function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
     const conditions: SQL[] = []
+    if (data.publicOnly) conditions.push(or(
+        ne(activities.organizerType, 'group'),
+        inArray(activities.organizerId, db.select({ id: groups.id }).from(groups)
+            .where(and(eq(groups.isPublic, true), eq(groups.status, 'approved')))),
+    )!)
     if (data.type) conditions.push(eq(activities.type, data.type))
     if (data.organizerType) conditions.push(eq(activities.organizerType, data.organizerType))
     if (data.organizerId) conditions.push(eq(activities.organizerId, data.organizerId))
@@ -54,7 +59,7 @@ export const activityQueries = {
         await activityQueries.synchronizeStatuses()
         return db.query.activities.findMany({
             where: buildActivityWhere(data),
-            orderBy: [desc(activities.startTime), desc(activities.id)],
+            orderBy: [desc(data.sort === 'latest' ? activities.createdAt : activities.startTime), desc(activities.id)],
             limit: data.limit,
             offset: data.offset,
         })

@@ -100,6 +100,10 @@ export interface GroupPostWithGroup extends GroupPost {
     group: Pick<Group, 'id' | 'name' | 'slug'>;
 }
 
+export interface PublicGroupPost extends GroupPostWithAuthor {
+    group: Pick<Group, 'id' | 'name' | 'slug'>;
+}
+
 export interface GroupPostFull extends GroupPost {
     author: Pick<DbUser, 'id' | 'name'>;
     group: Pick<Group, 'id' | 'name' | 'slug'>;

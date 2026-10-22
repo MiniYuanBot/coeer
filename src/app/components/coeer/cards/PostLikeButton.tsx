@@ -4,7 +4,7 @@ import { toggleReactionFn } from '~/functions/reactions'
 import { Button } from '../ui/Button'
 import { Icon } from '../ui/Icon'
 
-export function PostLikeButton({ post }: { post: { id: string; reactionCount?: number; hasReacted?: boolean } }) {
+export function PostLikeButton({ post, compact = false }: { post: { id: string; reactionCount?: number; hasReacted?: boolean }; compact?: boolean }) {
     const { user } = useRouteContext({ from: '__root__' })
     const router = useRouter()
     const navigate = useNavigate()
@@ -25,7 +25,7 @@ export function PostLikeButton({ post }: { post: { id: string; reactionCount?: n
         finally { setPending(false) }
     }
     return <div>
-        <Button variant="ghost" size="sm" aria-pressed={state.reacted} aria-label={`${state.reacted ? '取消点赞' : '点赞'}，${state.count} 人点赞`} loading={pending} onClick={() => void toggle()} className={state.reacted ? 'text-primary' : ''}>
+        <Button variant="ghost" size={compact ? 'xs' : 'sm'} aria-pressed={state.reacted} aria-label={`${state.reacted ? '取消点赞' : '点赞'}，${state.count} 人点赞`} loading={pending} onClick={() => void toggle()} className={(state.reacted ? 'text-primary ' : '') + (compact ? 'coeer-home-action [&_svg]:h-3.5 [&_svg]:w-3.5' : '')}>
             <Icon name="heart" />{state.reacted ? '已点赞' : '点赞'} <span className="tabular-nums">{state.count}</span>
         </Button>
         {error ? <p role="alert" className="mt-1 text-xs text-danger">{error}</p> : null}

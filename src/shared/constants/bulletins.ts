@@ -19,6 +19,7 @@ export type BulletinSourceType = typeof BULLETIN_SOURCE_TYPE[keyof typeof BULLET
 export const BULLETIN_SOURCE_TYPE_ARRAY = ['feedback', 'group_post', 'activity'] as const
 
 export const BULLETIN = {
+    PIN_LIMIT_REACHED: { code: 'PIN_LIMIT_REACHED', message: '公告最多置顶 5 条，请先取消其他公告的置顶。' } as const,
     CREATE_SUCCESS: { code: 'CREATE_SUCCESS', message: 'Create successful' } as const,
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,
     UPDATE_SUCCESS: { code: 'UPDATE_SUCCESS', message: 'Update successful' } as const,

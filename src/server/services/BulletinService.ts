@@ -1,6 +1,8 @@
 import { bulletinQueries } from '../database/queries'
 import { AuthService } from './AuthService'
 import { BULLETIN } from '@shared/constants'
+import { sql } from 'drizzle-orm'
+import { db } from '../database/client'
 import type {
     BulletinIdInput,
     BulletinResponse,
@@ -24,8 +26,15 @@ export class BulletinService {
         const auth = await this.ensureAdmin()
         if (!auth.ok) return { success: false, state: auth.state }
         try {
-            const bulletin = await bulletinQueries.create(data)
-            return { success: true, data: bulletin, state: BULLETIN.CREATE_SUCCESS }
+            return await db.transaction(async (tx) => {
+                // Serialize pin changes, including concurrent creates and edits.
+                await tx.execute(sql`select pg_advisory_xact_lock(hashtext('coeer:bulletin-pins'))`)
+                if (data.isPinned && await bulletinQueries.count({ isPinned: true, limit: 1, offset: 0 }, tx) >= 5) {
+                    return { success: false, state: BULLETIN.PIN_LIMIT_REACHED }
+                }
+                const bulletin = await bulletinQueries.create(data, tx)
+                return { success: true, data: bulletin, state: BULLETIN.CREATE_SUCCESS }
+            })
         } catch (err) {
             console.error('Create bulletin error:', err)
             return { success: false, state: BULLETIN.SERVER_ERROR }
@@ -47,8 +56,16 @@ export class BulletinService {
     static async update(data: UpdateBulletinInput): Promise<BulletinResponse<void>> {
         const auth = await this.ensureAdmin()
         if (!auth.ok) return { success: false, state: auth.state }
-        await bulletinQueries.update(data)
-        return { success: true, state: BULLETIN.UPDATE_SUCCESS }
+        return db.transaction(async (tx) => {
+            await tx.execute(sql`select pg_advisory_xact_lock(hashtext('coeer:bulletin-pins'))`)
+            const existing = await bulletinQueries.findById({ id: data.id }, tx)
+            if (!existing) return { success: false, state: BULLETIN.NOT_FOUND }
+            if (data.isPinned && !existing.isPinned && await bulletinQueries.count({ isPinned: true, limit: 1, offset: 0 }, tx) >= 5) {
+                return { success: false, state: BULLETIN.PIN_LIMIT_REACHED }
+            }
+            await bulletinQueries.update(data, tx)
+            return { success: true, state: BULLETIN.UPDATE_SUCCESS }
+        })
     }
 
     static async delete(data: BulletinIdInput): Promise<BulletinResponse<void>> {
