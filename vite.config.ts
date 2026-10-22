@@ -18,9 +18,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: parseInt(env.PORT) || 3000,
       strictPort: true,
+      fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.coeer-local/**'] },
       watch: {
         // Router-generator scratch writes and local QA artifacts must not retrigger HMR.
-        ignored: ['**/.tanstack/**', '**/tmp/**'],
+        ignored: ['**/.tanstack/**', '**/tmp/**', '**/.coeer-local/**'],
       },
     },
     optimizeDeps: {

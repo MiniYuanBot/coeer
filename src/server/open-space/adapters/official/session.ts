@@ -14,7 +14,8 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, isAbsolute, relative, sep } from "node:path";
+import { dirname, resolve } from "node:path";
+import { isPrivateRuntimePath } from '../../private-path'
 import { z } from "zod";
 import { AdapterError } from "../adapter.js";
 import { readPrivateJSON, type OfficialConfig } from "./config.js";
@@ -56,11 +57,11 @@ export function safeBusinessCookies(
 }
 export function privateTarget(path: string) {
   try {
-    if (!isAbsolute(path)) throw 0;
+    path = resolve(path);
+    if (!isPrivateRuntimePath(path)) throw 0;
     mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-    const parent = realpathSync(dirname(path)),
-      rel = relative(process.cwd(), parent);
-    if (!(rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)))
+    const parent = realpathSync(dirname(path));
+    if (!isPrivateRuntimePath(parent))
       throw 0;
     if (process.platform !== "win32" && statSync(parent).mode & 0o077) throw 0;
     // Do not follow pre-existing symlinks for private output files.

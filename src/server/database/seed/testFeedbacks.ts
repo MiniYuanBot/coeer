@@ -82,6 +82,9 @@ export function getSampleFeedbacks(users: {
             isAnonymous: false,
             status: 'processing' as const,
         },
-    ]
+    ].map((feedback) => {
+        const updatedAt = feedback.resolvedAt ?? new Date(Date.now() - 60 * 60 * 1000)
+        return { ...feedback, updatedAt, createdAt: new Date(updatedAt.getTime() - 30 * 60 * 1000) }
+    })
 
 }

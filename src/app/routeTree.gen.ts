@@ -10,11 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HealthzRouteImport } from './routes/healthz'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedNotificationsRouteImport } from './routes/_authed/notifications'
+import { Route as AuthedBookmarksRouteImport } from './routes/_authed/bookmarks'
 import { Route as AuthedSpacesRouteRouteImport } from './routes/_authed/spaces/route'
 import { Route as AuthedRedeemsRouteRouteImport } from './routes/_authed/redeems/route'
 import { Route as AuthedProfileRouteRouteImport } from './routes/_authed/profile/route'
@@ -87,6 +91,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
@@ -102,6 +111,11 @@ const HealthzRoute = HealthzRouteImport.update({
   path: '/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedRouteRoute = AuthedRouteRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
@@ -110,6 +124,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedNotificationsRoute = AuthedNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedBookmarksRoute = AuthedBookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedSpacesRouteRoute = AuthedSpacesRouteRouteImport.update({
   id: '/spaces',
@@ -468,9 +492,11 @@ const AuthedGroupsSlugPostsPostIdEditRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/healthz': typeof HealthzRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/achievements': typeof AuthedAchievementsRouteRouteWithChildren
   '/activities': typeof AuthedActivitiesRouteRouteWithChildren
@@ -482,6 +508,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthedProfileRouteRouteWithChildren
   '/redeems': typeof AuthedRedeemsRouteRouteWithChildren
   '/spaces': typeof AuthedSpacesRouteRouteWithChildren
+  '/bookmarks': typeof AuthedBookmarksRoute
+  '/notifications': typeof AuthedNotificationsRoute
   '/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
@@ -541,11 +569,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/healthz': typeof HealthzRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
+  '/bookmarks': typeof AuthedBookmarksRoute
+  '/notifications': typeof AuthedNotificationsRoute
   '/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/admin/activities': typeof AuthedAdminActivitiesRoute
   '/admin/bulletins': typeof AuthedAdminBulletinsRoute
@@ -598,9 +630,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/healthz': typeof HealthzRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authed/achievements': typeof AuthedAchievementsRouteRouteWithChildren
   '/_authed/activities': typeof AuthedActivitiesRouteRouteWithChildren
@@ -612,6 +646,8 @@ export interface FileRoutesById {
   '/_authed/profile': typeof AuthedProfileRouteRouteWithChildren
   '/_authed/redeems': typeof AuthedRedeemsRouteRouteWithChildren
   '/_authed/spaces': typeof AuthedSpacesRouteRouteWithChildren
+  '/_authed/bookmarks': typeof AuthedBookmarksRoute
+  '/_authed/notifications': typeof AuthedNotificationsRoute
   '/_authed/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/_authed/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
   '/_authed/admin/groups': typeof AuthedAdminGroupsRouteRouteWithChildren
@@ -673,9 +709,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/healthz'
     | '/login'
     | '/logout'
+    | '/reset-password'
     | '/signup'
     | '/achievements'
     | '/activities'
@@ -687,6 +725,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/redeems'
     | '/spaces'
+    | '/bookmarks'
+    | '/notifications'
     | '/admin/dorms'
     | '/admin/feedbacks'
     | '/admin/groups'
@@ -746,11 +786,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
     | '/healthz'
     | '/login'
     | '/logout'
+    | '/reset-password'
     | '/signup'
     | '/groups'
+    | '/bookmarks'
+    | '/notifications'
     | '/admin/achievements'
     | '/admin/activities'
     | '/admin/bulletins'
@@ -802,9 +846,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authed'
+    | '/forgot-password'
     | '/healthz'
     | '/login'
     | '/logout'
+    | '/reset-password'
     | '/signup'
     | '/_authed/achievements'
     | '/_authed/activities'
@@ -816,6 +862,8 @@ export interface FileRouteTypes {
     | '/_authed/profile'
     | '/_authed/redeems'
     | '/_authed/spaces'
+    | '/_authed/bookmarks'
+    | '/_authed/notifications'
     | '/_authed/admin/dorms'
     | '/_authed/admin/feedbacks'
     | '/_authed/admin/groups'
@@ -877,9 +925,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRouteRoute: typeof AuthedRouteRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HealthzRoute: typeof HealthzRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiOpenSpaceSplatRoute: typeof ApiOpenSpaceSplatRoute
 }
@@ -891,6 +941,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/logout': {
@@ -914,6 +971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HealthzRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed': {
       id: '/_authed'
       path: ''
@@ -927,6 +991,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/notifications': {
+      id: '/_authed/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthedNotificationsRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/bookmarks': {
+      id: '/_authed/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof AuthedBookmarksRouteImport
+      parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/spaces': {
       id: '/_authed/spaces'
@@ -1719,6 +1797,8 @@ interface AuthedRouteRouteChildren {
   AuthedProfileRouteRoute: typeof AuthedProfileRouteRouteWithChildren
   AuthedRedeemsRouteRoute: typeof AuthedRedeemsRouteRouteWithChildren
   AuthedSpacesRouteRoute: typeof AuthedSpacesRouteRouteWithChildren
+  AuthedBookmarksRoute: typeof AuthedBookmarksRoute
+  AuthedNotificationsRoute: typeof AuthedNotificationsRoute
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
@@ -1732,6 +1812,8 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedProfileRouteRoute: AuthedProfileRouteRouteWithChildren,
   AuthedRedeemsRouteRoute: AuthedRedeemsRouteRouteWithChildren,
   AuthedSpacesRouteRoute: AuthedSpacesRouteRouteWithChildren,
+  AuthedBookmarksRoute: AuthedBookmarksRoute,
+  AuthedNotificationsRoute: AuthedNotificationsRoute,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
@@ -1741,9 +1823,11 @@ const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRouteRoute: AuthedRouteRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HealthzRoute: HealthzRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiOpenSpaceSplatRoute: ApiOpenSpaceSplatRoute,
 }

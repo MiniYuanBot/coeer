@@ -115,21 +115,21 @@ it('shares PostgreSQL while isolating reservation tables and selects the same of
         DATABASE_URL: 'postgresql://test.invalid/community',
         PORT: '3000',
         SESSION_SECRET: 'community-secret',
-        OPENSPACE_DATABASE_SCHEMA: 'coeer_spaces',
-        OPENSPACE_APP_ORIGIN: 'https://community.example.com',
+        BOOKING_DB_SCHEMA: 'coeer_spaces',
+        BOOKING_ALLOWED_ORIGIN: 'https://community.example.com',
     })
     expect(result.DATABASE_URL).toBe('postgresql://test.invalid/community')
-    expect(result.DATABASE_SCHEMA).toBe('coeer_spaces')
-    expect(result.APP_ORIGIN).toBe('https://community.example.com')
-    expect(result.ADAPTER_MODE).toBe('official')
+    expect(result.BOOKING_DB_SCHEMA).toBe('coeer_spaces')
+    expect(result.BOOKING_ALLOWED_ORIGIN).toBe('https://community.example.com')
+    expect(result.BOOKING_DATA_SOURCE).toBe('official')
     expect(result).not.toHaveProperty('DATABASE_PATH')
     expect(result).not.toHaveProperty('SESSION_SECRET')
     expect(result).not.toHaveProperty('PORT')
     const development = spaceEnvironment({ NODE_ENV: 'development', DATABASE_URL: 'postgresql://test.invalid/community' })
-    expect(development.ADAPTER_MODE).toBe(result.ADAPTER_MODE)
+    expect(development.BOOKING_DATA_SOURCE).toBe(result.BOOKING_DATA_SOURCE)
     expect(runtime(development)).toMatchObject({ mode: 'official', environment: 'staging' })
     expect(runtime(result)).toMatchObject({ mode: 'official', environment: 'production' })
-    expect(spaceEnvironment({ NODE_ENV: 'test', OPENSPACE_ADAPTER_MODE: 'mock' }).ADAPTER_MODE).toBe('mock')
+    expect(spaceEnvironment({ NODE_ENV: 'test', BOOKING_DATA_SOURCE: 'mock' }).BOOKING_DATA_SOURCE).toBe('mock')
 })
 
 it('starts exactly one embedded engine and serves its API without a sibling project or second UI', async () => {
@@ -138,8 +138,8 @@ it('starts exactly one embedded engine and serves its API without a sibling proj
     vi.stubEnv('NODE_ENV', 'test')
     vi.stubEnv('CLIENT_URL', 'http://localhost:3000')
     vi.stubEnv('DATABASE_URL', databaseUrl!)
-    vi.stubEnv('OPENSPACE_DATABASE_SCHEMA', scope.name)
-    vi.stubEnv('OPENSPACE_ADAPTER_MODE', 'mock')
+    vi.stubEnv('BOOKING_DB_SCHEMA', scope.name)
+    vi.stubEnv('BOOKING_DATA_SOURCE', 'mock')
     await expect(getEmbeddedSpaceServer()).rejects.toThrow('has not started')
     const first = startEmbeddedSpaceServer()
     expect(getEmbeddedSpaceServer()).toBe(first)

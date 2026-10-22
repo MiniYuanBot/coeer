@@ -42,7 +42,7 @@ export const ACTIVITY = {
     CANCEL_SUCCESS: { code: 'CANCEL_SUCCESS', message: 'Cancel successful' } as const,
     CHECK_IN_SUCCESS: { code: 'CHECK_IN_SUCCESS', message: 'Check in successful' } as const,
     NOT_FOUND: { code: 'ACTIVITY_NOT_FOUND', message: 'Activity not found' } as const,
-    ALREADY_REGISTERED: { code: 'ALREADY_REGISTERED', message: 'Already registered' } as const,
+    ALREADY_REGISTERED: { code: 'ALREADY_REGISTERED', message: '你已报名该活动，无需重复报名' } as const,
     FULL: { code: 'ACTIVITY_FULL', message: 'Activity is full' } as const,
     UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Unauthorized user' } as const,
     FORBIDDEN: { code: 'FORBIDDEN', message: 'You do not have permission' } as const,

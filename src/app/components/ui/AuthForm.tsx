@@ -27,6 +27,7 @@ export function AuthForm({ actionText, onSubmit, status, afterSubmit }: {
                     {afterSubmit ? <Alert tone="danger">{afterSubmit}</Alert> : null}
                     <Button type="submit" loading={status === 'pending'} className="h-11 w-full">{isLogin ? '登录' : '注册'}</Button>
                 </form>
+                {isLogin ? <p className="mt-4 text-right text-xs"><Link to="/forgot-password" className="coeer-focus rounded text-muted-foreground hover:text-foreground hover:underline">忘记密码？</Link></p> : null}
                 <p className="mt-6 text-center text-xs text-muted-foreground">
                     {isLogin ? '还没有账号？' : '已经有账号？'}{' '}
                     <Link to={isLogin ? '/signup' : '/login'} className="coeer-focus rounded font-medium text-foreground hover:underline">{isLogin ? '创建账号' : '登录'}</Link>

@@ -7,6 +7,7 @@ import {
 import { promisify } from "node:util";
 import type { User } from "@shared/open-space/domain.js";
 import { DB } from "./db.js";
+import { ADMIN_STUDENT_ID } from './coeer-identity.js';
 const scrypt = promisify(scryptCallback);
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -46,6 +47,7 @@ export async function session(
     digest(token),
     Date.now(),
   );
+  if (row?.role !== 'admin' && row?.studentId === ADMIN_STUDENT_ID) return null;
   return row
     ? {
         user: {
@@ -53,8 +55,8 @@ export async function session(
           email: row.email,
           name: row.name,
           role: row.role,
-          studentId: row.studentId,
-          bookingPermission: row.bookingPermission,
+          studentId: row.role === 'admin' ? ADMIN_STUDENT_ID : row.studentId,
+          bookingPermission: row.role === 'admin' ? 'allowed' : row.bookingPermission,
           passwordIsDefault: !!row.passwordIsDefault,
         },
         csrf: row.csrf,

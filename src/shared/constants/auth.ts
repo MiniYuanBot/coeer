@@ -5,6 +5,9 @@ export const AUTH = {
     LOGOUT_SUCCESS: { code: 'LOGOUT_SUCCESS', message: '已退出登录' } as const,
     PROFILE_UPDATED: { code: 'PROFILE_UPDATED', message: '昵称已更新' } as const,
     PASSWORD_CHANGED: { code: 'PASSWORD_CHANGED', message: '密码已更新，请重新登录' } as const,
+    RESET_REQUESTED: { code: 'RESET_REQUESTED', message: '如果该邮箱对应有效账号，你会收到密码重置邮件。请检查收件箱和垃圾邮件，并稍后再试。' } as const,
+    RESET_INVALID: { code: 'RESET_INVALID', message: '重置链接无效或已过期，请重新申请' } as const,
+    MAIL_UNAVAILABLE: { code: 'MAIL_UNAVAILABLE', message: '密码找回服务暂不可用，请联系管理员' } as const,
 
     INVALID_STUDENT_EMAIL: { code: 'INVALID_STUDENT_EMAIL', message: '请使用 10 位学号的学生邮箱注册，例如 2026201234@stu.pku.edu.cn' } as const,
     INVALID_INPUT: { code: 'INVALID_INPUT', message: '请检查输入内容' } as const,

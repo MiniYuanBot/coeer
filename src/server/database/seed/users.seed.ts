@@ -3,9 +3,10 @@ import { testUsers } from './testUsers'
 import { userQueries } from '../queries'
 import { db } from '../client'
 import { userProfiles } from '../schemas'
-import { cleanSeedData, hasCleanFlag, isMainModule, runSeedCli } from './seed-utils'
+import { assertSeedEnvironment, cleanSeedData, hasCleanFlag, isMainModule, runSeedCli } from './seed-utils'
 
 export async function seedUsers(options: { clean?: boolean } = {}) {
+    assertSeedEnvironment()
     const shouldClean = options.clean ?? hasCleanFlag()
     console.log('Start seeding users...')
 
@@ -34,13 +35,7 @@ export async function seedUsers(options: { clean?: boolean } = {}) {
             console.log(`Create successful: ${user.email}`)
             await syncProfile(created.id, user.bio)
         } else {
-            await userQueries.update({
-                id: existingUser.id,
-                name: user.name,
-                passwordHash: user.passwordHash,
-                role: user.role,
-            })
-            console.log(`User exists, credentials synced: ${user.email}`)
+            console.log(`User exists, credentials preserved: ${user.email}`)
             await syncProfile(existingUser.id, user.bio)
         }
     }

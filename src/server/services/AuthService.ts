@@ -14,7 +14,7 @@ import type {
     UpdateProfileInput,
     ChangePasswordInput,
 } from '@shared/contracts'
-import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_PATTERN } from '@shared/contracts'
+import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_PATTERN, studentIdForUser } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
 
 /**
@@ -31,6 +31,7 @@ function toSessionUser(user: {
         email: user.email,
         name: user.name ?? null,
         role: user.role,
+        studentId: studentIdForUser(user),
         lastUpdated: Date.now(),
     }
 }

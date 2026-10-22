@@ -1,6 +1,6 @@
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, ne, sql } from 'drizzle-orm'
 import { db } from '../client'
-import { NewReply, replies, Reply } from '../schemas'
+import { groupMembers, groupPosts, groups, NewReply, replies, Reply } from '../schemas'
 import type {
     ListChildRepliesInput,
     ListRepliesByAuthorInput,
@@ -27,7 +27,7 @@ export const replyQueries = {
         return db.query.replies.findMany({
             where: and(eq(replies.targetType, data.targetType), eq(replies.targetId, data.targetId)),
             with: { author: { columns: { id: true, name: true } } },
-            orderBy: [desc(replies.createdAt)],
+            orderBy: [desc(replies.createdAt), desc(replies.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -37,32 +37,35 @@ export const replyQueries = {
         return db.query.replies.findMany({
             where: eq(replies.parentId, data.parentId),
             with: { author: { columns: { id: true, name: true } } },
-            orderBy: [desc(replies.createdAt)],
+            orderBy: [desc(replies.createdAt), desc(replies.id)],
             limit: data.limit,
             offset: data.offset,
         })
     },
 
-    async listByAuthor(data: ListRepliesByAuthorInput): Promise<Reply[]> {
-        return db.query.replies.findMany({
-            where: eq(replies.userId, data.authorId),
-            orderBy: [desc(replies.createdAt)],
-            limit: data.limit,
-            offset: data.offset,
-        })
+    async listByAuthor(data: ListRepliesByAuthorInput, viewer: { id: string; role: string }): Promise<Reply[]> {
+        return db.select(getTableColumns(replies)).from(replies).where(
+            and(eq(replies.userId, data.authorId), eq(replies.targetType, 'group_post'),
+                sql`exists (select 1 from ${groupPosts} inner join ${groups} on ${groups.id} = ${groupPosts.groupId}
+                    where ${groupPosts.id} = ${replies.targetId} and (${viewer.role === 'admin'} or exists (
+                        select 1 from ${groupMembers} where ${groupMembers.groupId} = ${groups.id}
+                        and ${groupMembers.userId} = ${viewer.id} and ${groupMembers.status} = 'approved')))`,
+            ),
+        ).orderBy(desc(replies.createdAt), desc(replies.id)).limit(data.limit).offset(data.offset)
     },
 
     async update(data: UpdateReplyInput): Promise<Reply> {
         const [reply] = await db.update(replies)
             .set({ content: data.content, updatedAt: new Date() })
-            .where(eq(replies.id, data.id))
+            .where(and(eq(replies.id, data.id), ne(replies.content, '')))
             .returning()
         if (!reply) throw new Error('Reply not found')
         return reply
     },
 
     async delete(data: ReplyIdInput): Promise<void> {
-        await db.delete(replies).where(eq(replies.id, data.id))
+        // Preserve descendants and their context; the original author/content are hidden by the UI.
+        await db.update(replies).set({ content: '', updatedAt: new Date() }).where(eq(replies.id, data.id))
     },
 
     async countByTarget(data: ListRepliesByTargetInput): Promise<number> {

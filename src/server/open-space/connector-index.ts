@@ -1,5 +1,6 @@
 /** Private network service. No external users, no automatic booking worker. */
 import { AdapterError } from "./adapters/adapter.js";
+import { assertBookingEnvironment } from './environment.js';
 import { DB } from "./db.js";
 import { loadOfficialConfig } from "./adapters/official/config.js";
 import { ManagedSession } from "./adapters/official/session.js";
@@ -15,34 +16,35 @@ import {
   createConnectorApp,
   connectorKey,
 } from "./adapters/official/remote.js";
-if (process.env.CONFIG_ENV_FILE)
-  process.loadEnvFile(process.env.CONFIG_ENV_FILE);
+if (process.env.BOOKING_EXTRA_ENV_FILE)
+  process.loadEnvFile(process.env.BOOKING_EXTRA_ENV_FILE);
+assertBookingEnvironment();
 process.umask(0o077);
 if (
-  !process.env.OFFICIAL_CONFIG_FILE ||
-  !process.env.OFFICIAL_SESSION_FILE ||
-  !process.env.OFFICIAL_SESSION_KEY_FILE ||
-  !process.env.OFFICIAL_CONNECTOR_KEY_FILE ||
+  !process.env.CAMPUS_API_CONFIG_FILE ||
+  !process.env.CAMPUS_COOKIE_FILE ||
+  !process.env.CAMPUS_COOKIE_KEY_FILE ||
+  !process.env.CONNECTOR_TOKEN_FILE ||
   !process.env.DATABASE_URL
 )
   throw new Error("Private connector configuration required");
 const cfg = loadOfficialConfig(
-  process.env.OFFICIAL_CONFIG_FILE,
-  process.env.OFFICIAL_PUBLICATION_FILE,
-  process.env.OFFICIAL_WRITES_FILE,
+  process.env.CAMPUS_API_CONFIG_FILE,
+  process.env.CAMPUS_PUBLIC_ROOMS_FILE,
+  process.env.CAMPUS_BOOKING_FORM_FILE,
 );
 if (!cfg.account.profileUserId)
   throw new Error("Enroll an authorized service identity first");
-if (cfg.allowHTTP && process.env.OFFICIAL_HTTP_NETWORK_APPROVED !== "true")
+if (cfg.allowHTTP && process.env.CAMPUS_ALLOW_HTTP !== "true")
   throw new Error("Protected HTTP network approval required");
 cfg.writes.enabled =
-  cfg.writes.enabled && process.env.OFFICIAL_WRITES_ENABLED === "true";
-const db = await DB.open(process.env.DATABASE_URL, process.env.DATABASE_SCHEMA),
+  cfg.writes.enabled && process.env.CAMPUS_WRITE_ENABLED === "true";
+const db = await DB.open(process.env.DATABASE_URL, process.env.BOOKING_DB_SCHEMA),
   manager = new ManagedSession(
     cfg,
-    process.env.OFFICIAL_SESSION_FILE,
-    process.env.OFFICIAL_SESSION_KEY_FILE,
-    process.env.OFFICIAL_SESSION_RENEWAL === "true",
+    process.env.CAMPUS_COOKIE_FILE,
+    process.env.CAMPUS_COOKIE_KEY_FILE,
+    process.env.CAMPUS_COOKIE_LEASE_RENEWAL === "true",
   );
 const adapter = new LiveOfficialAdapter(
   cfg,
@@ -56,25 +58,25 @@ const adapter = new LiveOfficialAdapter(
       throw new AdapterError("AUTHORIZATION_REQUIRED");
   },
 );
-const port = Number(process.env.CONNECTOR_PORT ?? 3002);
+const port = Number(process.env.CONNECTOR_LISTEN_PORT ?? 3002);
 let authentication: AuthenticationRecovery | undefined;
-if (process.env.OFFICIAL_AUTOMATIC_LOGIN_APPROVED === "true") {
+if (process.env.CAMPUS_AUTO_RELOGIN === "true") {
   if (
-    !process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE ||
-    !process.env.OFFICIAL_ACCOUNT_KEY_FILE ||
-    !process.env.OFFICIAL_RECOVERY_STATE_FILE
+    !process.env.CAMPUS_ACCOUNT_FILE ||
+    !process.env.CAMPUS_ACCOUNT_KEY_FILE ||
+    !process.env.CAMPUS_RELOGIN_STATE_FILE
   )
     throw new Error("Private automatic authentication configuration required");
-  const credentialsPath = process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE,
-    credentialsKey = process.env.OFFICIAL_ACCOUNT_KEY_FILE,
-    keyPath = process.env.OFFICIAL_SESSION_KEY_FILE;
+  const credentialsPath = process.env.CAMPUS_ACCOUNT_FILE,
+    credentialsKey = process.env.CAMPUS_ACCOUNT_KEY_FILE,
+    keyPath = process.env.CAMPUS_COOKIE_KEY_FILE;
   authentication = new AuthenticationRecovery({
     config: cfg,
     manager,
-    sessionPath: process.env.OFFICIAL_SESSION_FILE,
+    sessionPath: process.env.CAMPUS_COOKIE_FILE,
     keyPath,
-    statePath: process.env.OFFICIAL_RECOVERY_STATE_FILE,
-    probe: () => adapter.checkConnection(),
+    statePath: process.env.CAMPUS_RELOGIN_STATE_FILE,
+    probe: options => adapter.checkConnection(options),
     login: () =>
       loginAuthorizedAccount(
         cfg,
@@ -90,9 +92,9 @@ if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error("Invalid connector port");
 const server = createConnectorApp(
   adapter,
-  connectorKey(process.env.OFFICIAL_CONNECTOR_KEY_FILE),
+  connectorKey(process.env.CONNECTOR_TOKEN_FILE),
   authentication,
-).listen(port, process.env.CONNECTOR_HOST ?? "127.0.0.1", () =>
+).listen(port, process.env.CONNECTOR_LISTEN_HOST ?? "127.0.0.1", () =>
   console.log('{"event":"connector.started"}'),
 );
 server.requestTimeout = 30000;

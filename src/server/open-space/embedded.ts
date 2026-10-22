@@ -38,56 +38,56 @@ async function start(): Promise<EmbeddedSpaceRuntime> {
   const settings = runtime(values)
   let adapter
   let official
-  if (settings.mode === 'official' && values.OFFICIAL_CONNECTOR_URL) {
-    if (!values.OFFICIAL_CONNECTOR_KEY_FILE) throw new Error('Private connector key required')
-    adapter = new RemoteOfficialAdapter(values.OFFICIAL_CONNECTOR_URL, connectorKey(values.OFFICIAL_CONNECTOR_KEY_FILE), values.OFFICIAL_WRITES_ENABLED === 'true')
+  if (settings.mode === 'official' && values.CONNECTOR_URL) {
+    if (!values.CONNECTOR_TOKEN_FILE) throw new Error('Private connector key required')
+    adapter = new RemoteOfficialAdapter(values.CONNECTOR_URL, connectorKey(values.CONNECTOR_TOKEN_FILE), values.CAMPUS_WRITE_ENABLED === 'true')
     await adapter.initialize()
   } else if (settings.mode === 'official') {
     if (settings.environment === 'production') throw new Error('Production requires an isolated connector')
-    if (!values.OFFICIAL_CONFIG_FILE || !values.OFFICIAL_SESSION_FILE) throw new Error('Official configuration and session required')
-    const config = loadOfficialConfig(values.OFFICIAL_CONFIG_FILE, values.OFFICIAL_PUBLICATION_FILE, values.OFFICIAL_WRITES_FILE)
+    if (!values.CAMPUS_API_CONFIG_FILE || !values.CAMPUS_COOKIE_FILE) throw new Error('Official configuration and session required')
+    const config = loadOfficialConfig(values.CAMPUS_API_CONFIG_FILE, values.CAMPUS_PUBLIC_ROOMS_FILE, values.CAMPUS_BOOKING_FORM_FILE)
     if (!config.account.profileUserId) throw new Error('Authorized service identity required')
-    if (config.allowHTTP && values.OFFICIAL_HTTP_NETWORK_APPROVED !== 'true') throw new Error('Protected HTTP network approval required')
-    config.writes.enabled = config.writes.enabled && values.OFFICIAL_WRITES_ENABLED === 'true'
-    const mode = values.OFFICIAL_AUTH_MODE ?? 'operator_sso'
+    if (config.allowHTTP && values.CAMPUS_ALLOW_HTTP !== 'true') throw new Error('Protected HTTP network approval required')
+    config.writes.enabled = config.writes.enabled && values.CAMPUS_WRITE_ENABLED === 'true'
+    const mode = values.CAMPUS_LOGIN_METHOD ?? 'operator_sso'
     if (!['operator_sso', 'approved_headers'].includes(mode)) throw new Error('Invalid official authentication mode')
-    if (mode === 'operator_sso' && !values.OFFICIAL_SESSION_KEY_FILE) throw new Error('Encrypted session key required')
-    const automatic = values.OFFICIAL_AUTOMATIC_LOGIN_APPROVED === 'true'
-    if (automatic && (mode !== 'operator_sso' || !values.OFFICIAL_ACCOUNT_CREDENTIALS_FILE || !values.OFFICIAL_ACCOUNT_KEY_FILE || !values.OFFICIAL_RECOVERY_STATE_FILE))
+    if (mode === 'operator_sso' && !values.CAMPUS_COOKIE_KEY_FILE) throw new Error('Encrypted session key required')
+    const automatic = values.CAMPUS_AUTO_RELOGIN === 'true'
+    if (automatic && (mode !== 'operator_sso' || !values.CAMPUS_ACCOUNT_FILE || !values.CAMPUS_ACCOUNT_KEY_FILE || !values.CAMPUS_RELOGIN_STATE_FILE))
       throw new Error('Private automatic authentication configuration required')
     const manager = mode === 'operator_sso'
-      ? new ManagedSession(config, values.OFFICIAL_SESSION_FILE, values.OFFICIAL_SESSION_KEY_FILE!, values.OFFICIAL_SESSION_RENEWAL === 'true')
+      ? new ManagedSession(config, values.CAMPUS_COOKIE_FILE, values.CAMPUS_COOKIE_KEY_FILE!, values.CAMPUS_COOKIE_LEASE_RENEWAL === 'true')
       : undefined
     official = {
       config,
-      credentials: manager?.provider ?? privateSessionFile(values.OFFICIAL_SESSION_FILE),
+      credentials: manager?.provider ?? privateSessionFile(values.CAMPUS_COOKIE_FILE),
       wrapAdapter: automatic ? (direct: LiveOfficialAdapter) => new AuthenticatedOfficialAdapter(direct, new AuthenticationRecovery({
         config,
         manager: manager!,
-        sessionPath: values.OFFICIAL_SESSION_FILE!,
-        keyPath: values.OFFICIAL_SESSION_KEY_FILE!,
-        statePath: values.OFFICIAL_RECOVERY_STATE_FILE!,
-        probe: () => direct.checkConnection(),
-        login: () => loginAuthorizedAccount(config, loadAccountCredentials(values.OFFICIAL_ACCOUNT_CREDENTIALS_FILE!, values.OFFICIAL_ACCOUNT_KEY_FILE!, config.account.alias)),
+        sessionPath: values.CAMPUS_COOKIE_FILE!,
+        keyPath: values.CAMPUS_COOKIE_KEY_FILE!,
+        statePath: values.CAMPUS_RELOGIN_STATE_FILE!,
+        probe: options => direct.checkConnection(options),
+        login: () => loginAuthorizedAccount(config, loadAccountCredentials(values.CAMPUS_ACCOUNT_FILE!, values.CAMPUS_ACCOUNT_KEY_FILE!, config.account.alias)),
       })) : undefined,
     }
   }
   const context = await createApp({
     databaseUrl: values.DATABASE_URL,
-    databaseSchema: values.DATABASE_SCHEMA,
+    databaseSchema: values.BOOKING_DB_SCHEMA,
     origin: settings.origin,
     production: settings.hardened,
     environment: settings.environment,
-    demo: settings.mode === 'mock' && !settings.hardened && values.DEMO_MODE !== 'false',
+    demo: settings.mode === 'mock' && !settings.hardened && values.BOOKING_DEMO_DATA !== 'false',
     adapterMode: settings.mode,
     adapter,
     official,
-    adminStudentId: values.ADMIN_STUDENT_ID,
+    adminStudentId: values.BOOKING_BOOTSTRAP_STUDENT_ID,
     adminPassword: settings.adminPassword,
-    publicBookingUserId: values.PUBLIC_BOOKING_USER_ID || undefined,
-    syncEnabled: values.SYNC_ENABLED === undefined ? undefined : values.SYNC_ENABLED === 'true',
-    horizon: Number(values.BOOKING_DAYS ?? 7),
-    bookingEnabled: values.BOOKING_ENABLED === undefined ? undefined : values.BOOKING_ENABLED === 'true',
+    publicBookingUserId: values.BOOKING_PUBLIC_USER_ID || undefined,
+    syncEnabled: values.BOOKING_SYNC_ENABLED === undefined ? undefined : values.BOOKING_SYNC_ENABLED === 'true',
+    horizon: Number(values.BOOKING_ADVANCE_DAYS ?? 7),
+    bookingEnabled: values.BOOKING_SUBMISSIONS_ENABLED === undefined ? undefined : values.BOOKING_SUBMISSIONS_ENABLED === 'true',
     deferInitialSync: settings.mode === 'official',
     serveClient: false,
     communityIdentitySecret: communityIdentitySecret(),

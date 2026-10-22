@@ -134,9 +134,11 @@ describe('COEER follows official upstream booking rules', () => {
         const spaceId = 'synthetic-meeting-one'
         await context.db.run('DELETE FROM snapshots WHERE space_id=? AND date=?', spaceId, date)
         expect(await context.db.get('SELECT 1 FROM snapshots WHERE space_id=? AND date=?', spaceId, date)).toBeUndefined()
-        const responses = await Promise.all(Array.from({ length: 8 }, () => call(`/spaces/${spaceId}/availability?date=${date}`)))
-        expect(responses.map(value => value.status)).toEqual(Array(8).fill(200))
-        const results = await Promise.all(responses.map(value => value.json() as Promise<Availability>))
+        const results = await Promise.all(Array.from({ length: 8 }, async () => {
+            const response = await call(`/spaces/${spaceId}/availability?date=${date}`)
+            expect(response.status).toBe(200)
+            return response.json() as Promise<Availability>
+        }))
         expect(results.every(value => value.stale && value.slots.length === 0)).toBe(true)
         expect(await context.db.get('SELECT 1 FROM snapshots WHERE space_id=? AND date=?', spaceId, date)).toBeUndefined()
         const expired = addDays(today(), 7)
@@ -198,13 +200,14 @@ describe('COEER follows official upstream booking rules', () => {
             end: 495 + duration, quantity: 1, purpose: '官网规则合成验收' }
         const key = `upstream-offset-grid-${id}-${duration}`
         const first = await submit(input, key)
-        expect(first.status).toBe(201)
+        expect(first.status).toBe(202)
         const booking = await first.json() as Booking
-        expect(booking.status).toBe('confirmed')
+        expect(booking.status).toBe('queued')
         const repeat = await submit(input, key)
-        expect(repeat.status).toBe(201)
+        expect(repeat.status).toBe(202)
         expect((await repeat.json()).id).toBe(booking.id)
         expect((await context.db.get<{ count: number }>('SELECT COUNT(*) AS count FROM bookings'))?.count).toBe(1)
+        expect((await context.service.waitForResult(booking.id)).status).toBe('confirmed')
         expect(adapter.createCalls).toHaveLength(1)
         expect(adapter.createCalls[0]).toMatchObject({ start: 495, end: 495 + duration, date: input.date })
         expect((await context.service.booking(booking.id)).status).toBe('confirmed')

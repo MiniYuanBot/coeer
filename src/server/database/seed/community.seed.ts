@@ -139,14 +139,14 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             groupId: officialGroup.id,
             authorId: adminUser.id,
             title: '积分与成就系统使用说明',
-            content: '提交反馈、参与活动、发帖互动都会累积积分；积分可抽卡片，也能在积分商城兑换校园周边与权益。',
+            content: '在个人中心查看积分流水。管理员会根据反馈处理与活动参与情况发放积分；积分可用于抽卡和商城兑换。',
             type: 'announcement' as const,
             isPinned: false,
         },
         officialGroup && {
             groupId: officialGroup.id,
             authorId: demoUser.id,
-            title: '九月校园活动日历上线',
+            title: '校园活动日历上线',
             content: '功能体验会、Hack Night 与共创圆桌已排期，欢迎在活动页报名。',
             type: 'discussion' as const,
             isPinned: false,
@@ -156,6 +156,27 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             authorId: testUser.id,
             title: '新人报到：介绍一下自己',
             content: '第一次使用 COEER？来官方动态下打个招呼，介绍一下你的专业和兴趣吧。',
+            type: 'discussion' as const,
+            isPinned: false,
+        },
+        codingGroup && {
+            groupId: codingGroup.id,
+            authorId: testUser.id,
+            title: '求助：这题怎么积？',
+            content: String.raw`## 定积分求助
+
+想计算下面的积分：
+
+$$
+\int_0^1 x e^{x^2}\,\mathrm{d}x
+$$
+
+- 我试着令 $u=x^2$，于是 $\mathrm{d}u=2x\,\mathrm{d}x$。
+- 上下限还是 $0$ 和 $1$ 吗？
+
+**我的猜测**是 $\frac{e-1}{2}$，想请大家帮忙检查换元过程。
+
+> 回复中也可以直接写公式，分享你的推导。`,
             type: 'discussion' as const,
             isPinned: false,
         },
@@ -186,12 +207,19 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
     ].filter(isDefined)
 
     for (const post of samplePosts) {
+        if (post.title === '校园活动日历上线') {
+            const legacy = await db.query.groupPosts.findFirst({ where: (table, { and, eq }) => and(eq(table.groupId, post.groupId), eq(table.title, '九月校园活动日历上线'), eq(table.authorId, post.authorId)) })
+            const current = await db.query.groupPosts.findFirst({ where: (table, { and, eq }) => and(eq(table.groupId, post.groupId), eq(table.title, post.title)) })
+            if (legacy && !current) await db.update(groupPosts).set({ title: post.title }).where(eq(groupPosts.id, legacy.id))
+        }
         const existing = await db.query.groupPosts.findFirst({
             where: (table, { and, eq }) => and(eq(table.groupId, post.groupId), eq(table.title, post.title)),
         })
         if (!existing) {
             await db.insert(groupPosts).values(post)
             console.log(`Create post: ${post.title}`)
+        } else if (post.title === '积分与成就系统使用说明' && existing.authorId === adminUser.id && existing.content === '提交反馈、参与活动、发帖互动都会累积积分；积分可抽卡片，也能在积分商城兑换校园周边与权益。') {
+            await db.update(groupPosts).set({ content: post.content }).where(eq(groupPosts.id, existing.id))
         }
     }
 

@@ -26,7 +26,7 @@ export async function spaceApi<T>(path: string, options: RequestInit = {}): Prom
     if (body === null) throw new Error('服务返回的结果无法识别，请刷新后查看')
     return body as T
 }
-export function useSpaceResource<T>(path: string | null, poll = 0) {
+export function useSpaceResource<T>(path: string | null, poll = 0, { enabled = true }: { enabled?: boolean } = {}) {
     const [state, setState] = useState<{ path: string | null; data?: T; error: string; loading: boolean }>({
         path,
         error: '',
@@ -34,6 +34,7 @@ export function useSpaceResource<T>(path: string | null, poll = 0) {
     })
     const [version, setVersion] = useState(0)
     useEffect(() => {
+        if (!enabled) return
         let active = true
         const controller = new AbortController()
         let timer: ReturnType<typeof setTimeout> | undefined
@@ -60,7 +61,7 @@ export function useSpaceResource<T>(path: string | null, poll = 0) {
             controller.abort()
             if (timer) clearTimeout(timer)
         }
-    }, [path, poll, version])
+    }, [path, poll, version, enabled])
     return {
         ...(state.path === path ? state : { path, error: '', loading: !!path, data: undefined }),
         reload: () => setVersion((value) => value + 1),

@@ -1,5 +1,5 @@
 import { readFileSync, realpathSync, statSync } from "node:fs";
-import { isAbsolute, relative, sep } from "node:path";
+import { isPrivateRuntimePath } from '../../private-path'
 import { z } from "zod";
 import { AdapterError } from "../adapter.js";
 import { validDate } from "@shared/open-space/domain.js";
@@ -235,15 +235,12 @@ export function parseOfficialConfig(value: unknown): OfficialConfig {
   if (!r.success) throw new AdapterError("CONFIGURATION");
   return r.data;
 }
-/** Private runtime files must be outside the repository; no raw error messages or paths. */
+/** Private files stay outside the project or in .coeer-local; errors never expose paths. */
 export function readPrivateJSON(path: string, maxBytes = 262144): unknown {
   try {
-    const real = realpathSync(path),
-      rel = relative(process.cwd(), real),
-      stat = statSync(real);
+    const real = realpathSync(path), stat = statSync(real);
     if (
-      !isAbsolute(path) ||
-      !(rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) ||
+      !isPrivateRuntimePath(real) ||
       !stat.isFile() ||
       stat.size > maxBytes
     )

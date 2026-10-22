@@ -1,6 +1,8 @@
-import { PostContent } from '@/components/coeer/cards/PostContent'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
+import { PostLikeButton } from '@/components/coeer/cards/PostLikeButton'
+import { PostBookmarkButton } from '@/components/coeer/cards/PostBookmarkButton'
+import { PostContent } from '@/components/coeer/cards/PostContent'
 import { z } from 'zod'
 import { deleteGroupPostFn, listPostsByGroupFn, togglePinPostFn } from '~/functions'
 import { type GroupPostWithAuthor, GroupPostFilterSchema } from '@shared/contracts'
@@ -44,10 +46,13 @@ function postTypeLabel(type: string) {
 
 function PostsListPage() {
     const { posts, total, page, pageSize, type } = Route.useLoaderData()
-    const { isAdmin } = Route.useRouteContext()
+    const { isAdmin, user } = Route.useRouteContext()
     const navigate = useNavigate()
+    const router = useRouter()
     const { slug } = Route.useParams()
     const [deletingPost, setDeletingPost] = useState<GroupPostWithAuthor | null>(null)
+    const [actionPending, setActionPending] = useState(false)
+    const [actionError, setActionError] = useState('')
     const totalPages = Math.ceil(total / pageSize)
 
     const go = (next: { type?: GroupPostType; page?: number }) => {
@@ -55,14 +60,22 @@ function PostsListPage() {
     }
 
     const handleDelete = async (postId: string) => {
-        await deleteGroupPostFn({ data: { id: postId } })
-        setDeletingPost(null)
-        navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page } })
+        setActionPending(true); setActionError('')
+        try {
+            await deleteGroupPostFn({ data: { id: postId } })
+            setDeletingPost(null)
+            await router.invalidate()
+        } catch (error) { setActionError(error instanceof Error ? error.message : '删除失败') }
+        finally { setActionPending(false) }
     }
 
     const handleTogglePin = async (postId: string, isPinned: boolean) => {
-        await togglePinPostFn({ data: { id: postId, isPinned } })
-        navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page } })
+        setActionPending(true); setActionError('')
+        try {
+            await togglePinPostFn({ data: { id: postId, isPinned } })
+            await router.invalidate()
+        } catch (error) { setActionError(error instanceof Error ? error.message : '置顶失败') }
+        finally { setActionPending(false) }
     }
 
     return (
@@ -72,6 +85,7 @@ function PostsListPage() {
                 description="查看群组讨论与公告。"
                 action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button><Icon name="send" /> 发布帖子</Button></Link>}
             />
+            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             <FilterPanel
                 groups={[
@@ -96,14 +110,14 @@ function PostsListPage() {
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {isAdmin ? (
-                                        <Button size="sm" variant="ghost" onClick={() => handleTogglePin(post.id, !post.isPinned)}>
+                                        <Button size="sm" variant="ghost" disabled={actionPending} onClick={() => handleTogglePin(post.id, !post.isPinned)}>
                                             {post.isPinned ? '取消置顶' : '置顶'}
                                         </Button>
                                     ) : null}
-                                    <Link to="/groups/$slug/posts/$postId/edit" params={{ slug, postId: post.id }}>
+                                    {isAdmin || post.authorId === user?.id ? <><Link to="/groups/$slug/posts/$postId/edit" params={{ slug, postId: post.id }}>
                                         <Button size="sm" variant="outline">编辑</Button>
                                     </Link>
-                                    <Button size="sm" variant="danger" onClick={() => setDeletingPost(post)}>删除</Button>
+                                    <Button size="sm" variant="danger" onClick={() => setDeletingPost(post)}>删除</Button></> : null}
                                 </div>
                             </div>
 
@@ -111,12 +125,13 @@ function PostsListPage() {
                                 <h3 className="text-[15px] font-medium hover:text-[hsl(var(--primary))]">{post.title}</h3>
                             </Link>
                             <PostContent content={post.content} className="mt-2 text-muted-foreground" />
-                            <div className="mt-4 flex items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
+                            <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
                                 <div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xs font-medium text-[hsl(var(--primary))]">
                                     {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                 </div>
                                 <span className="font-medium text-[hsl(var(--foreground))]">{post.author?.name || '未知用户'}</span>
                                 <span>{formatDate(post.createdAt)}</span>
+                                <div className="ml-auto flex gap-2"><PostLikeButton post={post} /><PostBookmarkButton post={post} /></div>
                             </div>
                         </Card>
                     ))}
@@ -143,7 +158,7 @@ function PostsListPage() {
                 </p>
                 <div className="mt-5 flex justify-end gap-3">
                     <Button variant="outline" onClick={() => setDeletingPost(null)}>取消</Button>
-                    <Button variant="danger" onClick={() => deletingPost && handleDelete(deletingPost.id)}>删除</Button>
+                    <Button variant="danger" loading={actionPending} onClick={() => deletingPost && handleDelete(deletingPost.id)}>删除</Button>
                 </div>
             </Modal>
         </div>

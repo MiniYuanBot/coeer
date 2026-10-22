@@ -251,7 +251,8 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 | 群组帖子 | 发帖=已通过审核群组的已批准成员；公告/置顶=群组 admin；编辑/删除=作者或群组 admin；**读**（getById/listByGroup）先做群组可见性校验 |
 | 群组可见性 | 未审核群组对非成员不可见（slug 直接访问也返回未找到）；成员列表：非公开群组仅成员可见，pending 申请仅群组 admin 可见；`memberCount` 只统计已批准 |
 | 反馈 | 查看：公开(isPublic)/作者/admin；**匿名反馈对非管理员隐藏作者**；状态流转仅 admin（与日志同事务） |
-| 回复/点赞 | 只能作用于“自己可见”的目标（post 的群组可见性 / feedback 的公开或归属），否则 TARGET_NOT_FOUND |
+| 回复 | 仅群组帖子开放；已批准群成员可读写、作者可编辑、作者/群管理员/平台管理员可删除；所有读取入口校验成员权限，父回复必须属于同一帖子 |
+| 点赞/收藏 | 点赞只能作用于可见目标；帖子收藏按本人持久化，列表在分页前检查可见性，帖子删除时级联清理 |
 | 活动 | 报名=本人+upcoming+容量内；取消=本人或主办方；签到/名单=主办方(用户主办=本人，群主办=群 admin)或平台 admin；**official 活动仅平台 admin 可建**，organizerId 服务端强制归属本人/本人所在群 |
 | 商城 | 兑换=单人单事务（扣积分+锁库存+建单）；**订单详情仅本人或 admin 可读**（含兑换码）；商品管理=admin |
 | 卡片 | 抽卡=单事务：锁用户行→余额→加权抽(按 dropRate)→入账 |
@@ -272,7 +273,7 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 | 用户 | `users`, `user_profiles` |
 | 群组 | `groups`, `group_members`, `group_posts` |
 | 反馈 | `feedbacks`, `feedback_status_logs` |
-| 互动 | `reactions`, `replies`（target 为游离 UUID，完整性靠 service） |
+| 互动 | `reactions`, `replies`（target 为游离 UUID，完整性靠 service），`bookmarks`（用户/帖子外键与联合主键） |
 | 公告/订阅 | `bulletins`, `subscriptions` |
 | 活动 | `activities`, `activity_participants`（(activityId,userId) 唯一） |
 | 积分 | `point_transactions`（余额 = SUM(amount)） |
@@ -282,7 +283,7 @@ type PaginatedActionResponse<T, S> = ActionResponse<{ items?: T[]; total?: numbe
 | 空间预约（`coeer_spaces`） | `spaces`, `snapshots`, `bookings`, `booking_events`, `booking_allowlist`, `user_accounts`, `jobs`, `audit`, `sync_runs`, `official_bindings` 等 |
 
 社区表继续使用 Drizzle schema；预约表由 `server/open-space/postgres-schema.ts` 初始化，
-使用异步 `pg` 查询并复用 `DATABASE_URL`。`OPENSPACE_DATABASE_SCHEMA` 可调整预约表的
+使用异步 `pg` 查询并复用 `DATABASE_URL`。`BOOKING_DB_SCHEMA` 可调整预约表的
 命名空间。旧 SQLite 文件保留供单独迁移，不自动导入。自动测试创建并清理带随机 UUID 的
 `coeer_test_*` schema，使用真实 PostgreSQL，不再使用 PGlite 或 SQLite。
 

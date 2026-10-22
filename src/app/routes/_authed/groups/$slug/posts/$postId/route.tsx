@@ -2,10 +2,10 @@ import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 import { getGroupPostByIdFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId')({
-    beforeLoad: async ({ params }) => {
+    beforeLoad: async ({ params, context }) => {
         try {
             const post = await getGroupPostByIdFn({ data: { id: params.postId } })
-            if (!post) {
+            if (!post || post.groupId !== context.group.id) {
                 throw redirect({
                     to: '/groups/$slug/posts',
                     params: { slug: params.slug }

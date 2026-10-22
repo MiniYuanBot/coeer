@@ -22,7 +22,7 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
   }
   const target = new URL(backend)
   if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.search || target.hash || target.pathname !== '/') {
-    throw new Error('OPENSPACE_BACKEND_URL must be an HTTP(S) origin')
+    throw new Error('BOOKING_ENGINE_URL must be an HTTP(S) origin')
   }
   target.pathname = '/api' + path
   target.search = url.search
@@ -34,7 +34,7 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
     if (value) headers.set(name, value)
   }
   // Origin is checked above; identify the configured upstream to its own origin guard.
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) headers.set('origin', process.env.OPENSPACE_APP_ORIGIN ?? (process.env.OPENSPACE_BACKEND_URL ? target.origin : process.env.CLIENT_URL ?? url.origin))
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) headers.set('origin', process.env.BOOKING_ALLOWED_ORIGIN ?? (process.env.BOOKING_ENGINE_URL ? target.origin : process.env.CLIENT_URL ?? url.origin))
   let body: ArrayBuffer | undefined
   if (!['GET', 'HEAD'].includes(request.method) && request.body) {
     const reader = request.body.getReader()
@@ -54,10 +54,10 @@ export async function forwardSpaceRequest(request: Request, user: Identity | nul
   }
   let response: Response
   try {
-    // Reads use PostgreSQL only. Submission waits for the official write and its
-    // independent result query; a proxy timeout must not masquerade as rejection.
-    const submission = request.method === 'POST' && (path === '/bookings' || /^\/admin\/bookings\/[^/]+\/review$/.test(path))
-    const timeout = submission ? 650000 : 30000
+    // Creation returns the saved application immediately; only approval waits
+    // for official verification. Detail reads use PostgreSQL without replaying writes.
+    const approval = request.method === 'POST' && /^\/admin\/bookings\/[^/]+\/review$/.test(path)
+    const timeout = approval ? 650000 : 30000
     response = await fetch(target, { method: request.method, headers, body, redirect: 'error', signal: AbortSignal.timeout(timeout) })
   } catch {
     return error(503, 'SPACE_UNAVAILABLE', '空间预约服务暂不可用，请稍后重试')

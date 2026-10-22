@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, type SearchSchemaInput } from '@tanstack/react-router'
-import { Alert, Button, LoadingState, NavTabs, navTabClass, activeNavTabClass } from '@/components/coeer'
+import { Alert, Button, LoadingState, NavTabs, PageLayout, navTabClass, activeNavTabClass } from '@/components/coeer'
 import { SpacesProvider, useSpaces } from '@/hooks/useSpaces'
 import { spaceSearchSchema } from '@shared/contracts/spaces'
 
@@ -18,7 +18,7 @@ function SpacesLayout() {
     const { config, loading, error, reload } = useSpaces()
     const { user: communityUser } = Route.useRouteContext()
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <NavTabs label="空间预约">
                 <Link
                     to="/spaces"
@@ -60,6 +60,6 @@ function SpacesLayout() {
                 </Alert>
             )}
             {loading ? <LoadingState /> : config ? <Outlet /> : null}
-        </div>
+        </PageLayout>
     )
 }

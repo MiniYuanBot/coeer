@@ -15,6 +15,7 @@ import type {
 } from '@shared/contracts'
 import { FEEDBACK } from '@shared/constants'
 import { AuthService } from './AuthService'
+import { NotificationService } from './NotificationService'
 import { feedbackQueries } from '../database/queries'
 import { eq, desc, count, and, gte, lte } from 'drizzle-orm'
 
@@ -194,6 +195,8 @@ export class FeedbackService {
             }
 
             await db.transaction(async (tx) => {
+                const [current] = await tx.select().from(feedbacks).where(eq(feedbacks.id, data.id)).for('update')
+                if (!current) throw new Error('Feedback not found')
                 // Update feedback status (same transaction as the log row)
                 await feedbackQueries.update({ id: data.id, status: data.status, isPublic: data.isPublic }, tx)
 
@@ -205,6 +208,14 @@ export class FeedbackService {
                     note: data.note,
                     createdAt: new Date()
                 })
+                if (current.status !== data.status) {
+                    const labels = { pending: '待处理', processing: '处理中', resolved: '已解决', invalid: '已驳回' }
+                    await NotificationService.create({
+                        userId: feedback.authorId, type: 'feedback_status', title: '反馈处理进展',
+                        content: `你的反馈「${feedback.title}」已变为${labels[data.status]}。${data.note ?? ''}`,
+                        href: `/feedbacks/${feedback.id}`,
+                    }, tx)
+                }
             })
 
             return {

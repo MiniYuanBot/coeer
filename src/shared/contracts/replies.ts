@@ -11,12 +11,12 @@ export const CreateReplySchema = z.object({
     targetType: z.enum(REPLY_TARGET_TYPE_ARRAY),
     targetId: z.uuid(),
     parentId: z.uuid().optional(),
-    content: z.string().min(1).max(2000),
+    content: z.string().trim().min(1).max(2000),
 })
 
 export const UpdateReplySchema = z.object({
     id: z.uuid(),
-    content: z.string().min(1).max(2000),
+    content: z.string().trim().min(1).max(2000),
 })
 
 export const ListRepliesByTargetSchema = z.object({

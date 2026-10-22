@@ -11,6 +11,8 @@ import { ManagedSession, ensureSessionKey, loadSession, saveSession, type Connec
 import { OfficialHTTP } from '../../src/server/open-space/adapters/official/http'
 import { LiveOfficialAdapter } from '../../src/server/open-space/adapters/official/live'
 import { parseOfficialConfig } from '../../src/server/open-space/adapters/official/config'
+import { createApp } from '../../src/server/open-space/app'
+import { createTestDatabase, databaseUrl } from '../support/postgres'
 
 let directory: string
 let sessionPath: string
@@ -40,6 +42,89 @@ function configuration(baseURL = 'http://127.0.0.1/meeting/') {
 }
 
 describe('COEER direct official authentication', () => {
+    it.each(['profile connection', 'slot timeout'])('completes the first deferred worker sync after a cold %s failure', async failure => {
+        const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        const scope = createTestDatabase('coldsync')
+        const config = parseOfficialConfig({ ...configuration(), rulesSource: 'upstream', modules: ['meeting'], requestTimeoutMs: 100 })
+        const manager = new ManagedSession(config, sessionPath, keyPath)
+        let failedOnce = false
+        const fetcher = vi.fn<typeof fetch>(async (input, init) => {
+            const path = new URL(String(input)).pathname
+            if (!failedOnce && path.endsWith(failure === 'profile connection' ? '/head/getList.do' : '/meeting/getTimeSlot')) {
+                failedOnce = true
+                if (failure === 'profile connection') throw new TypeError('synthetic cold connection reset')
+                return new Promise((_resolve, reject) => {
+                    init!.signal!.addEventListener('abort', () => reject(init!.signal!.reason), { once: true })
+                })
+            }
+            if (path.endsWith('/head/getList.do')) return new Response(JSON.stringify({ list: [{ USER_ID: 'pinned-profile' }] }))
+            if (path.endsWith('/meeting/reList.do')) {
+                const date = new URLSearchParams(init!.body!.toString()).get('MEETING_DATE')!
+                return new Response(`<html><head><base href="${config.baseURL}"></head><body>
+                    <form id="Form" action="meeting/reList.do" method="post"><input id="MEETING_DATE" value="${date}"></form>
+                    <div class="details"><dl data-visible="1"><dt><span class="zhuangtai">空闲中</span></dt>
+                    <dt><ol><li>合成空间</li><li>容纳人数：12</li></ol></dt><dt><ul>
+                    <li class="planItem green" data="{'id':'synthetic-room','staTime':'10:00','endTime':'10:30','date':'${date}'}"></li>
+                    </ul></dt></dl></div><div class="pagination"><span>共1条 共1页</span><li class="active">1</li>
+                    <select name="showCount"><option value="50" selected>50</option></select></div></body></html>`)
+            }
+            if (path.endsWith('/meeting/getTimeSlot')) return new Response(JSON.stringify({
+                ROOMMEETING_ID: 'synthetic-room', OPEN_TIME: '10:00', CLOSE_TIME: '10:30', SCALE_VALUE: 30,
+                PCRF_COST: 0, TIME_LIMIT: '0', AUDIT_FLAG: '0', data: [{ staTime: '10:00', endTime: '10:30', className: 'green' }],
+            }))
+            throw new Error('Unexpected synthetic official endpoint')
+        })
+        const login = vi.fn(async () => session('new-cookie'))
+        let context: Awaited<ReturnType<typeof createApp>> | undefined
+        let stop: (() => Promise<void>) | undefined
+        try {
+            await scope.initialize()
+            context = await createApp({ databaseUrl, databaseSchema: scope.name, adapterMode: 'official',
+                deferInitialSync: true, serveClient: false, horizon: 1, syncEnabled: true, bookingEnabled: false,
+                official: { config, credentials: manager.provider, fetcher, wrapAdapter: direct => new AuthenticatedOfficialAdapter(direct,
+                    new AuthenticationRecovery({ config, manager, sessionPath, keyPath, statePath: join(directory, 'recovery-state.json'),
+                        probe: options => direct.checkConnection(options), login })) } })
+            expect(await context.db.all('SELECT * FROM sync_runs')).toHaveLength(0)
+            stop = context.startWorker(20)
+            await vi.waitFor(async () => {
+                expect(await context!.db.all('SELECT status,snapshot_count FROM sync_runs')).toEqual([{ status: 'success', snapshot_count: 2 }])
+                expect(await context!.db.all("SELECT state,attempts FROM jobs WHERE type='sync'")).toEqual([{ state: 'done', attempts: 1 }])
+            }, { timeout: 5000 })
+            expect(failedOnce).toBe(true)
+            expect(login).not.toHaveBeenCalled()
+            expect(await context.db.all("SELECT * FROM audit WHERE action='sync.failed'")).toHaveLength(0)
+            expect(await context.db.setting('paused')).toBe('false')
+        } finally {
+            await stop?.()
+            await context?.db.close()
+            await scope.close()
+            log.mockRestore()
+        }
+    })
+
+    it('cancels the startup authentication probe without another request or login', async () => {
+        const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        try {
+            const config = configuration()
+            const manager = new ManagedSession(config, sessionPath, keyPath)
+            const fetcher = vi.fn<typeof fetch>(async (_input, init) => new Promise((_resolve, reject) => {
+                init!.signal!.addEventListener('abort', () => reject(init!.signal!.reason), { once: true })
+            }))
+            const direct = new LiveOfficialAdapter(config, new OfficialHTTP(config, manager.provider, fetcher), {
+                get: async () => undefined, byRequest: async () => undefined, put: async () => undefined,
+            })
+            const login = vi.fn(async () => session('new-cookie'))
+            const recovery = new AuthenticationRecovery({ config, manager, sessionPath, keyPath, statePath: join(directory, 'recovery-state.json'),
+                probe: options => direct.checkConnection(options), login })
+            const adapter = new AuthenticatedOfficialAdapter(direct, recovery)
+            adapter.beginSync()
+            await expect(adapter.listSpaces({ signal: AbortSignal.timeout(100) })).rejects.toMatchObject({ code: 'TIMEOUT' })
+            expect(fetcher).toHaveBeenCalledOnce()
+            expect(login).not.toHaveBeenCalled()
+            expect(recovery.diagnostics()).toMatchObject({ manualRequired: false, attemptsToday: 0 })
+        } finally { log.mockRestore() }
+    })
+
     it('recovers once across concurrent reads using encrypted credentials and an independently verified replacement session', async () => {
         let writes = 0
         server = createServer((request, response) => {

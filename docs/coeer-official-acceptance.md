@@ -35,19 +35,19 @@ COEER `/api/open-space/bookings` 创建，当时由本站 Worker 调用官方适
 两次普通组件热更新均保留页面状态。
 
 此后的实现已改为后台每 5 分钟同步今天至第 7 天的全部日期，页面只读取 PostgreSQL。
-`OPENSPACE_BOOKING_DAYS=7` 统一控制前后端可预约范围与同步范围，修改后重启。
-新提交先本地排除冲突，再实时查询官网并等待提交核对结果；以下历史预约记录没有因此重跑，
+`BOOKING_ADVANCE_DAYS=7` 统一控制前后端可预约范围与同步范围，修改后重启。
+新提交先保存申请号并进入详情，官网查询、提交与结果核对由后台继续执行；以下历史预约记录没有因此重跑，
 也没有为新回归自动新增官方预约。
 
 ## 开放预约前
 
-1. 开发与部署均使用 `ADAPTER_MODE=official` 和主配置 `rulesSource: "upstream"`。
+1. 开发与部署均使用 `BOOKING_DATA_SOURCE=official` 和主配置 `rulesSource: "upstream"`。
    本机校园网直连使用 staging；production 通过隔离 Connector，业务规则来源相同。
-   `APP_ORIGIN` 使用实际 COEER 地址；HTTP 校园接口需开启
-   `OFFICIAL_HTTP_NETWORK_APPROVED`。集成环境参数均使用 `OPENSPACE_` 前缀。
-2. 官方账户、会话、密钥与表单协议使用仓库外文件，共用路径和开关放在 `.env.local`。
-   `OFFICIAL_WRITES_ENABLED=true` 与加载后的协议写入开关同时启用。
-   使用 `OFFICIAL_WRITES_FILE` 时其内容为 `{ version: 1, contact, contract }`，
+   `BOOKING_ALLOWED_ORIGIN` 使用实际 COEER 地址；HTTP 校园接口需开启
+   `CAMPUS_ALLOW_HTTP`。环境参数按用途分为 `BOOKING_*`、`CAMPUS_*` 与 `CONNECTOR_*`。
+2. 官方账户、会话、密钥与表单协议使用项目内被 Git 忽略的 `.coeer-local` 文件，共用路径和开关放在 `.env.local`。
+   `CAMPUS_WRITE_ENABLED=true` 与加载后的协议写入开关同时启用。
+   使用 `CAMPUS_BOOKING_FORM_FILE` 时其内容为 `{ version: 1, contact, contract }`，
    基础主配置保持 `writes.enabled=false`，不内嵌另一套表单协议。
 3. 账户 `profileUserId`、`bookingPersonId` 分别对应官方用户资料和初始化表单身份，
    不能用学生学号替代。协议基于实际表单，覆盖初始化、校验、保存和取消。
@@ -61,7 +61,7 @@ COEER `/api/open-space/bookings` 创建，当时由本站 Worker 调用官方适
    不启动按需同步。范围外的查询和提交均拒绝，提交仍实时检查官网并独立核对。
 6. 开启同步与预约、恢复自动处理，确认 `paused=false`、`syncEnabled=true`、
    `bookingEnabled=true`，目标日期的快照新鲜。把测试学生学号加入白名单并设为允许预约。
-   无学生学号的管理员账号可以管理预约，提交测试使用学生账号。
+   管理员使用保留学号 `0000000000`，可管理预约及提交本人的申请；学生仍需加入白名单。
 
 旧 `rulesSource: "contract"` 模式保留静态公开清单和授权范围兼容，正常配置显式选择
 `upstream`。完整主配置与表单协议模板见 [空间预约配置](open-space.md#官方接入与部署)。
@@ -69,8 +69,9 @@ COEER `/api/open-space/bookings` 创建，当时由本站 Worker 调用官方适
 ## 验收结果
 
 学生从 COEER 选择真实房间与空闲时段，提交一次带清晰测试用途的申请。
-提交请求应等待实时核对结果：只有已确认预约返回 201；明确失败返回 409，
-待审批或结果待核对等状态返回 202，并显示具体状态。不能将“排队”或“已受理”当作成功。
+提交请求应立即返回 202 和持久化的申请号，页面进入预约详情；即使官网响应缓慢，也不应
+停在时段选择页等待。详情页持续更新后台核对结果，只有“已确认”表示预约成功。
+本地校验失败留在表单提示原因；官网失败、待审批或结果待核对在原申请详情中展示。
 
 学生随后在 COEER 取消本次申请，等待状态变为“已取消”。取消依赖已保存的官方记录绑定，
 并由独立查询核对官方状态，不能仅根据取消请求的 HTTP 状态判断成功。
@@ -80,10 +81,10 @@ COEER `/api/open-space/bookings` 创建，当时由本站 Worker 调用官方适
 
 `scripts/coeer-spaces-e2e.ts` 只请求 COEER 的 HTTP API，不直接调用官方预约 API，
 不读取数据库或官方账户配置。准备已登录 COEER 的 Playwright `storageState` 导出文件，
-保存在仓库外。该文件包含登录凭据，应按私密会话文件保管。
+保存在被 Git 忽略的 `.coeer-local` 内。该文件包含登录凭据，应按私密会话文件保管。
 
 ```powershell
-pnpm.cmd exec tsx scripts/coeer-spaces-e2e.ts inspect --origin http://localhost:3000 --state ..\.coeer-local\coeer-session.json
+pnpm.cmd exec tsx scripts/coeer-spaces-e2e.ts inspect --origin http://localhost:3000 --state .\.coeer-local\coeer-session.json
 ```
 
 默认 `inspect` 只读，可加 `--space` 与 `--date` 检查时段。

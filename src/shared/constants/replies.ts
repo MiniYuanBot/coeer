@@ -14,7 +14,7 @@ export const REPLY = {
     NOT_FOUND: { code: 'REPLY_NOT_FOUND', message: 'Reply not found' } as const,
     TARGET_NOT_FOUND: { code: 'TARGET_NOT_FOUND', message: 'Target not found' } as const,
     UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Unauthorized user' } as const,
-    FORBIDDEN: { code: 'FORBIDDEN', message: 'You do not have permission' } as const,
+    FORBIDDEN: { code: 'FORBIDDEN', message: '仅群组已通过审核的成员可以回复；仅作者可编辑，作者或管理员可删除回复' } as const,
     SERVER_ERROR: { code: 'SERVER_ERROR', message: 'Server error, please try again' } as const,
 } as const
 

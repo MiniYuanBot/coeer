@@ -3,9 +3,9 @@ import { AdapterError } from "./adapters/adapter.js";
 
 /** Only non-secret operator settings. dotenv treats an unquoted # as a comment. */
 export function serializeOperatorEnvironment(values: Record<string, string>) {
-  const allowed = new Set(["OFFICIAL_CONFIG_FILE", "OFFICIAL_SESSION_KEY_FILE", "OFFICIAL_SESSION_FILE",
-    "OFFICIAL_OPERATOR_LOGIN_APPROVED", "OFFICIAL_HTTP_NETWORK_APPROVED", "OFFICIAL_WRITES_ENABLED",
-    "OFFICIAL_LOGIN_PROXY_URL", "OFFICIAL_LOGIN_URL", "OFFICIAL_LOGIN_ORIGIN"]);
+  const allowed = new Set(["CAMPUS_API_CONFIG_FILE", "CAMPUS_COOKIE_KEY_FILE", "CAMPUS_COOKIE_FILE",
+    "CAMPUS_ALLOW_INTERACTIVE_LOGIN", "CAMPUS_ALLOW_HTTP", "CAMPUS_WRITE_ENABLED",
+    "CAMPUS_LOGIN_PROXY_URL", "CAMPUS_LOGIN_URL", "CAMPUS_LOGIN_ORIGIN"]);
   return Object.entries(values).map(([key, value]) => {
     if (!allowed.has(key) || /[\r\n\x00]/.test(value) || value.length > 2048)
       throw new AdapterError("CONFIGURATION");

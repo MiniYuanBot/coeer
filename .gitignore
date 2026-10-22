@@ -30,3 +30,6 @@ __pycache__/
 tmp
 README.pdf
 data/
+
+# Local encrypted credentials, session files and keys
+/.coeer-local/

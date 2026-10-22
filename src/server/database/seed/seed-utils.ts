@@ -27,9 +27,15 @@ import {
     userProfiles,
     users,
     userSubscriptions,
+    notifications,
+    passwordResets,
 } from '../schemas'
 
 export const seedArgs = process.argv.slice(2)
+
+export function assertSeedEnvironment() {
+    if (process.env.NODE_ENV === 'production') throw new Error('Seed data is disabled in production')
+}
 
 export function hasCleanFlag(args = seedArgs) {
     return args.includes('--clean')
@@ -40,6 +46,7 @@ export function isMainModule(importMetaUrl: string) {
 }
 
 export async function getSeedUsers() {
+    assertSeedEnvironment()
     const rows = await db.query.users.findMany({
         where: inArray(users.email, ['0000000001@stu.pku.edu.cn', 'admin@example.com', '0000000002@stu.pku.edu.cn']),
     })
@@ -56,8 +63,11 @@ export async function getSeedUsers() {
 }
 
 export async function cleanSeedData() {
+    assertSeedEnvironment()
     console.log('Cleaning seed data in dependency order...')
 
+    await db.delete(notifications)
+    await db.delete(passwordResets)
     await db.delete(dormRooms)
     await db.delete(dormQuestionnaires)
     await db.delete(dormStudentProfiles)

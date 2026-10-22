@@ -1,9 +1,11 @@
 import { loadEnvironmentFiles } from './config/environment-files'
+import { assertBookingEnvironment } from './open-space/environment'
 import { startEmbeddedSpaceServer, stopEmbeddedSpaceServer } from './open-space/embedded'
 
 export async function startSpaceBackground() {
     loadEnvironmentFiles()
-    if (process.env.OPENSPACE_BACKEND_URL) return
+    assertBookingEnvironment()
+    if (process.env.BOOKING_ENGINE_URL) return
     await startEmbeddedSpaceServer()
 }
 

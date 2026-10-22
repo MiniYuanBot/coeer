@@ -675,6 +675,11 @@
     ],
     "rules": [
       {
+        "name": "The Fluid Workspace Rule",
+        "body": "工作区页面占满侧栏之外的可用宽度，仅保留统一页边距。标题、操作、导航和主体共享左右边界；用自适应分栏展示设置、记录与相关信息，局部文字和输入区单独控制行宽。",
+        "section": "layout"
+      },
+      {
         "name": "The Semantic Color Rule",
         "body": "主操作与进行中状态使用 primary；成功、待处理和错误沿用独立语义色，并配文字或图形表达状态。",
         "section": "colors"

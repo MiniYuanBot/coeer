@@ -69,10 +69,11 @@ export type ListActivityParticipantsInput = z.infer<typeof ListActivityParticipa
 
 export type ActivityWithOrganizer = Activity & {
     organizer?: Pick<DbUser, 'id' | 'name'> | Pick<Group, 'id' | 'name' | 'slug'> | null
+    myParticipation?: Pick<ActivityParticipant, 'id' | 'status'> | null
 }
 
 export type ActivityParticipantWithUser = ActivityParticipant & {
-    user: Pick<DbUser, 'id' | 'name'> | null
+    user: (Pick<DbUser, 'id' | 'name'> & { studentId?: string }) | null
 }
 
 export type ActivityParticipantWithActivity = ActivityParticipant & {

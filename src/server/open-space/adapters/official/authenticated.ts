@@ -2,7 +2,7 @@ import { AdapterError, type CreateCommand, type OfficialAdapter, type OperationO
 import type { LiveOfficialAdapter } from './live.js'
 
 export interface ReadAuthentication {
-    beforeRead(): Promise<void>
+    beforeRead(options?: OperationOptions): Promise<void>
     diagnostics(): Record<string, unknown>
 }
 
@@ -29,7 +29,7 @@ export class AuthenticatedOfficialAdapter implements OfficialAdapter {
     listSpaces(options?: OperationOptions) {
         return this.serial(async () => {
             if (this.#beginSync) {
-                await this.authentication.beforeRead()
+                await this.authentication.beforeRead(options)
                 this.adapter.beginSync()
                 this.#beginSync = false
             }
@@ -41,13 +41,13 @@ export class AuthenticatedOfficialAdapter implements OfficialAdapter {
     }
     get(ref: string, options?: OperationOptions) {
         return this.serial(async () => {
-            await this.authentication.beforeRead()
+            await this.authentication.beforeRead(options)
             return this.adapter.get(ref, options)
         }, options)
     }
     checkConnection(options?: OperationOptions) {
         return this.serial(async () => {
-            await this.authentication.beforeRead()
+            await this.authentication.beforeRead(options)
             return this.diagnostics()
         }, options)
     }

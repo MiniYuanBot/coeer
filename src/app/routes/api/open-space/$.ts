@@ -10,7 +10,7 @@ async function handle({ request }: { request: Request }) {
   }
   try {
     // Reading this promise never starts or retries background synchronization.
-    const backend = process.env.OPENSPACE_BACKEND_URL || (await getEmbeddedSpaceServer()).url
+    const backend = process.env.BOOKING_ENGINE_URL || (await getEmbeddedSpaceServer()).url
     return await forwardSpaceRequest(request, identity.data, backend)
   } catch {
     return Response.json({ error: { code: 'SPACE_UNAVAILABLE', message: '空间预约服务未就绪，请联系管理员检查配置' } }, { status: 503, headers: { 'Cache-Control': 'no-store' } })

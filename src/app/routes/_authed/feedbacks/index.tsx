@@ -3,7 +3,7 @@ import z from 'zod'
 import { getFeedbacksFn } from '~/functions'
 import { FEEDBACK_TARGET_TYPE_ARRAY, FeedbackTargetType } from '@shared/constants'
 import { FeedbackFilterSchema } from '@shared/contracts'
-import { Button, EmptyState, FeedbackCard, FilterPanel, Icon, SectionHeader, feedbackTargetLabels } from '@/components/coeer'
+import { Button, EmptyState, FeedbackCard, FilterPanel, Icon, PageLayout, SectionHeader, feedbackTargetLabels } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...FeedbackFilterSchema.shape,
@@ -35,7 +35,7 @@ function FeedbacksListPage() {
         void navigate({ to: '/feedbacks', search: { view, targetType, search, page: 1, ...next } })
     }
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <SectionHeader title="反馈" description="每一个建议，都是让学院变得更好的开始。查看问题进展，参与社区改进。"
                 action={<Button asChild><Link to="/feedbacks/create"><Icon name="plus" />提交反馈</Link></Button>} />
             <div>
@@ -85,6 +85,6 @@ function FeedbacksListPage() {
                     </div> : null}
                 </footer>
             </div>
-        </div>
+        </PageLayout>
     )
 }

@@ -1,4 +1,5 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
+import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createGroupPostFn } from '~/functions'
@@ -10,7 +11,7 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/create')({
 })
 
 function CreatePostPage() {
-    const { group } = Route.useRouteContext()
+    const { group, isAdmin } = Route.useRouteContext()
     const { slug } = Route.useParams()
     const navigate = useNavigate()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,7 +42,7 @@ function CreatePostPage() {
     }
 
     return (
-        <PageLayout width="form">
+        <PageLayout>
             <SectionHeader level="h2" title="发布帖子" description={`分享内容到 ${group.name}。`} />
 
             <Card className="rounded-lg p-5">
@@ -55,7 +56,7 @@ function CreatePostPage() {
                                 讨论
                             </label>
                             <label className="flex cursor-pointer items-center gap-2 text-sm">
-                                <input type="radio" name="type" value="announcement" className="h-4 w-4 accent-[hsl(var(--primary))]" />
+                                <input type="radio" name="type" value="announcement" disabled={!isAdmin} className="h-4 w-4 accent-[hsl(var(--primary))]" />
                                 公告
                                 <Badge>管理员</Badge>
                             </label>
@@ -69,7 +70,8 @@ function CreatePostPage() {
 
                     <label className="block">
                         <span className="text-sm font-medium">内容</span>
-                        <textarea name="content" required rows={10} maxLength={10000} placeholder="写下正文内容" className="coeer-focus mt-2 w-full resize-y rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
+                        <textarea name="content" required rows={10} maxLength={10000} placeholder="写下正文内容，例如：求助，这题怎么积？$$\int_0^1 x^2\,dx$$" className="coeer-focus mt-2 w-full resize-y rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
+                        <MarkdownHelp />
                     </label>
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">

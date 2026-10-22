@@ -94,6 +94,7 @@ let context: Awaited<ReturnType<typeof createApp>>
 let adapter: InteractiveOfficialAdapter
 let server: Server | undefined
 let backend: string
+let stopWorker: (() => Promise<void>) | undefined
 
 async function startApplication(extra: Partial<AppOptions> = {}) {
     context = await createApp({ databaseUrl, databaseSchema: scope.name, adapter, adapterMode: 'official',
@@ -106,6 +107,8 @@ async function startApplication(extra: Partial<AppOptions> = {}) {
     backend = `http://127.0.0.1:${address.port}`
 }
 async function closeApplication() {
+    await stopWorker?.()
+    stopWorker = undefined
     if (server) await new Promise<void>((resolve, reject) => server!.close(error => error ? reject(error) : resolve()))
     server = undefined
     if (context) await context.db.close()
@@ -152,74 +155,75 @@ async function eventually(check: () => Promise<boolean>) {
     throw new Error('Synthetic durable execution did not settle')
 }
 
-describe('COEER interactive official submission', () => {
-    it('waits for independent official verification before returning a confirmed booking', async () => {
+function runWorker() { stopWorker = context.startWorker(15) }
+async function detail(id: string): Promise<Booking> {
+    const response = await call(`/bookings/${id}`)
+    expect(response.status).toBe(200)
+    return response.json()
+}
+
+describe('COEER asynchronous official submission', () => {
+    it('returns a durable booking ID before slow official processing and exposes progress through detail reads', async () => {
         adapter.createGate = deferred()
         adapter.getGate = deferred()
-        let returned = false
-        const pending = submit('interactive-waits-for-verification').then(response => { returned = true; return response })
-        try {
-            await adapter.createStarted.promise
-            expect(returned).toBe(false)
-            adapter.createGate.resolve()
-            await adapter.getStarted.promise
-            expect(returned).toBe(false)
-            adapter.getGate.resolve()
-            const response = await pending
-            expect(response.status).toBe(201)
-            expect((await response.json()).status).toBe('confirmed')
-            expect(adapter.createCalls).toHaveLength(1)
-            expect(adapter.getCalls).toHaveLength(1)
-        } finally {
-            adapter.createGate.resolve()
-            adapter.getGate.resolve()
-            await pending
-        }
+        const response = await submit('async-before-official-verification')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        expect(booking.status).toBe('queued')
+        expectNoUpstreamCalls()
+        expect((await detail(booking.id)).status).toBe('queued')
+        expect((await context.db.get<{ state: string }>("SELECT state FROM jobs WHERE booking_id=? AND type='create'", booking.id))?.state).toBe('pending')
+        runWorker()
+        await adapter.createStarted.promise
+        expect((await detail(booking.id)).status).toBe('submitting')
+        adapter.createGate.resolve()
+        await adapter.getStarted.promise
+        expect((await detail(booking.id)).status).toBe('accepted')
+        adapter.getGate.resolve()
+        await eventually(async () => (await detail(booking.id)).status === 'confirmed')
+        expect(adapter.createCalls).toHaveLength(1)
+        expect(adapter.getCalls).toHaveLength(1)
     })
 
-    it('shares an in-flight idempotency key and submits to the official system only once', async () => {
-        adapter.createGate = deferred()
-        const first = submit('interactive-shared-idempotency')
-        let second: Promise<Response> | undefined
-        try {
-            await adapter.createStarted.promise
-            second = submit('interactive-shared-idempotency')
-            adapter.createGate.resolve()
-            const responses = await Promise.all([first, second])
-            expect(responses.map(response => response.status)).toEqual([201, 201])
-            const bookings = await Promise.all(responses.map(response => response.json() as Promise<Booking>))
-            expect(bookings[0].id).toBe(bookings[1].id)
-            expect(bookings.every(booking => booking.status === 'confirmed')).toBe(true)
-            expect(adapter.createCalls).toHaveLength(1)
-            expect((await context.db.get<{ count: number }>('SELECT COUNT(*) AS count FROM bookings'))?.count).toBe(1)
-        } finally {
-            adapter.createGate.resolve()
-            await Promise.allSettled([first, ...(second ? [second] : [])])
-        }
+    it('reuses the saved application on immediate retries and performs the official write only once', async () => {
+        const responses = await Promise.all([submit('async-shared-idempotency'), submit('async-shared-idempotency')])
+        expect(responses.map(response => response.status)).toEqual([202, 202])
+        const bookings = await Promise.all(responses.map(response => response.json() as Promise<Booking>))
+        expect(bookings[0].id).toBe(bookings[1].id)
+        expect(bookings.every(booking => booking.status === 'queued')).toBe(true)
+        expectNoUpstreamCalls()
+        expect((await context.db.get<{ count: number }>('SELECT COUNT(*) AS count FROM bookings'))?.count).toBe(1)
+        runWorker()
+        await eventually(async () => (await detail(bookings[0].id)).status === 'confirmed')
+        const retry = await submit('async-shared-idempotency')
+        expect(retry.status).toBe(201)
+        expect((await retry.json()).id).toBe(bookings[0].id)
+        expect(adapter.createCalls).toHaveLength(1)
     })
 
     it('rejects a conflicting COEER booking locally before touching the official system', async () => {
         const user = (await new Accounts(context.db).communityUser(student))!
-        await context.service.create(user.id, input(), 'interactive-existing-local-hold', {
+        await context.service.create(user.id, input(), 'async-existing-local-hold', {
             applicantName: user.name, studentId: user.studentId!,
         })
-        const response = await submit('interactive-local-conflict')
+        const response = await submit('async-local-conflict')
         expect(response.status).toBe(409)
         expect((await response.json()).error.code).toBe('CONFLICT')
         expectNoUpstreamCalls()
         expect((await context.db.get<{ count: number }>('SELECT COUNT(*) AS count FROM bookings'))?.count).toBe(1)
     })
 
-    it('can finish a booking while a durable background synchronization is still waiting', async () => {
+    it('can finish a booking while background synchronization is still waiting', async () => {
         adapter.syncGate = deferred()
         await context.service.enqueue('sync')
         let syncFinished = false
         const synchronization = context.service.runOne({ lane: 'sync' }).finally(() => { syncFinished = true })
         try {
             await adapter.syncStarted.promise
-            const response = await submit('interactive-does-not-wait-for-sync')
-            expect(response.status).toBe(201)
-            expect((await response.json()).status).toBe('confirmed')
+            const response = await submit('async-does-not-wait-for-sync')
+            expect(response.status).toBe(202)
+            const booking = await response.json() as Booking
+            expect((await context.service.waitForResult(booking.id)).status).toBe('confirmed')
             expect(syncFinished).toBe(false)
         } finally {
             adapter.syncGate.resolve()
@@ -227,82 +231,102 @@ describe('COEER interactive official submission', () => {
         }
     })
 
-    it('returns an explicit failure and booking ID when the official preflight rejects the request', async () => {
+    it('exposes an official preflight failure in the saved detail instead of losing the application', async () => {
         adapter.createFailure = 'CONFLICT'
-        const response = await submit('interactive-official-conflict')
-        expect(response.status).toBe(409)
-        const result = await response.json()
-        expect(result.error.code).toBe('BOOKING_FAILED')
-        expect(result.error.bookingId).toEqual(expect.any(String))
-        expect((await context.service.booking(result.error.bookingId)).status).toBe('failed')
+        const response = await submit('async-official-conflict')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        runWorker()
+        await eventually(async () => (await detail(booking.id)).status === 'failed')
+        const retry = await submit('async-official-conflict')
+        expect(retry.status).toBe(409)
+        expect((await retry.json()).error).toMatchObject({ code: 'BOOKING_FAILED', bookingId: booking.id })
         expect(adapter.createCalls).toHaveLength(1)
         expect(adapter.saveCalls).toBe(0)
     })
 
-    it('returns pending approval as a verified result without claiming it is confirmed', async () => {
+    it('updates the detail to pending approval without claiming the booking is confirmed', async () => {
         adapter.finalStatus = 'pending_approval'
-        const response = await submit('interactive-official-approval')
+        const response = await submit('async-official-approval')
         expect(response.status).toBe(202)
-        expect((await response.json()).status).toBe('pending_approval')
+        const booking = await response.json() as Booking
+        expect(booking.status).toBe('queued')
+        runWorker()
+        await eventually(async () => (await detail(booking.id)).status === 'pending_approval')
         expect(adapter.createCalls).toHaveLength(1)
         expect(adapter.getCalls).toHaveLength(1)
     })
 
-    it('preserves uncertainty after a lost official write response and never resubmits it', async () => {
+    it('preserves uncertainty after a lost write response and never resubmits it', async () => {
         adapter.createFailure = 'TIMEOUT'
-        const response = await submit('interactive-unknown-official-result')
+        const response = await submit('async-unknown-official-result')
         expect(response.status).toBe(202)
         const booking = await response.json() as Booking
-        expect(['uncertain', 'manual_review']).toContain(booking.status)
-        expect(booking.status).not.toBe('failed')
-        const repeat = await submit('interactive-unknown-official-result')
-        expect(repeat.status).toBe(202)
-        expect((await repeat.json()).id).toBe(booking.id)
+        runWorker()
+        await eventually(async () => ['uncertain', 'manual_review'].includes((await detail(booking.id)).status))
+        const retry = await submit('async-unknown-official-result')
+        expect(retry.status).toBe(202)
+        expect((await retry.json()).id).toBe(booking.id)
         expect(adapter.createCalls).toHaveLength(1)
         expect(adapter.saveCalls).toBe(1)
     })
 
-    it('independently confirms a timed-out write when initialization already persisted its reference', async () => {
+    it('independently confirms a timed-out write with a persisted official reference', async () => {
         adapter.createFailure = 'TIMEOUT'
         adapter.returnReferenceOnFailure = true
         adapter.onInitialized = (command, ref) => context.db.run('UPDATE bookings SET official_ref=? WHERE id=?', ref, command.requestId).then(() => undefined)
-        const response = await submit('interactive-timeout-known-reference')
-        expect(response.status).toBe(201)
-        expect((await response.json()).status).toBe('confirmed')
+        const response = await submit('async-timeout-known-reference')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        runWorker()
+        await eventually(async () => (await detail(booking.id)).status === 'confirmed')
         expect(adapter.createCalls).toHaveLength(1)
         expect(adapter.getCalls).toHaveLength(1)
     })
 
-    it('returns at the HTTP waiting deadline without calling an in-flight official operation a failure', async () => {
-        await closeApplication()
-        await startApplication({ bookingWaitMs: 120, deferInitialSync: true })
+    it('keeps processing after the creation response and waits for in-flight work during shutdown', async () => {
         adapter.createGate = deferred()
-        const pending = submit('interactive-http-deadline')
-        let bookingId: string | undefined
-        let draining: Promise<void> | undefined
+        const response = await submit('async-request-independent')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        const execution = context.service.runOne({ lane: 'booking', bookingId: booking.id })
+        await adapter.createStarted.promise
+        let drained = false
+        const draining = context.service.drain().then(() => { drained = true })
         try {
-            await adapter.createStarted.promise
-            const response = await Promise.race([pending, delay(2000).then(() => { throw new Error('HTTP waiting deadline did not return') })])
-            expect(response.status).toBe(202)
-            const booking = await response.json() as Booking
-            bookingId = booking.id
-            expect(['queued', 'submitting', 'accepted', 'uncertain']).toContain(booking.status)
-            expect(booking.status).not.toBe('failed')
-            expect(adapter.createCalls).toHaveLength(1)
-            let drained = false
-            draining = context.service.drain().then(() => { drained = true })
             await delay(30)
             expect(drained).toBe(false)
+            expect((await detail(booking.id)).status).toBe('submitting')
         } finally {
             adapter.createGate.resolve()
-            await pending
+            await execution
             await draining
-            if (bookingId) {
-                await eventually(async () => (await context.db.get<{ state: string }>("SELECT state FROM jobs WHERE booking_id=? AND type='create'", bookingId!))?.state === 'done')
-                await context.db.run("UPDATE jobs SET run_at=0 WHERE booking_id=? AND state='pending'", bookingId)
-                await context.service.waitForResult(bookingId)
-            }
         }
+        expect((await context.service.waitForResult(booking.id)).status).toBe('confirmed')
         expect(adapter.createCalls).toHaveLength(1)
+    })
+
+    it('recovers a saved queued application after restarting the server', async () => {
+        const response = await submit('async-restart-queued-request')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        expectNoUpstreamCalls()
+        await closeApplication()
+        await startApplication({ deferInitialSync: true })
+        expect((await detail(booking.id)).status).toBe('queued')
+        runWorker()
+        await eventually(async () => (await detail(booking.id)).status === 'confirmed')
+        expect(adapter.createCalls).toHaveLength(1)
+    })
+
+    it('keeps review-required applications out of the official queue until approval', async () => {
+        await new Accounts(context.db).save('2026000001', '', 'review')
+        const response = await submit('async-awaits-administrator-review')
+        expect(response.status).toBe(202)
+        const booking = await response.json() as Booking
+        expect(booking.status).toBe('pending_review')
+        expect(await context.service.runOne({ lane: 'booking', bookingId: booking.id })).toBe(false)
+        expect((await detail(booking.id)).status).toBe('pending_review')
+        expectNoUpstreamCalls()
     })
 })

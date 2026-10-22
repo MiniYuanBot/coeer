@@ -70,7 +70,7 @@ function GroupSettingsPage() {
     }
 
     return (
-        <PageLayout width="form">
+        <PageLayout>
             <SectionHeader level="h2" title="群组设置" description="更新群组展示信息和可见性。" />
             <Card className="rounded-lg p-5">
 

@@ -1,10 +1,14 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { updateGroupPostFn } from '~/functions'
 import { Badge, Button, Card, SectionHeader } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/edit')({
+    beforeLoad: ({ context, params }) => {
+        if (!context.isAdmin && context.post.authorId !== context.user?.id) throw redirect({ to: '/groups/$slug/posts/$postId', params })
+    },
     component: EditPostPage,
 })
 
@@ -39,7 +43,7 @@ function EditPostPage() {
     }
 
     return (
-        <PageLayout width="form">
+        <PageLayout>
             <SectionHeader level="h2" title="编辑帖子" description={`更新 ${group.name} 中的帖子内容。`} />
 
             <Card className="rounded-lg p-5">
@@ -58,6 +62,7 @@ function EditPostPage() {
                     <label className="block">
                         <span className="text-sm font-medium">内容</span>
                         <textarea name="content" required rows={10} maxLength={10000} defaultValue={post.content} className="coeer-focus mt-2 w-full resize-y rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
+                        <MarkdownHelp />
                     </label>
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">

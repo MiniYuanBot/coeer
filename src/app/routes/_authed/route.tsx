@@ -20,7 +20,7 @@ function AuthedLayout() {
     const { user } = Route.useRouteContext()
 
     return (
-        <AppShell user={user}>
+        <AppShell user={user!}>
             <Outlet />
         </AppShell>
     )

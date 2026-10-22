@@ -60,7 +60,7 @@ export function createArchive(projectPath, destination) {
   for (const name of ['src', 'public', 'package.json', 'pnpm-lock.yaml', 'tsconfig.json', 'vite.config.ts']) {
     if (!existsSync(join(projectPath, name))) throw new Error('缺少发布文件：' + name)
   }
-  const excludes = ['.env*', '*.local.json', '*.pem', '*.key', '.git', '.ssh', '.aws', 'node_modules', '__pycache__']
+  const excludes = ['.env*', '.coeer-local', '*.local.json', '*.pem', '*.key', '.git', '.ssh', '.aws', 'node_modules', '__pycache__']
   const args = [...excludes.map((item) => '--exclude=' + item), '-czf', destination, '-C', projectPath, ...sourceEntries.filter((name) => existsSync(join(projectPath, name)))]
   // Archive the working tree, including the current uncommitted UI changes.
   run('tar', args, { env: { ...process.env, COPYFILE_DISABLE: '1' } })

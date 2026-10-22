@@ -1,4 +1,5 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
+import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createFeedbackFn } from '~/functions'
 import { FeedbackTargetType } from '@shared/constants'
@@ -45,7 +46,7 @@ function CreateFeedbackPage() {
     }
 
     return (
-        <PageLayout className="coeer-detail-page">
+        <PageLayout>
             <SectionHeader title="提交反馈" description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。" />
             <DetailLayout asideLabel="反馈填写提示" aside={
                 <section className="space-y-5 rounded-lg border border-border bg-muted/20 p-5">
@@ -82,6 +83,7 @@ function CreateFeedbackPage() {
 
                     <Field label="内容">
                         <Textarea name="content" required rows={10} maxLength={5000} placeholder="描述发生了什么、影响是什么、你期待怎样处理。" />
+                        <MarkdownHelp />
                     </Field>
 
                     <label className="flex min-h-11 items-center gap-2 text-[13px]">

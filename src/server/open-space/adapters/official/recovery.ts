@@ -7,7 +7,7 @@ import {
 import { existsSync, renameSync, unlinkSync } from "node:fs";
 import { z } from "zod";
 import { chromium } from "playwright-core";
-import { AdapterError } from "../adapter.js";
+import { AdapterError, type OperationOptions } from "../adapter.js";
 import { readPrivateJSON, type OfficialConfig } from "./config.js";
 import {
   atomicPrivateJSON,
@@ -112,8 +112,7 @@ export async function loginAuthorizedAccount(
     credentials.accountAlias !== config.account.alias
   )
     throw new AdapterError("CONFIGURATION");
-  const executablePath = process.env.OFFICIAL_BROWSER_EXECUTABLE_PATH
-    || process.env.OPENSPACE_OFFICIAL_BROWSER_EXECUTABLE_PATH;
+  const executablePath = process.env.CAMPUS_BROWSER_EXECUTABLE;
   const browser = await chromium.launch({ headless: true, executablePath });
   const timeout = setTimeout(() => void browser.close().catch(() => {}), 90000);
   try {
@@ -248,7 +247,7 @@ export class AuthenticationRecovery {
       keyPath: string;
       statePath: string;
       manager: ManagedSession;
-      probe(): Promise<unknown>;
+      probe(options?: OperationOptions): Promise<unknown>;
       login(): Promise<ConnectorSession>;
     },
   ) {}
@@ -284,7 +283,8 @@ export class AuthenticationRecovery {
       };
     }
   }
-  async beforeRead() {
+  async beforeRead(options?: OperationOptions) {
+    if (options?.signal?.aborted) throw new AdapterError("TIMEOUT");
     const o = this.options,
       state = this.state(),
       revision = loadSession(o.sessionPath, o.keyPath).revision;
@@ -294,11 +294,12 @@ export class AuthenticationRecovery {
     }
     if (state.manualRequired) throw new AdapterError("AUTH_EXPIRED");
     try {
-      await o.probe();
+      await o.probe(options);
       return;
     } catch (e) {
       if (!(e instanceof AdapterError) || e.code !== "AUTH_EXPIRED") throw e;
     }
+    if (options?.signal?.aborted) throw new AdapterError("TIMEOUT");
     const now = Date.now(),
       day = Math.floor(now / 86400000);
     if (state.day !== day) {
@@ -318,7 +319,7 @@ export class AuthenticationRecovery {
       saveSession(candidate, o.keyPath, session);
       const manager = new ManagedSession(o.config, candidate, o.keyPath);
       const http = new OfficialHTTP(o.config, manager.provider);
-      const response = await (await http.session()).request("profile", {}, {});
+      const response = await (await http.session()).request("profile", {}, {}, options);
       const json = parseJSON(response.body);
       if (
         !Array.isArray(json.list) ||
@@ -329,7 +330,7 @@ export class AuthenticationRecovery {
       renameSync(candidate, o.sessionPath);
       candidate = undefined;
       o.manager.provider.reset!();
-      await o.probe();
+      await o.probe(options);
       state.revision = session.revision;
       state.lastRecoveredAt = Date.now();
       state.lastError = null;
@@ -350,6 +351,7 @@ export class AuthenticationRecovery {
         "RATE_LIMITED",
       ].includes(code);
       atomicPrivateJSON(o.statePath, state);
+      if (options?.signal?.aborted) throw new AdapterError("TIMEOUT");
       throw new AdapterError("AUTH_EXPIRED");
     } finally {
       if (candidate && existsSync(candidate)) unlinkSync(candidate);

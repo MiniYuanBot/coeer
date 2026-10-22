@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, or, SQL } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, inArray, or, sql, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { activities, activityParticipants, NewActivity, NewActivityParticipant } from '../schemas'
 import type {
@@ -28,6 +28,17 @@ function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
 }
 
 export const activityQueries = {
+    async findParticipationsForUser(activityIds: string[], userId: string) {
+        if (!activityIds.length) return []
+        return db.select({ id: activityParticipants.id, activityId: activityParticipants.activityId, status: activityParticipants.status })
+            .from(activityParticipants).where(and(inArray(activityParticipants.activityId, activityIds), eq(activityParticipants.userId, userId)))
+    },
+    async synchronizeStatuses() {
+        await db.update(activities).set({
+            status: sql`case when ${activities.endTime} <= now() then 'completed'::activity_status else 'ongoing'::activity_status end`,
+            updatedAt: new Date(),
+        }).where(sql`(${activities.status} = 'upcoming' and ${activities.startTime} <= now()) or (${activities.status} = 'ongoing' and ${activities.endTime} <= now())`)
+    },
     async create(data: NewActivity) {
         const [activity] = await db.insert(activities).values(data).returning()
         if (!activity) throw new Error('Create activity failed')
@@ -35,10 +46,12 @@ export const activityQueries = {
     },
 
     async findById(data: ActivityIdInput) {
+        await activityQueries.synchronizeStatuses()
         return db.query.activities.findFirst({ where: eq(activities.id, data.id) })
     },
 
     async list(data: ListActivitiesInput) {
+        await activityQueries.synchronizeStatuses()
         return db.query.activities.findMany({
             where: buildActivityWhere(data),
             orderBy: [desc(activities.startTime)],
@@ -61,6 +74,7 @@ export const activityQueries = {
     },
 
     async count(data: ListActivitiesInput): Promise<number> {
+        await activityQueries.synchronizeStatuses()
         const [result] = await db.select({ value: count() }).from(activities).where(buildActivityWhere(data))
         return result?.value ?? 0
     },
@@ -88,7 +102,7 @@ export const activityQueries = {
         if (data.status) conditions.push(eq(activityParticipants.status, data.status))
         return db.query.activityParticipants.findMany({
             where: and(...conditions),
-            with: { user: { columns: { id: true, name: true } } },
+            with: { user: { columns: { id: true, name: true, email: true, role: true } } },
             limit: data.limit,
             offset: data.offset,
         })

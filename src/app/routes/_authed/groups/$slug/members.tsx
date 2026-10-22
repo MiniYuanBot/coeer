@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { z } from 'zod'
 import { getGroupMembersFn, removeMemberFn, updateMemberRoleFn } from '~/functions'
 import { useState } from 'react'
@@ -41,21 +41,21 @@ function GroupMembersPage() {
     const { members, total, group, pageSize } = Route.useLoaderData()
     const { status, page } = Route.useSearch()
     const navigate = useNavigate()
+    const router = useRouter()
     const { slug } = Route.useParams()
     const [processingId, setProcessingId] = useState<string | null>(null)
+    const [actionError, setActionError] = useState('')
 
     const totalPages = Math.ceil(total / pageSize)
 
-    const handleApprove = async (memberId: string) => {
+    const handleApprove = async (memberId: string, approved = true) => {
         setProcessingId(memberId)
+        setActionError('')
         try {
-            await updateMemberRoleFn({ data: { memberId, status: 'approved' } })
-            // Refresh
-            navigate({
-                to: '/groups/$slug/members',
-                params: { slug },
-                search: { status, page },
-            })
+            await updateMemberRoleFn({ data: { memberId, status: approved ? 'approved' : 'rejected' } })
+            await router.invalidate()
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : '审核失败，请重试')
         } finally {
             setProcessingId(null)
         }
@@ -65,13 +65,12 @@ function GroupMembersPage() {
         if (!confirm('确定要移除该成员吗？')) return
 
         setProcessingId(memberId)
+        setActionError('')
         try {
             await removeMemberFn({ data: { memberId } })
-            navigate({
-                to: '/groups/$slug/members',
-                params: { slug },
-                search: { status, page },
-            })
+            await router.invalidate()
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : '移除失败，请重试')
         } finally {
             setProcessingId(null)
         }
@@ -79,15 +78,14 @@ function GroupMembersPage() {
 
     const handleRoleChange = async (memberId: string, role: string) => {
         setProcessingId(memberId)
+        setActionError('')
         try {
             await updateMemberRoleFn({
                 data: { memberId, role: role as GroupMemberRole },
             })
-            navigate({
-                to: '/groups/$slug/members',
-                params: { slug },
-                search: { status, page },
-            })
+            await router.invalidate()
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : '角色更新失败，请重试')
         } finally {
             setProcessingId(null)
         }
@@ -96,6 +94,7 @@ function GroupMembersPage() {
     return (
         <div className="space-y-6">
             <SectionHeader level="h2" title="群组成员" description={`共 ${total} 名成员或申请记录。`} />
+            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             <FilterPanel
                 groups={[
@@ -103,7 +102,7 @@ function GroupMembersPage() {
                         items: [
                             { key: 'all', label: '全部', active: !status, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } }) },
                             { key: 'approved', label: '已通过', active: status === GROUP_MEMBER_STATUS.APPROVED, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.APPROVED, page: 1 } }) },
-                            { key: 'pending', label: '待审核', active: status === GROUP_MEMBER_STATUS.PENDING, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.PENDING, page: 1 } }) },
+                            ...(isAdmin ? [{ key: 'pending', label: '待审核', active: status === GROUP_MEMBER_STATUS.PENDING, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.PENDING, page: 1 } }) }] : []),
                         ],
                     },
                 ]}
@@ -123,39 +122,40 @@ function GroupMembersPage() {
                                     <p className="text-[15px] font-medium">{member.user.name}</p>
                                     <div className="mt-1 flex flex-wrap gap-2">
                                         <Badge>{member.role === 'admin' ? '管理员' : '成员'}</Badge>
-                                        {member.status === 'pending' ? <Badge tone="warning">待审核</Badge> : <Badge tone="success">已通过</Badge>}
+                                        {member.status === 'pending' ? <Badge tone="warning">待审核</Badge> : member.status === 'rejected' ? <Badge tone="danger">已拒绝</Badge> : <Badge tone="success">已通过</Badge>}
                                     </div>
                                 </div>
                             </div>
 
-                            {isAdmin && member.user.id !== group.creatorId && (
+                            {isAdmin && (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {member.status === 'pending' && (
-                                        <Button
+                                        <><Button
                                             size="sm"
                                             onClick={() => handleApprove(member.id)}
-                                            disabled={processingId === member.id}
+                                            disabled={processingId !== null}
                                             loading={processingId === member.id}
                                         >
                                             通过
-                                        </Button>
+                                        </Button><Button size="sm" variant="outline" disabled={processingId !== null} onClick={() => void handleApprove(member.id, false)}>拒绝</Button></>
                                     )}
 
-                                    <select
+                                    {member.status === 'approved' ? <select
+                                        aria-label={`调整 ${member.user.name || '成员'} 的角色`}
                                         value={member.role}
                                         onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                        disabled={processingId === member.id}
+                                        disabled={processingId !== null}
                                         className="coeer-focus h-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm disabled:opacity-50"
                                     >
                                         <option value="member">成员</option>
                                         <option value="admin">管理员</option>
-                                    </select>
+                                    </select> : null}
 
                                     <Button
                                         size="sm"
                                         variant="danger"
                                         onClick={() => handleRemove(member.id)}
-                                        disabled={processingId === member.id}
+                                        disabled={processingId !== null}
                                         loading={processingId === member.id}
                                     >
                                         移除

@@ -22,20 +22,9 @@ export class ReactionService {
             // Only react to content the caller can actually see.
             if (!await canViewTarget(data, user)) return { success: false, state: REACTION.TARGET_NOT_FOUND }
 
-            const existing = await reactionQueries.findByUserAndTarget(user.id, data)
-            if (existing) {
-                await reactionQueries.deleteById(existing.id)
-                return {
-                    success: true,
-                    data: { reacted: false, count: await reactionQueries.countByTarget(data) },
-                    state: REACTION.TOGGLE_SUCCESS,
-                }
-            }
-
-            await reactionQueries.create({ userId: user.id, ...data })
             return {
                 success: true,
-                data: { reacted: true, count: await reactionQueries.countByTarget(data) },
+                data: await reactionQueries.toggle(user.id, data),
                 state: REACTION.TOGGLE_SUCCESS,
             }
         } catch (err) {
@@ -46,6 +35,8 @@ export class ReactionService {
 
     static async listByTarget(data: ListReactionsInput): Promise<PaginatedReactionResponse<ReactionWithUser>> {
         try {
+            const current = await AuthService.getCurrentUser()
+            if (!await canViewTarget(data, current.success ? current.data : undefined)) return { success: false, state: REACTION.TARGET_NOT_FOUND }
             const items = await reactionQueries.listByTarget(data)
             const total = await reactionQueries.countByTarget(data)
             return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REACTION.GET_SUCCESS }

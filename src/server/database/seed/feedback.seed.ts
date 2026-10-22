@@ -17,7 +17,7 @@ async function seedFeedbackStatusLogs(
     users: { adminUser: DbUser; testUser: DbUser; demoUser?: DbUser },
 ) {
     const stageMinutes = 15
-    const base = new Date(Date.now() - 12 * 60 * 60 * 1000) // 假设提交于 12 小时前
+    const base = feedback.createdAt
     const stages: Array<{ status: Feedback['status']; changedBy: string; note: string; at: Date }> = []
 
     stages.push({
@@ -41,7 +41,7 @@ async function seedFeedbackStatusLogs(
             status: 'resolved',
             changedBy: users.adminUser.id,
             note: '已解决并回复用户',
-            at: new Date(base.getTime() + 2 * stageMinutes * 60 * 1000),
+        at: feedback.resolvedAt ?? new Date(base.getTime() + 2 * stageMinutes * 60 * 1000),
         })
     }
 
@@ -67,6 +67,8 @@ async function seedFeedbackStatusLogs(
                 note: stage.note,
                 createdAt: stage.at,
             })
+        } else if (existing.note === stage.note && existing.createdAt.getTime() !== stage.at.getTime()) {
+            await db.update(feedbackStatusLogs).set({ createdAt: stage.at }).where(eq(feedbackStatusLogs.id, existing.id))
         }
     }
 }
@@ -87,25 +89,21 @@ export async function seedFeedbacks(options: { clean?: boolean } = {}) {
         console.log('Feedbacks schema has been cleaned')
     }
 
-    const existingFeedbacks = await db.select().from(feedbacks).limit(1)
-    if (existingFeedbacks.length > 0 && !shouldClean) {
-        console.log('Feedbacks exist (use --clean to recreate)')
-
-        console.log('\nCurrent feedbacks:')
-        for (const stat of FEEDBACK_STATUS_ARRAY) {
-            const count = await feedbackQueries.count({ status: stat })
-            console.log(`  - ${stat}: ${count}`)
-        }
-
-        return
-    }
-
     console.log('\nCreating dev feedbacks...')
     const sampleFeedbacks = getSampleFeedbacks({ testUser, adminUser, demoUser })
 
     console.log(`Will create ${sampleFeedbacks.length} feedbacks...`)
 
     for (const [index, fb] of sampleFeedbacks.entries()) {
+        const existing = await db.query.feedbacks.findFirst({ where: (table, { and, eq }) => and(eq(table.title, fb.title), eq(table.authorId, fb.authorId)) })
+        if (existing) {
+            if (existing.resolvedAt && existing.resolvedAt < existing.createdAt) {
+                const createdAt = new Date(existing.resolvedAt.getTime() - 30 * 60 * 1000)
+                const [repaired] = await db.update(feedbacks).set({ createdAt, updatedAt: existing.resolvedAt }).where(eq(feedbacks.id, existing.id)).returning()
+                await seedFeedbackStatusLogs(repaired, fb, { testUser, adminUser, demoUser })
+            }
+            continue
+        }
         const created = await feedbackQueries.create(fb)
         // 状态流转记录：让“处理记录”页有真实的流转时间线可看
         await seedFeedbackStatusLogs(created, fb, { testUser, adminUser, demoUser })

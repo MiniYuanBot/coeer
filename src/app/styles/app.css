@@ -52,7 +52,6 @@
   --inverted-foreground: 0 0% 100%;
   --sidebar-width: 224px;
   --workspace-gutter: 32px;
-  --workspace-width: 1440px;
 }
 .dark {
   --background: 240 7% 10%;
@@ -132,16 +131,13 @@
 }
 @layer components {
   .coeer-container { width: min(100% - 3rem, 84rem); margin-inline: auto; }
-  .coeer-workspace { container: workspace / inline-size; width: min(100% - var(--workspace-gutter) * 2, var(--workspace-width)); margin-inline: auto; padding-block: 1.75rem 4rem; }
-  .coeer-page { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
-  .coeer-page[data-width='reading'] { max-width: 896px; }
-  .coeer-page[data-width='form'] { max-width: 704px; }
-  .coeer-detail-page { max-width: 1200px; }
+  .coeer-workspace { container: workspace / inline-size; width: calc(100% - var(--workspace-gutter) * 2); margin-inline: auto; padding-block: 1.75rem 4rem; }
+  .coeer-page { width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
   .coeer-detail-layout { display: grid; align-items: start; gap: 32px; }
   .coeer-detail-main { overflow-wrap: anywhere; }
   .coeer-detail-aside { overflow-wrap: anywhere; }
   @container workspace (min-width: 880px) {
-    .coeer-detail-layout { grid-template-columns: minmax(0, 1fr) 280px; }
+    .coeer-detail-layout { grid-template-columns: minmax(0, 1fr) clamp(280px, 26%, 400px); }
     .coeer-detail-aside { position: sticky; top: 76px; }
   }
   @container workspace (max-width: 879px) {
@@ -175,10 +171,27 @@
   .coeer-space-date { min-width: 160px; }
   .coeer-table-scroll { overflow-x: auto; overscroll-behavior-inline: contain; }
   .coeer-settings-section { display: grid; gap: 24px; padding-block: 24px; border-top: 1px solid hsl(var(--border)); }
-  .coeer-settings-section > :last-child { min-width: 0; }
+  .coeer-settings-section > :last-child { min-width: 0; width: 100%; max-width: 704px; }
+  .coeer-profile-content { display: grid; align-items: start; gap: 32px; }
+  .coeer-profile-settings { min-width: 0; container: settings / inline-size; }
+  .coeer-record-row.coeer-booking-row { display: grid; align-items: start; gap: 12px 24px; }
+  .coeer-booking-row > * { min-width: 0; }
+  @container workspace (min-width: 880px) {
+    .coeer-booking-row { grid-template-columns: minmax(0, 1.2fr) minmax(200px, .7fr) minmax(220px, 1fr); }
+  }
+  @container workspace (min-width: 1080px) {
+    .coeer-profile-content { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+  }
+  @container settings (min-width: 640px) {
+    .coeer-settings-section { grid-template-columns: clamp(160px, 24%, 224px) minmax(0, 1fr); gap: 32px; }
+  }
+  .coeer-record-list { border-block: 1px solid hsl(var(--border)); }
+  .coeer-record-row { min-width: 0; display: block; padding-block: 16px; overflow-wrap: anywhere; }
+  .coeer-record-row + .coeer-record-row { border-top: 1px solid hsl(var(--border)); }
+  a.coeer-record-row:hover { background: hsl(var(--muted) / .4); }
+  .coeer-record-row:focus-visible { outline-offset: -2px; }
   @container workspace (min-width: 720px) {
-    .coeer-settings-section { grid-template-columns: minmax(180px, .65fr) minmax(0, 1fr); gap: 48px; }
-    .coeer-profile-summary { grid-template-columns: minmax(0, 1fr) 280px; }
+    .coeer-profile-summary { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   }
   .coeer-card { border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--card)); }
   .coeer-focus:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
@@ -198,8 +211,7 @@
   .coeer-feed .coeer-post { border: 0; border-radius: 0; background: transparent; padding: 22px 0; }
   .coeer-feed > :first-child .coeer-post, .coeer-feed > .coeer-post:first-child { padding-top: 0; }
   @media (max-width: 639px) {
-    :root { --workspace-gutter: 16px; }
-    .coeer-container, .coeer-workspace { width: calc(100% - 2rem); }
+    .coeer-container { width: calc(100% - 2rem); }
     .coeer-workspace { padding-block: 1.5rem 3rem; }
     .coeer-command { inset-block-start: 10vh; }
     .coeer-filter-search { flex-basis: 100%; }
@@ -221,5 +233,6 @@
 
 /* Mobile field typography must also override per-page Tailwind font utilities. */
 @media (max-width: 639px) {
+  :root { --workspace-gutter: 16px; }
   input:not([type='checkbox']):not([type='radio']):not([type='hidden']), select, textarea { font-size: 16px; }
 }

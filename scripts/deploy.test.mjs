@@ -25,6 +25,8 @@ test('archives current working files but excludes secrets and local artifacts', 
     for (const name of ['src', 'public', 'scripts', 'deploy', 'dist', 'node_modules']) mkdirSync(join(directory, name))
     for (const name of ['package.json', 'pnpm-lock.yaml', 'tsconfig.json', 'vite.config.ts']) writeFileSync(join(directory, name), '{}')
     writeFileSync(join(directory, 'src', 'current.tsx'), 'uncommitted UI version')
+    mkdirSync(join(directory, 'src', '.coeer-local'))
+    writeFileSync(join(directory, 'src', '.coeer-local', 'session.enc.json'), 'never-upload-this')
     for (const name of ['.env', 'src/.env.production', 'deploy/aliyun.local.json', 'public/private.pem', 'scripts/private.key', 'dist/private.js', 'node_modules/secret.js']) writeFileSync(join(directory, name), 'never-upload-this')
     const archive = join(directory, 'source.tar.gz')
     const digest = createArchive(directory, archive)
@@ -33,7 +35,7 @@ test('archives current working files but excludes secrets and local artifacts', 
     const listing = spawnSync('tar', ['-tzf', archive], { encoding: 'utf8' })
     assert.equal(listing.status, 0)
     assert.match(listing.stdout, /src\/current.tsx/)
-    assert.doesNotMatch(listing.stdout, /\.env|\.local\.json|private\.|node_modules|dist\//)
+    assert.doesNotMatch(listing.stdout, /\.env|\.coeer-local|\.local\.json|private\.|node_modules|dist\//)
     const content = spawnSync('tar', ['-xOzf', archive, 'src/current.tsx'], { encoding: 'utf8' })
     assert.equal(content.stdout, 'uncommitted UI version')
   } finally { rmSync(directory, { recursive: true, force: true }) }

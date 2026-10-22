@@ -18,7 +18,7 @@ const runHook = (hook: unknown, args: unknown[] = []) => {
 beforeEach(() => {
     vi.clearAllMocks()
     vi.stubEnv('TSS_PRERENDERING', 'false')
-    vi.stubEnv('OPENSPACE_BACKEND_URL', '')
+    vi.stubEnv('BOOKING_ENGINE_URL', '')
 })
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks() })
 
@@ -107,11 +107,17 @@ describe('development server startup', () => {
 })
 
 describe('production startup boundary', () => {
+    it('rejects retired settings before selecting either an embedded or external engine', async () => {
+        vi.stubEnv('OPENSPACE_BACKEND_URL', 'https://retired-engine.invalid')
+        vi.stubEnv('BOOKING_ENGINE_URL', 'https://engine.invalid')
+        await expect(startSpaceBackground()).rejects.toThrow('Retired booking variables')
+        expect(background.start).not.toHaveBeenCalled()
+    })
     it('does not start for development entry imports, static prerendering, or an external engine', async () => {
         initializeProductionSpaceBackground(false, false)()
         initializeProductionSpaceBackground(true, true)()
         expect(background.start).not.toHaveBeenCalled()
-        vi.stubEnv('OPENSPACE_BACKEND_URL', 'https://engine.invalid')
+        vi.stubEnv('BOOKING_ENGINE_URL', 'https://engine.invalid')
         await startSpaceBackground()
         expect(background.start).not.toHaveBeenCalled()
     })

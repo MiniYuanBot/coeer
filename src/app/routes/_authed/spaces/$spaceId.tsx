@@ -38,12 +38,12 @@ function SpaceDetailPage() {
     const { config, user } = useSpaces()
     const date = search.date && validDate(search.date) ? search.date : addDays(today(), 1)
     const room = useSpaceResource<Space>(`/spaces/${spaceId}`, 10000)
-    const availability = useSpaceResource<Availability>(`/spaces/${spaceId}/availability?date=${date}`, 5000)
     const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
     const [quantity, setQuantity] = useState(1)
     const [purpose, setPurpose] = useState('')
     const [message, setMessage] = useState('')
     const [busy, setBusy] = useState(false)
+    const availability = useSpaceResource<Availability>(`/spaces/${spaceId}/availability?date=${date}`, 5000, { enabled: !busy })
     const idempotency = useRef<{ body: string; key: string } | null>(null)
     const slots = availability.data?.slots ?? []
     const canUse = (slot: Slot) =>
@@ -56,7 +56,7 @@ function SpaceDetailPage() {
         setMessage('')
     }, [date, spaceId])
     useEffect(() => {
-        if (!selection || !availability.data) return
+        if (busy || !selection || !availability.data) return
         const selected = availability.data.slots.filter(
             (slot) => slot.start >= selection.start && slot.end <= selection.end,
         )
@@ -68,7 +68,7 @@ function SpaceDetailPage() {
             setSelection(null)
             setMessage('所选时段状态已变化，请重新选择。')
         }
-    }, [availability.data, quantity, selection, date])
+    }, [availability.data, quantity, selection, date, busy])
 
     function select(slot: Slot) {
         setMessage('')
@@ -86,8 +86,9 @@ function SpaceDetailPage() {
     }
     async function submit(event: FormEvent) {
         event.preventDefault()
+        if (busy) return
         if (!user) {
-            setMessage('请使用 10 位学号的学生邮箱账号预约。')
+            setMessage('请先登录学生或管理员账号。')
             return
         }
         if (!selection) return
@@ -101,10 +102,10 @@ function SpaceDetailPage() {
                 body,
                 headers: { 'Idempotency-Key': idempotency.current.key },
             })
-            void navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: booking.id } })
+            await navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: booking.id } })
         } catch (error) {
             if (error instanceof SpaceApiError && error.bookingId) {
-                void navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: error.bookingId } })
+                await navigate({ to: '/spaces/bookings/$bookingId', params: { bookingId: error.bookingId } })
                 return
             }
             setMessage((error as Error).message)
@@ -161,6 +162,7 @@ function SpaceDetailPage() {
                         <Field label="预约日期">
                             <Input
                                 type="date"
+                                disabled={busy}
                                 min={today()}
                                 max={addDays(today(), config!.horizon)}
                                 value={date}
@@ -180,6 +182,7 @@ function SpaceDetailPage() {
                         ).map((day) => (
                             <Button
                                 key={day}
+                                disabled={busy}
                                 variant={day === date ? 'primary' : 'outline'}
                                 className="h-auto min-w-0 flex-col px-1 py-2"
                                 aria-pressed={day === date}
@@ -235,7 +238,7 @@ function SpaceDetailPage() {
                                         key={slot.start}
                                         variant={selected ? 'primary' : 'outline'}
                                         disabled={
-                                            !canUse(slot) ||
+                                            busy || !canUse(slot) ||
                                             availability.data?.stale ||
                                             !config!.writesEnabled
                                         }
@@ -278,10 +281,10 @@ function SpaceDetailPage() {
                         <p className="text-xs leading-6 text-muted-foreground">
                             预约人：{user.name}
                             <br />
-                            {user.studentId ? `学号：${user.studentId}` : '管理员账号未关联学生学号'}
+                            {user.studentId ? `${user.role === 'admin' ? '管理员学号' : '学号'}：${user.studentId}` : '当前账号缺少预约学号'}
                         </p>
                     ) : (
-                        <Alert>请使用 10 位学号的学生邮箱账号预约，昵称和学号将自动带入申请。</Alert>
+                        <Alert>请使用 COEER 学生或管理员账号登录，昵称和学号将自动带入申请。</Alert>
                     )}
                     {user?.bookingPermission === 'blocked' && (
                         <Alert tone="danger">当前账号没有预约权限，请联系管理员将你的学号加入预约白名单。</Alert>
@@ -294,6 +297,7 @@ function SpaceDetailPage() {
                             <Field label="预约人数">
                                 <Input
                                     type="number"
+                                    disabled={busy}
                                     min={1}
                                     max={space.capacity || 100}
                                     value={quantity}
@@ -304,6 +308,7 @@ function SpaceDetailPage() {
                         )}
                         <Field label="使用用途">
                             <Textarea
+                                disabled={busy}
                                 value={purpose}
                                 onChange={(event) => setPurpose(event.target.value)}
                                 minLength={2}
@@ -327,7 +332,7 @@ function SpaceDetailPage() {
                                 !user || !user.studentId || !selection || user.bookingPermission === 'blocked'
                             }
                         >
-                            {busy ? '正在核验官网预约结果…' : '提交预约申请'}
+                            {busy ? '正在保存申请…' : '提交预约申请'}
                         </Button>
                     </form>
                     <p className="text-xs leading-6 text-muted-foreground">
@@ -335,7 +340,7 @@ function SpaceDetailPage() {
                             ? '当前仅供查询，暂不接受预约。'
                             : space.policy.kind === 'meeting' && space.policy.approval
                               ? '此空间需要官方审批，请以最终确认结果为准。'
-                              : '提交后会实时查询官网并核对预约结果，请等待返回。'}
+                              : '提交后进入预约详情，处理进度和最终结果会自动更新。'}
                     </p>
                 </Card>
             </div>

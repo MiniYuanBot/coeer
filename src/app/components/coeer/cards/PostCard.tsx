@@ -1,10 +1,10 @@
-import { PostContent } from './PostContent'
 import { Link } from '@tanstack/react-router'
-import * as React from 'react'
 import { formatDate } from '../lib/date'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
-import { Icon } from '../ui/Icon'
+import { PostContent } from './PostContent'
+import { PostLikeButton } from './PostLikeButton'
+import { PostBookmarkButton } from './PostBookmarkButton'
 
 export function PostCard({ post, to }: { post: any; to?: string }) {
     const content = (
@@ -16,8 +16,8 @@ export function PostCard({ post, to }: { post: any; to?: string }) {
             <h3 className="mt-3 text-[15px] font-medium">{to ? <Link to={to as any} className="coeer-focus rounded hover:text-primary">{post.title}</Link> : post.title}</h3>
             <PostContent key={post.id} content={post.content} className="mt-2 text-muted-foreground" />
             <div className="mt-4 flex items-center gap-4 text-sm text-[hsl(var(--muted-foreground))]">
-                <span className="inline-flex items-center gap-1"><Icon name="heart" /> 点赞</span>
-                <span className="inline-flex items-center gap-1"><Icon name="comment" /> 回复</span>
+                <PostLikeButton post={post} />
+                <PostBookmarkButton post={post} />
             </div>
         </Card>
     )

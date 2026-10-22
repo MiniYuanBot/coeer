@@ -23,6 +23,8 @@ import { AuthService } from './AuthService'
 import { groupPostQueries } from '../database/queries/groupPosts'
 import { groupMemberQueries } from '../database/queries'
 import { groupQueries } from '../database/queries/groups'
+import { reactionQueries } from '../database/queries/reactions'
+import { bookmarkQueries } from '../database/queries/bookmarks'
 
 // Maximum number of pinned posts per group
 const MAX_PINNED_POSTS = 3
@@ -239,7 +241,8 @@ export class GroupPostService {
 
             return {
                 success: true,
-                data: post,
+                data: { ...post, reactionCount: 0, hasReacted: false, ...(await reactionQueries.summarizePosts([post.id], payload.data?.id)).get(post.id),
+                    isBookmarked: (await bookmarkQueries.summarizePosts([post.id], payload.data?.id)).has(post.id) },
                 state: GROUP_POST.GET_SUCCESS,
             }
         } catch (err) {
@@ -267,13 +270,15 @@ export class GroupPostService {
             }
 
             const posts = await groupPostQueries.findByGroup(data)
+            const summaries = await reactionQueries.summarizePosts(posts.map((post) => post.id), payload.data?.id)
+            const saved = await bookmarkQueries.summarizePosts(posts.map((post) => post.id), payload.data?.id)
 
             const total = await groupPostQueries.countByGroup({ groupId, type })
 
             return {
                 success: true,
                 data: {
-                    items: posts,
+                    items: posts.map((post) => ({ ...post, reactionCount: 0, hasReacted: false, ...summaries.get(post.id), isBookmarked: saved.has(post.id) })),
                     total,
                     limit,
                     offset,

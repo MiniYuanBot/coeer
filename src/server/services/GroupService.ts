@@ -1,6 +1,8 @@
 // services/GroupService.ts
 import { db } from '../database/client'
-import { Group, GroupMember } from '../database/schemas'
+import { Group, GroupMember, groups, groupMembers } from '../database/schemas'
+import { eq } from 'drizzle-orm'
+import { NotificationService } from './NotificationService'
 import type {
     CreateGroupInput,
     GroupWithStats,
@@ -35,6 +37,42 @@ import { groupQueries } from '../database/queries/groups'
 import { groupMemberQueries } from '../database/queries'
 
 export class GroupService {
+    /** Serialize roster changes per group, then recheck the actor and last admin. */
+    private static async changeMembership(memberId: string, actorId: string,
+        change: { remove: true; selfLeave?: boolean } | { update: UpdateGroupMemberInput },
+    ): Promise<GroupMemberResponse<void>> {
+        const target = await groupMemberQueries.findById({ memberId })
+        if (!target) return { success: false, state: GROUP_MEMBER.NOT_FOUND }
+        return db.transaction(async (tx) => {
+            const [group] = await tx.select().from(groups).where(eq(groups.id, target.groupId)).for('update')
+            if (!group) return { success: false, state: GROUP_MEMBER.GROUP_NOT_FOUND }
+            const roster = await tx.select().from(groupMembers).where(eq(groupMembers.groupId, group.id))
+            const member = roster.find((item) => item.id === memberId)
+            if (!member) return { success: false, state: GROUP_MEMBER.NOT_FOUND }
+            const actor = roster.find((item) => item.userId === actorId)
+            const leaving = 'remove' in change && change.selfLeave && member.userId === actorId
+            if (!leaving && (actor?.role !== 'admin' || actor.status !== 'approved')) return { success: false, state: GROUP_MEMBER.FORBIDDEN }
+            const update = 'update' in change ? change.update : undefined
+            if (update?.status && (member.status !== 'pending' || update.status === 'pending')) return { success: false, state: GROUP_MEMBER.INVALID_STATUS }
+            const losesAdmin = member.role === 'admin' && member.status === 'approved' &&
+                ('remove' in change || (update?.role !== undefined && update.role !== 'admin'))
+            if (losesAdmin && roster.filter((item) => item.role === 'admin' && item.status === 'approved').length <= 1) {
+                return { success: false, state: GROUP_MEMBER.LAST_ADMIN }
+            }
+            if ('remove' in change) {
+                await tx.delete(groupMembers).where(eq(groupMembers.id, memberId))
+                return { success: true, state: leaving ? GROUP_MEMBER.LEAVE_SUCCESS : GROUP_MEMBER.DELETE_SUCCESS }
+            }
+            await tx.update(groupMembers).set({ role: update!.role, status: update!.status, updatedAt: new Date() }).where(eq(groupMembers.id, memberId))
+            if (update!.status && update!.status !== member.status) {
+                await NotificationService.create({ userId: member.userId, type: 'membership_review', title: '入群申请审核结果',
+                    content: `你加入「${group.name}」的申请${update!.status === 'approved' ? '已通过' : '未通过'}。`,
+                    href: update!.status === 'approved' ? `/groups/${group.slug}` : '/groups',
+                }, tx)
+            }
+            return { success: true, state: GROUP_MEMBER.UPDATE_SUCCESS }
+        })
+    }
     // Create a group
     static async create(data: CreateGroupInput): Promise<GroupResponse<Group>> {
         try {
@@ -53,18 +91,18 @@ export class GroupService {
                 }
             }
 
-            const result = await db.transaction(async () => {
+            const result = await db.transaction(async (tx) => {
                 // Create the group
-                const group = await groupQueries.create({
+                const [group] = await tx.insert(groups).values({
                     ...data,
                     creatorId: user.id,
                     status: GROUP_STATUS.PENDING,
                     createdAt: new Date(),
                     updatedAt: new Date()
-                })
+                }).returning()
 
                 // Add creator as admin
-                await groupMemberQueries.create({
+                await tx.insert(groupMembers).values({
                     groupId: group.id,
                     userId: user.id,
                     role: GROUP_MEMBER_ROLE.ADMIN,
@@ -147,8 +185,8 @@ export class GroupService {
                 }
             }
 
-            // Check if user is creator or admin
-            if (group.creatorId !== user.id) {
+            // Creation history does not retain management rights after a role change.
+            {
                 const isAdmin = await groupMemberQueries.checkRole({
                     groupId: data.groupId,
                     userId: user.id,
@@ -328,7 +366,18 @@ export class GroupService {
             }
 
             const status = data.approved ? GROUP_STATUS.APPROVED : GROUP_STATUS.REJECTED
-            await groupQueries.updateStatus({ id: data.id, status, rejectedReason: data.rejectedReason })
+            const reviewed = await db.transaction(async (tx) => {
+                const [current] = await tx.select().from(groups).where(eq(groups.id, data.id)).for('update')
+                if (!current || current.status !== GROUP_STATUS.PENDING) return false
+                await tx.update(groups).set({ status, rejectedReason: data.rejectedReason, updatedAt: new Date() }).where(eq(groups.id, data.id))
+                if (group.creatorId) await NotificationService.create({
+                    userId: group.creatorId, type: 'group_review', title: '群组审核结果',
+                    content: `你创建的群组「${group.name}」${data.approved ? '已通过审核' : '未通过审核'}。${data.rejectedReason ?? ''}`,
+                    href: data.approved ? `/groups/${group.slug}` : '/groups?view=managed',
+                }, tx)
+                return true
+            })
+            if (!reviewed) return { success: false, state: GROUP.INVALID_STATUS }
 
             if (status === GROUP_STATUS.APPROVED) {
                 return {
@@ -367,7 +416,24 @@ export class GroupService {
                 return { success: false, state: GROUP.NOT_FOUND }
             }
 
-            await groupQueries.updateStatus(data)
+            await db.transaction(async (tx) => {
+                const [current] = await tx.select().from(groups).where(eq(groups.id, data.id)).for('update')
+                if (!current) throw new Error('Group not found')
+                await tx.update(groups).set({
+                    status: data.status,
+                    rejectedReason: data.status === GROUP_STATUS.REJECTED ? data.rejectedReason : null,
+                    reviewNote: data.reviewNote,
+                    updatedAt: new Date(),
+                }).where(eq(groups.id, data.id))
+                if (current.creatorId && current.status !== data.status) {
+                    const labels = { pending: '已进入待审核状态', approved: '已通过审核', rejected: '未通过审核' }
+                    await NotificationService.create({
+                        userId: current.creatorId, type: 'group_review', title: '群组审核结果',
+                        content: `你创建的群组「${current.name}」${labels[data.status]}。${data.rejectedReason ?? data.reviewNote ?? ''}`,
+                        href: data.status === GROUP_STATUS.APPROVED ? `/groups/${current.slug}` : '/groups?view=joined',
+                    }, tx)
+                }
+            })
 
             return {
                 success: true,
@@ -487,12 +553,7 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.delete({ memberId: membership.id })
-
-            return {
-                success: true,
-                state: GROUP_MEMBER.LEAVE_SUCCESS,
-            }
+            return await this.changeMembership(membership.id, user.id, { remove: true, selfLeave: true })
         } catch (err) {
             console.error('Leave group error:', err)
             return {
@@ -541,7 +602,7 @@ export class GroupService {
             if (!group.isPublic && !isApprovedMember) {
                 return { success: false, state: GROUP_MEMBER.FORBIDDEN }
             }
-            if (group.status !== GROUP_STATUS.APPROVED && !isPlatformAdmin) {
+            if (group.status !== GROUP_STATUS.APPROVED && !isGroupAdmin) {
                 return { success: false, state: GROUP_MEMBER.FORBIDDEN }
             }
 
@@ -640,12 +701,7 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.update(data)
-
-            return {
-                success: true,
-                state: GROUP_MEMBER.UPDATE_SUCCESS,
-            }
+            return await this.changeMembership(data.memberId, user.id, { update: data })
         } catch (err) {
             console.error('Update member role error:', err)
             return {
@@ -696,12 +752,7 @@ export class GroupService {
                 }
             }
 
-            await groupMemberQueries.delete(data)
-
-            return {
-                success: true,
-                state: GROUP_MEMBER.DELETE_SUCCESS,
-            }
+            return await this.changeMembership(data.memberId, user.id, { remove: true })
         } catch (err) {
             console.error('Remove member error:', err)
             return {

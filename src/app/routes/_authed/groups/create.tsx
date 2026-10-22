@@ -44,7 +44,7 @@ function CreateGroupComponent() {
     }
 
     return (
-        <PageLayout width="form">
+        <PageLayout>
             <SectionHeader title="创建群组" description="提交群组名称、分类和简介，创建后将进入审核流程。" />
 
             <Card className="rounded-lg p-5">

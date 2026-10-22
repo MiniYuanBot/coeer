@@ -5,8 +5,9 @@ import { Icon } from '../ui/Icon'
 import { Sidebar } from './Sidebar'
 import { CommandMenu } from './CommandMenu'
 import { getBreadcrumbs } from './navItems'
+import { NotificationBell } from './NotificationBell'
 
-export function AppShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
+export function AppShell({ user, children }: { user: NonNullable<SessionUser> & { id: string }; children: React.ReactNode }) {
     const [open, setOpen] = React.useState(false)
     const [searchOpen, setSearchOpen] = React.useState(false)
     const closeNav = React.useCallback(() => setOpen(false), [])
@@ -44,7 +45,8 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
                                 <Link to={item.to as any} className="coeer-focus shrink-0 rounded py-2 text-muted-foreground hover:text-foreground">{item.label}</Link>}
                         </React.Fragment>)}
                     </nav>
-                    <button type="button" aria-label="搜索页面" onClick={() => setSearchOpen(true)} className="coeer-focus ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Icon name="search" /></button>
+                    <NotificationBell userId={user.id} />
+                    <button type="button" aria-label="搜索页面" onClick={() => setSearchOpen(true)} className="coeer-focus grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Icon name="search" /></button>
                     <Link to="/profile" aria-label="个人中心" className="coeer-focus grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-medium text-primary lg:hidden">{(user?.name || user?.email || 'U').slice(0, 1).toUpperCase()}</Link>
                 </header>
                 <main id="main-content" tabIndex={-1} className="coeer-workspace min-w-0 flex-1">{children}</main>

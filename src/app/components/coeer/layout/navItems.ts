@@ -21,6 +21,8 @@ export const navSections: NavSection[] = [
             { to: '/', label: '动态', icon: 'home', active: 'exact' },
             { to: '/groups', label: '群组', icon: 'group', active: 'prefix' },
             { to: '/bulletins', label: '公告', icon: 'bell', active: 'prefix' },
+            { to: '/notifications', label: '站内通知', icon: 'inbox', active: 'prefix' },
+            { to: '/bookmarks', label: '我的收藏', icon: 'bookmark', active: 'prefix' },
             { to: '/activities', label: '活动', icon: 'calendar', active: 'prefix' },
         ],
     },

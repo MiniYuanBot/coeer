@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { assertBookingEnvironment } from './environment.js';
 import { z } from "zod";
 import {
   activateAccounts,
@@ -15,11 +16,12 @@ import {
 } from "./adapters/official/remote.js";
 import { BookingService } from "./service.js";
 import { activateReadOnlyAllowlist } from "./publication-operations.js";
-if (process.env.CONFIG_ENV_FILE)
-  process.loadEnvFile(process.env.CONFIG_ENV_FILE);
+if (process.env.BOOKING_EXTRA_ENV_FILE)
+  process.loadEnvFile(process.env.BOOKING_EXTRA_ENV_FILE);
+assertBookingEnvironment();
 const command = process.argv[2],
   path = process.env.DATABASE_URL,
-  schema = process.env.DATABASE_SCHEMA || 'coeer_spaces',
+  schema = process.env.BOOKING_DB_SCHEMA || 'coeer_spaces',
   target = process.argv[3];
 try {
   if (command === "keygen" && target) {
@@ -75,15 +77,15 @@ try {
       console.log(JSON.stringify(await verifyDatabase(path, schema)));
     else if (command === "publish-allowlist") {
       if (
-        process.env.ADAPTER_MODE !== "official" ||
-        process.env.OFFICIAL_WRITES_ENABLED === "true" ||
-        !process.env.OFFICIAL_CONNECTOR_URL ||
-        !process.env.OFFICIAL_CONNECTOR_KEY_FILE
+        process.env.BOOKING_DATA_SOURCE !== "official" ||
+        process.env.CAMPUS_WRITE_ENABLED === "true" ||
+        !process.env.CONNECTOR_URL ||
+        !process.env.CONNECTOR_TOKEN_FILE
       )
         throw new Error();
       const adapter = new RemoteOfficialAdapter(
-        process.env.OFFICIAL_CONNECTOR_URL,
-        connectorKey(process.env.OFFICIAL_CONNECTOR_KEY_FILE),
+        process.env.CONNECTOR_URL,
+        connectorKey(process.env.CONNECTOR_TOKEN_FILE),
         false,
       );
       await adapter.initialize();

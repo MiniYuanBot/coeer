@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { DB } from "./db.js";
 import { hashPassword } from "./auth.js";
 import type { BookingPermission, User } from "@shared/open-space/domain.js";
-import { studentIdFromEmail, type CommunityIdentity } from "./coeer-identity.js";
+import { ADMIN_STUDENT_ID, studentIdForUser, type CommunityIdentity } from "./coeer-identity.js";
 
 export const defaultStudentPassword = (studentId: string) =>
   `${studentId}@114514`;
@@ -17,7 +17,7 @@ export class Accounts {
   constructor(readonly db: DB) {}
   /** Mirror trusted community identity while retaining historical student booking ownership. */
   async communityUser(identity: CommunityIdentity): Promise<User | null> {
-    const studentId = studentIdFromEmail(identity.email);
+    const studentId = studentIdForUser(identity);
     const role = identity.role === "admin" ? "admin" : "user";
     if (role !== "admin" && !studentId) return null;
     return this.db.tx(async () => {
@@ -47,8 +47,9 @@ export class Accounts {
       WHERE u.id=? AND (u.role='admin' OR (a.enabled=1 AND EXISTS(SELECT 1 FROM booking_allowlist w WHERE w.student_id=a.student_id)))`,
       id,
     );
+    if (row?.role !== 'admin' && row?.studentId === ADMIN_STUDENT_ID) return undefined;
     return row
-      ? { ...row, studentId: row.studentId ?? studentIdFromEmail(row.email), bookingPermission: row.role === "admin" ? "allowed" : row.bookingPermission, passwordIsDefault: false }
+      ? { ...row, studentId: row.role === 'admin' ? ADMIN_STUDENT_ID : row.studentId ?? studentIdForUser(row), bookingPermission: row.role === "admin" ? "allowed" : row.bookingPermission, passwordIsDefault: false }
       : undefined;
   }
   list() {
@@ -59,11 +60,12 @@ export class Accounts {
       FROM booking_allowlist w LEFT JOIN user_accounts a ON a.student_id=w.student_id LEFT JOIN users u ON u.id=a.user_id ORDER BY w.updated_at DESC`);
   }
   async save(studentId: string, name = "", permission?: BookingPermission) {
+    if (studentId === ADMIN_STUDENT_ID) throw new Error('BOOKING_BOOTSTRAP_STUDENT_ID');
     const existing = await this.db.get<{ id: string; role: string }>(
       "SELECT u.id,u.role FROM users u JOIN user_accounts a ON a.user_id=u.id WHERE a.student_id=?",
       studentId,
     );
-    if (existing?.role === "admin") throw new Error("ADMIN_STUDENT_ID");
+    if (existing?.role === "admin") throw new Error("BOOKING_BOOTSTRAP_STUDENT_ID");
     const passwordHash = existing
       ? undefined
       : await hashPassword(defaultStudentPassword(studentId));
@@ -73,7 +75,7 @@ export class Accounts {
         "SELECT a.user_id,u.role FROM user_accounts a JOIN users u ON u.id=a.user_id WHERE a.student_id=?",
         studentId,
       );
-      if (current?.role === "admin") throw new Error("ADMIN_STUDENT_ID");
+      if (current?.role === "admin") throw new Error("BOOKING_BOOTSTRAP_STUDENT_ID");
       if (!current) {
         const id = randomUUID();
         await this.db.run(

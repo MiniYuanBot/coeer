@@ -6,8 +6,11 @@ import type { BadgeTone } from '../lib/types'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
+import { activityStatusAt } from '@shared/activities'
+import { useActivityClock } from '@/hooks/useActivityClock'
 
 export function ActivityCard({ activity, action }: { activity: any; action?: React.ReactNode }) {
+    activity = { ...activity, status: activityStatusAt(activity, useActivityClock()) }
     const statusTone: BadgeTone = activity.status === 'ongoing'
         ? 'success'
         : activity.status === 'completed' || activity.status === 'cancelled'

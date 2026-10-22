@@ -55,7 +55,7 @@ const callSchema = z.discriminatedUnion("method", [
 export function createConnectorApp(
   adapter: LiveOfficialAdapter,
   secret: string,
-  authentication?: { beforeRead(): Promise<void>; diagnostics(): Record<string, unknown> },
+  authentication?: { beforeRead(options?: OperationOptions): Promise<void>; diagnostics(): Record<string, unknown> },
 ) {
   const app = express();
   app.disable("x-powered-by");
@@ -105,7 +105,7 @@ export function createConnectorApp(
         };
       let data: unknown = null;
       if (["beginSync", "checkConnection", "get"].includes(c.method))
-        await authentication?.beforeRead();
+        await authentication?.beforeRead(options);
       switch (c.method) {
         case "info":
           break;

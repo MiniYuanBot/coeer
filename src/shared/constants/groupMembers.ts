@@ -22,12 +22,12 @@ export const GROUP_MEMBER = {
     UPDATE_SUCCESS: { code: 'UPDATE_SUCCESS', message: 'Update successful' } as const,
     DELETE_SUCCESS: { code: 'DELETE_SUCCESS', message: 'Delete successful' } as const,
     APPROVE_SUCCESS: { code: 'APPROVE_SUCCESS', message: 'Approve successful' } as const,
-    
+
     GROUP_NOT_FOUND: { code: 'GROUP_NOT_FOUND', message: 'Group not found' } as const,
     NOT_FOUND: { code: 'MEMBER_NOT_FOUND', message: 'Group member not found' } as const,
     UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Unauthorized user' } as const,
-    LAST_ADMIN: { code: 'LAST_ADMIN', message: 'You are the last admin' } as const,
-    FORBIDDEN: { code: 'FORBIDDEN', message: 'You do not have permission' } as const,
+    LAST_ADMIN: { code: 'LAST_ADMIN', message: '群组至少需要一名已通过审核的管理员，请先任命其他管理员' } as const,
+    FORBIDDEN: { code: 'FORBIDDEN', message: '只有已通过审核的群组管理员可以管理成员' } as const,
     INVALID_STATUS: { code: 'INVALID_STATUS', message: 'Already reviewed' } as const,
     ALREADY_EXISTS: { code: 'ALREADY_EXISTS', message: 'Group member already exists' } as const,
     ALREADY_SUBMIT: { code: 'ALREADY_SUBMIT', message: 'Your request is already submited' } as const,

@@ -1,4 +1,3 @@
-import { PostContent } from '@/components/coeer/cards/PostContent'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import z from 'zod'
 import { listPostsByGroupFn } from '~/functions'
@@ -63,6 +62,7 @@ function AnnouncementsPage() {
                                 </div>
                                 <span className="font-medium text-[hsl(var(--foreground))]">{post.author?.name || '未知用户'}</span>
                             </div>
+                            <div className="mt-3 flex gap-2"><PostLikeButton post={post} /><PostBookmarkButton post={post} /></div>
                         </Card>
                     ))}
                 </div>
@@ -72,3 +72,6 @@ function AnnouncementsPage() {
         </div>
     )
 }
+import { PostContent } from '@/components/coeer/cards/PostContent'
+import { PostLikeButton } from '@/components/coeer/cards/PostLikeButton'
+import { PostBookmarkButton } from '@/components/coeer/cards/PostBookmarkButton'

@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
-export { studentIdFromEmail } from '@shared/contracts/auth'
+export { ADMIN_STUDENT_ID, studentIdFromEmail, studentIdForUser } from '@shared/contracts/auth'
 
 const key = Symbol.for('coeer.spaces.identity-secret')
 const state = globalThis as typeof globalThis & { [key]?: string }
@@ -15,8 +15,8 @@ export type CommunityIdentity = Omit<z.infer<typeof identitySchema>, 'issuedAt'>
 
 /** A remote engine must share an explicit server secret with COEER. */
 export function communityIdentitySecret() {
-    if (process.env.OPENSPACE_INTERNAL_AUTH_SECRET) return process.env.OPENSPACE_INTERNAL_AUTH_SECRET
-    if (process.env.OPENSPACE_BACKEND_URL) throw new Error('OPENSPACE_INTERNAL_AUTH_SECRET is required for a remote booking engine')
+    if (process.env.BOOKING_ENGINE_SIGNING_SECRET) return process.env.BOOKING_ENGINE_SIGNING_SECRET
+    if (process.env.BOOKING_ENGINE_URL) throw new Error('BOOKING_ENGINE_SIGNING_SECRET is required for a remote booking engine')
     return state[key] ??= randomBytes(48).toString('base64url')
 }
 const signature = (value: string, secret: string) => createHmac('sha256', secret).update(value).digest('base64url')

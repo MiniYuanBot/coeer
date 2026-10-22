@@ -203,7 +203,7 @@ export async function createApp(options: AppOptions = {}) {
   ) {
     await db.close();
     throw new Error(
-      "Configure ADMIN_STUDENT_ID and a private admin password for first deployment",
+      "Configure BOOKING_BOOTSTRAP_STUDENT_ID and a private admin password for first deployment",
     );
   }
   if (!options.deferInitialSync || demo) {
@@ -521,7 +521,7 @@ export async function createApp(options: AppOptions = {}) {
         throw new AppError(400, "IDEMPOTENCY_KEY", "缺少有效的申请标识");
       const user = res.locals.user!;
       if (!user.studentId)
-        throw new AppError(403, "STUDENT_ID_REQUIRED", "此管理员账号未关联学生学号，请使用学生账号提交预约");
+        throw new AppError(403, "STUDENT_ID_REQUIRED", "当前账号缺少有效的预约学号，请联系管理员");
       if (
         (studentId && studentId !== user.studentId) ||
         (applicantName && applicantName !== user.name)
@@ -531,7 +531,9 @@ export async function createApp(options: AppOptions = {}) {
           "IDENTITY_MISMATCH",
           "预约身份必须与当前登录账号一致",
         );
-      const booking = await service.submit(user.id, input, key, {
+      // Persist the request and durable job before returning the application ID.
+      // The worker verifies the official result independently of this HTTP request.
+      const booking = await service.create(user.id, input, key, {
           applicantName: user.name,
           studentId: user.studentId!,
         });
@@ -659,8 +661,8 @@ export async function createApp(options: AppOptions = {}) {
       try {
         await accounts.save(studentId, undefined, bookingPermission);
       } catch (e) {
-        if ((e as Error).message === "ADMIN_STUDENT_ID")
-          throw new AppError(409, "ADMIN_STUDENT_ID", "该学号已用于管理员账号");
+        if ((e as Error).message === "BOOKING_BOOTSTRAP_STUDENT_ID")
+          throw new AppError(409, "BOOKING_BOOTSTRAP_STUDENT_ID", "该学号已用于管理员账号");
         throw e;
       }
       await db.audit(res.locals.user!.id, "allowlist.save", digest(studentId), {

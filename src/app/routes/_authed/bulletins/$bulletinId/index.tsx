@@ -15,12 +15,13 @@ function BulletinDetailPage() {
     if (!bulletin) return <EmptyState title="公告不存在" />
 
     return (
-        <article className="coeer-page max-w-4xl">
+        <article className="coeer-page">
             <SectionHeader title={bulletin.title} description={formatDateTime(bulletin.createdAt)} />
             <Card className="rounded-lg p-5">
                 <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
-                <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-foreground">{bulletin.content}</p>
+                <Markdown content={bulletin.content} className="mt-5 text-foreground" />
             </Card>
         </article>
     )
 }
+import { Markdown } from '@/components/coeer/ui/Markdown'

@@ -20,8 +20,10 @@ OpenSpace 已作为 COEER 的服务模块集成，侧栏“服务 → 空间预�
 
 空间预约共用 COEER 登录身份，不再提供独立预约登录、预约密码或身份切换页面。
 普通用户注册须使用 `xxxxxxxxxx@stu.pku.edu.cn`，其中 `xxxxxxxxxx` 为 10 位数字学号；
-管理员由服务端创建，可使用其他邮箱。平台管理员直接拥有预约管理权限，无需二次验证。
-非学生邮箱管理员可以管理预约，提交自己的实名预约需使用学生邮箱账号。
+管理员由服务端创建，可使用其他邮箱。平台管理员直接拥有预约管理及本人预约权限，无需二次验证。
+管理员统一使用保留学号 `0000000000`，无需加入学生白名单，原登录邮箱不变；普通用户不能注册
+此学号或通过白名单获取它。预约记录和限额按各管理员的独立账号计算，仍遵守时间、容量、
+冲突与处理开关等规则。
 
 白名单只需填写学号与预约权限，不要求姓名；列表显示已关联 COEER 用户的当前昵称。
 学生学号由登录邮箱提取，申请人信息由服务端带入，不能由浏览器改成他人身份。
@@ -48,7 +50,7 @@ pnpm dev
 ```
 
 社区与预约使用同一个 `DATABASE_URL`。社区保留原表，预约后台启动时初始化到独立
-`coeer_spaces` schema，可通过 `OPENSPACE_DATABASE_SCHEMA` 调整；数据库账号需要创建
+`coeer_spaces` schema，可通过 `BOOKING_DB_SCHEMA` 调整；数据库账号需要创建
 该 schema 与表的权限。预约查询与事务均异步执行，事务锁保证多连接下的容量与任务领取
 原子性。旧 SQLite 文件不会自动导入 PostgreSQL，已有文件应保留供单独的数据迁移。
 
@@ -58,6 +60,13 @@ pnpm dev
 重复创建或停止它。服务器关闭时清理后台任务、监听器与数据库连接。
 静态构建和预渲染不会启动预约后台。启动失败会记录运行事件，预约 API 返回 503；
 页面查询不会尝试重新启动，修复配置后需重启服务。
+
+首次同步与后续定时同步都对官网资料、空间列表和时段读取的 `NETWORK` / `TIMEOUT`
+最多尝试 3 次，失败后分别等待 1 秒、2 秒；各次请求仍受单次超时和整项操作的取消信号约束。
+认证失效、权限拒绝、限流及维护响应不走此重试；预约初始化、校验、提交和取消也不自动重放。
+终端的 `spaces.official.request_error` 记录接口名称、请求阶段、次数、耗时及安全的底层错误码，
+`spaces.official.request_retry` 记录退避重试。同步失败审计另记目录/时段阶段与日期；日志不含
+Cookie、账号密码、请求参数或官网响应正文。
 
 自动测试也使用 `.env` 的真实 PostgreSQL，在带随机 UUID 的 `coeer_test_*` schema 中
 执行、清理，不改开发表或历史预约，不使用 PGlite/SQLite。官方网络在自动测试中使用
@@ -73,13 +82,15 @@ Mock，测试包括权限、CSRF、幂等、归属、创建/取消和并发预�
 
 默认最多提前 **7 天**预约，允许今天至今天加 7 天，共 8 个日期（北京时间）。
 日期输入、服务端查询与提交使用同一范围，越界请求会被拒绝。
-可在 `.env.local` 设置 `OPENSPACE_BOOKING_DAYS=7` 并重启，统一调整预约范围及后台同步范围。
+可在 `.env.local` 设置 `BOOKING_ADVANCE_DAYS=7` 并重启，统一调整预约范围及后台同步范围。
 后台独立运行，每 5 分钟逐日同步范围内所有空间；页面读取目录、时段与预约时只访问
 PostgreSQL，不触发官网同步，缺失或过期缓存也不会改成按需访问官网。
 
-提交先用本地预约记录检查冲突并保留占位，再实时读取官网状态、执行官方表单校验和提交，
-等待独立官方查询核对结果后返回。只有已确认预约返回 201；明确失败返回 409，
-待审批、结果待核对等状态明确返回 202，不把排队或 HTTP 请求完成当成预约成功。
+提交先用本地预约记录检查冲突、保留占位并持久化后台任务，随即返回 202 和申请号。
+页面立即进入预约详情，后台独立读取官网状态、执行表单校验、提交并核对结果；刷新或关闭
+详情页不影响任务。原选择页在保存申请时停止时段轮询，避免把自己的占位误报为冲突。
+详情页每 3 秒读取处理进度，只有独立核对成功才显示“已确认”；排队、待审批与结果待核对
+均使用对应状态。幂等重试返回原申请；已确认返回 201，明确失败返回带申请号的 409。
 官网结果不明确时保留申请及幂等键继续核对，不自动重复创建。
 COEER 继续校验登录、学号白名单、预约归属、CSRF、幂等与并发占用。
 
@@ -92,7 +103,7 @@ COEER 继续校验登录、学号白名单、预约归属、CSRF、幂等与并�
 
 当前测试使用本机已有的校园网连接，不启动 VPN 或代理。真实网站登录入口为
 `http://smart.coe.pku.edu.cn:8500/show/#/v1702279899865050`。
-账号及密码只保存在仓库外 `../.coeer-local`，账号和会话均加密存储，密钥分文件保存；
+账号及密码只保存在项目内且已被 Git 忽略的 `./.coeer-local`，账号和会话均加密存储，密钥分文件保存；
 不要将该目录、密码或登录会话加入 Git。
 
 本地私密文件包括：
@@ -102,6 +113,13 @@ COEER 继续校验登录、学号白名单、预约归属、CSRF、幂等与并�
 - `session.enc.json` / `session-key.json`：加密官方会话与密钥。
 - `last-probe.json`：不含个人信息的最近一次空间查询摘要。
 
+官网账号密码实际保存在 `account.enc.json` 中，使用 AES-256-GCM 加密，密钥单独放在
+`account-key.json`；两者分别由 `CAMPUS_ACCOUNT_FILE` 和 `CAMPUS_ACCOUNT_KEY_FILE` 指定。
+`pnpm spaces:campus login` 会在本机内存中解密账号密码，通过正常官网页面完成登录，
+再把 Cookie 会话加密保存到 `CAMPUS_COOKIE_FILE`，对应密钥为 `CAMPUS_COOKIE_KEY_FILE`。
+后续查询与预约复用 Cookie；只有重新登录时才需要读取账号密码。未配置自动重登时，
+会话失效后需要手动运行登录命令。本地会话租约尚未过期，不代表官网服务端一定仍接受该 Cookie。
+
 ```sh
 pnpm spaces:campus login
 pnpm spaces:campus probe
@@ -109,18 +127,18 @@ pnpm spaces:campus probe 2026-10-23
 ```
 
 `login` 执行一次正常网页登录并保存会话，随后检查连接；`probe` 只读查询空间与日期
-状态，不创建或取消预约。目录可通过 `OPENSPACE_CAMPUS_PRIVATE_DIR` 指定。
+状态，不创建或取消预约。目录可通过 `BOOKING_PRIVATE_DIR` 指定。
 
-直连自动恢复需显式设置 `OPENSPACE_OFFICIAL_AUTOMATIC_LOGIN_APPROVED=true`，并配置
-`OPENSPACE_OFFICIAL_ACCOUNT_CREDENTIALS_FILE`、`OPENSPACE_OFFICIAL_ACCOUNT_KEY_FILE`、
-`OPENSPACE_OFFICIAL_RECOVERY_STATE_FILE`，同时保留已有加密会话与密钥配置。
+直连自动恢复需显式设置 `CAMPUS_AUTO_RELOGIN=true`，并配置
+`CAMPUS_ACCOUNT_FILE`、`CAMPUS_ACCOUNT_KEY_FILE`、
+`CAMPUS_RELOGIN_STATE_FILE`，同时保留已有加密会话与密钥配置。
 恢复只在同步、详情核对和连接检查等读取边界触发，整个适配器工作流串行执行，
 创建和取消不会因认证失败而自动重发。新会话独立核对固定官方身份后才安装；
 验证码、MFA 或账号错误停止自动尝试，网络失败冷却与每日次数限制持久化。
-可选 `OPENSPACE_OFFICIAL_SESSION_RENEWAL=true` 仅在身份核对成功后续期仍有效的本地租约，
+可选 `CAMPUS_COOKIE_LEASE_RENEWAL=true` 仅在身份核对成功后续期仍有效的本地租约，
 不延长官方 Cookie 有效期。调整这些配置后需重启开发服务。
 
-共用官方路径与开关放在忽略的 `.env.local`，引用仓库外文件；开发模式使用本机 HTTP
+共用官方路径与开关放在忽略的 `.env.local`，引用 `.coeer-local` 私密文件；开发模式使用本机 HTTP
 origin 与校园网接口。普通用户的学号由 COEER 管理员加入白名单。此前已通过 COEER
 完成三间教室的提交、确认和取消，记录见 [真实接入验收](coeer-official-acceptance.md)；
 该记录是已发生的验证范围，当前目录与时段继续跟随官网响应。
@@ -128,37 +146,39 @@ origin 与校园网接口。普通用户的学号由 COEER 管理员加入白名
 
 ## 官方接入与部署
 
-原预约配置统一增加 `OPENSPACE_` 前缀，数据库默认复用主站 `DATABASE_URL`。
+预约业务使用 `BOOKING_*`，官网账号与接口使用 `CAMPUS_*`，独立连接器使用 `CONNECTOR_*`。
+主站、内嵌引擎及运维命令使用同一套变量，数据库复用主站 `DATABASE_URL`。
+旧变量已移除，不提供别名或回退；出现旧 `OPENSPACE_*` 配置时会明确报错。
 生产环境直接使用 COEER 管理员身份，不需要初始化第二个预约管理员账号。
 
 ```dotenv
-OPENSPACE_APP_ENV=production
-OPENSPACE_APP_ORIGIN=https://coeer.example.com
-OPENSPACE_DATABASE_SCHEMA=coeer_spaces
-OPENSPACE_ADAPTER_MODE=official
-OPENSPACE_OFFICIAL_CONNECTOR_URL=http://127.0.0.1:3002
-OPENSPACE_OFFICIAL_CONNECTOR_KEY_FILE=/private/connector-key.json
-OPENSPACE_OFFICIAL_WRITES_ENABLED=true
+BOOKING_RUNTIME_ENV=production
+BOOKING_ALLOWED_ORIGIN=https://coeer.example.com
+BOOKING_DB_SCHEMA=coeer_spaces
+BOOKING_DATA_SOURCE=official
+CONNECTOR_URL=http://127.0.0.1:3002
+CONNECTOR_TOKEN_FILE=/private/connector-key.json
+CAMPUS_WRITE_ENABLED=true
 ```
 
 Production 要求隔离 Connector；staging 可使用直连适配器。两者使用相同的
 `rulesSource: "upstream"` 官方配置和表单协议。直连时配置
-`OPENSPACE_OFFICIAL_CONFIG_FILE`、`OPENSPACE_OFFICIAL_SESSION_FILE`、
-`OPENSPACE_OFFICIAL_SESSION_KEY_FILE` 和
-`OPENSPACE_OFFICIAL_WRITES_FILE`。HTTP 接口还需显式配置
-`OPENSPACE_OFFICIAL_HTTP_NETWORK_APPROVED=true`。密钥、凭据与官方配置存放在仓库外。
+`CAMPUS_API_CONFIG_FILE`、`CAMPUS_COOKIE_FILE`、
+`CAMPUS_COOKIE_KEY_FILE` 和
+`CAMPUS_BOOKING_FORM_FILE`。HTTP 接口还需显式配置
+`CAMPUS_ALLOW_HTTP=true`。密钥、凭据与官方配置存放在被 Git 忽略的 `.coeer-local` 内。
 主配置模板为 [official.upstream.example.json](../config/official.upstream.example.json)，
 其中官网用户 ID 必须替换为实际核对的服务身份。表单协议模板为
 [official.meeting-contract.example.json](../config/official.meeting-contract.example.json)，
 其 `rules: []` 不增设本地房间、日期和时长范围。
-私密 `OPENSPACE_OFFICIAL_WRITES_FILE` 的结构为 `{ version: 1, contact, contract }`，
+私密 `CAMPUS_BOOKING_FORM_FILE` 的结构为 `{ version: 1, contact, contract }`，
 `contract` 填入上述协议内容，`contact` 填写服务账号联系方式。
 使用独立协议文件时主配置保留 `writes.enabled=false`，加载器合并后开启写入；
-运行环境还需 `OPENSPACE_OFFICIAL_WRITES_ENABLED=true`。生产 Connector 使用同样配置，
+运行环境还需 `CAMPUS_WRITE_ENABLED=true`。生产 Connector 使用同样配置，
 主站与 Connector 均须开启对应写入开关。
 
-如使用 `OPENSPACE_BACKEND_URL` 指向外部预约引擎，该服务必须实现当前版本的 COEER
-签名身份验证，并与网关配置相同的服务器私密 `OPENSPACE_INTERNAL_AUTH_SECRET`。
+如使用 `BOOKING_ENGINE_URL` 指向外部预约引擎，该服务必须实现当前版本的 COEER
+签名身份验证，并与网关配置相同的服务器私密 `BOOKING_ENGINE_SIGNING_SECRET`。
 不支持直接连接仍要求独立登录的旧 OpenSpace 服务。内嵌模式自动生成进程级随机密钥，
 无需手工配置。
 

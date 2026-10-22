@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { deleteFeedbackFn, getFeedbackByIdFn } from '~/functions'
-import { Badge, Button, Card, Icon, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Badge, Button, Card, DetailLayout, Icon, SectionHeader, formatDateTime } from '@/components/coeer'
 import { FeedbackStatusBadge, feedbackTargetLabels } from '../-feedback-ui'
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/')({
@@ -64,36 +64,32 @@ function FeedbackDetailPage() {
                 }
             />
 
-            <Card className="p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                    <FeedbackStatusBadge status={feedback.status} />
-                    <Badge>{feedbackTargetLabels[feedback.targetType]}</Badge>
-                    {feedback.isAnonymous ? <Badge>匿名提交</Badge> : null}
-                    <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDateTime(feedback.createdAt)}</span>
-                </div>
-
-                {feedback.targetDesc ? (
-                    <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">
-                        关联对象：{feedback.targetDesc}
-                    </p>
-                ) : null}
-
-                <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--foreground))]">
-                    {feedback.content}
-                </div>
-            </Card>
-
-            <Card className="p-5">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
-                        {feedback.isAnonymous ? '匿' : feedback.author?.name?.[0] || 'U'}
+            <DetailLayout asideLabel="反馈信息" aside={
+                <Card className="space-y-5 p-5">
+                    <h2 className="text-sm font-semibold">反馈信息</h2>
+                    <dl className="space-y-4 text-[13px]">
+                        <div><dt className="mb-2 text-xs text-muted-foreground">处理状态</dt><dd><FeedbackStatusBadge status={feedback.status} /></dd></div>
+                        <div><dt className="mb-2 text-xs text-muted-foreground">反馈对象</dt><dd><Badge>{feedbackTargetLabels[feedback.targetType]}</Badge></dd></div>
+                        <div><dt className="mb-2 text-xs text-muted-foreground">提交时间</dt><dd className="tabular-nums">{formatDateTime(feedback.createdAt)}</dd></div>
+                    </dl>
+                    <div className="flex min-w-0 items-center gap-3 border-t border-border pt-5">
+                        <div aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-primary">
+                            {feedback.isAnonymous ? '匿' : feedback.author?.name?.[0] || 'U'}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="break-words text-sm font-medium">{feedback.isAnonymous ? '匿名用户' : feedback.author?.name || '未知用户'}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">提交人</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-[15px] font-medium">{feedback.isAnonymous ? '匿名用户' : feedback.author?.name || '未知用户'}</p>
-                        <p className="text-[13px] text-[hsl(var(--muted-foreground))]">提交人</p>
-                    </div>
-                </div>
-            </Card>
+                </Card>
+            }>
+                <Card className="space-y-4 p-5">
+                    <h2 className="text-sm font-semibold">反馈内容</h2>
+                    {feedback.targetDesc ? <p className="text-sm text-muted-foreground">关联对象：{feedback.targetDesc}</p> : null}
+                    <Markdown content={feedback.content} className="max-w-[76ch] text-foreground" />
+                </Card>
+            </DetailLayout>
         </div>
     )
 }
+import { Markdown } from '@/components/coeer/ui/Markdown'

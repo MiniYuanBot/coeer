@@ -7,7 +7,7 @@ export const Route = createFileRoute('/_authed/feedbacks/$feedbackId')({
 
 function FeedbackDetailLayout() {
     return (
-        <PageLayout width="reading">
+        <PageLayout>
             <div>
                 <Link to="/feedbacks" className="coeer-focus inline-flex min-h-9 items-center gap-1.5 rounded text-xs text-muted-foreground hover:text-foreground">
                     <Icon name="chevron" className="h-3.5 w-3.5 rotate-180" />

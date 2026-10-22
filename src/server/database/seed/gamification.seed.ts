@@ -16,6 +16,7 @@ import {
     userAchievements,
     userCards,
     userSubscriptions,
+    notifications,
 } from '../schemas'
 import { getSeedUsers, hasCleanFlag, isMainModule, runSeedCli } from './seed-utils'
 
@@ -51,6 +52,7 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
     })
     const officialGroup = seededGroups.find((group) => group.slug === 'coeer-official')
     const codingGroup = seededGroups.find((group) => group.slug === 'coding-study')
+    if (!codingGroup) throw new Error('Missing coding-study group. Run seed:community first.')
 
     const sampleActivities = [
         {
@@ -70,7 +72,7 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
             description: '围绕校园工具做一个小型协作开发夜。',
             type: 'group' as const,
             organizerType: 'group' as const,
-            organizerId: codingGroup?.id ?? adminUser.id,
+            organizerId: codingGroup.id,
             location: '线上会议室',
             startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000),
@@ -82,7 +84,7 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
             description: '围绕高频反馈讨论可执行的改进方案。',
             type: 'official' as const,
             organizerType: 'user' as const,
-            organizerId: demoUser.id,
+            organizerId: adminUser.id,
             location: '学生事务中心 B203',
             startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
             endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
@@ -102,26 +104,45 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
             status: 'upcoming' as const,
         },
         {
-            title: '辩论社表演赛观摩',
-            description: '观赛名额有限，报名即得观赛席与活动积分。',
+            title: '编程学习小组项目分享会',
+            description: '分享校园工具项目的实现过程，交流开发经验。',
             type: 'group' as const,
             organizerType: 'group' as const,
-            organizerId: codingGroup?.id ?? adminUser.id,
+            organizerId: codingGroup.id,
             location: '报告厅 201',
             startTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
             endTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
-            maxParticipants: 120,
+            maxParticipants: 3,
             status: 'upcoming' as const,
+        },
+        {
+            title: '开放学习室共学', description: '正在进行的共学活动，用于展示报名截止后的状态。',
+            type: 'group' as const, organizerType: 'group' as const, organizerId: codingGroup.id,
+            location: '学习室 B102', startTime: new Date(Date.now() - 3600000), endTime: new Date(Date.now() + 3600000),
+            maxParticipants: 20, status: 'ongoing' as const,
+        },
+        {
+            title: '户外交流活动（已取消）', description: '因天气原因取消，用于展示取消状态。',
+            type: 'official' as const, organizerType: 'user' as const, organizerId: adminUser.id,
+            location: '校园草坪', startTime: new Date(Date.now() + 86400000), endTime: new Date(Date.now() + 90000000),
+            maxParticipants: 20, status: 'cancelled' as const,
         },
     ]
 
     for (const activity of sampleActivities) {
+        if (activity.title === '编程学习小组项目分享会') {
+            const legacy = await db.query.activities.findFirst({ where: (table, { and, eq }) => and(eq(table.title, '辩论社表演赛观摩'), eq(table.organizerId, codingGroup.id)) })
+            const current = await db.query.activities.findFirst({ where: (table, { eq }) => eq(table.title, activity.title) })
+            if (legacy && !current) await db.update(activities).set({ title: activity.title, description: activity.description, maxParticipants: activity.maxParticipants }).where(eq(activities.id, legacy.id))
+        }
         const existing = await db.query.activities.findFirst({
             where: (table, { eq }) => eq(table.title, activity.title),
         })
         if (!existing) {
             await db.insert(activities).values(activity)
             console.log(`Create activity: ${activity.title}`)
+        } else if (activity.type === 'official' && existing.organizerId === demoUser.id) {
+            await db.update(activities).set({ organizerId: adminUser.id }).where(eq(activities.id, existing.id))
         }
     }
 
@@ -131,6 +152,7 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
 
     // 报名数据：每个活动都有 test/demo 报名；进行中/未开始的活动再给 admin 也报一个名
     for (const activity of seededActivities) {
+        if (activity.status === 'cancelled') continue
         const usersToRegister = [testUser, demoUser, adminUser].filter(
             (user) => !(activity.status === 'completed' && user.id === adminUser.id),
         )
@@ -148,9 +170,9 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
     }
 
     const sampleCards = [
-        { name: '工程馆晨光', description: '普通纪念卡', imageUrl: 'https://placehold.co/512x512?text=COEER+Common', rarity: 'common' as const, series: 'campus', dropRate: '0.6000' },
-        { name: '代码夜航', description: '稀有学习卡', imageUrl: 'https://placehold.co/512x512?text=COEER+Rare', rarity: 'rare' as const, series: 'study', dropRate: '0.3000' },
-        { name: '年度共创者', description: '传说贡献卡', imageUrl: 'https://placehold.co/512x512?text=COEER+Legendary', rarity: 'legendary' as const, series: 'honor', dropRate: '0.1000' },
+        { name: '工程馆晨光', description: '普通纪念卡', imageUrl: '/demo/card-common.svg', rarity: 'common' as const, series: 'campus', dropRate: '0.6000' },
+        { name: '代码夜航', description: '稀有学习卡', imageUrl: '/demo/card-rare.svg', rarity: 'rare' as const, series: 'study', dropRate: '0.3000' },
+        { name: '年度共创者', description: '传说贡献卡', imageUrl: '/demo/card-legendary.svg', rarity: 'legendary' as const, series: 'honor', dropRate: '0.1000' },
     ]
 
     for (const card of sampleCards) {
@@ -158,6 +180,8 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
         if (!existing) {
             await db.insert(cards).values(card)
             console.log(`Create card: ${card.name}`)
+        } else if (existing.imageUrl?.startsWith('https://placehold.co/')) {
+            await db.update(cards).set({ imageUrl: card.imageUrl }).where(eq(cards.id, existing.id))
         }
     }
 
@@ -167,9 +191,9 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
 
     // 卡册：testUser 集齐 3 种（与 CARD_COLLECTOR 成就一致），demoUser 有一张普通卡
     const cardOwnership: Array<{ userId: string; cardId: string; count: number }> = []
-    for (const [index, card] of seededCards.entries()) {
-        cardOwnership.push({ userId: testUser.id, cardId: card.id, count: index === 0 ? 2 : 1 })
-        if (index === 0) {
+    for (const card of seededCards) {
+        cardOwnership.push({ userId: testUser.id, cardId: card.id, count: card.rarity === 'common' ? 2 : 1 })
+        if (card.rarity === 'common') {
             cardOwnership.push({ userId: demoUser.id, cardId: card.id, count: 1 })
         }
     }
@@ -220,9 +244,9 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
     }
 
     const sampleItems = [
-        { name: 'COEER 贴纸包', description: '实体周边贴纸一套', imageUrl: 'https://placehold.co/512x512?text=Sticker', pointsCost: 80, stock: 50, type: 'physical' as const, status: 'active' as const },
-        { name: '活动优先报名券', description: '可用于热门活动优先报名', imageUrl: 'https://placehold.co/512x512?text=Ticket', pointsCost: 200, stock: -1, type: 'virtual' as const, status: 'active' as const },
-        { name: '限定帆布袋', description: '测试售罄商品', imageUrl: 'https://placehold.co/512x512?text=Bag', pointsCost: 500, stock: 0, type: 'physical' as const, status: 'sold_out' as const },
+        { name: 'COEER 贴纸包', description: '实体周边贴纸一套', imageUrl: '/demo/sticker.svg', pointsCost: 80, stock: 50, type: 'physical' as const, status: 'active' as const },
+        { name: '活动优先报名券', description: '可用于热门活动优先报名', imageUrl: '/demo/ticket.svg', pointsCost: 200, stock: -1, type: 'virtual' as const, status: 'active' as const },
+        { name: '限定帆布袋', description: '测试售罄商品', imageUrl: '/demo/bag.svg', pointsCost: 500, stock: 0, type: 'physical' as const, status: 'sold_out' as const },
     ]
 
     for (const item of sampleItems) {
@@ -230,6 +254,8 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
         if (!existing) {
             await db.insert(redeemItems).values(item)
             console.log(`Create redeem item: ${item.name}`)
+        } else if (existing.imageUrl?.startsWith('https://placehold.co/')) {
+            await db.update(redeemItems).set({ imageUrl: item.imageUrl }).where(eq(redeemItems.id, existing.id))
         }
     }
 
@@ -272,7 +298,7 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
 
     const samplePointTransactions = [
         // testUser
-        { userId: testUser.id, amount: 400, type: 'earn' as const, source: 'feedback' as const, description: '反馈闭环奖励（4 条反馈处理完成）' },
+        { userId: testUser.id, amount: 400, type: 'earn' as const, source: 'feedback' as const, description: '反馈闭环奖励（延长开放时间建议）' },
         { userId: testUser.id, amount: -200, type: 'spend' as const, source: 'redeem' as const, description: '兑换：活动优先报名券' },
         { userId: testUser.id, amount: -50, type: 'spend' as const, source: 'draw' as const, description: '抽卡：代码夜航' },
         // demoUser
@@ -281,6 +307,14 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
     ]
 
     for (const transaction of samplePointTransactions) {
+        // Recognize the earlier fixture label so reruns do not credit the reward twice.
+        if (transaction.source === 'feedback') {
+            const legacy = await db.query.pointTransactions.findFirst({ where: (table, { and, eq }) => and(eq(table.userId, transaction.userId), eq(table.description, '反馈闭环奖励（4 条反馈处理完成）')) })
+            if (legacy) {
+                await db.update(pointTransactions).set({ description: transaction.description }).where(eq(pointTransactions.id, legacy.id))
+                continue
+            }
+        }
         const existing = await db.query.pointTransactions.findFirst({
             where: (table, { and, eq }) => and(eq(table.userId, transaction.userId), eq(table.description, transaction.description)),
         })
@@ -289,48 +323,12 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
         }
     }
 
-    // 互动演示：公告帖/讨论帖的点赞与回复
+    // 互动演示：公告帖/讨论帖点赞；回复功能暂不开放。
     const seededPosts = await db.query.groupPosts.findMany({
         where: inArray(groupPosts.title, ['COEER 测试环境说明', '项目协作规范草案', '第一期共读书目投票']),
     })
     const officialPost = seededPosts.find((post) => post.title === 'COEER 测试环境说明')
     const normPost = seededPosts.find((post) => post.title === '项目协作规范草案')
-
-    const sampleReplies = [
-        officialPost && {
-            userId: demoUser.id,
-            targetType: 'group_post' as const,
-            targetId: officialPost.id,
-            content: '收到，辛苦啦！功能体验会记得提前发公告～',
-        },
-        normPost && {
-            userId: adminUser.id,
-            targetType: 'group_post' as const,
-            targetId: normPost.id,
-            content: '赞成。建议补充一条：提交 PR 前先跑 `pnpm exec tsc --noEmit`。',
-        },
-        normPost && {
-            userId: testUser.id,
-            targetType: 'group_post' as const,
-            targetId: normPost.id,
-            content: '+1，另外希望能统一 Prettier 配置。',
-        },
-    ].filter(isDefined)
-
-    for (const reply of sampleReplies) {
-        const existing = await db.query.replies.findFirst({
-            where: (table, { and, eq }) => and(
-                eq(table.userId, reply.userId),
-                eq(table.targetType, reply.targetType),
-                eq(table.targetId, reply.targetId),
-                eq(table.content, reply.content),
-            ),
-        })
-        if (!existing) {
-            await db.insert(replies).values(reply)
-            console.log(`  Create reply on post ${reply.targetId}`)
-        }
-    }
 
     const sampleReactions: Array<{ userId: string; targetType: 'group_post'; targetId: string }> = []
     if (officialPost) {
@@ -380,11 +378,11 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
             content: '后续版本将支持群组上传头像与横幅图，敬请期待。',
             isPinned: false,
         },
-        officialGroup && {
+        officialGroup && officialPost && {
             type: 'group_announcement' as const,
             title: '官方公告群开放订阅',
             content: '订阅后可以在公告流中看到平台更新。',
-            sourceId: officialGroup.id,
+            sourceId: officialPost.id,
             sourceType: 'group_post' as const,
             isPinned: false,
         },
@@ -403,6 +401,8 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
         if (!existing) {
             await db.insert(bulletins).values(bulletin)
             console.log(`Create bulletin: ${bulletin.title}`)
+        } else if (bulletin.sourceType === 'group_post' && existing.sourceId === officialGroup?.id) {
+            await db.update(bulletins).set({ sourceId: bulletin.sourceId }).where(eq(bulletins.id, existing.id))
         }
     }
 
@@ -425,6 +425,18 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
                 })
             }
         }
+    }
+
+    const reviewedFeedback = await db.query.feedbacks.findFirst({ where: (table, { and, eq }) => and(eq(table.authorId, testUser.id), eq(table.status, 'resolved')) })
+    const upcoming = seededActivities.find((activity) => activity.title === 'COEER 功能体验会')
+    const sampleNotifications = [
+        reviewedFeedback && { userId: testUser.id, type: 'feedback_status', title: '反馈处理进展', content: `你的反馈「${reviewedFeedback.title}」已解决。`, href: `/feedbacks/${reviewedFeedback.id}` },
+        upcoming && { userId: testUser.id, type: 'activity_registration', title: '活动报名成功', content: `你已成功报名「${upcoming.title}」。`, href: `/activities/${upcoming.id}` },
+        officialGroup && { userId: adminUser.id, type: 'group_review', title: '群组审核结果', content: `你创建的群组「${officialGroup.name}」已通过审核。`, href: `/groups/${officialGroup.slug}` },
+    ].filter(isDefined)
+    for (const notification of sampleNotifications) {
+        const existing = await db.query.notifications.findFirst({ where: (table, { and, eq }) => and(eq(table.userId, notification.userId), eq(table.type, notification.type), eq(table.href, notification.href)) })
+        if (!existing) await db.insert(notifications).values(notification)
     }
 
     console.log('Gamification seeding succeeded')

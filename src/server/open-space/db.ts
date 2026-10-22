@@ -23,7 +23,7 @@ export class DB {
   private readonly transaction = new AsyncLocalStorage<PoolClient>();
   private constructor(readonly pool: Pool, readonly schema: string) {}
 
-  static async open(connectionString = process.env.DATABASE_URL, schema = process.env.OPENSPACE_DATABASE_SCHEMA ?? 'coeer_spaces') {
+  static async open(connectionString = process.env.DATABASE_URL, schema = process.env.BOOKING_DB_SCHEMA ?? 'coeer_spaces') {
     if (!connectionString || !/^postgres(?:ql)?:\/\//.test(connectionString)) {
       throw new Error('Reservations require the PostgreSQL DATABASE_URL configured in .env');
     }

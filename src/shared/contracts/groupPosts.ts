@@ -90,6 +90,9 @@ export type CheckAuthorInput = z.infer<typeof CheckAuthorSchema>
 export type CheckModifyInput = z.infer<typeof CheckModifySchema>
 
 export interface GroupPostWithAuthor extends GroupPost {
+    reactionCount?: number;
+    hasReacted?: boolean;
+    isBookmarked?: boolean;
     author: Pick<DbUser, 'id' | 'name'> | null;
 }
 

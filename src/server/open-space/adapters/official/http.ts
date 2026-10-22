@@ -14,6 +14,24 @@ export const routes = {
   cancel: ["POST", "meeting_apply/cancelMeeting.do"],
 } as const;
 export type Operation = keyof typeof routes;
+// These POST endpoints only read. Initialization, verification and writes must
+// never be replayed when their outcome is unknown.
+const retryableReads = new Set<Operation>([
+  "profile", "meetingList", "activityList", "meetingSlots",
+]);
+const transportCodes = new Set([
+  "ECONNRESET", "ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT",
+  "EHOSTUNREACH", "ENETUNREACH", "EACCES", "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET",
+]);
+interface RequestFailure {
+  operation: Operation;
+  phase: "guard" | "request" | "response";
+  attempt: number;
+  durationMs: number;
+  code: string;
+  transportCode?: string;
+}
 export interface OfficialResponse {
   status: number;
   body: string;
@@ -71,15 +89,17 @@ export class OfficialHTTP implements OfficialTransport {
   #tail: Promise<void> = Promise.resolve();
   #lastStarted = 0;
   #notBefore = 0;
+  #lastRequestFailure?: RequestFailure;
   constructor(
     private config: OfficialConfig,
     private provider: CredentialProvider,
     private fetcher: typeof fetch = fetch,
   ) {}
   diagnostics() {
-    return (
-      this.provider.diagnostics?.() ?? { authentication: "externally_managed" }
-    );
+    return {
+      ...(this.provider.diagnostics?.() ?? { authentication: "externally_managed" }),
+      lastRequestFailure: this.#lastRequestFailure ?? null,
+    };
   }
   verified() {
     this.provider.verified?.();
@@ -104,11 +124,45 @@ export class OfficialHTTP implements OfficialTransport {
     // Freeze one credential generation for the entire read/write workflow.
     return {
       request: (operation, query, form, options) =>
-        this.serial(
-          () => this.send(headers, operation, query, form, options),
-          options?.signal,
-        ),
+        this.request(headers, operation, query, form, options),
     };
+  }
+  private async request(
+    credentials: Headers,
+    operation: Operation,
+    query: Record<string, string>,
+    form: Record<string, string>,
+    options?: OperationOptions,
+  ): Promise<OfficialResponse> {
+    const attempts = retryableReads.has(operation) ? 3 : 1;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.serial(
+          () => this.send(credentials, operation, query, form, attempt, options),
+          options?.signal,
+        );
+      } catch (e) {
+        const code = e instanceof AdapterError ? e.code : "NETWORK";
+        if (
+          attempt >= attempts || options?.signal?.aborted ||
+          !["NETWORK", "TIMEOUT"].includes(code)
+        ) {
+          this.provider.invalidate?.(code);
+          throw e;
+        }
+        const delayMs = 1000 * 2 ** (attempt - 1);
+        console.warn(JSON.stringify({
+          event: "spaces.official.request_retry", operation, code,
+          attempt, nextAttempt: attempt + 1, delayMs,
+        }));
+        try {
+          await delay(delayMs, undefined, { signal: options?.signal });
+        } catch {
+          this.provider.invalidate?.("TIMEOUT");
+          throw new AdapterError("TIMEOUT");
+        }
+      }
+    }
   }
   private async serial<T>(
     fn: () => Promise<T>,
@@ -140,6 +194,7 @@ export class OfficialHTTP implements OfficialTransport {
     operation: Operation,
     query: Record<string, string>,
     form: Record<string, string>,
+    attempt: number,
     options?: OperationOptions,
   ): Promise<OfficialResponse> {
     const [method, path] = routes[operation],
@@ -163,12 +218,15 @@ export class OfficialHTTP implements OfficialTransport {
       ...(options?.signal ? [options.signal] : []),
       AbortSignal.timeout(this.config.requestTimeoutMs),
     ]);
+    const startedAt = Date.now();
+    let phase: RequestFailure["phase"] = "guard";
     try {
       if (signal.aborted) throw new AdapterError("TIMEOUT");
       this.provider.assert?.();
       await options?.beforeSend?.();
       if (signal.aborted) throw new AdapterError("TIMEOUT");
       this.provider.assert?.();
+      phase = "request";
       const r = await this.fetcher(url, {
         method,
         headers,
@@ -176,6 +234,7 @@ export class OfficialHTTP implements OfficialTransport {
         redirect: "manual",
         signal,
       });
+      phase = "response";
       if (r.status === 401) throw new AdapterError("AUTH_EXPIRED");
       if (r.status === 403) throw new AdapterError("FORBIDDEN");
       if ([429, 502, 503].includes(r.status)) {
@@ -267,7 +326,16 @@ export class OfficialHTTP implements OfficialTransport {
         e instanceof AdapterError
           ? e
           : new AdapterError(signal.aborted ? "TIMEOUT" : "NETWORK");
-      this.provider.invalidate?.(error.code);
+      const cause = (e as { cause?: { code?: unknown }; code?: unknown })?.cause?.code
+        ?? (e as { code?: unknown })?.code;
+      this.#lastRequestFailure = {
+        operation, phase, attempt, durationMs: Date.now() - startedAt,
+        code: error.code,
+        ...(typeof cause === "string" && transportCodes.has(cause) ? { transportCode: cause } : {}),
+      };
+      // Log only fixed operation names and safe codes, never URLs, forms,
+      // cookies, response bodies or raw errors from the official system.
+      console.warn(JSON.stringify({ event: "spaces.official.request_error", ...this.#lastRequestFailure }));
       throw error;
     }
   }

@@ -82,8 +82,75 @@ describe('COEER booking integration', () => {
     it('grants community administrators booking administration without student credentials', async () => {
         expect((await call('/admin/overview', alice)).status).toBe(403)
         expect((await call('/admin/overview', administrator)).status).toBe(200)
-        expect((await session(administrator)).user).toMatchObject({ role: 'admin', name: administrator.name })
+        expect((await session(administrator)).user).toMatchObject({ role: 'admin', name: administrator.name, studentId: '0000000000', bookingPermission: 'allowed' })
         expect((await call('/admin/overview', { ...administrator, role: 'student' })).status).toBe(403)
+    })
+    it('lets administrators book with the reserved student ID while keeping personal ownership separate', async () => {
+        const otherAdmin = { ...administrator, id: 'coeer-admin-other', email: 'other-admin@example.com', name: '另一位管理员' }
+        const firstSession = await session(administrator)
+        const otherSession = await session(otherAdmin)
+        expect(firstSession.user.id).not.toBe(otherSession.user.id)
+        expect(otherSession.user).toMatchObject({ studentId: '0000000000', bookingPermission: 'allowed' })
+        const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': firstSession.csrf, 'Idempotency-Key': 'coeer-admin-booking-0001' }
+        const input = JSON.stringify(bookingInput())
+        const response = await call('/bookings', administrator, { method: 'POST', headers, body: input })
+        expect(response.status).toBe(202)
+        const booking = await response.json()
+        expect(booking).toMatchObject({ applicantName: administrator.name, studentId: '0000000000', status: 'queued' })
+        expect(await context.db.get('SELECT user_id,student_id FROM bookings WHERE id=?', booking.id)).toEqual({ user_id: firstSession.user.id, student_id: '0000000000' })
+        const retry = await call('/bookings', administrator, { method: 'POST', headers, body: input })
+        expect(retry.status).toBe(202)
+        expect((await retry.json()).id).toBe(booking.id)
+        expect((await (await call('/bookings', administrator)).json()).map((item: { id: string }) => item.id)).toEqual([booking.id])
+        expect(await (await call('/bookings', otherAdmin)).json()).toEqual([])
+        expect((await call(`/bookings/${booking.id}`, otherAdmin)).status).toBe(404)
+        expect((await call(`/bookings/${booking.id}/cancel`, otherAdmin, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': otherSession.csrf }, body: '{}' })).status).toBe(404)
+        expect((await call('/bookings', otherAdmin, { method: 'POST', headers: { ...headers, 'X-CSRF-Token': otherSession.csrf }, body: input })).status).toBe(409)
+        const otherBooking = await call('/bookings', otherAdmin, { method: 'POST', headers: { ...headers, 'X-CSRF-Token': otherSession.csrf }, body: JSON.stringify({ ...bookingInput(), start: 660, end: 720 }) })
+        expect(otherBooking.status).toBe(202)
+        const otherId = (await otherBooking.json()).id
+        expect(otherId).not.toBe(booking.id)
+        expect((await call(`/bookings/${otherId}`, administrator)).status).toBe(404)
+        expect(await context.db.all("SELECT * FROM user_accounts WHERE student_id='0000000000'")).toEqual([])
+        await processJobs()
+        const cancelled = await call(`/bookings/${booking.id}/cancel`, administrator, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': firstSession.csrf }, body: '{}' })
+        expect(cancelled.status).toBe(200)
+        await processJobs()
+        expect((await (await call(`/bookings/${booking.id}`, administrator)).json()).status).toBe('cancelled')
+        expect((await (await call(`/bookings/${otherId}`, otherAdmin)).json()).status).toBe('confirmed')
+    })
+    it('enforces booking quotas per administrator account rather than the shared display ID', async () => {
+        const response = await mutate('/bookings', bookingInput(), administrator, 'POST')
+        expect(response.status).toBe(400) // A valid idempotency key is still required for administrators.
+        const { csrf } = await session(administrator)
+        const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'Idempotency-Key': 'coeer-admin-quota-0001' }
+        const first = await call('/bookings', administrator, { method: 'POST', headers, body: JSON.stringify(bookingInput()) })
+        expect(first.status).toBe(202)
+        const booking = await first.json()
+        await scope.client.query(`INSERT INTO bookings(id,user_id,space_id,date,start,"end",quantity,purpose,status,message,idempotency_key,fingerprint,created_at,updated_at,provider,applicant_name,student_id,submission_user_id)
+            SELECT 'admin-quota-' || n,user_id,space_id,date,start,"end",quantity,purpose,'pending_review',message,'admin-quota-' || n,fingerprint,created_at,updated_at,provider,applicant_name,student_id,submission_user_id
+            FROM bookings CROSS JOIN generate_series(1,9) AS n WHERE id=$1`, [booking.id])
+        const next = JSON.stringify({ ...bookingInput(), start: 660, end: 720 })
+        const denied = await call('/bookings', administrator, { method: 'POST', headers: { ...headers, 'Idempotency-Key': 'coeer-admin-quota-0002' }, body: next })
+        expect(denied.status).toBe(429)
+        expect((await denied.json()).error.code).toBe('BOOKING_QUOTA')
+        const otherAdmin = { ...administrator, id: 'coeer-admin-other', email: 'other-admin@example.com' }
+        const otherSession = await session(otherAdmin)
+        const allowed = await call('/bookings', otherAdmin, { method: 'POST', headers: { ...headers, 'X-CSRF-Token': otherSession.csrf }, body: next })
+        expect(allowed.status).toBe(202)
+    })
+    it('reserves the zero student ID for trusted administrators and revokes it after demotion', async () => {
+        const untrusted = { ...alice, id: 'coeer-zero-student', email: '0000000000@stu.pku.edu.cn' }
+        expect((await (await call('/auth/me', untrusted)).json()).user).toBeNull()
+        expect((await call('/bookings', untrusted, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookingInput()) })).status).toBe(401)
+        const reserved = await mutate('/admin/allowlist/0000000000', { bookingPermission: 'allowed' })
+        expect(reserved.status).toBe(409)
+        const { csrf } = await session()
+        const forged = await call('/bookings', alice, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'Idempotency-Key': 'coeer-zero-forged-0001' }, body: JSON.stringify({ ...bookingInput(), studentId: '0000000000' }) })
+        expect(forged.status).toBe(403)
+        expect((await forged.json()).error.code).toBe('IDENTITY_MISMATCH')
+        expect((await session(administrator)).user.studentId).toBe('0000000000')
+        expect((await (await call('/auth/me', { ...administrator, role: 'student' })).json()).user).toBeNull()
     })
     it('retires separate booking login, password and logout endpoints', async () => {
         for (const path of ['/auth/login', '/auth/password', '/auth/logout']) {
@@ -128,7 +195,7 @@ describe('COEER booking integration', () => {
         const headers = { 'Content-Type': 'application/json', 'Idempotency-Key': 'coeer-gateway-booking-0001' }
         expect((await call('/bookings', alice, { method: 'POST', headers, body: input })).status).toBe(403)
         const first = await call('/bookings', alice, { method: 'POST', headers: { ...headers, 'X-CSRF-Token': csrf }, body: input })
-        expect(first.status).toBe(201)
+        expect(first.status).toBe(202)
         const booking = await first.json()
         const repeated = await call('/bookings', alice, { method: 'POST', headers: { ...headers, 'X-CSRF-Token': csrf }, body: input })
         expect((await repeated.json()).id).toBe(booking.id)
@@ -156,7 +223,7 @@ describe('COEER booking integration', () => {
             },
             body: JSON.stringify(bookingInput()),
         })))
-        expect(responses.map(response => response.status).sort()).toEqual([201, 409])
+        expect(responses.map(response => response.status).sort()).toEqual([202, 409])
         expect((await context.db.get<{ count: number }>('SELECT COUNT(*) AS count FROM bookings'))?.count).toBe(1)
     })
     it('returns a useful service error when the upstream cannot be reached', async () => {

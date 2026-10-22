@@ -1,8 +1,12 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { z } from 'zod'
-import { ActivityCard, Button, EmptyState, FilterPanel, Icon, SectionHeader, activityStatusLabels, activityTypeLabels, useAsyncAction } from '@/components/coeer'
-import { listActivitiesFn, registerActivityFn } from '~/functions'
+import { ActivityCard, EmptyState, FilterPanel, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
+import { ActivityRegistrationButton } from '@/components/coeer/cards/ActivityRegistrationButton'
+import { listActivitiesFn } from '~/functions'
 import { ACTIVITY_STATUS_ARRAY, ACTIVITY_TYPE_ARRAY, ActivityStatus, ActivityType } from '@shared/constants'
+import { useActivityClock } from '@/hooks/useActivityClock'
+import { activityStatusAt } from '@shared/activities'
 
 const searchSchema = z.object({
     type: z.string().optional(),
@@ -31,10 +35,14 @@ export const Route = createFileRoute('/_authed/activities/')({
 })
 
 function ActivitiesPage() {
-    const { activities, total } = Route.useLoaderData()
+    const { activities: loadedActivities, total } = Route.useLoaderData()
+    const now = useActivityClock()
+    const activities = loadedActivities.map((activity) => ({ ...activity, status: activityStatusAt(activity, now) }))
+    const router = useRouter()
+    const timeStatusChanged = activities.some((activity, index) => activity.status !== loadedActivities[index].status)
+    useEffect(() => { if (timeStatusChanged) void router.invalidate() }, [timeStatusChanged, router])
     const { type, status, search } = Route.useSearch()
     const navigate = useNavigate()
-    const { loadingKey, run } = useAsyncAction()
 
     const go = (next: { type?: string; status?: string; search?: string; page?: number }) => {
         navigate({ to: '/activities', search: { type, status, search, page: 1, ...next } })
@@ -80,20 +88,7 @@ function ActivitiesPage() {
                         <ActivityCard
                             key={activity.id}
                             activity={activity}
-                            action={
-                                <Button
-                                    className="w-full"
-                                    variant={activity.status === 'completed' || activity.status === 'cancelled' ? 'ghost' : 'primary'}
-                                    loading={loadingKey === activity.id}
-                                    disabled={activity.status === 'completed' || activity.status === 'cancelled'}
-                                    onClick={() => run(activity.id, () => registerActivityFn({ data: { activityId: activity.id } }), {
-                                        success: '报名成功',
-                                        error: '报名失败',
-                                    })}
-                                >
-                                    <Icon name="check" /> {activity.status === 'completed' || activity.status === 'cancelled' ? '已结束' : '报名'}
-                                </Button>
-                            }
+                            action={<ActivityRegistrationButton activity={activity} />}
                         />
                     ))}
                 </div>

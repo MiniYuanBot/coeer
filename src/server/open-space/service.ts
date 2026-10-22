@@ -420,11 +420,13 @@ export class BookingService {
           "PUBLIC_BOOKING_DISABLED",
           "免登录预约尚未配置完成，请联系管理员",
         );
+      // Administrators share a display ID, so their quotas remain account-specific.
+      const quotaByStudent = applicant && account?.role !== 'admin';
       const quota = (await this.db.get<{ active: number; daily: number }>(
-        `SELECT SUM(CASE WHEN status NOT IN ('failed','cancelled') AND date>=? THEN 1 ELSE 0 END) AS active, SUM(CASE WHEN created_at>? THEN 1 ELSE 0 END) AS daily FROM bookings WHERE ${applicant ? "student_id" : "user_id"}=?`,
+        `SELECT SUM(CASE WHEN status NOT IN ('failed','cancelled') AND date>=? THEN 1 ELSE 0 END) AS active, SUM(CASE WHEN created_at>? THEN 1 ELSE 0 END) AS daily FROM bookings WHERE ${quotaByStudent ? "student_id" : "user_id"}=?`,
         today(),
         Date.now() - 86400000,
-        applicant?.studentId ?? userId,
+        quotaByStudent ? applicant!.studentId : userId,
       ))!;
       if (quota.active >= 10 || quota.daily >= 30)
         throw new AppError(
@@ -533,11 +535,6 @@ export class BookingService {
       await this.db.audit(userId, "booking.create", id);
       return this.project(await this.booking(id), true);
     });
-  }
-  /** Persist the intent first; only report success after independently verified upstream results. */
-  async submit(...args: Parameters<BookingService["create"]>): Promise<Booking> {
-    const booking = await this.create(...args);
-    return this.waitForResult(booking.id);
   }
   async waitForResult(id: string): Promise<Booking> {
     const booking = await this.booking(id);
@@ -694,6 +691,8 @@ export class BookingService {
       startedAt,
       this.adapter.mode,
     );
+    let phase = "catalog";
+    let currentDate: string | undefined;
     try {
       const catalog = await this.bounded((signal) =>
         this.adapter.listSpaces({ signal }),
@@ -748,10 +747,12 @@ export class BookingService {
         }
       });
       let snapshotCount = 0;
+      phase = "availability";
       // Cover every bookable date, not just today. Date-first reads share a single
       // official room-list batch; each completed date becomes visible immediately.
       for (let offset = 0; offset <= this.horizon; offset++) {
         const date = addDays(firstDate, offset);
+        currentDate = date;
         const snapshots: Array<{ spaceId: string; slots: Slot[]; includedRefs: string[]; observedAt?: number }> = [];
         for (const space of published) {
           // Yield between bounded reads so an interactive submission does not wait
@@ -789,7 +790,9 @@ export class BookingService {
         code,
         id,
       );
-      await this.db.audit("system", "sync.failed", id, { code });
+      await this.db.audit("system", "sync.failed", id, {
+        code, phase, date: currentDate, durationMs: Date.now() - startedAt,
+      });
       await this.db.alert(code === "AUTH_EXPIRED" ? "AUTH_EXPIRED" : "SYNC_FAILED");
       if (code === "AUTH_EXPIRED" || code === "FORBIDDEN")
         await this.db.set("paused", "true");

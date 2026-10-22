@@ -1,5 +1,6 @@
-/** Local campus-network checks. Credentials and sessions stay outside the repository. */
+/** Local campus-network checks. Credentials and sessions stay in the gitignored .coeer-local directory. */
 import { loadEnvironmentFiles } from '../src/server/config/environment-files'
+import { assertBookingEnvironment } from '../src/server/open-space/environment'
 import { resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
 import { loadOfficialConfig } from '../src/server/open-space/adapters/official/config'
@@ -11,11 +12,12 @@ import { AdapterError } from '../src/server/open-space/adapters/adapter'
 import { addDays, today, validDate } from '../src/shared/open-space/domain'
 
 loadEnvironmentFiles()
+assertBookingEnvironment()
 
-const directory = resolve(process.env.OPENSPACE_CAMPUS_PRIVATE_DIR || '../.coeer-local')
-const configFile = resolve(directory, 'official.json')
-const sessionFile = resolve(directory, 'session.enc.json')
-const sessionKeyFile = resolve(directory, 'session-key.json')
+const directory = resolve(process.env.BOOKING_PRIVATE_DIR || './.coeer-local')
+const configFile = resolve(process.env.CAMPUS_API_CONFIG_FILE || resolve(directory, 'official.json'))
+const sessionFile = resolve(process.env.CAMPUS_COOKIE_FILE || resolve(directory, 'session.enc.json'))
+const sessionKeyFile = resolve(process.env.CAMPUS_COOKIE_KEY_FILE || resolve(directory, 'session-key.json'))
 const command = process.argv[2] || 'probe'
 
 async function main() {
@@ -26,8 +28,8 @@ async function main() {
     if (command === 'login') {
         // The current user explicitly supplied this campus test account. Use one
         // normal login attempt in a new browser context without a proxy.
-        const credentials = loadAccountCredentials(resolve(directory, 'account.enc.json'),
-            resolve(directory, 'account-key.json'), config.account.alias)
+        const credentials = loadAccountCredentials(process.env.CAMPUS_ACCOUNT_FILE || resolve(directory, 'account.enc.json'),
+            process.env.CAMPUS_ACCOUNT_KEY_FILE || resolve(directory, 'account-key.json'), config.account.alias)
         const session = await loginAuthorizedAccount(config, credentials)
         saveSession(sessionFile, sessionKeyFile, session)
         console.log(JSON.stringify({ event: 'campus.login', authenticated: true, proxy: false }))

@@ -1,5 +1,6 @@
 /** Operator-only CLI. Never connects to MCP/CDP or an existing browser profile. */
 import { existsSync } from "node:fs";
+import { assertBookingEnvironment } from './environment.js';
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { randomUUID } from "node:crypto";
@@ -30,20 +31,21 @@ import {
   loginAuthorizedAccount,
   saveAccountCredentials,
 } from "./adapters/official/recovery.js";
-if (process.env.CONFIG_ENV_FILE)
-  process.loadEnvFile(process.env.CONFIG_ENV_FILE);
-const configPath = process.env.OFFICIAL_CONFIG_FILE,
-  sessionPath = process.env.OFFICIAL_SESSION_FILE,
-  keyPath = process.env.OFFICIAL_SESSION_KEY_FILE;
+if (process.env.BOOKING_EXTRA_ENV_FILE)
+  process.loadEnvFile(process.env.BOOKING_EXTRA_ENV_FILE);
+assertBookingEnvironment();
+const configPath = process.env.CAMPUS_API_CONFIG_FILE,
+  sessionPath = process.env.CAMPUS_COOKIE_FILE,
+  keyPath = process.env.CAMPUS_COOKIE_KEY_FILE;
 async function main() {
   if (!configPath || !sessionPath || !keyPath)
     throw new AdapterError("CONFIGURATION");
   const config = loadOfficialConfig(configPath);
-  if (config.allowHTTP && process.env.OFFICIAL_HTTP_NETWORK_APPROVED !== "true")
+  if (config.allowHTTP && process.env.CAMPUS_ALLOW_HTTP !== "true")
     throw new AdapterError("AUTHORIZATION_REQUIRED");
   const command = process.argv[2];
   const proxy = operatorLoginProxy(
-    process.env.OFFICIAL_LOGIN_PROXY_URL,
+    process.env.CAMPUS_LOGIN_PROXY_URL,
     command,
   );
   const enroll = process.argv.includes("--enroll");
@@ -52,9 +54,9 @@ async function main() {
   if (command === "credentials") {
     if (
       !stdin.isTTY ||
-      process.env.OFFICIAL_AUTOMATIC_LOGIN_APPROVED !== "true" ||
-      !process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE ||
-      !process.env.OFFICIAL_ACCOUNT_KEY_FILE
+      process.env.CAMPUS_AUTO_RELOGIN !== "true" ||
+      !process.env.CAMPUS_ACCOUNT_FILE ||
+      !process.env.CAMPUS_ACCOUNT_KEY_FILE
     )
       throw new AdapterError("AUTHORIZATION_REQUIRED");
     let username = await readHidden("自动恢复的官方账号（不回显）：", 128);
@@ -63,10 +65,10 @@ async function main() {
       512,
     );
     try {
-      ensureSessionKey(process.env.OFFICIAL_ACCOUNT_KEY_FILE);
+      ensureSessionKey(process.env.CAMPUS_ACCOUNT_KEY_FILE);
       saveAccountCredentials(
-        process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE,
-        process.env.OFFICIAL_ACCOUNT_KEY_FILE,
+        process.env.CAMPUS_ACCOUNT_FILE,
+        process.env.CAMPUS_ACCOUNT_KEY_FILE,
         { accountAlias: config.account.alias, username, password },
       );
     } finally {
@@ -75,15 +77,15 @@ async function main() {
     }
     console.log('{"event":"connector.credentials_enrolled"}');
   } else if (command === "login") {
-    if (!stdin.isTTY || process.env.OFFICIAL_OPERATOR_LOGIN_APPROVED !== "true")
+    if (!stdin.isTTY || process.env.CAMPUS_ALLOW_INTERACTIVE_LOGIN !== "true")
       throw new AdapterError("AUTHORIZATION_REQUIRED");
     const { chromium } = await import("playwright-core");
     const browser = await chromium.launch({
       headless:
         process.argv.includes("--headless") &&
         process.argv.includes("--account-form"),
-      executablePath: process.env.OFFICIAL_BROWSER_EXECUTABLE_PATH || undefined,
-      channel: process.env.OFFICIAL_BROWSER_EXECUTABLE_PATH
+      executablePath: process.env.CAMPUS_BROWSER_EXECUTABLE || undefined,
+      channel: process.env.CAMPUS_BROWSER_EXECUTABLE
         ? undefined
         : existsSync("/Applications/Google Chrome.app")
           ? "chrome"
@@ -109,8 +111,8 @@ async function main() {
       await page.goto(
         operatorLoginURL(
           config.baseURL,
-          process.env.OFFICIAL_LOGIN_URL,
-          process.env.OFFICIAL_LOGIN_ORIGIN,
+          process.env.CAMPUS_LOGIN_URL,
+          process.env.CAMPUS_LOGIN_ORIGIN,
         ),
         {
           waitUntil: "domcontentloaded",
@@ -191,7 +193,7 @@ async function main() {
             else console.log("MEETING_ENTRY_REQUIRES_OPERATOR");
           } else if (
             action === "REFRESH" &&
-            new URL(page.url()).origin === process.env.OFFICIAL_LOGIN_ORIGIN
+            new URL(page.url()).origin === process.env.CAMPUS_LOGIN_ORIGIN
           ) {
             await page.reload({ waitUntil: "domcontentloaded" });
           } else if (action) throw new AdapterError("CONFIGURATION");
@@ -297,10 +299,10 @@ async function main() {
     }
   } else if (command === "auto-probe") {
     if (
-      process.env.OFFICIAL_AUTOMATIC_LOGIN_APPROVED !== "true" ||
-      !process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE ||
-      !process.env.OFFICIAL_ACCOUNT_KEY_FILE ||
-      !process.env.OFFICIAL_RECOVERY_STATE_FILE
+      process.env.CAMPUS_AUTO_RELOGIN !== "true" ||
+      !process.env.CAMPUS_ACCOUNT_FILE ||
+      !process.env.CAMPUS_ACCOUNT_KEY_FILE ||
+      !process.env.CAMPUS_RELOGIN_STATE_FILE
     )
       throw new AdapterError("AUTHORIZATION_REQUIRED");
     const manager = new ManagedSession(config, sessionPath, keyPath, true),
@@ -318,8 +320,8 @@ async function main() {
       http.verified();
     };
     const credentials = loadAccountCredentials(
-      process.env.OFFICIAL_ACCOUNT_CREDENTIALS_FILE,
-      process.env.OFFICIAL_ACCOUNT_KEY_FILE,
+      process.env.CAMPUS_ACCOUNT_FILE,
+      process.env.CAMPUS_ACCOUNT_KEY_FILE,
       config.account.alias,
     );
     const recovery = new AuthenticationRecovery({
@@ -327,7 +329,7 @@ async function main() {
       manager,
       sessionPath,
       keyPath,
-      statePath: process.env.OFFICIAL_RECOVERY_STATE_FILE,
+      statePath: process.env.CAMPUS_RELOGIN_STATE_FILE,
       probe,
       login: () => loginAuthorizedAccount(config, credentials),
     });

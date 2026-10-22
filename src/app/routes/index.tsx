@@ -1,4 +1,6 @@
 import { BrandMark } from '@/components/coeer/layout/BrandMark'
+import { useActivityClock } from '@/hooks/useActivityClock'
+import { activityStatusAt } from '@shared/activities'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   AppShell,
@@ -69,7 +71,9 @@ type HomeData = {
 }
 
 function Home() {
-  const data = Route.useLoaderData()
+  const loaded = Route.useLoaderData()
+  const now = useActivityClock()
+  const data = { ...loaded, activities: loaded.activities.map((activity) => ({ ...activity, status: activityStatusAt(activity, now) })) }
 
   // 登录用户进入 App 外壳（侧边栏 + 移动端抽屉）
   if (data.user) {

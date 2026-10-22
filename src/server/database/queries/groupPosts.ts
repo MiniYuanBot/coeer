@@ -1,6 +1,6 @@
 // groupPostQueries.ts
 import { db } from '../client'
-import { groupPosts } from '../schemas'
+import { groupPosts, reactions, replies } from '../schemas'
 import { eq, desc, and, count, SQL } from 'drizzle-orm'
 import type { NewGroupPost } from '../schemas'
 import {
@@ -81,14 +81,12 @@ export const groupPostQueries = {
 
     // Delete the post
     async delete(data: GroupPostIdInput): Promise<void> {
-        const [post] = await db
-            .delete(groupPosts)
-            .where(eq(groupPosts.id, data.id))
-            .returning()
-
-        if (!post) {
-            throw new Error('Post not found')
-        }
+        await db.transaction(async (tx) => {
+            await tx.delete(replies).where(and(eq(replies.targetType, 'group_post'), eq(replies.targetId, data.id)))
+            await tx.delete(reactions).where(and(eq(reactions.targetType, 'group_post'), eq(reactions.targetId, data.id)))
+            const [post] = await tx.delete(groupPosts).where(eq(groupPosts.id, data.id)).returning()
+            if (!post) throw new Error('Post not found')
+        })
     },
 
     // Find a post with author by its id
