@@ -3,10 +3,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 import { REDEEM_ITEM_STATUS_ARRAY, REDEEM_ITEM_TYPE_ARRAY, RedeemItemStatus, RedeemItemType } from '@shared/constants'
-import { Button, Card, EmptyState, SectionHeader, redeemItemStatusLabels, redeemItemTypeLabels } from '@/components/coeer'
+import { Button, Card, EmptyState, Pagination, SectionHeader, redeemItemStatusLabels, redeemItemTypeLabels } from '@/components/coeer'
 import { adminCreateRedeemItemFn, adminDeleteRedeemItemFn, adminListRedeemOrdersFn, adminUpdateRedeemItemFn, listRedeemItemsFn } from '~/functions'
 
-const searchSchema = z.object({ page: z.number().default(1) })
+const searchSchema = z.object({ page: z.number().int().min(1).default(1) })
 
 export const Route = createFileRoute('/_authed/admin/redeems')({
     validateSearch: searchSchema,
@@ -14,17 +14,17 @@ export const Route = createFileRoute('/_authed/admin/redeems')({
     loader: async ({ deps: { search } }) => {
         const pageSize = 20
         const result = await listRedeemItemsFn({ data: { limit: pageSize, offset: (search.page - 1) * pageSize } })
-        return { items: result.data?.items ?? [] }
+        return { items: result.data?.items ?? [], total: result.data?.total ?? 0 }
     },
     component: AdminRedeemsPage,
 })
 
 function AdminRedeemsPage() {
-    const { items } = Route.useLoaderData()
+    const { items, total } = Route.useLoaderData()
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
-    const [orders, setOrders] = useState<any[] | null>(null)
+    const [orders, setOrders] = useState<{ itemId: string; page: number; total: number; items: any[] } | null>(null)
     const refresh = () => navigate({ to: '/admin/redeems', search: { page } })
 
     const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,9 +51,9 @@ function AdminRedeemsPage() {
         refresh()
     }
 
-    const showOrders = async (itemId: string) => {
-        const result = await adminListRedeemOrdersFn({ data: { itemId, limit: 100, offset: 0 } })
-        setOrders(result.data?.items ?? [])
+    const showOrders = async (itemId: string, page = 1) => {
+        const result = await adminListRedeemOrdersFn({ data: { itemId, limit: 10, offset: (page - 1) * 10 } })
+        setOrders({ itemId, page, total: result.data?.total ?? 0, items: result.data?.items ?? [] })
     }
 
     return (
@@ -73,8 +73,9 @@ function AdminRedeemsPage() {
                     <div className="flex gap-2"><Button type="submit">{editing ? '保存物品' : '添加物品'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}</div>
                 </form>
             </Card>
-            {orders ? <Card className="rounded-lg p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">兑换详情</h2><Button variant="outline" onClick={() => setOrders(null)}>关闭</Button></div>{orders.length ? orders.map((order) => <p key={order.id} className="py-1 text-sm">{order.user?.name || '未知用户'} · {order.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无兑换</p>}</Card> : null}
+            {orders ? <Card className="rounded-lg p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">兑换详情</h2><Button variant="outline" onClick={() => setOrders(null)}>关闭</Button></div>{orders.items.length ? orders.items.map((order) => <p key={order.id} className="py-1 text-sm">{order.user?.name || '未知用户'} · {order.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无兑换</p>}<Pagination total={orders.total} page={orders.page} onChange={(page) => void showOrders(orders.itemId, page)} label="兑换订单分页" /></Card> : null}
             {items.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{items.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{redeemItemTypeLabels[item.type]} · {redeemItemStatusLabels[item.status]}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => showOrders(item.id)}>兑换详情</Button><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无商城物品" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/redeems', search: { page } })} />
         </div>
     )
 }

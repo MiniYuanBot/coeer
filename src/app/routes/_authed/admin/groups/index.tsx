@@ -3,11 +3,12 @@ import z from 'zod'
 import { useState } from 'react'
 import { GROUP_STATUS_ARRAY, GroupStatus } from '@shared/constants'
 import { deleteGroupFn, listAllGroupsFn, updateGroupStatusFn } from '~/functions'
-import { Badge, Button, Card, EmptyState, Modal, SearchInput, SectionHeader, groupStatusLabels } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, FilterPanel, Modal, Pagination, SectionHeader, groupStatusLabels } from '@/components/coeer'
 
 const searchSchema = z.object({
     status: z.enum(['all', 'pending']).default('all'),
-    page: z.number().default(1),
+    search: z.string().optional(),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/admin/groups/')({
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/_authed/admin/groups/')({
         const result = await listAllGroupsFn({
             data: {
                 status: search.status === 'pending' ? 'pending' : undefined,
+                search: search.search,
                 limit: pageSize,
                 offset: (search.page - 1) * pageSize,
             },
@@ -29,18 +31,11 @@ export const Route = createFileRoute('/_authed/admin/groups/')({
 
 function AdminGroupsPage() {
     const { groups, total, pageSize } = Route.useLoaderData()
-    const { status, page } = Route.useSearch()
+    const { status, search, page } = Route.useSearch()
     const navigate = useNavigate()
-    const [search, setSearch] = useState('')
     const [reviewing, setReviewing] = useState<any | null>(null)
-    const totalPages = Math.ceil(total / pageSize)
-    const visibleGroups = groups.filter((group) => {
-        const keyword = search.trim().toLowerCase()
-        if (!keyword) return true
-        return group.name.toLowerCase().includes(keyword) || group.slug.toLowerCase().includes(keyword) || group.description?.toLowerCase().includes(keyword)
-    })
 
-    const refresh = () => navigate({ to: '/admin/groups', search: { status, page } })
+    const refresh = () => navigate({ to: '/admin/groups', search: { status, search, page } })
 
     const submitReview = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -66,17 +61,15 @@ function AdminGroupsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="群组审核" description="查看全部群组或仅查看待审核群组，并设置审核状态与备注。" />
-            <Card className="grid gap-3 p-4 md:grid-cols-[1fr_auto_auto] md:items-center">
-                <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索群组名称、slug 或描述" />
-                <select value={status} onChange={(e) => navigate({ to: '/admin/groups', search: { status: e.target.value as 'all' | 'pending', page: 1 } })} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
-                    <option value="all">全部群组</option>
-                    <option value="pending">待审核群组</option>
-                </select>
-                <Badge tone="primary">共 {total} 个</Badge>
-            </Card>
-            {visibleGroups.length ? (
+            <FilterPanel searchValue={search} searchPlaceholder="搜索群组名称、slug 或描述"
+                onSearch={(search) => void navigate({ to: '/admin/groups', search: { status, search: search || undefined, page: 1 } })}
+                groups={[{ title: '状态', items: [
+                    { key: 'all', label: '全部群组', active: status === 'all', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'all', search, page: 1 } }) },
+                    { key: 'pending', label: '待审核群组', active: status === 'pending', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'pending', search, page: 1 } }) },
+                ] }]} />
+            {groups.length ? (
                 <Card className="divide-y divide-[hsl(var(--border))]">
-                    {visibleGroups.map((group) => (
+                    {groups.map((group) => (
                         <div key={group.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -95,7 +88,7 @@ function AdminGroupsPage() {
                     ))}
                 </Card>
             ) : <EmptyState title="没有匹配的群组" />}
-            {totalPages > 1 ? <div className="flex items-center justify-center gap-2"><Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/admin/groups', search: { status, page: page - 1 } })}>上一页</Button><span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span><Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/admin/groups', search: { status, page: page + 1 } })}>下一页</Button></div> : null}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/admin/groups', search: { status, search, page } })} />
             <Modal open={!!reviewing} title="审核群组" onOpenChange={(open) => !open && setReviewing(null)}>
                 <form onSubmit={submitReview} className="space-y-4">
                     <label className="block text-sm font-medium">审核状态

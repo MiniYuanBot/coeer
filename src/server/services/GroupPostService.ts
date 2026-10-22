@@ -20,6 +20,9 @@ import {
     GROUP_STATUS,
 } from '@shared/constants'
 import { AuthService } from './AuthService'
+import { db } from '../database/client'
+import { EngagementService } from './EngagementService'
+import { pointQueries } from '../database/queries/points'
 import { groupPostQueries } from '../database/queries/groupPosts'
 import { groupMemberQueries } from '../database/queries'
 import { groupQueries } from '../database/queries/groups'
@@ -92,15 +95,19 @@ export class GroupPostService {
                 }
             }
 
-            await groupPostQueries.create({
-                groupId: data.groupId,
-                authorId: user.id,
-                title: data.title,
-                content: data.content,
-                type: data.type,
-                isPinned: false,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+            await db.transaction(async (tx) => {
+                await pointQueries.lockUser(user.id, tx)
+                const post = await groupPostQueries.create({
+                    groupId: data.groupId,
+                    authorId: user.id,
+                    title: data.title,
+                    content: data.content,
+                    type: data.type,
+                    isPinned: false,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                }, tx)
+                await EngagementService.recordInTx(user.id, 'post', post.id, tx)
             })
 
             return {

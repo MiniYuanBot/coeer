@@ -6,6 +6,8 @@ import { activities, activityParticipants } from '../database/schemas'
 import { and, count, eq, ne } from 'drizzle-orm'
 import { activityStatusAt } from '@shared/activities'
 import { NotificationService } from './NotificationService'
+import { EngagementService } from './EngagementService'
+import { pointQueries } from '../database/queries/points'
 import { studentIdForUser } from '@shared/contracts/auth'
 import type { Activity } from '../database/schemas'
 import type {
@@ -186,7 +188,11 @@ export class ActivityService {
             return { success: false, state: ACTIVITY.FORBIDDEN }
         }
 
-        await activityQueries.updateParticipantStatus(data, 'attended')
+        await db.transaction(async (tx) => {
+            await pointQueries.lockUser(participant.userId, tx)
+            await activityQueries.updateParticipantStatus(data, 'attended', tx)
+            await EngagementService.recordInTx(participant.userId, 'attendance', participant.activityId, tx)
+        })
         return { success: true, state: ACTIVITY.CHECK_IN_SUCCESS }
     }
 
@@ -203,10 +209,10 @@ export class ActivityService {
             return { success: false, state: ACTIVITY.FORBIDDEN }
         }
 
-        const items = await activityQueries.listParticipants(data)
+        const [items, total] = await Promise.all([activityQueries.listParticipants(data), activityQueries.countRoster(data)])
         return { success: true, data: { items: items.map(({ user: participantUser, ...participant }) => ({
             ...participant,
             user: participantUser ? { id: participantUser.id, name: participantUser.name, studentId: studentIdForUser(participantUser) } : null,
-        })), limit: data.limit, offset: data.offset }, state: ACTIVITY.GET_SUCCESS }
+        })), total, limit: data.limit, offset: data.offset }, state: ACTIVITY.GET_SUCCESS }
     }
 }

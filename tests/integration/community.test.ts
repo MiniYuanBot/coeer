@@ -207,6 +207,34 @@ describe('COEER post interactions and author permissions', () => {
         expect((await ReplyService.listChildren({ parentId: grandchild.id, limit: 20, offset: 0 })).success).toBe(false)
         expect((await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 20, offset: 0 })).success).toBe(false)
     })
+    it('orders root and sibling replies by publication time before pagination, preserving order after edits', async () => {
+        const { group, post } = await postFixture()
+        await db.insert(groupMembers).values({ groupId: group.id, userId: ids.student, role: 'member', status: 'approved' })
+        const target = { targetType: 'group_post' as const, targetId: post.id }
+        const [old, newest, middle] = await db.insert(replies).values([
+            { ...target, userId: ids.student, content: '较早回复', createdAt: new Date('2026-10-20T08:00:00Z') },
+            { ...target, userId: ids.student, content: '最新回复', createdAt: new Date('2026-10-22T08:00:00Z') },
+            { ...target, userId: ids.student, content: '中间回复', createdAt: new Date('2026-10-21T08:00:00Z') },
+        ]).returning()
+        const children = await db.insert(replies).values([
+            { ...target, userId: ids.student, parentId: old.id, content: '旧子回复', createdAt: new Date('2026-10-20T09:00:00Z') },
+            { ...target, userId: ids.student, parentId: old.id, content: '新子回复', createdAt: new Date('2026-10-22T09:00:00Z') },
+            { ...target, userId: ids.student, parentId: old.id, content: '中间子回复', createdAt: new Date('2026-10-21T09:00:00Z') },
+        ]).returning()
+        signIn()
+        const rootIds: string[] = []
+        const childIds: string[] = []
+        for (let offset = 0; offset < 3; offset++) {
+            rootIds.push((await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 1, offset })).data!.items![0].id)
+            childIds.push((await ReplyService.listChildren({ parentId: old.id, limit: 1, offset })).data!.items![0].id)
+        }
+        expect(rootIds).toEqual([newest.id, middle.id, old.id])
+        expect(childIds).toEqual([children[1].id, children[2].id, children[0].id])
+        await ReplyService.update({ id: old.id, content: '旧回复已编辑' })
+        expect((await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 10, offset: 0 })).data?.items?.map((item) => item.id))
+            .toEqual(rootIds)
+    })
+
     it('filters reply author histories before pagination and revokes access after leaving a group', async () => {
         const { group, post } = await postFixture(false)
         await db.insert(groupMembers).values({ groupId: group.id, userId: ids.student, role: 'member', status: 'approved' })
@@ -263,6 +291,57 @@ describe('COEER group administrator capabilities', () => {
         ]).returning()
         return { group, owner, member, applicant }
     }
+    it('filters applicants by membership status without filtering out the approved group', async () => {
+        const { group, applicant } = await fixture()
+        signIn()
+        const pending = await GroupService.getMembers({ groupId: group.id, status: 'pending', limit: 1, offset: 0 })
+        expect(pending.success).toBe(true)
+        expect(pending.data?.total).toBe(1)
+        expect(pending.data?.items).toMatchObject([{ id: applicant.id, status: 'pending', user: { id: ids.admin } }])
+        const next = await GroupService.getMembers({ groupId: group.id, status: 'pending', limit: 1, offset: 1 })
+        expect(next.success).toBe(true)
+        expect(next.data).toMatchObject({ total: 1, items: [] })
+        expect((await GroupService.getMembers({ groupId: group.id, status: 'approved', limit: 10, offset: 0 })).data?.total).toBe(2)
+        expect((await GroupService.getMembers({ groupId: group.id, status: 'rejected', limit: 10, offset: 0 })).data).toMatchObject({ total: 0, items: [] })
+        // Non-admin members still see only the approved roster, even if they request applicants.
+        signIn(ids.other)
+        const restricted = await GroupService.getMembers({ groupId: group.id, status: 'pending', limit: 10, offset: 0 })
+        expect(restricted.success).toBe(true)
+        expect(restricted.data?.items).toHaveLength(2)
+        expect(restricted.data?.items?.every((item) => item.status === 'approved')).toBe(true)
+    })
+
+    it('returns real approved member counts on every group list and refreshes after approval and departure', async () => {
+        const { group, applicant } = await fixture()
+        const [empty, applying] = await db.insert(groups).values([
+            { name: '空群组', slug: 'empty-group', category: GROUP_CATEGORY_ARRAY[0], status: 'approved', isPublic: true },
+            { name: '申请中的群组', slug: 'applying-group', category: GROUP_CATEGORY_ARRAY[0], status: 'approved', isPublic: true },
+        ]).returning()
+        await db.insert(groupMembers).values([
+            { groupId: applying.id, userId: ids.student, role: 'member', status: 'pending' },
+            { groupId: applying.id, userId: ids.other, role: 'admin', status: 'approved' },
+        ])
+        await db.insert(groupPosts).values({ groupId: group.id, authorId: ids.student, title: '统计帖子', content: '正文' })
+        signIn()
+        const page = { limit: 10, offset: 0 }
+        const publicGroups = (await GroupService.listAllGroups({ ...page, status: 'approved' })).data!.items!
+        expect(publicGroups.find((item) => item.id === group.id)).toMatchObject({ memberCount: 2, postCount: 1 })
+        expect(publicGroups.find((item) => item.id === empty.id)).toMatchObject({ memberCount: 0, postCount: 0 })
+        for (const filter of [{ status: 'approved' as const }, { status: 'approved' as const, role: 'admin' as const }]) {
+            const memberships = (await GroupService.listMyGroups({ ...page, ...filter })).data!.items!
+            expect(memberships.find((item) => item.groupId === group.id)?.group).toMatchObject({ memberCount: 2, postCount: 1 })
+        }
+        const pending = (await GroupService.listMyGroups({ ...page, status: 'pending' })).data!.items!
+        expect(pending[0].group).toMatchObject({ id: applying.id, memberCount: 1 })
+        expect((await GroupService.getBySlug({ slug: group.slug })).data?.memberCount).toBe(2)
+        expect((await GroupService.updateMember({ memberId: applicant.id, status: 'approved' })).success).toBe(true)
+        expect((await GroupService.listMyGroups({ ...page, status: 'approved' })).data?.items?.find((item) => item.groupId === group.id)?.group.memberCount).toBe(3)
+        signIn(ids.other)
+        expect((await GroupService.leaveGroup({ groupId: group.id })).success).toBe(true)
+        expect((await GroupService.getBySlug({ slug: group.slug })).data?.memberCount).toBe(2)
+        expect((await GroupService.listAllGroups(page)).data?.items?.find((item) => item.id === group.id)?.memberCount).toBe(2)
+    })
+
     it('allows group admins to review members, set roles and moderate posts without platform review powers', async () => {
         const { group, member, applicant } = await fixture()
         signIn(ids.other)

@@ -7,11 +7,11 @@ import { z } from 'zod'
 import { deleteGroupPostFn, listPostsByGroupFn, togglePinPostFn } from '~/functions'
 import { type GroupPostWithAuthor, GroupPostFilterSchema } from '@shared/contracts'
 import { GroupPostType } from '@shared/constants'
-import { Badge, Button, Card, EmptyState, FilterPanel, Icon, Modal, SectionHeader, formatDate } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, FilterPanel, Icon, Modal, Pagination, SectionHeader, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/')({
@@ -53,7 +53,6 @@ function PostsListPage() {
     const [deletingPost, setDeletingPost] = useState<GroupPostWithAuthor | null>(null)
     const [actionPending, setActionPending] = useState(false)
     const [actionError, setActionError] = useState('')
-    const totalPages = Math.ceil(total / pageSize)
 
     const go = (next: { type?: GroupPostType; page?: number }) => {
         navigate({ to: '/groups/$slug/posts', params: { slug }, search: { type, page: 1, ...next } })
@@ -91,7 +90,7 @@ function PostsListPage() {
                 groups={[
                     {
                         items: [
-                            { key: 'all', label: `全部 ${total}`, active: !type, onClick: () => go({ type: undefined }) },
+                            { key: 'all', label: '全部', active: !type, onClick: () => go({ type: undefined }) },
                             { key: 'discussion', label: '讨论', active: type === 'discussion', onClick: () => go({ type: 'discussion' }) },
                             { key: 'announcement', label: '公告', active: type === 'announcement', onClick: () => go({ type: 'announcement' }) },
                         ],
@@ -144,13 +143,7 @@ function PostsListPage() {
                 />
             )}
 
-            {totalPages > 1 ? (
-                <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" disabled={page <= 1} onClick={() => go({ page: page - 1 })}>上一页</Button>
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span>
-                    <Button variant="outline" disabled={page >= totalPages} onClick={() => go({ page: page + 1 })}>下一页</Button>
-                </div>
-            ) : null}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => go({ page })} />
 
             <Modal open={Boolean(deletingPost)} title="删除帖子" onOpenChange={(open) => !open && setDeletingPost(null)}>
                 <p className="text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">

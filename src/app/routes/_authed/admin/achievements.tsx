@@ -3,10 +3,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 import { ACHIEVEMENT_CONDITION_TYPE_ARRAY, AchievementConditionType } from '@shared/constants'
-import { Button, Card, EmptyState, SectionHeader, achievementConditionTypeLabels } from '@/components/coeer'
+import { Button, Card, EmptyState, Pagination, SectionHeader, achievementConditionTypeLabels } from '@/components/coeer'
 import { adminCreateAchievementFn, adminDeleteAchievementFn, adminUpdateAchievementFn, getAllAchievementsFn } from '~/functions'
 
-const searchSchema = z.object({ page: z.number().default(1) })
+const searchSchema = z.object({ page: z.number().int().min(1).default(1) })
 
 export const Route = createFileRoute('/_authed/admin/achievements')({
     validateSearch: searchSchema,
@@ -14,13 +14,13 @@ export const Route = createFileRoute('/_authed/admin/achievements')({
     loader: async ({ deps: { search } }) => {
         const pageSize = 20
         const result = await getAllAchievementsFn({ data: { limit: pageSize, offset: (search.page - 1) * pageSize } })
-        return { achievements: result.data?.items ?? [] }
+        return { achievements: result.data?.items ?? [], total: result.data?.total ?? 0 }
     },
     component: AdminAchievementsPage,
 })
 
 function AdminAchievementsPage() {
-    const { achievements } = Route.useLoaderData()
+    const { achievements, total } = Route.useLoaderData()
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
@@ -66,6 +66,7 @@ function AdminAchievementsPage() {
                 </form>
             </Card>
             {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[item.conditionType]} · {item.conditionValue}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/achievements', search: { page } })} />
         </div>
     )
 }

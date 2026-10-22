@@ -11,6 +11,7 @@ import { DefaultCatchBoundary, NotFound } from '@/components/basic'
 import { PageStatus, ToastProvider } from '@/components/coeer'
 import appCss from '@/styles/app.css?url'
 import { fetchUserFn } from '~/functions'
+import { recordDailyVisitFn } from '~/functions/points'
 import { seo } from '~/utils/seo.js'
 
 /** 在首帧前设置明暗主题，避免深色模式用户看到闪烁的浅色页面。 */
@@ -27,6 +28,7 @@ export const Route = createRootRoute({
   // `_authed` 等布局路由负责（前端守卫只做 UX，服务端 Service 才是边界）。
   beforeLoad: async () => {
     const user = await fetchUserFn()
+    if (user) await recordDailyVisitFn().catch((error) => console.error('Daily activity reward failed:', error))
     return { user }
   },
   head: () => ({

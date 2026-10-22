@@ -4,8 +4,9 @@ import {
     GroupMemberCode,
     GROUP_MEMBER_ROLE_ARRAY,
     GROUP_MEMBER_STATUS_ARRAY,
+    GROUP_CATEGORY_ARRAY,
 } from '../constants'
-import { GroupWithCreator } from './groups'
+import { GroupWithCreator, GroupWithStats } from './groups'
 import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
 
 // ===== Zod Schemas ======
@@ -37,6 +38,8 @@ export const ListMembersByGroupSchema = z.object({
 
 export const CountMembersByUserSchema = z.object({
     userId: z.string(),
+    category: z.enum(GROUP_CATEGORY_ARRAY).optional(),
+    search: z.string().optional(),
     ...GroupMemberFilterSchema.shape
 })
 
@@ -65,6 +68,8 @@ export type GroupMemberWithUser = GroupMember & {
 export type GroupMemberWithGroup = GroupMember & {
     group: GroupWithCreator
 }
+
+export type GroupMemberWithGroupStats = GroupMember & { group: GroupWithStats }
 
 // Response types
 export type GroupMemberResponse<T> = ActionResponse<T, GroupMemberCode>

@@ -1,5 +1,5 @@
-import { MediaPreview, StatsBar } from '@/components/coeer'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { MediaPreview, Pagination } from '@/components/coeer'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
     AchievementCard,
@@ -14,7 +14,7 @@ import {
     cardRarityLabels,
     useAsyncAction,
 } from '@/components/coeer'
-import { drawCardsFn, getAllAchievementsFn, getCardPoolFn, getMyAchievementsFn, getMyCardsFn } from '~/functions'
+import { drawCardsFn, getAllAchievementsFn, getMyCardsFn } from '~/functions'
 import { ACHIEVEMENT_CONDITION_TYPE_ARRAY, AchievementConditionType, CARD_RARITY_ARRAY, CardRarity } from '@shared/constants'
 
 const searchSchema = z.object({
@@ -22,55 +22,44 @@ const searchSchema = z.object({
     conditionType: z.string().optional(),
     rarity: z.string().optional(),
     search: z.string().optional(),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/achievements/')({
     validateSearch: searchSchema,
     loaderDeps: ({ search }) => ({ search }),
     loader: async ({ deps: { search } }) => {
-        const [allAchievements, myAchievements, cards, myCards] = await Promise.allSettled([
-            getAllAchievementsFn({
-                data: {
-                    conditionType: search.conditionType as any,
-                    search: search.search,
-                    limit: 100,
-                    offset: 0,
-                },
-            }),
-            getMyAchievementsFn({ data: { limit: 100, offset: 0 } }),
-            getCardPoolFn({ data: { rarity: search.rarity as any, limit: 100, offset: 0 } }),
-            getMyCardsFn({ data: { limit: 100, offset: 0 } }),
-        ])
-
+        const pageSize = 12
+        const pagination = { limit: pageSize, offset: (search.page - 1) * pageSize, search: search.search }
+        const allAchievements = search.view === 'achievements'
+            ? await getAllAchievementsFn({ data: { ...pagination, conditionType: search.conditionType as AchievementConditionType } })
+            : undefined
+        const myCards = search.view === 'cards'
+            ? await getMyCardsFn({ data: { ...pagination, rarity: search.rarity as CardRarity } })
+            : undefined
         return {
-            achievements: allAchievements.status === 'fulfilled' ? allAchievements.value.data?.items ?? [] : [],
-            unlocked: myAchievements.status === 'fulfilled' ? myAchievements.value.data?.items ?? [] : [],
-            cards: cards.status === 'fulfilled' ? cards.value.data?.items ?? [] : [],
-            myCards: myCards.status === 'fulfilled' ? myCards.value.data?.items ?? [] : [],
+            achievements: allAchievements?.data?.items ?? [],
+            myCards: myCards?.data?.items ?? [],
+            total: (search.view === 'cards' ? myCards : allAchievements)?.data?.total ?? 0,
+            pageSize,
         }
     },
     component: AchievementsPage,
 })
 
 function AchievementsPage() {
-    const { achievements, unlocked, cards, myCards } = Route.useLoaderData()
-    const { view, conditionType, rarity, search } = Route.useSearch()
+    const { achievements, myCards, total, pageSize } = Route.useLoaderData()
+    const { view, conditionType, rarity, search, page } = Route.useSearch()
     const navigate = useNavigate()
     const { loadingKey, run } = useAsyncAction()
-    const unlockedIds = new Set(unlocked.map((item: any) => item.achievementId))
-    const keyword = search?.trim().toLowerCase()
-    const visibleMyCards = myCards.filter((item: any) => {
-        const card = item.card
-        const matchesRarity = !rarity || card.rarity === rarity
-        const matchesSearch = !keyword ||
-            card.name.toLowerCase().includes(keyword) ||
-            card.description?.toLowerCase().includes(keyword) ||
-            card.series?.toLowerCase().includes(keyword)
-        return matchesRarity && matchesSearch
-    })
-
-    const go = (next: { view?: 'cards' | 'achievements'; conditionType?: string; rarity?: string; search?: string }) => {
-        navigate({ to: '/achievements', search: { view, conditionType, rarity, search, ...next } })
+    const router = useRouter()
+    const draw = async () => {
+        const result = await drawCardsFn({ data: { count: 1 } })
+        await router.invalidate()
+        return result
+    }
+    const go = (next: { view?: 'cards' | 'achievements'; conditionType?: string; rarity?: string; search?: string; page?: number }) => {
+        navigate({ to: '/achievements', search: { view, conditionType, rarity, search, page: 1, ...next } })
     }
 
     return (
@@ -81,7 +70,7 @@ function AchievementsPage() {
                 action={
                     <Button
                         loading={loadingKey === 'draw'}
-                        onClick={() => run('draw', () => drawCardsFn({ data: { count: 1 } }), {
+                        onClick={() => run('draw', draw, {
                             success: '抽卡完成',
                             error: '抽卡失败',
                         })}
@@ -90,12 +79,6 @@ function AchievementsPage() {
                     </Button>
                 }
             />
-
-            <StatsBar label="我的成长概览" items={[
-                { label: '我的卡片', value: myCards.length, icon: 'card' },
-                { label: '已解锁成就', value: unlocked.length, icon: 'award' },
-                { label: '卡池种类', value: cards.length, icon: 'spark' },
-            ]} />
 
             <FilterPanel
                 searchValue={search}
@@ -139,9 +122,9 @@ function AchievementsPage() {
             {view === 'cards' ? (
                 <section className="space-y-3">
                     <h2 className="text-[15px] font-medium">我的卡片</h2>
-                    {visibleMyCards.length ? (
+                    {myCards.length ? (
                         <div className="coeer-grid">
-                            {visibleMyCards.map((item: any) => (
+                            {myCards.map((item: any) => (
                                 <Card key={item.id} className="overflow-hidden rounded-lg">
                                     <MediaPreview src={item.card.imageUrl} alt={item.card.name} icon="card" />
                                     <div className="p-4">
@@ -153,7 +136,7 @@ function AchievementsPage() {
                             ))}
                         </div>
                     ) : (
-                        <EmptyState title="没有匹配的卡片" description="换个关键词或稀有度试试，也可以抽一张卡。" action={<Button onClick={() => run('draw', () => drawCardsFn({ data: { count: 1 } }), { success: '抽卡完成', error: '抽卡失败' })}>抽一张卡</Button>} />
+                        <EmptyState title="没有匹配的卡片" description="换个关键词或稀有度试试，也可以抽一张卡。" action={<Button loading={loadingKey === 'draw'} onClick={() => run('draw', draw, { success: '抽卡完成', error: '抽卡失败' })}>抽一张卡</Button>} />
                     )}
                 </section>
             ) : (
@@ -162,7 +145,7 @@ function AchievementsPage() {
                     {achievements.length ? (
                         <div className="grid gap-4 md:grid-cols-2">
                             {achievements.map((achievement: any) => (
-                                <AchievementCard key={achievement.id} achievement={achievement} unlocked={unlockedIds.has(achievement.id)} />
+                                <AchievementCard key={achievement.id} achievement={achievement} unlocked={achievement.unlocked} />
                             ))}
                         </div>
                     ) : (
@@ -170,6 +153,7 @@ function AchievementsPage() {
                     )}
                 </section>
             )}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => go({ page })} />
         </div>
     )
 }

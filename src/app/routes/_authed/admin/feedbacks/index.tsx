@@ -6,12 +6,12 @@ import z from 'zod'
 import { deleteFeedbackFn, getFeedbacksFn, updateFeedbackStatusFn } from '~/functions'
 import { FeedbackStatus } from '@shared/constants'
 import { FeedbackFilterSchema } from '@shared/contracts'
-import { Badge, Button, Card, EmptyState, Icon, Modal, SearchInput, SectionHeader, formatDate } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, Icon, Modal, Pagination, SearchInput, SectionHeader, formatDate } from '@/components/coeer'
 import { FeedbackStatusBadge, feedbackTargetLabels } from '../../feedbacks/-feedback-ui'
 
 const searchSchema = z.object({
     ...FeedbackFilterSchema.shape,
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/admin/feedbacks/')({
@@ -43,7 +43,6 @@ function AdminFeedbacksPage() {
     const isPending = useRouterState({ select: state => state.status === 'pending' })
     const [reviewingId, setReviewingId] = useState<string | null>(null)
     const [workingId, setWorkingId] = useState<string | null>(null)
-    const totalPages = Math.ceil(total / pageSize)
     const isLoading = hydrated && isPending
 
     const refresh = () => navigate({ to: '/admin/feedbacks', search: { status, search, page } })
@@ -107,7 +106,6 @@ function AdminFeedbacksPage() {
             </Card>
 
             <div className="flex flex-wrap items-center gap-2">
-                <Badge tone="primary">共 {total} 条</Badge>
                 {isLoading ? <Badge>刷新中</Badge> : null}
             </div>
 
@@ -164,13 +162,7 @@ function AdminFeedbacksPage() {
                 )}
             </Card>
 
-            {totalPages > 1 ? (
-                <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/admin/feedbacks', search: { status, search, page: page - 1 } })}>上一页</Button>
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span>
-                    <Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/admin/feedbacks', search: { status, search, page: page + 1 } })}>下一页</Button>
-                </div>
-            ) : null}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/admin/feedbacks', search: { status, search, page } })} />
 
             <ReviewModal
                 open={!!reviewingId}

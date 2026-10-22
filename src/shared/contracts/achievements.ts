@@ -47,5 +47,7 @@ export type AchievementProgress = {
     percentage: number
 }
 
+export type AchievementWithProgress = Achievement & { unlocked: boolean; progress?: AchievementProgress }
+
 export type AchievementResponse<T> = ActionResponse<T, AchievementCode>
 export type PaginatedAchievementResponse<T> = PaginatedActionResponse<T, AchievementCode>

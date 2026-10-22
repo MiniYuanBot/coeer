@@ -143,7 +143,7 @@ export const feedbackQueries = {
                     columns: { id: true, name: true, email: true },
                 },
             },
-            orderBy: [desc(feedbacks.createdAt)],
+            orderBy: [desc(feedbacks.createdAt), desc(feedbacks.id)],
             limit,
             offset,
         })
@@ -160,7 +160,7 @@ export const feedbackQueries = {
                     columns: { id: true, name: true, email: true },
                 },
             },
-            orderBy: [desc(feedbacks.createdAt)],
+            orderBy: [desc(feedbacks.createdAt), desc(feedbacks.id)],
             limit,
             offset,
         })
@@ -177,7 +177,7 @@ export const feedbackQueries = {
                     columns: { id: true, name: true, email: true },
                 },
             },
-            orderBy: [desc(feedbacks.createdAt)],
+            orderBy: [desc(feedbacks.createdAt), desc(feedbacks.id)],
             limit,
             offset,
         })

@@ -38,6 +38,7 @@ export const FeedbackFilterSchema = z.object({
 
 export const CountFeedbacksSchema = z.object({
     authorId: z.uuid().optional(),
+    isPublic: z.boolean().optional(),
     ...FeedbackFilterSchema.shape,
 })
 

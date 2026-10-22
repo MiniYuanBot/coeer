@@ -4,10 +4,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 import { BULLETIN_TYPE_ARRAY, BulletinType } from '@shared/constants'
-import { Button, Card, EmptyState, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
+import { Button, Card, EmptyState, Pagination, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
 import { createBulletinFn, deleteBulletinFn, getBulletinFeedFn, updateBulletinFn } from '~/functions'
 
-const searchSchema = z.object({ page: z.number().default(1) })
+const searchSchema = z.object({ page: z.number().int().min(1).default(1) })
 
 export const Route = createFileRoute('/_authed/admin/bulletins')({
     validateSearch: searchSchema,
@@ -21,7 +21,7 @@ export const Route = createFileRoute('/_authed/admin/bulletins')({
 })
 
 function AdminBulletinsPage() {
-    const { bulletins } = Route.useLoaderData()
+    const { bulletins, total = 0 } = Route.useLoaderData()
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
@@ -93,6 +93,7 @@ function AdminBulletinsPage() {
                     ))}
                 </Card>
             ) : <EmptyState title="暂无公告" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/bulletins', search: { page } })} />
         </div>
     )
 }

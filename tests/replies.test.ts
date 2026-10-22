@@ -121,6 +121,23 @@ describe.skipIf(!executablePath)('reply previews and nested discussions in Chrom
         expect(await page.locator('#reply-children-many article').count()).toBe(25)
     })
 
+    it('displays newer roots and siblings above older replies, including newly submitted replies', async () => {
+        // Deliberately supply unsorted rows to verify the rendered order independently of the API fixture.
+        await page.getByRole('button', { name: '模拟乱序回复' }).click()
+        await page.waitForFunction(() => document.querySelector('ol[aria-label="群内回复"] > li > article')?.id === 'reply-many')
+        await expand('many', 'sibling-1')
+        const children = page.locator('#reply-children-many > ol > li > article')
+        expect((await children.evaluateAll((items) => items.map((item) => item.id))).slice(0, 3))
+            .toEqual(['reply-sibling-1', 'reply-sibling-2', 'reply-sibling-0'])
+        await page.getByRole('button', { name: '加载更多子回复' }).click()
+        await page.waitForFunction(() => document.querySelectorAll('#reply-children-many > ol > li > article').length === 25)
+        const dates = await children.locator('time').evaluateAll((items) => items.map((item) => new Date(item.getAttribute('datetime')!).getTime()))
+        expect(dates.every((date, index) => index === 0 || dates[index - 1] >= date)).toBe(true)
+        await page.locator('#group-reply-content').fill('按发布时间置顶的新回复')
+        await page.getByRole('button', { name: '发送回复' }).click()
+        await page.waitForFunction(() => document.querySelector('ol[aria-label="群内回复"] > li > article')?.id === 'reply-new-1')
+    })
+
     it('shows deep hierarchy on desktop and mobile without shrinking the reply body indefinitely', async () => {
         await expand('root', 'level-1')
         for (let depth = 1; depth < 7; depth++) await expand(`level-${depth}`, `level-${depth + 1}`)

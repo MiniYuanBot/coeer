@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GroupReplies } from '../../src/app/components/coeer/cards/GroupReplies'
-import { initialize, roots, state } from './reply-actions'
+import { configureChronologyFixture, initialize, roots, state } from './reply-actions'
 import '../../src/app/styles/app.css'
 
 initialize()
@@ -18,6 +18,7 @@ function Discussion() {
         <GroupReplies postId="post" replies={roots()} total={state.items.length} userId="me" canReply canManage
             onRootCreated={async () => setRootCreated(true)} />
         <button onClick={() => { state.failNextLoad = true }}>模拟下次加载失败</button>
+        <button onClick={configureChronologyFixture}>模拟乱序回复</button>
         <output id="last-parent">{state.lastParent}</output>
         <output id="root-created">{String(rootCreated)}</output>
     </main>

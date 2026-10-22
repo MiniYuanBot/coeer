@@ -1,6 +1,6 @@
 // groupQueries.ts
 import { db } from '../client'
-import { groups } from '../schemas'
+import { groups, groupMembers, groupPosts } from '../schemas'
 import { eq, desc, and, inArray, ilike, or, count, SQL } from 'drizzle-orm'
 import type { NewGroup, Group } from '../schemas'
 import {
@@ -15,7 +15,6 @@ import {
     GroupSlugWithFilterInput
 } from '@shared/contracts'
 import { GroupCategory, GROUP_MEMBER_STATUS, GROUP_STATUS, GroupStatus } from '@shared/constants'
-import { groupMemberQueries } from './groupMembers'
 import { groupPostQueries } from './groupPosts'
 
 // Private query condition builder
@@ -64,6 +63,21 @@ function buildWhereClause(params: {
 }
 
 export const groupQueries = {
+    async withStats<T extends GroupWithCreator>(items: T[]): Promise<Array<T & GroupWithStats>> {
+        if (!items.length) return []
+        const ids = items.map((group) => group.id)
+        const [members, posts] = await Promise.all([
+            db.select({ groupId: groupMembers.groupId, value: count() }).from(groupMembers)
+                .where(and(inArray(groupMembers.groupId, ids), eq(groupMembers.status, GROUP_MEMBER_STATUS.APPROVED)))
+                .groupBy(groupMembers.groupId),
+            db.select({ groupId: groupPosts.groupId, value: count() }).from(groupPosts)
+                .where(inArray(groupPosts.groupId, ids)).groupBy(groupPosts.groupId),
+        ])
+        const memberCounts = new Map(members.map((item) => [item.groupId, item.value]))
+        const postCounts = new Map(posts.map((item) => [item.groupId, item.value]))
+        return items.map((group) => ({ ...group, memberCount: memberCounts.get(group.id) ?? 0, postCount: postCounts.get(group.id) ?? 0 }))
+    },
+
     // Create a group
     async create(data: NewGroup): Promise<Group> {
         const [group] = await db.insert(groups).values(data).returning()
@@ -101,21 +115,7 @@ export const groupQueries = {
 
         if (!group) return undefined
 
-        // Member count only counts *approved* memberships (pending/rejected
-        // applications must not inflate the displayed roster size).
-        const memberCount = await groupMemberQueries.countByGroup({
-            groupId: group.id,
-            status: GROUP_MEMBER_STATUS.APPROVED,
-        })
-
-        // Posts count (implemented — previously a stub returning 0).
-        const postCount = await groupPostQueries.countByGroup({ groupId: group.id })
-
-        return {
-            ...group,
-            memberCount: memberCount,
-            postCount: postCount,
-        }
+        return (await groupQueries.withStats([group]))[0]
     },
 
     // Count groups with filters
@@ -147,20 +147,21 @@ export const groupQueries = {
     },
 
     // List all groups with optional filters
-    async listAll(data: ListAllGroupsInput): Promise<GroupWithCreator[]> {
+    async listAll(data: ListAllGroupsInput): Promise<GroupWithStats[]> {
         const { status, category, search, limit, offset } = data
 
-        return db.query.groups.findMany({
+        const items = await db.query.groups.findMany({
             where: buildWhereClause({ status, category, search }),
             with: {
                 creator: {
                     columns: { id: true, name: true, email: true },
                 },
             },
-            orderBy: [desc(groups.createdAt)],
+            orderBy: [desc(groups.createdAt), desc(groups.id)],
             limit,
             offset,
         })
+        return groupQueries.withStats(items)
     },
 
     // // List groups created by a specific user

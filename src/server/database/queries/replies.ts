@@ -1,5 +1,5 @@
 import { and, count, desc, eq, getTableColumns, isNull, ne, sql } from 'drizzle-orm'
-import { db } from '../client'
+import { db, type DbExecutor } from '../client'
 import { groupMembers, groupPosts, groups, NewReply, replies, Reply } from '../schemas'
 import type {
     ListChildRepliesInput,
@@ -14,8 +14,8 @@ const childCount = sql<number>`(select count(*)::int from replies children
     and children.target_id = ${replies.targetId})`.as('child_count')
 
 export const replyQueries = {
-    async create(data: NewReply): Promise<Reply> {
-        const [reply] = await db.insert(replies).values(data).returning()
+    async create(data: NewReply, executor: DbExecutor = db): Promise<Reply> {
+        const [reply] = await executor.insert(replies).values(data).returning()
         if (!reply) throw new Error('Create reply failed')
         return reply
     },

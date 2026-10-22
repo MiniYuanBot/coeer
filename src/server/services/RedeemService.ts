@@ -21,8 +21,8 @@ import type { RedeemItem, RedeemOrder } from '../database/schemas'
 
 export class RedeemService {
     static async listItems(data: ListRedeemItemsInput): Promise<PaginatedRedeemResponse<RedeemItem>> {
-        const items = await redeemQueries.listAvailable(data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
+        const [items, total] = await Promise.all([redeemQueries.listAvailable(data), redeemQueries.countAvailable(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
     }
 
     /**
@@ -89,8 +89,8 @@ export class RedeemService {
         const payload = await AuthService.getCurrentUser()
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
-        const items = await redeemQueries.listOrdersByUser(user.id, data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
+        const [items, total] = await Promise.all([redeemQueries.listOrdersByUser(user.id, data), redeemQueries.countOrders(data, user.id)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
     }
 
     static async adminListOrders(data: ListRedeemOrdersInput): Promise<PaginatedRedeemResponse<RedeemOrderWithDetails>> {
@@ -98,8 +98,8 @@ export class RedeemService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
         if (user.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
-        const items = await redeemQueries.listOrders(data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
+        const [items, total] = await Promise.all([redeemQueries.listOrders(data), redeemQueries.countOrders(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
     }
 
     /**

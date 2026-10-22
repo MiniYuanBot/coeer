@@ -1,26 +1,33 @@
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
-import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, PointsSummaryCard, SectionHeader } from '@/components/coeer'
+import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, Pagination, PointsSummaryCard, SectionHeader } from '@/components/coeer'
+import { z } from 'zod'
+import { ENGAGEMENT_REWARDS } from '@shared/constants/engagement'
 import { changePasswordFn, getMyPointBalanceFn, getMyPointHistoryFn, updateProfileFn } from '~/functions'
 import { SettingsSection } from '@/components/coeer/ui/SettingsSection'
 
 export const Route = createFileRoute('/_authed/profile/')({
-    loader: async ({ context }) => {
+    validateSearch: z.object({ page: z.number().int().min(1).default(1) }),
+    loaderDeps: ({ search }) => ({ search }),
+    loader: async ({ context, deps: { search } }) => {
         const [balanceResult, historyResult] = await Promise.allSettled([
             getMyPointBalanceFn(),
-            getMyPointHistoryFn({ data: { limit: 8, offset: 0 } }),
+            getMyPointHistoryFn({ data: { limit: 8, offset: (search.page - 1) * 8 } }),
         ])
         return {
             user: context.user!,
             balance: balanceResult.status === 'fulfilled' ? balanceResult.value.data?.balance ?? 0 : 0,
             history: historyResult.status === 'fulfilled' ? historyResult.value.data?.items ?? [] : [],
+            total: historyResult.status === 'fulfilled' ? historyResult.value.data?.total ?? 0 : 0,
         }
     },
     component: ProfileIndexComponent,
 })
 
 function ProfileIndexComponent() {
-    const { user, balance, history } = Route.useLoaderData()
+    const { user, balance, history, total } = Route.useLoaderData()
+    const { page } = Route.useSearch()
+    const navigate = useNavigate()
     const router = useRouter()
     const [profilePending, setProfilePending] = useState(false)
     const [passwordPending, setPasswordPending] = useState(false)
@@ -116,8 +123,7 @@ function ProfileIndexComponent() {
 
                 <section className="min-w-0 border-t border-border pt-6" aria-labelledby="profile-points-title">
                     <div className="mb-4 flex items-center justify-between">
-                        <h2 id="profile-points-title" className="text-sm font-semibold">最近积分流水</h2>
-                        <Badge>{history.length} 条</Badge>
+                        <h2 id="profile-points-title" className="text-sm font-semibold">积分流水</h2>
                     </div>
                     <div className="coeer-record-list">
                         {history.map((item: any) => (
@@ -134,6 +140,12 @@ function ProfileIndexComponent() {
                             </div>
                         ))}
                         {!history.length ? <p className="py-6 text-sm text-[hsl(var(--muted-foreground))]">暂无积分流水</p> : null}
+                    </div>
+                    <Pagination total={total} page={page} size={8} onChange={(page) => void navigate({ to: '/profile', search: { page } })} />
+                    <div className="mt-6 space-y-2 border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
+                        <h3 className="font-semibold text-foreground">如何获得积分</h3>
+                        {Object.entries(ENGAGEMENT_REWARDS).map(([key, rule]) => <p key={key}>{rule.label}：每次 +{rule.amount}，每日最多 {rule.dailyLimit} 次。</p>)}
+                        <p>每日额度按北京时间零点重置，活动签到由管理员或主办方确认。</p>
                     </div>
                 </section>
             </div>

@@ -4,10 +4,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 import { ACTIVITY_STATUS_ARRAY, ACTIVITY_TYPE_ARRAY, ActivityStatus, ActivityType } from '@shared/constants'
-import { Button, Card, EmptyState, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
+import { Button, Card, EmptyState, Pagination, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
 import { createActivityFn, deleteActivityFn, getActivityParticipantsFn, listActivitiesFn, updateActivityFn } from '~/functions'
 
-const searchSchema = z.object({ page: z.number().default(1) })
+const searchSchema = z.object({ page: z.number().int().min(1).default(1) })
 
 export const Route = createFileRoute('/_authed/admin/activities')({
     validateSearch: searchSchema,
@@ -15,18 +15,18 @@ export const Route = createFileRoute('/_authed/admin/activities')({
     loader: async ({ deps: { search } }) => {
         const pageSize = 20
         const result = await listActivitiesFn({ data: { limit: pageSize, offset: (search.page - 1) * pageSize } })
-        return { activities: result.data?.items ?? [] }
+        return { activities: result.data?.items ?? [], total: result.data?.total ?? 0 }
     },
     component: AdminActivitiesPage,
 })
 
 function AdminActivitiesPage() {
-    const { activities } = Route.useLoaderData()
+    const { activities, total = 0 } = Route.useLoaderData()
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
     const [error, setError] = useState('')
-    const [participants, setParticipants] = useState<any[] | null>(null)
+    const [participants, setParticipants] = useState<{ activityId: string; page: number; total: number; items: any[] } | null>(null)
 
     const refresh = () => navigate({ to: '/admin/activities', search: { page } })
 
@@ -63,9 +63,9 @@ function AdminActivitiesPage() {
         refresh()
     }
 
-    const showParticipants = async (activityId: string) => {
-        const result = await getActivityParticipantsFn({ data: { activityId, limit: 100, offset: 0 } })
-        setParticipants(result.data?.items ?? [])
+    const showParticipants = async (activityId: string, page = 1) => {
+        const result = await getActivityParticipantsFn({ data: { activityId, limit: 10, offset: (page - 1) * 10 } })
+        setParticipants({ activityId, page, total: result.data?.total ?? 0, items: result.data?.items ?? [] })
     }
 
     return (
@@ -99,7 +99,8 @@ function AdminActivitiesPage() {
             {participants ? (
                 <Card className="rounded-lg p-5">
                     <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">报名情况</h2><Button variant="outline" onClick={() => setParticipants(null)}>关闭</Button></div>
-                    {participants.length ? participants.map((item) => <p key={item.id} className="py-1 text-sm">{item.user?.name || '未知用户'} · {item.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无报名</p>}
+                    {participants.items.length ? participants.items.map((item) => <p key={item.id} className="py-1 text-sm">{item.user?.name || '未知用户'} · {item.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无报名</p>}
+                    <Pagination total={participants.total} page={participants.page} onChange={(page) => void showParticipants(participants.activityId, page)} label="报名名单分页" />
                 </Card>
             ) : null}
             {activities.length ? (
@@ -112,6 +113,7 @@ function AdminActivitiesPage() {
                     ))}
                 </Card>
             ) : <EmptyState title="暂无活动" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/activities', search: { page } })} />
         </div>
     )
 }

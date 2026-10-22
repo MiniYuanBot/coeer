@@ -1,5 +1,8 @@
 import { replyQueries } from '../database/queries'
 import { AuthService } from './AuthService'
+import { db } from '../database/client'
+import { EngagementService } from './EngagementService'
+import { pointQueries } from '../database/queries/points'
 import { REPLY } from '@shared/constants'
 import { getDiscussionAccess } from '../utils/access'
 import type {
@@ -32,7 +35,12 @@ export class ReplyService {
                 }
             }
 
-            const reply = await replyQueries.create({ ...data, userId: user.id })
+            const reply = await db.transaction(async (tx) => {
+                await pointQueries.lockUser(user.id, tx)
+                const created = await replyQueries.create({ ...data, userId: user.id }, tx)
+                await EngagementService.recordInTx(user.id, 'reply', created.id, tx)
+                return created
+            })
             const withAuthor = await replyQueries.findById({ id: reply.id })
             return { success: true, data: withAuthor as ReplyWithAuthor, state: REPLY.CREATE_SUCCESS }
         } catch (err) {

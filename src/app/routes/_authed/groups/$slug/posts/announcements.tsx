@@ -1,12 +1,12 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import z from 'zod'
 import { listPostsByGroupFn } from '~/functions'
 import { GroupPostFilterSchema } from '@shared/contracts'
-import { Badge, Button, Card, EmptyState, Icon, SectionHeader, formatDate } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, Icon, Pagination, SectionHeader, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/announcements')({
@@ -26,14 +26,16 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/announcements'
         if (!result) {
             throw redirect({ to: '/groups/$slug/posts', params: { slug: params.slug } })
         }
-        return { group, announcements: result.items || [] }
+        return { group, announcements: result.items || [], total: result.total ?? 0, pageSize }
     },
     component: AnnouncementsPage,
 })
 
 function AnnouncementsPage() {
-    const { group, announcements } = Route.useLoaderData()
+    const { group, announcements, total, pageSize } = Route.useLoaderData()
     const { slug } = Route.useParams()
+    const { page } = Route.useSearch()
+    const navigate = useNavigate()
 
     return (
         <div className="space-y-6">
@@ -69,6 +71,7 @@ function AnnouncementsPage() {
             ) : (
                 <EmptyState title="暂无公告" description="群组公告发布后会显示在这里。" />
             )}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/groups/$slug/posts/announcements', params: { slug }, search: { page } })} />
         </div>
     )
 }

@@ -77,6 +77,8 @@ export const ListAllGroupsSchema = z.object({
 
 export const ListMyGroupsSchema = z.object({
     ...GroupMemberFilterSchema.shape,
+    category: z.enum(GROUP_CATEGORY_ARRAY).optional(),
+    search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 

@@ -1,5 +1,5 @@
 // groupPostQueries.ts
-import { db } from '../client'
+import { db, type DbExecutor } from '../client'
 import { groupPosts, reactions, replies } from '../schemas'
 import { eq, desc, and, count, SQL } from 'drizzle-orm'
 import type { NewGroupPost } from '../schemas'
@@ -55,12 +55,13 @@ function buildWhereClause(params: {
 
 export const groupPostQueries = {
     // Create a post
-    async create(data: NewGroupPost): Promise<void> {
-        const [post] = await db.insert(groupPosts).values(data).returning()
+    async create(data: NewGroupPost, executor: DbExecutor = db) {
+        const [post] = await executor.insert(groupPosts).values(data).returning()
         
         if (!post) {
             throw new Error('Create failed')
         }
+        return post
     },
 
     // Update content of post
@@ -117,6 +118,7 @@ export const groupPostQueries = {
             orderBy: [
                 desc(groupPosts.isPinned), // pinned post first
                 desc(groupPosts.createdAt),
+                desc(groupPosts.id),
             ],
             limit,
             offset,

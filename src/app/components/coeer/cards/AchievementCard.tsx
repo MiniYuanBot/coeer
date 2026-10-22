@@ -18,8 +18,9 @@ export function AchievementCard({ achievement, unlocked }: { achievement: any; u
                     </div>
                     <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{item.description}</p>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-[hsl(var(--muted))]">
-                        <div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: unlocked ? '100%' : '0%' }} />
+                        <div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: unlocked ? '100%' : `${item.progress?.percentage ?? 0}%` }} />
                     </div>
+                    {item.progress ? <p className="mt-1 text-xs tabular-nums text-muted-foreground">{item.progress.current} / {item.progress.target}</p> : null}
                 </div>
             </div>
         </Card>

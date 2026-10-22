@@ -4,6 +4,7 @@ import { listChildRepliesFn } from '~/functions/replies'
 import { Button } from '../ui/Button'
 import { Markdown } from '../ui/Markdown'
 import { formatDateTime } from '../lib/date'
+import { newestRepliesFirst } from '../lib/replies'
 
 type ThreadActions = {
     userId: string
@@ -84,7 +85,7 @@ export function ReplyThread({ reply, parent, depth = 0, ...actions }: ThreadActi
         </article>
         <div id={childrenId} hidden={!expanded} className="coeer-reply-children" data-deep={depth >= 3 || undefined}>
             <ol aria-label={`${reply.content ? name : '已删除回复'}的子回复`} className="divide-y divide-border">
-                {children.map((child) => <ReplyThread key={child.id} {...actions} reply={child} parent={reply} depth={depth + 1} />)}
+                {newestRepliesFirst(children).map((child) => <ReplyThread key={child.id} {...actions} reply={child} parent={reply} depth={depth + 1} />)}
             </ol>
             {loading ? <p role="status" className="py-3 text-xs text-muted-foreground">正在加载子回复…</p> : null}
             {error ? <div className="py-3"><p role="alert" className="text-sm text-danger">{error}</p>

@@ -21,6 +21,6 @@ function BookmarksPage() {
             <PostCard post={{ ...post, author, isBookmarked: true }} to={`/groups/${group.slug}/posts/${post.id}`} />
         </div>)}</div> : <EmptyState title={page > 1 ? '这一页没有收藏' : '还没有收藏'} description="在动态或群组帖子中点击收藏。"
             action={<Button asChild variant="secondary"><Link to="/">浏览动态</Link></Button>} />}
-        {total > 10 || page > 1 ? <Pagination total={total} page={page} onChange={(next) => void navigate({ to: '/bookmarks', search: { page: next } })} /> : null}
+        <Pagination total={total} page={page} onChange={(next) => void navigate({ to: '/bookmarks', search: { page: next } })} />
     </PageLayout>
 }

@@ -3,6 +3,8 @@ import { db } from '../database/client'
 import { Group, GroupMember, groups, groupMembers } from '../database/schemas'
 import { eq } from 'drizzle-orm'
 import { NotificationService } from './NotificationService'
+import { AchievementService } from './AchievementService'
+import { pointQueries } from '../database/queries/points'
 import type {
     CreateGroupInput,
     GroupWithStats,
@@ -10,9 +12,8 @@ import type {
     PaginatedGroupResponse,
     GroupMemberResponse,
     PaginatedGroupMemberResponse,
-    GroupMemberWithGroup,
+    GroupMemberWithGroupStats,
     GroupMemberWithUser,
-    GroupWithCreator,
     GroupIdInput,
     GroupSlugWithFilterInput,
     ListMyGroupsInput,
@@ -44,6 +45,7 @@ export class GroupService {
         const target = await groupMemberQueries.findById({ memberId })
         if (!target) return { success: false, state: GROUP_MEMBER.NOT_FOUND }
         return db.transaction(async (tx) => {
+            await pointQueries.lockUser(target.userId, tx)
             const [group] = await tx.select().from(groups).where(eq(groups.id, target.groupId)).for('update')
             if (!group) return { success: false, state: GROUP_MEMBER.GROUP_NOT_FOUND }
             const roster = await tx.select().from(groupMembers).where(eq(groupMembers.groupId, group.id))
@@ -64,6 +66,7 @@ export class GroupService {
                 return { success: true, state: leaving ? GROUP_MEMBER.LEAVE_SUCCESS : GROUP_MEMBER.DELETE_SUCCESS }
             }
             await tx.update(groupMembers).set({ role: update!.role, status: update!.status, updatedAt: new Date() }).where(eq(groupMembers.id, memberId))
+            await AchievementService.syncForUser(member.userId, tx)
             if (update!.status && update!.status !== member.status) {
                 await NotificationService.create({ userId: member.userId, type: 'membership_review', title: '入群申请审核结果',
                     content: `你加入「${group.name}」的申请${update!.status === 'approved' ? '已通过' : '未通过'}。`,
@@ -92,6 +95,7 @@ export class GroupService {
             }
 
             const result = await db.transaction(async (tx) => {
+                await pointQueries.lockUser(user.id, tx)
                 // Create the group
                 const [group] = await tx.insert(groups).values({
                     ...data,
@@ -111,6 +115,7 @@ export class GroupService {
                     updatedAt: new Date()
                 })
 
+                await AchievementService.syncForUser(user.id, tx)
                 return group
             })
 
@@ -266,7 +271,7 @@ export class GroupService {
     }
 
     // List public approved groups
-    static async listAllGroups(data: ListAllGroupsInput): Promise<PaginatedGroupResponse<GroupWithCreator>> {
+    static async listAllGroups(data: ListAllGroupsInput): Promise<PaginatedGroupResponse<GroupWithStats>> {
         try {
             const { status, category, search, limit, offset } = data
 
@@ -298,7 +303,7 @@ export class GroupService {
     }
 
     // List groups I've joined
-    static async listMyGroups(data: ListMyGroupsInput): Promise<PaginatedGroupMemberResponse<GroupMemberWithGroup>> {
+    static async listMyGroups(data: ListMyGroupsInput): Promise<PaginatedGroupMemberResponse<GroupMemberWithGroupStats>> {
         try {
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
@@ -312,13 +317,14 @@ export class GroupService {
                 userId: user.id,
                 ...data
             })
+            const groupsWithStats = await groupQueries.withStats(memberships.map((member) => member.group))
 
-            const total = await groupMemberQueries.countByUser({ userId: user.id, status, role })
+            const total = await groupMemberQueries.countByUser({ ...data, userId: user.id })
 
             return {
                 success: true,
                 data: {
-                    items: memberships,
+                    items: memberships.map((member, index) => ({ ...member, group: groupsWithStats[index] })),
                     total,
                     limit,
                     offset
@@ -576,7 +582,8 @@ export class GroupService {
                 }
             }
 
-            const group = await groupQueries.findById(data)
+            // The status in this request describes a membership, not the group.
+            const group = await groupQueries.findById({ groupId: data.groupId })
             if (!group) {
                 return {
                     success: false,

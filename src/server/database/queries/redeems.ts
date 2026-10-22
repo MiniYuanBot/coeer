@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, ilike, or, sql, SQL } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, gte, ilike, or, sql, SQL } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { NewRedeemItem, NewRedeemOrder, redeemItems, redeemOrders } from '../schemas'
 import type { ListRedeemItemsInput, ListRedeemOrdersInput, ProcessRedeemOrderInput, UpdateRedeemItemInput } from '@shared/contracts'
@@ -18,6 +18,20 @@ function buildItemWhere(data: ListRedeemItemsInput): SQL | undefined {
 }
 
 export const redeemQueries = {
+    async countOrders(data: ListRedeemOrdersInput, userId?: string) {
+        const [result] = await db.select({ value: count() }).from(redeemOrders).where(and(
+            data.itemId ? eq(redeemOrders.itemId, data.itemId) : undefined,
+            data.status ? eq(redeemOrders.status, data.status) : undefined,
+            userId ? eq(redeemOrders.userId, userId) : undefined,
+        ))
+        return result.value
+    },
+    async countAvailable(data: ListRedeemItemsInput) {
+        const [result] = await db.select({ value: count() }).from(redeemItems).where(and(
+            buildItemWhere({ ...data, status: 'active' }), or(eq(redeemItems.stock, -1), gt(redeemItems.stock, 0)),
+        ))
+        return result.value
+    },
     async createItem(data: NewRedeemItem) {
         const [item] = await db.insert(redeemItems).values(data).returning()
         if (!item) throw new Error('Create redeem item failed')
@@ -37,6 +51,7 @@ export const redeemQueries = {
         const stockWhere = or(eq(redeemItems.stock, -1), gt(redeemItems.stock, 0))
         return db.query.redeemItems.findMany({
             where: base ? and(base, stockWhere!) : stockWhere,
+            orderBy: [asc(redeemItems.name), asc(redeemItems.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -87,7 +102,7 @@ export const redeemQueries = {
         return db.query.redeemOrders.findMany({
             where: and(...conditions),
             with: { item: true },
-            orderBy: [desc(redeemOrders.createdAt)],
+            orderBy: [desc(redeemOrders.createdAt), desc(redeemOrders.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -100,7 +115,7 @@ export const redeemQueries = {
         return db.query.redeemOrders.findMany({
             where: conditions.length ? and(...conditions) : undefined,
             with: { item: true, user: { columns: { id: true, name: true } } },
-            orderBy: [desc(redeemOrders.createdAt)],
+            orderBy: [desc(redeemOrders.createdAt), desc(redeemOrders.id)],
             limit: data.limit,
             offset: data.offset,
         })

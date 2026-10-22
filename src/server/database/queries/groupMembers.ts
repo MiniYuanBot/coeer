@@ -1,7 +1,7 @@
 // groupMemberQueries.ts
 import { db } from '../client'
-import { groupMembers } from '../schemas'
-import { eq, desc, and, inArray, count, asc, SQL } from 'drizzle-orm'
+import { groupMembers, groups } from '../schemas'
+import { eq, desc, and, inArray, count, asc, SQL, ilike, or } from 'drizzle-orm'
 import type { NewGroupMember, GroupMember } from '../schemas'
 import {
     GroupMemberWithUser,
@@ -15,7 +15,7 @@ import {
     ListMembersByUserInput,
     CountMembersByUserInput,
 } from '@shared/contracts'
-import { GroupMemberRole, GroupMemberStatus, GROUP_MEMBER_STATUS } from '@shared/constants'
+import { GroupCategory, GroupMemberRole, GroupMemberStatus, GROUP_MEMBER_STATUS } from '@shared/constants'
 
 // Private query condition builder
 function buildWhereClause(params: {
@@ -23,6 +23,8 @@ function buildWhereClause(params: {
     userId?: string
     status?: GroupMemberStatus | GroupMemberStatus[]
     role?: GroupMemberRole
+    category?: GroupCategory
+    search?: string
 }): SQL | undefined {
     const { status, role, groupId, userId } = params
     const conditions: SQL[] = []
@@ -45,6 +47,13 @@ function buildWhereClause(params: {
 
     if (role) {
         conditions.push(eq(groupMembers.role, role))
+    }
+
+    if (params.category || params.search) {
+        conditions.push(inArray(groupMembers.groupId, db.select({ id: groups.id }).from(groups).where(and(
+            params.category ? eq(groups.category, params.category) : undefined,
+            params.search ? or(ilike(groups.name, `%${params.search}%`), ilike(groups.slug, `%${params.search}%`), ilike(groups.description, `%${params.search}%`)) : undefined,
+        ))))
     }
 
     return conditions.length > 0 ? and(...conditions) : undefined
@@ -111,10 +120,10 @@ export const groupMemberQueries = {
 
     // List groups the user has joined with optional filters
     async listByUser(data: ListMembersByUserInput): Promise<GroupMemberWithGroup[]> {
-        const { userId, status, role, limit, offset } = data
+        const { limit, offset } = data
 
         return db.query.groupMembers.findMany({
-            where: buildWhereClause({ userId, status, role }),
+            where: buildWhereClause(data),
             with: {
                 group: {
                     with: {
@@ -124,7 +133,7 @@ export const groupMemberQueries = {
                     },
                 },
             },
-            orderBy: [desc(groupMembers.joinedAt)],
+            orderBy: [desc(groupMembers.joinedAt), desc(groupMembers.id)],
             limit,
             offset,
         })
@@ -142,12 +151,10 @@ export const groupMemberQueries = {
 
     // Count groups I've joined by user ID with optional filters
     async countByUser(data: CountMembersByUserInput): Promise<number> {
-        const { userId, status, role } = data
-
         const [result] = await db
             .select({ value: count() })
             .from(groupMembers)
-            .where(buildWhereClause({ userId, status, role }))
+            .where(buildWhereClause(data))
 
         return result?.value ?? 0
     },

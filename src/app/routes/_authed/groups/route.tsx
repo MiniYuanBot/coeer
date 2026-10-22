@@ -3,14 +3,14 @@ import { z } from 'zod'
 import { listAllGroupsFn, listMyGroupsFn } from '~/functions'
 import { GroupFilterSchema } from '@shared/contracts'
 import { GROUP_CATEGORY_ARRAY, GROUP_MEMBER_ROLE, GROUP_MEMBER_STATUS, GroupCategory } from '@shared/constants'
-import { Button, EmptyState, FilterPanel, GroupCard, Icon, SectionHeader, groupCategoryLabels } from '@/components/coeer'
+import { Button, EmptyState, FilterPanel, GroupCard, Icon, Pagination, SectionHeader, groupCategoryLabels } from '@/components/coeer'
 
 const groupViewSchema = z.enum(['joined', 'managed', 'public', 'pending']).default('joined')
 
 const searchSchema = z.object({
     ...GroupFilterSchema.shape,
     view: groupViewSchema,
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 type GroupsSearch = z.infer<typeof searchSchema>
@@ -43,25 +43,15 @@ export const Route = createFileRoute('/_authed/groups')({
             data: {
                 status: search.view === 'pending' ? GROUP_MEMBER_STATUS.PENDING : GROUP_MEMBER_STATUS.APPROVED,
                 role: search.view === 'managed' ? GROUP_MEMBER_ROLE.ADMIN : undefined,
-                limit: 100,
-                offset: 0,
+                category: search.category,
+                search: search.search,
+                limit: pageSize,
+                offset: (search.page - 1) * pageSize,
             },
         })
-        const keyword = search.search?.trim().toLowerCase()
-        const groups = (result?.items ?? [])
-            .map((member) => member.group)
-            .filter((group) => !search.category || group.category === search.category)
-            .filter((group) => {
-                if (!keyword) return true
-                return group.name.toLowerCase().includes(keyword) ||
-                    group.slug.toLowerCase().includes(keyword) ||
-                    group.description?.toLowerCase().includes(keyword)
-            })
-        const offset = (search.page - 1) * pageSize
-
         return {
-            groups: groups.slice(offset, offset + pageSize),
-            total: groups.length,
+            groups: (result?.items ?? []).map((member) => member.group),
+            total: result?.total ?? 0,
             pageSize,
         }
     },
@@ -82,7 +72,6 @@ function GroupsHomePage() {
     const groups = data?.groups ?? []
     const total = data?.total ?? 0
     const pageSize = data?.pageSize ?? 9
-    const totalPages = Math.ceil(total / pageSize)
 
     const go = (next: Partial<GroupsSearch>) => {
         navigate({ to: '/groups', search: { view, category, search, page: 1, ...next } })
@@ -133,13 +122,7 @@ function GroupsHomePage() {
                 <EmptyState title="没有找到群组" description="换个关键词或分类试试。" action={<Link to="/groups/create"><Button>创建群组</Button></Link>} />
             )}
 
-            {totalPages > 1 ? (
-                <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/groups', search: { view, category, search, page: page - 1 } })}>上一页</Button>
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">{page} / {totalPages}</span>
-                    <Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/groups', search: { view, category, search, page: page + 1 } })}>下一页</Button>
-                </div>
-            ) : null}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => go({ page })} />
         </div>
     )
 }

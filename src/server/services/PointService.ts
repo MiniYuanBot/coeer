@@ -17,7 +17,7 @@ export class PointService {
      * Only used by internal business services (redeem, draw) inside a
      * transaction — never exposed directly as a server function.
      *
-     * Serialization: the user row is locked (SELECT … FOR UPDATE) so two
+     * Serialization: the user row is locked (SELECT … FOR NO KEY UPDATE) so two
      * concurrent spends/draws can not double-spend, and the balance is
      * re-read after the lock.
      */
@@ -102,7 +102,7 @@ export class PointService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: POINT.UNAUTHORIZED }
         const targetUserId = data.userId && user.role === 'admin' ? data.userId : user.id
-        const items = await pointQueries.listByUser(targetUserId, data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: POINT.GET_SUCCESS }
+        const [items, total] = await Promise.all([pointQueries.listByUser(targetUserId, data), pointQueries.countByUser(targetUserId, data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: POINT.GET_SUCCESS }
     }
 }

@@ -3,6 +3,7 @@ import { db } from '../database/client'
 import { CARD } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { PointService } from './PointService'
+import { AchievementService } from './AchievementService'
 import type {
     CardResponse,
     CreateCardInput,
@@ -75,6 +76,7 @@ export class CardService {
                     if (userCard) results.push({ ...userCard, card })
                 }
 
+                await AchievementService.syncForUser(user.id, tx)
                 result = {
                     success: true,
                     data: { cards: results, pointsSpent: DRAW_COST * count },
@@ -89,16 +91,16 @@ export class CardService {
     }
 
     static async listCards(data: ListCardsInput): Promise<PaginatedCardResponse<Card>> {
-        const items = await cardQueries.list(data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
+        const [items, total] = await Promise.all([cardQueries.list(data), cardQueries.count(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
     }
 
     static async listMine(data: ListCardsInput): Promise<PaginatedCardResponse<UserCardWithCard>> {
         const payload = await AuthService.getCurrentUser()
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: CARD.UNAUTHORIZED }
-        const items = await cardQueries.listUserCards(user.id, data)
-        return { success: true, data: { items, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
+        const [items, total] = await Promise.all([cardQueries.listUserCards(user.id, data), cardQueries.count(data, user.id)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
     }
 
     static async adminCreate(data: CreateCardInput): Promise<CardResponse<Card>> {

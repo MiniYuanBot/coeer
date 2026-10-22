@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { z } from 'zod'
-import { ActivityCard, EmptyState, FilterPanel, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
+import { ActivityCard, EmptyState, FilterPanel, Pagination, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
 import { ActivityRegistrationButton } from '@/components/coeer/cards/ActivityRegistrationButton'
 import { listActivitiesFn } from '~/functions'
 import { ACTIVITY_STATUS_ARRAY, ACTIVITY_TYPE_ARRAY, ActivityStatus, ActivityType } from '@shared/constants'
@@ -12,7 +12,7 @@ const searchSchema = z.object({
     type: z.string().optional(),
     status: z.string().optional(),
     search: z.string().optional(),
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/activities/')({
@@ -41,7 +41,7 @@ function ActivitiesPage() {
     const router = useRouter()
     const timeStatusChanged = activities.some((activity, index) => activity.status !== loadedActivities[index].status)
     useEffect(() => { if (timeStatusChanged) void router.invalidate() }, [timeStatusChanged, router])
-    const { type, status, search } = Route.useSearch()
+    const { type, status, search, page } = Route.useSearch()
     const navigate = useNavigate()
 
     const go = (next: { type?: string; status?: string; search?: string; page?: number }) => {
@@ -95,6 +95,7 @@ function ActivitiesPage() {
             ) : (
                 <EmptyState title="暂无活动" description="活动发布后会出现在这里。" />
             )}
+            <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
         </div>
     )
 }

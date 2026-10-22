@@ -31,6 +31,15 @@ function item(value: ReplyWithAuthor): ReplyListItem {
 
 export function roots() { return state.items.filter((value) => !value.parentId).map(item) }
 
+export function configureChronologyFixture() {
+    for (const value of state.items) value.createdAt = new Date('2026-01-01T00:00:00Z')
+    state.items.find((value) => value.id === 'many')!.createdAt = new Date('2026-01-03T00:00:00Z')
+    state.items.find((value) => value.id === 'sibling-0')!.createdAt = new Date('2026-01-03T01:00:00Z')
+    state.items.find((value) => value.id === 'sibling-1')!.createdAt = new Date('2026-01-03T03:00:00Z')
+    state.items.find((value) => value.id === 'sibling-2')!.createdAt = new Date('2026-01-03T02:00:00Z')
+    window.dispatchEvent(new Event('reload-replies'))
+}
+
 export async function listChildRepliesFn({ data }: { data: { parentId: string; limit: number; offset: number } }) {
     if (state.failNextLoad) {
         state.failNextLoad = false
@@ -44,6 +53,8 @@ export async function listChildRepliesFn({ data }: { data: { parentId: string; l
 
 export async function createReplyFn({ data }: { data: CreateReplyInput }) {
     const created = reply(`new-${++state.created}`, data.parentId ?? null, data.content)
+    created.createdAt = new Date()
+    created.updatedAt = created.createdAt
     state.items.unshift(created)
     state.lastParent = data.parentId ?? 'root'
     return { success: true, state: { code: 'CREATE_SUCCESS' }, data: created }

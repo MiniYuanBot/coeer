@@ -31,7 +31,7 @@ export const bulletinQueries = {
     async list(data: ListBulletinsInput): Promise<Bulletin[]> {
         return db.query.bulletins.findMany({
             where: buildWhere(data),
-            orderBy: [desc(bulletins.isPinned), desc(bulletins.createdAt)],
+            orderBy: [desc(bulletins.isPinned), desc(bulletins.createdAt), desc(bulletins.id)],
             limit: data.limit,
             offset: data.offset,
         })

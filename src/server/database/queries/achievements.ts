@@ -1,5 +1,5 @@
-import { and, eq, ilike, or, SQL } from 'drizzle-orm'
-import { db } from '../client'
+import { and, asc, count, desc, eq, ilike, inArray, or, SQL } from 'drizzle-orm'
+import { db, type DbExecutor } from '../client'
 import { achievements, NewAchievement, userAchievements } from '../schemas'
 import type { AchievementIdInput, ListAchievementsInput, UpdateAchievementInput } from '@shared/contracts'
 
@@ -18,6 +18,10 @@ function buildAchievementWhere(data: ListAchievementsInput): SQL | undefined {
 }
 
 export const achievementQueries = {
+    async count(data: ListAchievementsInput) {
+        const [result] = await db.select({ value: count() }).from(achievements).where(buildAchievementWhere(data))
+        return result.value
+    },
     async create(data: NewAchievement) {
         const [achievement] = await db.insert(achievements).values(data).returning()
         if (!achievement) throw new Error('Create achievement failed')
@@ -27,6 +31,7 @@ export const achievementQueries = {
     async list(data: ListAchievementsInput) {
         return db.query.achievements.findMany({
             where: buildAchievementWhere(data),
+            orderBy: [asc(achievements.code), asc(achievements.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -45,17 +50,26 @@ export const achievementQueries = {
         await db.delete(achievements).where(eq(achievements.id, data.achievementId))
     },
 
-    async listByUser(userId: string, limit = 20, offset = 0) {
+    async listByUser(userId: string, data: ListAchievementsInput) {
         return db.query.userAchievements.findMany({
-            where: eq(userAchievements.userId, userId),
+            where: and(eq(userAchievements.userId, userId), inArray(userAchievements.achievementId,
+                db.select({ id: achievements.id }).from(achievements).where(buildAchievementWhere(data)))),
             with: { achievement: true },
-            limit,
-            offset,
+            orderBy: [desc(userAchievements.unlockedAt), desc(userAchievements.id)],
+            limit: data.limit,
+            offset: data.offset,
         })
     },
 
-    async unlock(userId: string, achievementId: string) {
-        const [record] = await db.insert(userAchievements).values({ userId, achievementId }).returning()
+    async countByUser(userId: string, data: ListAchievementsInput) {
+        const [result] = await db.select({ value: count() }).from(userAchievements).where(and(eq(userAchievements.userId, userId),
+            inArray(userAchievements.achievementId, db.select({ id: achievements.id }).from(achievements).where(buildAchievementWhere(data)))))
+        return result.value
+    },
+
+    async unlock(userId: string, achievementId: string, executor: DbExecutor = db) {
+        const [record] = await executor.insert(userAchievements).values({ userId, achievementId })
+            .onConflictDoNothing({ target: [userAchievements.userId, userAchievements.achievementId] }).returning()
         return record
     },
 }

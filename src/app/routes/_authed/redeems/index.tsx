@@ -5,6 +5,7 @@ import {
     EmptyState,
     FilterPanel,
     Icon,
+    Pagination,
     RedeemItemCard,
     SectionHeader,
     redeemItemTypeLabels,
@@ -16,7 +17,7 @@ import { REDEEM_ITEM_TYPE_ARRAY, RedeemItemType } from '@shared/constants'
 const searchSchema = z.object({
     type: z.string().optional(),
     search: z.string().optional(),
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/redeems/')({
@@ -37,6 +38,7 @@ export const Route = createFileRoute('/_authed/redeems/')({
         ])
         return {
             items: itemsResult.data?.items ?? [],
+            total: itemsResult.data?.total ?? 0,
             balance: balanceResult.data?.balance ?? 0,
         }
     },
@@ -44,8 +46,8 @@ export const Route = createFileRoute('/_authed/redeems/')({
 })
 
 function RedeemsPage() {
-    const { items, balance } = Route.useLoaderData()
-    const { type, search } = Route.useSearch()
+    const { items, total, balance } = Route.useLoaderData()
+    const { type, search, page } = Route.useSearch()
     const navigate = useNavigate()
     const { loadingKey, run } = useAsyncAction()
 
@@ -105,6 +107,7 @@ function RedeemsPage() {
             ) : (
                 <EmptyState title="暂无商品" description="换个关键词或分类试试。" />
             )}
+            <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
         </div>
     )
 }

@@ -4,11 +4,11 @@ import { getGroupMembersFn, removeMemberFn, updateMemberRoleFn } from '~/functio
 import { useState } from 'react'
 import { GROUP_MEMBER_STATUS, GroupMemberRole } from '@shared/constants'
 import { GroupMemberFilterSchema } from '@shared/contracts'
-import { Badge, Button, Card, EmptyState, FilterPanel, SectionHeader } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, FilterPanel, Pagination, SectionHeader } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupMemberFilterSchema.shape,
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/groups/$slug/members')({
@@ -46,7 +46,6 @@ function GroupMembersPage() {
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [actionError, setActionError] = useState('')
 
-    const totalPages = Math.ceil(total / pageSize)
 
     const handleApprove = async (memberId: string, approved = true) => {
         setProcessingId(memberId)
@@ -93,7 +92,7 @@ function GroupMembersPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader level="h2" title="群组成员" description={`共 ${total} 名成员或申请记录。`} />
+            <SectionHeader level="h2" title="群组成员" description="查看群组成员与入群申请。" />
             {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             <FilterPanel
@@ -167,15 +166,7 @@ function GroupMembersPage() {
                 </Card>
             )}
 
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
-                    <Button variant="outline" disabled={page <= 1} onClick={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page: page - 1 } })}>上一页</Button>
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">
-                        {page} / {totalPages}
-                    </span>
-                    <Button variant="outline" disabled={page >= totalPages} onClick={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page: page + 1 } })}>下一页</Button>
-                </div>
-            )}
+            <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page } })} />
         </div>
     )
 }

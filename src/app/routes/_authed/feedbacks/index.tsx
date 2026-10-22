@@ -3,7 +3,7 @@ import z from 'zod'
 import { getFeedbacksFn } from '~/functions'
 import { FEEDBACK_TARGET_TYPE_ARRAY, FeedbackTargetType } from '@shared/constants'
 import { FeedbackFilterSchema } from '@shared/contracts'
-import { Button, EmptyState, FeedbackCard, FilterPanel, Icon, PageLayout, SectionHeader, feedbackTargetLabels } from '@/components/coeer'
+import { Button, EmptyState, FeedbackCard, FilterPanel, Icon, PageLayout, Pagination, SectionHeader, feedbackTargetLabels } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...FeedbackFilterSchema.shape,
@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_authed/feedbacks/')({
     loader: async ({ deps: { search } }) => {
         const pageSize = 8
         const result = await getFeedbacksFn({
-            data: { ...search, limit: pageSize, offset: (search.page - 1) * pageSize },
+            data: { ...search, view: search.view ?? 'public', limit: pageSize, offset: (search.page - 1) * pageSize },
         })
         return { feedbacks: result?.items || [], total: result?.total || 0, pageSize }
     },
@@ -30,7 +30,6 @@ function FeedbacksListPage() {
     const hydrated = useHydrated()
     const isPending = useRouterState({ select: (state) => state.status === 'pending' })
     const isLoading = hydrated && isPending
-    const totalPages = Math.ceil(total / pageSize)
     const go = (next: { view?: 'mine' | 'public'; targetType?: FeedbackTargetType; search?: string; page?: number }) => {
         void navigate({ to: '/feedbacks', search: { view, targetType, search, page: 1, ...next } })
     }
@@ -45,7 +44,7 @@ function FeedbacksListPage() {
                         return (
                             <button key={item.key} type="button" aria-pressed={active} onClick={() => go({ view: item.key as 'mine' | 'public' })}
                                 className={'coeer-focus -mb-px flex items-center gap-2 border-b-2 px-0.5 pb-3 text-[13px] ' + (active ? 'border-primary font-medium text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}>
-                                {item.label}{active ? <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">{total}</span> : null}
+                                {item.label}
                             </button>
                         )
                     })}
@@ -76,14 +75,7 @@ function FeedbacksListPage() {
                             action={search || targetType ? <Button variant="secondary" onClick={() => go({ search: undefined, targetType: undefined })}>清除筛选</Button> : <Button asChild><Link to="/feedbacks/create">提交反馈</Link></Button>} />
                     )}
                 </section>
-                <footer className="flex flex-wrap items-center justify-between gap-3 pt-4">
-                    <p aria-live="polite" className="text-xs tabular-nums text-muted-foreground">{total ? '共 ' + total + ' 条反馈，显示 ' + ((page - 1) * pageSize + 1) + '–' + Math.min(page * pageSize, total) + ' 条' : '共 0 条反馈'}</p>
-                    {totalPages > 1 ? <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" disabled={page <= 1 || isLoading} onClick={() => go({ page: page - 1 })}>上一页</Button>
-                        <span className="px-1 text-xs tabular-nums text-muted-foreground">{page} / {totalPages}</span>
-                        <Button size="sm" variant="outline" disabled={page >= totalPages || isLoading} onClick={() => go({ page: page + 1 })}>下一页</Button>
-                    </div> : null}
-                </footer>
+                <Pagination total={total} page={page} size={pageSize} disabled={isLoading} onChange={(page) => go({ page })} />
             </div>
         </PageLayout>
     )

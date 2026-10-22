@@ -16,6 +16,8 @@ import type {
 import { FEEDBACK } from '@shared/constants'
 import { AuthService } from './AuthService'
 import { NotificationService } from './NotificationService'
+import { EngagementService } from './EngagementService'
+import { pointQueries } from '../database/queries/points'
 import { feedbackQueries } from '../database/queries'
 import { eq, desc, count, and, gte, lte } from 'drizzle-orm'
 
@@ -30,6 +32,7 @@ export class FeedbackService {
             }
 
             const feedback = await db.transaction(async (tx) => {
+                await pointQueries.lockUser(user.id, tx)
                 const created = await feedbackQueries.create({
                     ...data,
                     authorId: user.id,
@@ -45,6 +48,7 @@ export class FeedbackService {
                     createdAt: new Date(),
                 })
 
+                await EngagementService.recordInTx(user.id, 'feedback', created.id, tx)
                 return created
             })
 
@@ -114,12 +118,12 @@ export class FeedbackService {
             }
 
             const isAdmin = user.role === 'admin'
-            const { status, search, targetType, view, limit, offset } = data
+            const { view, limit, offset } = data
 
             let items: FeedbackWithAuthor[]
             let total: number
 
-            if (isAdmin) {
+            if (isAdmin && !view) {
                 // Admin sees all feedbacks
                 items = await feedbackQueries.findAll(data) as FeedbackWithAuthor[]
 
@@ -138,7 +142,7 @@ export class FeedbackService {
                     scopedData.status = 'pending'
                 } else if (view === 'public') {
                     scopedData.authorId = undefined
-                    ; (scopedData as any).isPublic = true
+                    scopedData.isPublic = true
                 }
 
                 // Regular user sees own submissions plus feedback approved for public visibility.
@@ -146,13 +150,7 @@ export class FeedbackService {
                     ? await feedbackQueries.findByAuthorId(scopedData as any)
                     : await feedbackQueries.findVisibleToUser({ ...scopedData, viewerId: user.id } as any)
 
-                total = await feedbackQueries.countVisibleToUser({
-                    viewerId: user.id,
-                    authorId: scopedData.authorId,
-                    status: scopedData.status as any,
-                    search,
-                    targetType,
-                } as any)
+                total = await feedbackQueries.countVisibleToUser({ ...scopedData, viewerId: user.id })
             }
 
             // Anonymous feedback never exposes its author to regular viewers.

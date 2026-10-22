@@ -1,7 +1,13 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, asc, count, eq, gt, ilike, inArray, or, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { cards, NewCard, type Card, userCards } from '../schemas'
-import type { CreateCardInput, ListCardsInput } from '@shared/contracts'
+import type { ListCardsInput } from '@shared/contracts'
+
+function cardFilter(data: ListCardsInput) {
+    return and(data.rarity ? eq(cards.rarity, data.rarity) : undefined,
+        data.series ? eq(cards.series, data.series) : undefined,
+        data.search ? or(ilike(cards.name, `%${data.search}%`), ilike(cards.description, `%${data.search}%`), ilike(cards.series, `%${data.search}%`)) : undefined)
+}
 
 export const cardQueries = {
     async create(data: NewCard) {
@@ -11,11 +17,9 @@ export const cardQueries = {
     },
 
     async list(data: ListCardsInput) {
-        const conditions: ReturnType<typeof eq>[] = []
-        if (data.rarity) conditions.push(eq(cards.rarity, data.rarity))
-        if (data.series) conditions.push(eq(cards.series, data.series))
         return db.query.cards.findMany({
-            where: conditions.length ? and(...conditions) : undefined,
+            where: cardFilter(data),
+            orderBy: [asc(cards.name), asc(cards.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -48,10 +52,19 @@ export const cardQueries = {
 
     async listUserCards(userId: string, data: ListCardsInput) {
         return db.query.userCards.findMany({
-            where: eq(userCards.userId, userId),
+            where: and(eq(userCards.userId, userId), gt(userCards.count, 0), inArray(userCards.cardId, db.select({ id: cards.id }).from(cards).where(cardFilter(data)))),
             with: { card: true },
+            orderBy: [asc(userCards.cardId)],
             limit: data.limit,
             offset: data.offset,
         })
+    },
+
+    async count(data: ListCardsInput, userId?: string) {
+        const [result] = userId
+            ? await db.select({ value: count() }).from(userCards).innerJoin(cards, eq(cards.id, userCards.cardId))
+                .where(and(eq(userCards.userId, userId), gt(userCards.count, 0), cardFilter(data)))
+            : await db.select({ value: count() }).from(cards).where(cardFilter(data))
+        return result.value
     },
 }

@@ -6,6 +6,7 @@ import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { MarkdownEditor } from '../ui/MarkdownEditor'
 import { ReplyThread } from './ReplyThread'
+import { newestRepliesFirst } from '../lib/replies'
 
 export function GroupReplies({ postId, replies, total, userId, canReply, canManage, onRootCreated }: {
     postId: string; replies: ReplyListItem[]; total: number; userId: string; canReply: boolean; canManage: boolean
@@ -63,7 +64,7 @@ export function GroupReplies({ postId, replies, total, userId, canReply, canMana
     return <Card className="mt-6 p-5 sm:p-6">
         <h2 className="text-sm font-semibold">群内回复 <span className="text-muted-foreground">{total}</span></h2>
         <ol aria-label="群内回复" className="mt-4 divide-y divide-border">
-            {replies.map((reply) => <ReplyThread key={reply.id} reply={reply} userId={userId} canReply={canReply} canManage={canManage}
+            {newestRepliesFirst(replies).map((reply) => <ReplyThread key={reply.id} reply={reply} userId={userId} canReply={canReply} canManage={canManage}
                 pending={pending} revision={revision} openReplyId={openReplyId} onSelect={selectReply} onRemove={(id) => void remove(id)} />)}
         </ol>
         {!replies.length ? <p className="py-4 text-sm text-muted-foreground">还没有回复。</p> : null}

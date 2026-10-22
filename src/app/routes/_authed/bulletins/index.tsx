@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
-import { Badge, BulletinCard, EmptyState, FilterPanel, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
+import { BulletinCard, EmptyState, FilterPanel, Pagination, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
 import { getBulletinFeedFn } from '~/functions'
 import { BULLETIN_TYPE_ARRAY, BulletinType } from '@shared/constants'
 
 const searchSchema = z.object({
     type: z.string().optional(),
     search: z.string().optional(),
-    page: z.number().default(1),
+    page: z.number().int().min(1).default(1),
 })
 
 export const Route = createFileRoute('/_authed/bulletins/')({
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/_authed/bulletins/')({
 
 function BulletinsPage() {
     const { bulletins, total } = Route.useLoaderData()
-    const { type, search } = Route.useSearch()
+    const { type, search, page } = Route.useSearch()
     const navigate = useNavigate()
 
     const go = (next: { type?: string; search?: string; page?: number }) => {
@@ -39,7 +39,7 @@ function BulletinsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="公告" description="聚合官方通知、群组公告和活动提醒。" action={<Badge tone="primary">共 {total}</Badge>} />
+            <SectionHeader title="公告" description="聚合官方通知、群组公告和活动提醒。" />
             <FilterPanel
                 searchValue={search}
                 searchPlaceholder="搜索公告标题或内容"
@@ -66,6 +66,7 @@ function BulletinsPage() {
             ) : (
                 <EmptyState title="暂无公告" description="公告会在这里集中展示。" />
             )}
+            <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
         </div>
     )
 }

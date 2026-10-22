@@ -1,5 +1,5 @@
 import { and, count, desc, eq, ilike, inArray, or, sql, SQL } from 'drizzle-orm'
-import { db } from '../client'
+import { db, type DbExecutor } from '../client'
 import { activities, activityParticipants, NewActivity, NewActivityParticipant } from '../schemas'
 import type {
     ActivityIdInput,
@@ -54,7 +54,7 @@ export const activityQueries = {
         await activityQueries.synchronizeStatuses()
         return db.query.activities.findMany({
             where: buildActivityWhere(data),
-            orderBy: [desc(activities.startTime)],
+            orderBy: [desc(activities.startTime), desc(activities.id)],
             limit: data.limit,
             offset: data.offset,
         })
@@ -103,13 +103,21 @@ export const activityQueries = {
         return db.query.activityParticipants.findMany({
             where: and(...conditions),
             with: { user: { columns: { id: true, name: true, email: true, role: true } } },
+            orderBy: [desc(activityParticipants.registeredAt), desc(activityParticipants.id)],
             limit: data.limit,
             offset: data.offset,
         })
     },
 
-    async updateParticipantStatus(data: ActivityParticipantIdInput, status: 'registered' | 'attended' | 'cancelled') {
-        const [participant] = await db.update(activityParticipants)
+    async countRoster(data: ListActivityParticipantsInput) {
+        const [result] = await db.select({ value: count() }).from(activityParticipants).where(and(
+            eq(activityParticipants.activityId, data.activityId), data.status ? eq(activityParticipants.status, data.status) : undefined,
+        ))
+        return result.value
+    },
+
+    async updateParticipantStatus(data: ActivityParticipantIdInput, status: 'registered' | 'attended' | 'cancelled', executor: DbExecutor = db) {
+        const [participant] = await executor.update(activityParticipants)
             .set({ status })
             .where(eq(activityParticipants.id, data.participantId))
             .returning()

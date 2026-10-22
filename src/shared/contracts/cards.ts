@@ -14,6 +14,7 @@ export const DrawCardsSchema = z.object({
 export const ListCardsSchema = z.object({
     rarity: z.enum(CARD_RARITY_ARRAY).optional(),
     series: z.string().optional(),
+    search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 
