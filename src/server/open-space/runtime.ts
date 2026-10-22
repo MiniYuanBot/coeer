@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { readPrivateJSON } from "./adapters/official/config.js";
-import { existsSync } from "node:fs";
 import { assertBookingEnvironment } from './environment.js';
 export type Environment = "mock" | "staging" | "production";
 export function runtime(env: NodeJS.ProcessEnv) {
@@ -55,25 +53,12 @@ export function runtime(env: NodeJS.ProcessEnv) {
   ])
     if (env[name] !== undefined && !["true", "false"].includes(env[name]!))
       throw new Error(`Invalid boolean: ${name}`);
-  let adminPassword = env.BOOKING_BOOTSTRAP_PASSWORD;
-  if (env.BOOKING_BOOTSTRAP_FILE && existsSync(env.BOOKING_BOOTSTRAP_FILE)) {
-    const parsed = z
-      .strictObject({ password: z.string().min(12).max(128) })
-      .safeParse(readPrivateJSON(env.BOOKING_BOOTSTRAP_FILE, 4096));
-    if (!parsed.success) throw new Error("Invalid admin bootstrap file");
-    adminPassword = parsed.data.password;
-  }
-  if (hardened && env.BOOKING_BOOTSTRAP_PASSWORD)
-    throw new Error(
-      "Use private BOOKING_BOOTSTRAP_FILE in deployed environments",
-    );
   return {
     environment,
     mode,
     hardened,
     port,
     origin: origin.origin,
-    adminPassword,
     registrationEnabled:
       env.BOOKING_PUBLIC_SIGNUP_ENABLED === "true" ||
       (!hardened && env.BOOKING_PUBLIC_SIGNUP_ENABLED !== "false"),

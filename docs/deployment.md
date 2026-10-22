@@ -1,95 +1,42 @@
-# COEER Deployment Guide
+# 部署与数据库管理
 
-This project is a TanStack Start SSR application with Server Functions and PostgreSQL.
-It should be deployed as a Node.js service behind a reverse proxy such as Nginx.
+COEER 作为 Node.js SSR 服务运行，由 Nginx 反向代理，数据库使用 PostgreSQL。
+运行环境为 Node.js 26.x、npm 11.x 和 pnpm 10.33.4，推荐 Node 26.7.0。
 
-## 一键发布到现有阿里云服务器
+## 发布到现有服务器
 
-本仓库已经适配 `ssh aliyun` 上正在运行的 `/var/www/coeer` 和 `coeer.service`，沿用现有 Nginx 与 PostgreSQL，不需要 Docker。
-
-在本机项目目录执行：
-
-```sh
-npm run deploy
-```
-
-使用 pnpm 时执行 `pnpm run deploy`；`pnpm deploy` 是 pnpm 自带的工作区部署命令，不会运行本项目的发布脚本。Windows PowerShell 如遇脚本执行策略限制，可使用 `pnpm.cmd run deploy`。仅查看计划可执行 `pnpm run deploy --dry-run`，无需提前手动 build。
-
-该命令发布**当前工作区代码**，包含尚未提交的改动，不要求先 push 到 GitHub。流程为：
-
-1. 本机 TypeScript 检查、远程服务与运行时检查。
-2. 上传源码包至独立版本目录，使用固定 pnpm 和 `--frozen-lockfile` 安装依赖。
-3. 使用服务器现有 `.env`，再次检查环境、社区表结构、类型并构建；缺少通知、密码找回或收藏表时停止并提示升级命令。
-4. 在 `127.0.0.1:13000` 临时启动新版本，检查数据库表结构、SSR 登录页和实际 CSS 资源；预检进程随后关闭。
-5. 原子切换 `current` 链接，写入专用 systemd drop-in 并重启 `coeer.service`。
-6. 核对线上 `/healthz` 的版本 ID 和数据库状态；失败则恢复此前链接、启动配置并重启旧版本。
-
-这是**带健康检查和自动回滚的重启发布**，切换时可能短暂中断连接，不承诺零停机。新发布的 systemd 配置将停止等待限制为 15 秒，超时后由 systemd 终止残留进程；发布脚本为重启保留 120 秒等待，以兼容回滚时恢复的旧服务配置。失败的构建不会停止当前应用。发布过程中不执行数据库迁移、种子数据或数据库清理；应用回滚也不会回滚数据库。
-
-### 已有数据库的社区功能升级
-
-若站内通知显示 `Failed query ... from "notifications"`，同时收藏页出错，应先检查服务器是否遗漏社区迁移。在服务器当前应用目录（使用版本发布时为 `/var/www/coeer/.deploy/current`，首次部署前为 `/var/www/coeer`），使用服务对应的 Node/pnpm 运行：
+默认目标是 SSH 别名 `aliyun`、目录 `/var/www/coeer`、服务 `coeer.service`。
+在本机项目根目录运行：
 
 ```sh
-NODE_ENV=production pnpm db:check:community
-# 缺表时，先备份数据库，再执行以下可重复运行的增量升级：
-NODE_ENV=production pnpm db:upgrade:community
-NODE_ENV=production pnpm db:check:community
-```
-
-升级脚本和 `deploy/migrations` 必须来自待发布的新版本。升级仅创建 `notifications`、`password_resets`、`bookmarks` 及索引，不清理已有账号、帖子、积分或收藏。完成后重新发布；若仍报错，应继续检查数据库访问权限与实际表结构。不要用 `seed:all` 修复生产库，种子命令只用于开发环境。
-
-旧演示数据中的六种 `placehold.co` 卡片/商城图片地址会在展示时映射为随站点发布的 `/demo/*.svg`，无需重跑种子或改写生产图片数据；其他自定义图片地址保持原值。
-
-常用命令：
-
-```sh
-npm run deploy:check               # 只读检查，不上传或重启
-npm run deploy:list                # 查看线上、回滚、就绪与未就绪版本及占用大小
-npm run deploy:delete -- <ID>       # 删除指定未使用版本（永久删除该版本目录）
-npm run deploy -- --dry-run         # 查看计划，完全不连接服务器
-npm run deploy -- --prepare         # 上传、构建和隔离预检，不切换线上
-npm run deploy -- --activate <ID>   # 再次预检并发布此前准备的版本
-npm run deploy:rollback            # 恢复当前版本记录的上一版本
-npm run test:deploy                # 发布包排除规则、失败恢复及并发锁测试
-```
-
-版本查看不会上传或创建版本目录。删除使用同一把发布互斥锁，禁止删除当前线上版本、当前记录的直接回滚版本及发布目录外的路径；可删除其他就绪或构建失败的版本。删除不会重启服务、执行数据库命令，或沿 `.env`/依赖链接删除版本目录外的文件。删除较早版本后，其他历史版本中指向它的更早回滚记录可能失效；保留需要的回滚链再清理。命令不会自动批量删除，也不提供强制删除保护版本的选项。
-
-### 部署数据库命令
-
-在本机项目目录运行以下命令，复用同一个 `aliyun` 配置：
-
-```sh
-pnpm run deploy:db:status                         # 只读查看数据库、版本、所需表和就绪状态
-pnpm run deploy:db:backup                         # 创建并验证 PostgreSQL 备份
-pnpm run deploy:db:backups                        # 只读列出备份文件、时间和大小
-pnpm run deploy:db:upgrade                        # 先自动备份，再执行本地增量 SQL
-pnpm run deploy:db:seed --user test@example.com    # 先自动备份，再为已有账号补齐演示数据
-```
-
-PowerShell 如有限制，使用 `pnpm.cmd run ...`。各命令支持 `--config <JSON 文件>` 和 `--dry-run`；例如 `pnpm run deploy:db:seed --user test@example.com --dry-run` 只显示计划，不连接服务器，也不执行 SQL。pnpm 脚本参数直接追加，**不需要**在参数前插入 npm 的 `--` 分隔符。
-
-命令通过 SSH 将本地操作脚本发送到服务器执行，在当前线上版本目录读取服务器生产环境配置和数据库依赖。本机 `.env`、连接密码和数据库内容不会上传；即使未重新发布应用，也可以使用新脚本修复旧版本的数据库。数据库就绪检查失败或服务停止时仍可运行修复命令。
-
-升级和导入共用发布互斥锁，自动备份使用 `pg_dump` 自定义格式，并由 `pg_restore --list` 验证。备份失败或验证失败会阻止后续变更；备份保存在服务器 `/var/www/coeer/.deploy/backups`，目录权限为 700、文件为 600。备份命令要求服务器安装与数据库版本兼容的 PostgreSQL 客户端，密码通过进程环境传递，不写入命令行参数或输出。未验证完的 `.partial` 文件不会列为可用备份。
-
-`deploy:db:upgrade` 按文件名顺序执行本地 `deploy/migrations` 中的增量 SQL，然后检查社区表结构。现有 SQL 可重复运行；新增到此目录的 SQL 也应保持幂等并自行包裹事务。该命令不执行 `db:push` 或全库同步，不会复制本机数据库。
-
-`deploy:db:seed` 只接受**已存在且启用的账号邮箱**，在一个事务内创建该账号的私密演示群、示例帖子、收藏和通知，补齐最多三种已有卡片及一项演示成就，并一次性添加 200 测试积分；空卡池会创建一张零权重演示卡。重复执行不会增加积分或卡片数量，不重置密码、角色、已修改内容或通知已读状态，不修改其他用户的持有记录。演示群若被手动公开，脚本会中止，避免继续向公开空间导入。它不开放 `--clean`，也不会绕过原有 `seed:all` 的生产限制。
-
-首次使用或有新表时，顺序为：
-
-```sh
-pnpm run deploy:db:status
-pnpm run deploy:db:upgrade
 pnpm run deploy
-pnpm run deploy:db:seed --user test@example.com
+pnpm run deploy:check
+pnpm run deploy --dry-run
 ```
 
-导入数据后刷新页面即可，不需要再 build 或重启。应用回滚不会撤销数据库写入；这些命令不提供自动恢复或全库清理。
+必须使用 `pnpm run deploy`，`pnpm deploy` 是 pnpm 自带命令。
+PowerShell 可使用 `pnpm.cmd run ...`；pnpm 参数直接追加，不插入 npm 的 `--` 分隔符。
 
-配置位于 `deploy/aliyun.json`。如服务器目录、服务名或 Node/pnpm 安装位置变化，可新建忽略入 Git 的 `deploy/aliyun.local.json`，只填写需要覆盖的字段：
+发布使用当前工作区代码，包含未提交的改动。脚本先检查本机类型和服务器运行时，再上传源码，
+在独立目录安装锁定依赖、检查环境与表结构、构建，并在隔离端口预检。
+通过后切换 `current` 链接并重启服务；健康检查失败时恢复旧版本和启动配置。
+切换时可能短暂中断连接。发布不执行迁移、种子或数据库清空，应用回滚也不回滚数据库。
+
+```sh
+pnpm run deploy:list
+pnpm run deploy --prepare
+pnpm run deploy --activate <版本ID>
+pnpm run deploy:rollback
+pnpm run deploy:delete <版本ID>
+```
+
+`list` 显示版本、状态、时间和大小；`prepare` 只构建与预检；`activate` 发布指定版本。
+`delete` 永久删除未使用的历史版本，保护当前线上及直接回滚版本，不修改数据库或重启服务。
+清理较早版本前应保留需要的回滚链。
+
+## 部署目标配置
+
+公共配置位于 `deploy/aliyun.json`。需要覆盖时，新建 Git 忽略的 `deploy/aliyun.local.json`：
 
 ```json
 {
@@ -103,222 +50,172 @@ pnpm run deploy:db:seed --user test@example.com
 }
 ```
 
-`pnpm` 同目录下必须存在 `node`。项目现在要求 Node 26.x、npm 11.x 和 pnpm 10.33.4；
-仓库中的 `deploy/aliyun.json` 使用 `/root/.nvm/versions/node/v26.7.0/bin/pnpm`，
-其他服务器需先安装对应运行时，或在 `deploy/aliyun.local.json` 填入实际 Node 26 路径。
-脚本在预检时拒绝其他 Node 主版本，不会自动安装运行时；生产启动使用锁文件中的 srvx 0.11.7。
-
-服务器布局：
+`pnpm` 同目录须有 `node`。可通过 `--config <JSON文件>` 选择其他目标。
+服务器需要 Python 3、无交互 sudo、可用的 SSH 配置和依赖仓库访问权限。
+本机 `.env*`、`.coeer-local`、密钥、本机配置、依赖和构建产物不会上传。
 
 ```text
 /var/www/coeer/
-  .env                         # 现有服务器配置，原地保留
+  .env                       服务器配置
   .deploy/
-    lock                       # 发布/回滚互斥锁
-    current -> releases/<ID>   # 首次成功发布后创建
-    releases/<ID>/
+    lock                     发布与数据库写入共用的锁
+    current -> releases/ID   当前版本
+    backups/*.dump           PostgreSQL 备份
+    releases/ID/
       .env -> /var/www/coeer/.env
-      dist/                    # Linux 服务器构建的产物
-      ready.json               # 通过预检的版本记录
-      previous.json            # 上一版本及启动配置记录
-      previous-unit.conf       # 上一版专用 drop-in（如存在）
-      preview.log              # 该版本的隔离预检日志
+      dist/
+      ready.json
+      previous.json
+      previous-unit.conf
+      preview.log
 ```
 
-原始部署目录的源码、依赖和构建产物保持可用，因此首次发布也能回滚到现有部署。专用覆盖文件为 `/etc/systemd/system/coeer.service.d/90-coeer-release.conf`；其他覆盖文件若修改启动目录或启动命令，预检会停止并要求先核对，不会直接覆盖。版本目录默认保留，脚本不自动清理历史版本。上一版哈希静态资源会复制到新版本，降低已打开页面更新时的资源缺失风险。
+## 数据库状态与升级
 
-本机 `.env*`、SSH/云凭据、`*.pem`、`*.key`、本机配置、`node_modules` 和 `dist` 不会上传。SSH 使用已有 `aliyun` 身份和主机验证设置，不修改 SSH、防火墙或数据库权限。服务器需要 Python 3、无交互 sudo、现有 Node/pnpm，以及能访问依赖仓库的网络。
-
-健康检查的成功响应形如：
-
-```json
-{"status":"ok","release":"<ID>"}
+```sh
+pnpm run deploy:db:status
+pnpm run deploy:db:upgrade
 ```
 
-数据库不可用或社区所需表/字段缺失时返回 HTTP 503 与通用状态，不输出连接字符串或错误详情。发布成功意味着应用回环端口与 systemd 检查通过；公网 DNS、证书和 Nginx 配置沿用现状，可另用公网地址检查。
+数据库命令通过 SSH stdin 发送本地操作代码，在服务器当前版本中加载生产配置和依赖，
+无需先发布网站。`status` 只读检查数据库及社区表结构；`upgrade` 自动备份后按文件名执行
+`deploy/migrations` 中的增量 SQL，再检查表结构。备份失败会阻止升级。
 
-以下为首次搭建服务器的手动流程；已接入一键发布后，请使用上述命令，避免在原始目录手动 `git pull` 后重启。
+通知、收藏或密码找回缺表时，先升级再发布。也可在服务器当前应用目录执行：
 
-## Requirements
+```sh
+NODE_ENV=production pnpm db:check:community
+NODE_ENV=production pnpm db:upgrade:community
+NODE_ENV=production pnpm db:check:community
+```
 
-- Linux server, Ubuntu 22.04+ recommended
-- Node.js 26.x and npm 11.x (recommended Node 26.7.0)
-- pnpm 10.33.4
-- PostgreSQL 14+
-- Nginx
-- A domain name pointing to the server
+直接执行升级前自行备份。增量升级补齐通知、密码重置、收藏表与索引，不替代所有版本的结构迁移。
+新环境可用 `db:push` 创建社区表；已有生产表的其他变更应单独生成、审阅并应用迁移。
 
-## 1. Install Runtime Dependencies
+## 创建唯一管理员
+
+在本机的交互式终端运行：
+
+```sh
+pnpm run deploy:setup
+```
+
+按提示输入管理员邮箱、昵称、密码和密码确认。邮箱可使用非学生邮箱；密码至少 8 位，
+最多 72 字节，输入不回显。密码在本机生成 bcrypt 哈希后经 SSH stdin 传递，不写入代码、
+配置文件或命令行参数。数据库仅新增一个启用的管理员，不注入帖子、群组、积分或其他样例。
+
+已有管理员时 setup 会拒绝执行，包括已停用的管理员；邮箱已被普通账号使用时也会拒绝，
+不会提升权限或覆盖密码。重复或并发运行不会创建多个管理员。
+线上演示种子入口已移除，本地开发种子禁止在生产环境运行。
+主站内嵌预约引擎不自动创建演示账号或独立预约管理员。
+
+管理员登录凭据保存在社区 `users.email` 与 `users.password_hash`，不是 `.env` 中的配置。
+`DATABASE_URL` 的用户名与密码只用于连接数据库。登录后可在 `/profile` 修改密码，
+忘记密码可使用已配置邮件服务的找回流程。
+
+已有管理员的邮箱目前需要定向修改数据库。先核对账号 ID，修改社区邮箱；
+若存在预约身份镜像，同时修改镜像邮箱并保留其 ID，避免分离历史预约身份。
+修改开发种子文件不会改变已有线上账号。
+
+## 无备份清空数据库
+
+本机项目目录中先只读核对目标、表和行数，再执行清空：
+
+```sh
+pnpm run deploy:db:clear
+pnpm run deploy:db:clear --execute
+```
+
+清空会删除全部社区账号，包括管理员，以及社区与预约数据：反馈、群组、帖子、回复、活动、
+通知、积分、卡片与卡池、成就规则、兑换、宿舍、预约记录、白名单、预约设置、目录和缓存等。
+保留表结构、索引、约束和迁移版本；服务器环境文件、官网凭据、密钥、已有备份与发布版本保留。
+此命令不创建备份，也不会取消官网已有预约。
+
+默认只读预览，`--execute` 才会删除。执行时共用发布锁，暂停原本运行的服务，
+在事务中锁定显式列出的应用表并清空，再恢复服务；失败会回滚并尝试恢复原运行状态。
+服务原本停止时不会启动。缺表、异常命名空间或范围外外键引用会阻止清空，不使用级联删除。
+
+完成后用 `deploy:setup` 创建管理员。服务恢复后的后台同步可能重新生成场地目录、设置、缓存和日志；
+这些是运行数据，不是演示种子。`--dry-run` 仅显示本机计划，不连接服务器，也不读取线上行数。
+本地清空命令见 [development.md](development.md#本地数据库)。
+
+## 备份列表与删除
+
+```sh
+pnpm run deploy:db:backup
+pnpm run deploy:db:list
+pnpm run deploy:db:backups
+pnpm run deploy:db:delete coeer-db-20261022120000000-a1b2c3d4.dump --dry-run
+pnpm run deploy:db:delete coeer-db-20261022120000000-a1b2c3d4.dump
+```
+
+删除示例中的文件名需替换为列表中的完整名称。`list` 与 `backups` 等价，按新到旧显示目录、
+文件名、时间（UTC）和字节大小。列表与删除不建立数据库连接，但需要当前版本的 Node 与运行依赖。
+
+备份默认位于服务器 `/var/www/coeer/.deploy/backups`，随部署 `root` 调整。
+使用 PostgreSQL `pg_dump` 自定义格式，`pg_restore --list` 验证后才发布为 `.dump`，
+未完成的 `.partial` 不列入备份。服务器须安装兼容版本的 PostgreSQL 客户端。
+目录权限为 700、文件为 600，包含业务数据及密码哈希，不通过网页公开。
+查看备份中的记录，需要恢复到独立数据库后查询。
+
+`deploy:db:delete` 立即永久删除指定备份文件，不要求 `--execute`；拒绝路径、通配符和符号链接。
+它不改变当前数据库。网站历史版本使用 `deploy:delete` 管理，两种删除互不替代。
+
+## 首次搭建服务器
+
+以下命令以 Ubuntu、项目目录 `/var/www/coeer` 为例，域名和运行时路径需替换为实际值。
+先安装 Node.js 26.7.0 和 pnpm 10.33.4，再安装 PostgreSQL、Nginx 与客户端工具：
 
 ```sh
 sudo apt update
-sudo apt install -y nginx postgresql postgresql-contrib
-
-curl -fsSL https://deb.nodesource.com/setup_26.x | sudo -E bash -
-sudo apt install -y nodejs
-
-corepack enable
-corepack prepare pnpm@10.33.4 --activate
-```
-
-## 2. Prepare PostgreSQL
-
-```sh
-sudo -u postgres psql
-```
-
-```sql
-CREATE DATABASE coeer;
-CREATE USER coeer_user WITH ENCRYPTED PASSWORD 'change-this-password';
-GRANT ALL PRIVILEGES ON DATABASE coeer TO coeer_user;
-\q
-```
-
-For PostgreSQL 15+, also grant schema privileges after connecting to the database:
-
-```sh
-sudo -u postgres psql -d coeer
-```
-
-```sql
-GRANT ALL ON SCHEMA public TO coeer_user;
-\q
-```
-
-## 3. Clone and Configure
-
-```sh
-sudo mkdir -p /var/www
-sudo chown -R "$USER":"$USER" /var/www
-cd /var/www
-git clone https://github.com/your_name/coeer.git
-cd coeer
-
+sudo apt install -y git postgresql postgresql-client nginx
+sudo -u postgres createuser --pwprompt coeer_user
+sudo -u postgres createdb --owner=coeer_user coeer
+sudo mkdir -p /var/www/coeer
+sudo chown "$USER":"$USER" /var/www/coeer
+git clone https://github.com/MiniYuanBot/coeer.git /var/www/coeer
+cd /var/www/coeer
 cp .env.example .env
-```
-
-Edit `.env`:
-
-```env
-NODE_ENV=production
-PORT=3000
-CLIENT_URL=https://coeer.example.com
-
-DATABASE_URL=postgresql://coeer_user:change-this-password@localhost:5432/coeer
-DB_POOL_MIN=1
-DB_POOL_MAX=10
-
-SESSION_SECRET=replace-with-production-secret
-
-VITE_APP_NAME=COEER
-VITE_API_URL=
-```
-
-Generate a strong secret:
-
-```sh
+chmod 600 .env
 openssl rand -base64 48
 ```
 
-## 4. Install, Validate, Build
+填写 `.env` 的数据库连接、随机 `SESSION_SECRET`、`CLIENT_URL` 和 `APP_URL`。
+生产 origin 必须使用 HTTPS；预约的 Connector 与私密文件配置见 [open-space.md](open-space.md#官方接入与部署)。
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm check:env
-pnpm db:push
+NODE_ENV=production pnpm check:env
+NODE_ENV=production pnpm db:push
+NODE_ENV=production pnpm db:setup
 pnpm build
-```
-
-For a demo environment, you may seed test data:
-
-```sh
-pnpm seed:all
-```
-
-The local seed commands are disabled in production. For an existing deployed test account, use `pnpm run deploy:db:seed --user <email>` from your local project; it creates a verified backup before importing data.
-
-## 5. Run with systemd
-
-Copy and edit the service file:
-
-```sh
 sudo cp deploy/systemd/coeer.service /etc/systemd/system/coeer.service
 sudo nano /etc/systemd/system/coeer.service
 ```
 
-Make sure `WorkingDirectory` points to your deployed project directory and the Node.js path in `ExecStart` matches the installed runtime:
-
-```sh
-which node
-```
-
-Then start the service:
+在 service 中核对 `WorkingDirectory` 与 `ExecStart` 的 Node、srvx 和构建入口路径。
+管理员仍通过同一套交互式 setup 创建，不使用固定账号。
 
 ```sh
 sudo systemctl daemon-reload
-sudo systemctl enable coeer
-sudo systemctl start coeer
-sudo systemctl status coeer
-```
-
-View logs:
-
-```sh
-journalctl -u coeer -f
-```
-
-## 6. Configure Nginx
-
-Copy and edit the Nginx config:
-
-```sh
+sudo systemctl enable --now coeer
 sudo cp deploy/nginx/coeer.conf /etc/nginx/sites-available/coeer
 sudo nano /etc/nginx/sites-available/coeer
 sudo ln -s /etc/nginx/sites-available/coeer /etc/nginx/sites-enabled/coeer
 sudo nginx -t
 sudo systemctl reload nginx
-```
-
-## 7. Enable HTTPS
-
-```sh
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d coeer.example.com
 ```
 
-After HTTPS is enabled, ensure `.env` has:
-
-```env
-NODE_ENV=production
-CLIENT_URL=https://coeer.example.com
-```
-
-The session cookie is marked `secure` in production, so HTTPS is required for login to work correctly.
-
-## 8. Update Deployment
-
-已接入一键发布的服务器，在本机运行 `npm run deploy`。下列命令仅适用于未接入版本目录管理的手动部署；数据库变更应独立评估、备份并使用迁移，不作为每次 UI 发布步骤。
+## 服务检查
 
 ```sh
-cd /var/www/coeer
-git pull
-pnpm install --frozen-lockfile
-pnpm check:env
-pnpm build
-sudo systemctl restart coeer
-```
-
-## 9. Health Checks
-
-```sh
-curl -I http://127.0.0.1:3000
+curl http://127.0.0.1:3000/healthz
 curl -I https://coeer.example.com
 sudo systemctl status coeer
 journalctl -u coeer -n 100 --no-pager
+journalctl -u coeer -f
 ```
 
-## Notes
-
-- Keep `.env` only on the server. Never commit it.
-- `pnpm db:push` is convenient for early deployment. For a stable production database, prefer Drizzle migrations with `pnpm db:generate` and `pnpm db:migrate`. Schema changes (e.g. new columns such as `redeem_orders.quantity`) require running `pnpm db:push`/migrations on the production database.
-- Back up PostgreSQL before schema changes and before running any clean seed command.
+健康检查包含数据库及社区所需表结构。预约配置修改后需要重启服务；构建与静态预渲染不会启动预约后台。

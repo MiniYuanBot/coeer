@@ -68,7 +68,7 @@ class Deployment:
 
     def systemctl(self, *arguments, capture=False):
         # A legacy unit being restored can retain systemd's default 90s stop timeout.
-        timeout = 120 if "restart" in arguments else 45
+        timeout = 120 if any(action in arguments for action in ("restart", "stop")) else 45
         return self.runner.run(["systemctl", *arguments], capture=capture, timeout=timeout)
 
     def preflight(self):
@@ -403,12 +403,52 @@ class Deployment:
             raise DeployError("Node 运行时路径不可用。")
         if not isinstance(payload, dict) or not isinstance(payload.get("source"), str) or not isinstance(payload.get("schemaCheck"), str):
             raise DeployError("缺少本地数据库操作脚本。")
-        if self.args.action == "db-seed" and not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", self.args.user or ""):
-            raise DeployError("测试数据导入必须指定有效的已有账号邮箱。")
-        request = {"action": self.args.action, "user": self.args.user, "schemaCheck": payload["schemaCheck"],
+        execute = getattr(self.args, "execute", False)
+        if execute and self.args.action != "db-clear":
+            raise DeployError("--execute 只用于数据库清空。")
+        backup = getattr(self.args, "backup", None)
+        if self.args.action == "db-delete":
+            if not re.fullmatch(r"coeer-db-\d{17}-[a-f0-9]{8}\.dump", backup or ""):
+                raise DeployError("删除备份必须指定列表中的完整 .dump 文件名，不能使用路径或通配符。")
+        elif backup is not None:
+            raise DeployError("--backup 只用于删除数据库备份。")
+        request = {"action": self.args.action, "schemaCheck": payload["schemaCheck"],
                    "migrations": payload.get("migrations", []), "backupDirectory": str(self.control / "backups")}
-        environment = {**self.environment, "NODE_ENV": "production", "COEER_DB_REQUEST": json.dumps(request)}
-        self.runner.run([str(self.node), "--input-type=module", "-"], cwd=release, env=environment, input=payload["source"], timeout=300)
+        if self.args.action == "db-delete":
+            request["backup"] = backup
+        if self.args.action == "db-clear":
+            request["execute"] = False
+        if self.args.action == "db-setup":
+            if not isinstance(payload.get("admin"), dict):
+                raise DeployError("setup 缺少交互式管理员输入。")
+            request["admin"] = payload["admin"]
+
+        def run_operation(value):
+            environment = {**self.environment, "NODE_ENV": "production", "COEER_DB_REQUEST": json.dumps(value)}
+            self.runner.run([str(self.node), "--input-type=module", "-"], cwd=release, env=environment, input=payload["source"], timeout=300)
+
+        # Clear starts with read-only validation before service disruption.
+        run_operation(request)
+        if self.args.action != "db-clear" or not execute:
+            return
+        working = self.systemctl("show", self.args.service, "--property=WorkingDirectory", "--value", capture=True)
+        if working not in (str(self.root), str(self.current)):
+            raise DeployError("服务 WorkingDirectory 与配置不一致，拒绝停止其他服务。")
+        state = self.systemctl("show", self.args.service, "--property=ActiveState", "--value", capture=True)
+        if state not in ("active", "inactive", "failed"):
+            raise DeployError("服务状态正在变化，请稍后重试。")
+        was_active = state == "active"
+        try:
+            if was_active:
+                self.log("暂停服务后无备份清空数据库；不会取消官网预约。")
+                self.systemctl("stop", self.args.service)
+            run_operation({**request, "execute": True})
+        finally:
+            # Restore the original running state even when validation, backup or SQL fails.
+            if was_active:
+                self.systemctl("start", self.args.service)
+                self.wait_ready(self.args.port, release.name if release != self.root else None, legacy=release == self.root)
+                self.systemctl("is-active", "--quiet", self.args.service)
 
 
 def main():
@@ -417,7 +457,7 @@ def main():
     for signum in (signal.SIGHUP, signal.SIGTERM):
         signal.signal(signum, interrupted)
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["check", "prepare", "deploy", "activate", "rollback", "list", "delete", "db-status", "db-backup", "db-backups", "db-upgrade", "db-seed"])
+    parser.add_argument("action", choices=["check", "prepare", "deploy", "activate", "rollback", "list", "delete", "db-status", "db-backup", "db-backups", "db-delete", "db-upgrade", "db-setup", "db-clear"])
     parser.add_argument("--root", required=True)
     parser.add_argument("--service", required=True)
     parser.add_argument("--pnpm", required=True)
@@ -427,7 +467,8 @@ def main():
     parser.add_argument("--archive")
     parser.add_argument("--sha256")
     parser.add_argument("--release")
-    parser.add_argument("--user")
+    parser.add_argument("--backup")
+    parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if os.geteuid() != 0:
         raise DeployError("需要 sudo -n 访问现有 systemd 服务及部署目录。")
@@ -439,7 +480,7 @@ def main():
         raise DeployError("线上与预检端口必须有效且不同。")
     deployment = Deployment(args)
     if args.action.startswith("db-"):
-        if args.action in ("db-status", "db-backups"):
+        if args.action in ("db-status", "db-backups") or (args.action == "db-clear" and not args.execute):
             deployment.database(globals().get("DATABASE_PAYLOAD"))
         else:
             deployment.validate_release_layout()

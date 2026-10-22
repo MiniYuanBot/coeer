@@ -7,8 +7,9 @@ import tarfile
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
-from remote import Deployment, DeployError, atomic_write
+from remote import Deployment, DeployError, atomic_write, main
 
 
 class FakeRunner:
@@ -20,10 +21,17 @@ class FakeRunner:
         self.fail_schema = False
         self.restart_seconds = 0
         self.node_version = 'v26.7.0'
+        self.active_state = 'active'
+        self.fail_database_call = None
+        self.database_calls = 0
 
     def run(self, args, **options):
         self.calls.append(args)
         self.options.append(options)
+        if args[-2:] == ['--input-type=module', '-']:
+            self.database_calls += 1
+            if self.database_calls == self.fail_database_call:
+                raise subprocess.CalledProcessError(1, args)
         if args[:2] == ['systemctl', 'restart'] and options.get('timeout', 0) < self.restart_seconds:
             raise subprocess.TimeoutExpired(args, options.get('timeout', 0))
         if self.fail_build and args[-2:] == ['run', 'build']:
@@ -32,6 +40,8 @@ class FakeRunner:
             raise subprocess.CalledProcessError(1, args)
         if options.get('capture'):
             if args[0] == 'systemctl':
+                if '--property=ActiveState' in args:
+                    return self.active_state
                 return str(self.root)
             if args[-1] == '--version':
                 return self.node_version if args[0].endswith('/node') else '10.33.4'
@@ -131,21 +141,21 @@ class ReleaseTransactions(unittest.TestCase):
         self.assertEqual(request['backupDirectory'], str(self.deployment.control / 'backups'))
         self.assertNotIn('DATABASE_URL', request)
 
-    def test_database_commands_use_active_release_and_validate_target_and_account(self):
+    def test_setup_uses_active_release_and_passes_hash_through_stdin_payload(self):
         release = self.old_release()
         (release / '.env').symlink_to(self.root / '.env')
         for name in ['pg', 'dotenv']:
             (release / 'node_modules' / name).mkdir(parents=True)
-        self.args.action = 'db-seed'
-        self.args.user = 'test@example.com'
-        payload = {'source': 'operation source', 'schemaCheck': 'SELECT 1', 'migrations': []}
+        self.args.action = 'db-setup'
+        admin = {'email': 'custom@example.com', 'name': 'Operator', 'passwordHash': 'private-hash'}
+        payload = {'source': 'operation source', 'schemaCheck': 'SELECT 1', 'admin': admin}
         self.deployment.database(payload)
         self.assertEqual(self.runner.options[-1]['cwd'], release)
-        self.args.user = 'invalid;id'
+        request = json.loads(self.runner.options[-1]['env']['COEER_DB_REQUEST'])
+        self.assertEqual(request['admin'], admin)
+        self.assertNotIn('private-hash', str(self.runner.calls))
         with self.assertRaises(DeployError):
-            self.deployment.database(payload)
-        self.assertEqual(len(self.runner.calls), 1)
-        self.args.user = 'test@example.com'
+            self.deployment.database({**payload, 'admin': None})
         outside = self.base / 'outside'
         outside.mkdir()
         self.deployment.current.unlink()
@@ -153,6 +163,107 @@ class ReleaseTransactions(unittest.TestCase):
         with self.assertRaises(DeployError):
             self.deployment.database(payload)
         self.assertEqual(len(self.runner.calls), 1)
+
+    def clear_database_fixture(self, execute=False):
+        for name in ['pg', 'dotenv']:
+            (self.root / 'node_modules' / name).mkdir(parents=True)
+        self.args.action = 'db-clear'
+        self.args.user = None
+        self.args.execute = execute
+        return {'source': 'reset command source', 'schemaCheck': 'SELECT 1'}
+
+    def test_backup_listing_is_read_only_and_deletion_forwards_only_an_exact_filename(self):
+        for name in ['pg', 'dotenv']:
+            (self.root / 'node_modules' / name).mkdir(parents=True)
+        self.args.action = 'db-backups'
+        self.args.user = None
+        payload = {'source': 'backup management source', 'schemaCheck': 'SELECT 1'}
+        self.deployment.database(payload)
+        self.assertFalse(self.deployment.control.exists())
+        self.args.action = 'db-delete'
+        self.args.backup = 'coeer-db-20261022120000000-a1b2c3d4.dump'
+        self.deployment.database(payload)
+        request = json.loads(self.runner.options[-1]['env']['COEER_DB_REQUEST'])
+        self.assertEqual(request['backup'], self.args.backup)
+        self.assertEqual(request['backupDirectory'], str(self.root / '.deploy/backups'))
+        self.assertEqual(len(self.runner.calls), 2)
+        self.assertTrue(all(args[-2:] == ['--input-type=module', '-'] for args in self.runner.calls))
+        for invalid in [None, '../' + self.args.backup, '*.dump', self.args.backup + '.partial', self.args.backup + '\n']:
+            self.args.backup = invalid
+            with self.assertRaises(DeployError):
+                self.deployment.database(payload)
+        self.args.action = 'db-status'
+        self.args.backup = 'coeer-db-20261022120000000-a1b2c3d4.dump'
+        with self.assertRaises(DeployError):
+            self.deployment.database(payload)
+        self.assertEqual(len(self.runner.calls), 2)
+
+    def test_backup_deletion_uses_the_deployment_lock(self):
+        for name in ['pg', 'dotenv']:
+            (self.root / 'node_modules' / name).mkdir(parents=True)
+        self.args.action = 'db-delete'
+        self.args.user = None
+        self.args.backup = 'coeer-db-20261022120000000-a1b2c3d4.dump'
+        argv = ['remote.py', self.args.action, '--root', str(self.root), '--service', self.args.service,
+                '--pnpm', str(self.deployment.pnpm), '--pnpm-version', '10.33.4',
+                '--port', '3000', '--preview-port', '13000', '--backup', self.args.backup]
+        with patch('remote.Deployment', return_value=self.deployment), patch('remote.os.geteuid', return_value=0), \
+                patch('remote.sys.argv', argv), patch('remote.DATABASE_PAYLOAD', {'source': 'delete source', 'schemaCheck': 'SELECT 1'}, create=True):
+            with self.deployment.lock():
+                with self.assertRaisesRegex(DeployError, '正在进行'):
+                    main()
+            self.assertEqual(self.runner.calls, [])
+            main()
+        self.assertEqual(self.runner.database_calls, 1)
+
+    def test_database_clear_preview_is_read_only_and_does_not_stop_service(self):
+        self.deployment.database(self.clear_database_fixture())
+        self.assertEqual(len(self.runner.calls), 1)
+        request = json.loads(self.runner.options[0]['env']['COEER_DB_REQUEST'])
+        self.assertNotIn('admin', request)
+        self.assertIs(request['execute'], False)
+        self.assertFalse(self.deployment.control.exists())
+
+    def test_database_clear_execution_validates_then_stops_and_restores_service(self):
+        self.deployment.database(self.clear_database_fixture(execute=True))
+        self.assertEqual(self.runner.database_calls, 2)
+        requests = [json.loads(options['env']['COEER_DB_REQUEST']) for options in self.runner.options if 'COEER_DB_REQUEST' in (options.get('env') or {})]
+        self.assertEqual([request['execute'] for request in requests], [False, True])
+        stop = self.runner.calls.index(['systemctl', 'stop', self.args.service])
+        start = self.runner.calls.index(['systemctl', 'start', self.args.service])
+        operations = [index for index, args in enumerate(self.runner.calls) if args[-2:] == ['--input-type=module', '-']]
+        self.assertLess(operations[0], stop)
+        self.assertLess(stop, operations[1])
+        self.assertLess(operations[1], start)
+        self.assertIn((3000, None, True), self.deployment.probes)
+
+    def test_database_clear_failure_restores_service_but_failed_validation_never_stops_it(self):
+        payload = self.clear_database_fixture(execute=True)
+        self.runner.fail_database_call = 1
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.deployment.database(payload)
+        self.assertFalse(any('stop' in args or 'start' in args for args in self.runner.calls))
+        self.runner.calls.clear()
+        self.runner.database_calls = 0
+        self.runner.fail_database_call = 2
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.deployment.database(payload)
+        self.assertIn(['systemctl', 'stop', self.args.service], self.runner.calls)
+        self.assertIn(['systemctl', 'start', self.args.service], self.runner.calls)
+
+    def test_database_clear_does_not_start_an_originally_stopped_service(self):
+        payload = self.clear_database_fixture(execute=True)
+        self.runner.active_state = 'inactive'
+        self.deployment.database(payload)
+        self.assertEqual(self.runner.database_calls, 2)
+        self.assertFalse(any('stop' in args or 'start' in args for args in self.runner.calls))
+
+    def test_database_clear_rejects_changing_service_state(self):
+        payload = self.clear_database_fixture(execute=True)
+        self.runner.active_state = 'activating'
+        with self.assertRaises(DeployError):
+            self.deployment.database(payload)
+        self.assertFalse(any('stop' in args or 'start' in args for args in self.runner.calls))
 
     def test_failed_preview_never_switches_running_version(self):
         old = self.old_release()

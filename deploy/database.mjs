@@ -1,5 +1,5 @@
 // Also sent over SSH stdin: imports resolve against the active release's dependencies.
-import { createHash, randomBytes } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { chmodSync, closeSync, existsSync, lstatSync, mkdirSync, openSync, readdirSync, renameSync, statSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
@@ -37,6 +37,18 @@ export function listDatabaseBackups(directory) {
         const info = lstatSync(join(directory, name))
         return info.isFile() ? [{ name, bytes: info.size, createdAt: info.mtime.toISOString() }] : []
     })
+}
+
+export function deleteDatabaseBackup(directory, name) {
+    if (typeof name !== 'string' || name.trim() !== name || !backupPattern.test(name)) {
+        throw new Error('必须指定备份列表中的完整 .dump 文件名，不能使用路径或通配符。')
+    }
+    validateBackupDirectory(directory)
+    const destination = join(directory, name)
+    const info = lstatSync(destination, { throwIfNoEntry: false })
+    if (!info?.isFile() || info.isSymbolicLink()) throw new Error('备份不存在或不是普通文件，未执行删除。')
+    unlinkSync(destination)
+    return { deleted: name, bytes: info.size, directory }
 }
 
 export function backupDatabase(connectionString, directory, run = spawnSync) {
@@ -87,47 +99,103 @@ export async function applyDatabaseMigrations(pool, migrations, schemaCheck) {
     } finally { client.release() }
 }
 
-function demoId(userId, entity) {
-    const hex = createHash('sha256').update('coeer:deployment-demo:v1:' + userId + ':' + entity).digest('hex')
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`
+// Clear only application tables; never cascade into unrelated schemas.
+export const COMMUNITY_CLEAR_TABLES = [
+    'users', 'bookmarks', 'notifications', 'password_resets', 'dorm_rooms', 'dorm_questionnaires',
+    'dorm_student_profiles', 'dorm_cycles', 'redeem_orders', 'redeem_items', 'user_achievements',
+    'achievements', 'user_cards', 'cards', 'point_transactions', 'activity_participants', 'activities',
+    'user_subscriptions', 'bulletins', 'reactions', 'replies', 'feedback_status_logs', 'feedbacks',
+    'group_posts', 'group_members', 'groups', 'user_profiles',
+]
+export const BOOKING_CLEAR_TABLES = [
+    'sessions', 'booking_access', 'booking_events', 'jobs', 'bookings', 'snapshots', 'user_accounts',
+    'users', 'audit', 'sync_runs', 'mock_reservations', 'adapter_calls', 'official_bindings', 'alerts', 'rate_limits',
+    'spaces', 'settings', 'booking_allowlist', 'mock_scenarios',
+]
+
+function quotedSchema(name) {
+    if (!/^[a-z_][a-z0-9_]{0,62}$/.test(name ?? '') || name.startsWith('pg_') || name === 'information_schema') {
+        throw new Error('数据库命名空间无效，未执行清理。')
+    }
+    return '"' + name + '"'
 }
 
-export async function findDemoUser(pool, email) {
-    const { rows: [user] } = await pool.query('SELECT id, email FROM users WHERE lower(email) = lower($1) AND is_active = true', [email])
-    if (!user) throw new Error('指定的已有账号不存在或已停用；导入不会创建账号。')
-    return user
+async function clearContext(client, bookingSchema) {
+    quotedSchema(bookingSchema)
+    const { rows: [location] } = await client.query(`SELECT n.nspname AS schema FROM pg_class c
+        JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.oid=to_regclass('users') AND c.relkind IN ('r','p')`)
+    if (!location) throw new Error('找不到社区账号表，请先初始化表结构。')
+    const communitySchema = location.schema
+    quotedSchema(communitySchema)
+    if (communitySchema === bookingSchema) throw new Error('社区与预约命名空间必须不同，未执行清理。')
+    const { rows: namespaces } = await client.query('SELECT nspname FROM pg_namespace WHERE nspname=$1', [bookingSchema])
+    const hasBooking = namespaces.length > 0
+    const table = (schema, name) => `${quotedSchema(schema)}."${name}"`
+    const targets = [...COMMUNITY_CLEAR_TABLES.map(name => table(communitySchema, name)),
+        ...(hasBooking ? BOOKING_CLEAR_TABLES.map(name => table(bookingSchema, name)) : [])]
+    const { rows: tables } = await client.query(`SELECT n.nspname AS schema,c.relname AS name FROM pg_class c
+        JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=ANY($1::text[]) AND c.relkind IN ('r','p')`, [[communitySchema, bookingSchema]])
+    const available = new Set(tables.map(value => table(value.schema, value.name)))
+    const missing = targets.filter(name => !available.has(name))
+    if (missing.length) throw new Error('数据库表结构不完整，请先检查/升级：' + missing.join(', '))
+    return { communitySchema, bookingSchema, bookingInitialized: hasBooking, targets }
 }
 
-export async function seedDeploymentDemo(pool, email) {
+async function clearPlan(client, context) {
+    const cleared = []
+    for (const table of context.targets) {
+        const { rows: [row] } = await client.query(`SELECT count(*)::int AS total FROM ${table}`)
+        cleared.push({ table, rows: row.total })
+    }
+    const { rows: [database] } = await client.query('SELECT current_database() AS database, current_user AS role')
+    const { targets, ...location } = context
+    return { ...database, ...location, cleared, backup: false,
+        notice: '删除全部社区账号及社区、预约数据，包括白名单和预约设置；保留表结构与迁移版本。不创建备份，不取消官网预约。' }
+}
+
+export async function clearDatabase(pool, bookingSchema = 'coeer_spaces', execute = false) {
+    if (typeof execute !== 'boolean') throw new Error('清空执行标志必须为布尔值。')
+    const client = await pool.connect()
+    try {
+        await client.query(execute ? 'BEGIN' : 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+        if (execute) await client.query("SET LOCAL lock_timeout = '10s'")
+        const context = await clearContext(client, bookingSchema)
+        if (execute) {
+            await client.query(`LOCK TABLE ${context.targets.join(', ')} IN ACCESS EXCLUSIVE MODE`)
+            const { rows: externalReferences } = await client.query(`SELECT conname FROM pg_constraint
+                WHERE contype='f' AND confrelid=ANY($1::regclass[]) AND NOT (conrelid=ANY($1::regclass[]))`, [context.targets])
+            if (externalReferences.length) throw new Error('清理范围之外的表引用了待清理数据，拒绝级联删除。')
+        }
+        const plan = await clearPlan(client, context)
+        if (execute) await client.query(`TRUNCATE TABLE ${context.targets.join(', ')} RESTART IDENTITY`)
+        await client.query('COMMIT')
+        return { preview: !execute, ...plan }
+    } catch (error) {
+        await client.query('ROLLBACK')
+        throw error
+    } finally { client.release() }
+}
+
+export async function setupAdministrator(pool, admin) {
+    if (!admin || typeof admin.email !== 'string' || admin.email.length > 254 || admin.email !== admin.email.trim().toLowerCase()
+        || !/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(admin.email)
+        || typeof admin.name !== 'string' || !admin.name.trim() || admin.name.length > 63
+        || typeof admin.passwordHash !== 'string' || !/^\$2[aby]\$12\$[./A-Za-z0-9]{53}$/.test(admin.passwordHash)) {
+        throw new Error('管理员输入无效，请通过交互终端运行 setup。')
+    }
     const client = await pool.connect()
     try {
         await client.query('BEGIN')
-        const { rows: [user] } = await client.query('SELECT id, email FROM users WHERE lower(email) = lower($1) AND is_active = true FOR UPDATE', [email])
-        if (!user) throw new Error('指定的已有账号不存在或已停用；导入不会创建账号。')
-        const id = entity => demoId(user.id, entity)
-        const slug = 'coeer-demo-' + user.id
-        await client.query(`INSERT INTO groups (id, name, slug, description, category, creator_id, status, is_public)
-            VALUES ($1, '部署测试空间', $2, '仅用于指定账号的功能验收。', 'project', $3, 'approved', false) ON CONFLICT DO NOTHING`, [id('group'), slug, user.id])
-        const { rows: [group] } = await client.query('SELECT id, creator_id, is_public FROM groups WHERE id=$1 AND slug=$2', [id('group'), slug])
-        if (!group || group.creator_id !== user.id || group.is_public) throw new Error('演示空间标识被占用或已公开，未修改任何数据。')
-        await client.query(`INSERT INTO group_members (group_id,user_id,role,status) VALUES ($1,$2,'admin','approved') ON CONFLICT DO NOTHING`, [group.id, user.id])
-        await client.query(`INSERT INTO group_posts (id,group_id,author_id,title,content,type) VALUES ($1,$2,$3,'部署验收示例帖子',$4,'discussion') ON CONFLICT DO NOTHING`,
-            [id('post'), group.id, user.id, '这是一条测试数据，可用于验证帖子、收藏与 Markdown。\n\n行内公式：$x^2+y^2=1$。'])
-        await client.query('INSERT INTO bookmarks (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [user.id, id('post')])
-        // Reuse the real catalog. A zero-weight demo card is created only for an empty catalog.
-        let { rows: catalog } = await client.query('SELECT id FROM cards ORDER BY created_at,id LIMIT 3')
-        if (!catalog.length) {
-            await client.query(`INSERT INTO cards (id,name,description,image_url,rarity,series,drop_rate) VALUES ($1,'部署测试纪念卡','演示导入创建的测试卡片。','/demo/card-rare.svg','rare','deployment-demo',0) ON CONFLICT DO NOTHING`, [demoId('catalog', 'card')])
-            catalog = [{ id: demoId('catalog', 'card') }]
-        }
-        for (const card of catalog) await client.query('INSERT INTO user_cards (user_id,card_id,count) VALUES ($1,$2,1) ON CONFLICT DO NOTHING', [user.id, card.id])
-        await client.query(`INSERT INTO achievements (id,code,name,description,condition_type,condition_value) VALUES ($1,'DEPLOYMENT_DEMO','部署验收参与者','通过显式测试数据导入解锁的演示成就。','action',1) ON CONFLICT DO NOTHING`, [demoId('catalog', 'achievement')])
-        const { rows: [achievement] } = await client.query("SELECT id FROM achievements WHERE code='DEPLOYMENT_DEMO'")
-        await client.query('INSERT INTO user_achievements (user_id,achievement_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [user.id, achievement.id])
-        const points = await client.query(`INSERT INTO point_transactions (id,user_id,amount,type,source,description) VALUES ($1,$2,200,'earn','adjustment','部署演示：一次性测试积分') ON CONFLICT DO NOTHING RETURNING id`, [id('points'), user.id])
-        await client.query(`INSERT INTO notifications (id,user_id,type,title,content,href) VALUES ($1,$2,'deployment_demo','测试数据已就绪','已添加私密演示帖子、收藏、卡片、成就及一次性测试积分。',$3) ON CONFLICT DO NOTHING`, [id('notification'), user.id, '/groups/' + slug + '/posts/' + id('post')])
+        // Serialize setup with other setup calls and account registration.
+        await client.query('LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE')
+        const { rows: admins } = await client.query("SELECT id FROM users WHERE role='admin' LIMIT 1")
+        if (admins.length) throw new Error('已有管理员，setup 不会重复创建或覆盖密码。')
+        const { rows: conflicts } = await client.query('SELECT id FROM users WHERE lower(email)=lower($1)', [admin.email])
+        if (conflicts.length) throw new Error('该邮箱已有账号，setup 不会提升已有账号权限。')
+        const { rows: [created] } = await client.query(`INSERT INTO users(email,name,password_hash,role,is_active)
+            VALUES ($1,$2,$3,'admin',true) RETURNING id,email,name,role`, [admin.email, admin.name.trim(), admin.passwordHash])
         await client.query('COMMIT')
-        return { user: user.email, group: slug, cards: catalog.length, pointsGranted: points.rowCount ? 200 : 0 }
+        return { administrator: created }
     } catch (error) {
         await client.query('ROLLBACK')
         throw error
@@ -135,38 +203,31 @@ export async function seedDeploymentDemo(pool, email) {
 }
 
 export async function runDatabaseOperation(request, pool, makeBackup) {
-    if (!['db-status', 'db-backup', 'db-upgrade', 'db-seed'].includes(request.action)) throw new Error('不支持的数据库操作。')
     if (request.action === 'db-status') return databaseStatus(pool, request.schemaCheck)
-    if (request.action === 'db-seed') {
-        await pool.query(request.schemaCheck)
-        await findDemoUser(pool, request.user)
-    }
+    if (request.action === 'db-clear') return clearDatabase(pool, request.bookingSchema ?? 'coeer_spaces', request.execute ?? false)
+    if (request.action === 'db-setup') return setupAdministrator(pool, request.admin)
+    if (!['db-backup', 'db-upgrade'].includes(request.action)) throw new Error('不支持的数据库操作。')
     const backup = makeBackup()
-    // Once verified, print the backup location before any potentially failing write.
-    if (request.action !== 'db-backup') console.log(JSON.stringify({ backup }))
     if (request.action === 'db-backup') return { backup }
-    if (request.action === 'db-upgrade') return { backup, ...await applyDatabaseMigrations(pool, request.migrations, request.schemaCheck) }
-    if (request.action === 'db-seed') return { backup, ...await seedDeploymentDemo(pool, request.user) }
-    throw new Error('不支持的数据库操作。')
+    console.log(JSON.stringify({ backup }))
+    return { backup, ...await applyDatabaseMigrations(pool, request.migrations, request.schemaCheck) }
 }
 
-async function main() {
-    const request = JSON.parse(process.env.COEER_DB_REQUEST)
-    config({ path: ['.env.production.local', '.env.local', '.env.production', '.env'], quiet: true })
-    if (request.action === 'db-backups') {
-        console.log(JSON.stringify({ backups: listDatabaseBackups(request.backupDirectory) }, null, 2))
-        return
-    }
-    if (!process.env.DATABASE_URL) throw new Error('服务器未配置 DATABASE_URL。')
+export async function runConfiguredOperation(request) {
+    const mode = process.env.NODE_ENV || 'development'
+    config({ path: [`.env.${mode}.local`, '.env.local', `.env.${mode}`, '.env'], quiet: true })
+    if (request.action === 'db-clear') request.bookingSchema = process.env.BOOKING_DB_SCHEMA || 'coeer_spaces'
+    if (request.action === 'db-backups') return { directory: request.backupDirectory, backups: listDatabaseBackups(request.backupDirectory) }
+    if (request.action === 'db-delete') return deleteDatabaseBackup(request.backupDirectory, request.backup)
+    if (!process.env.DATABASE_URL) throw new Error('未配置 DATABASE_URL。')
     const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, connectionTimeoutMillis: 10000, query_timeout: 30000 })
     try {
-        const result = await runDatabaseOperation(request, pool, () => backupDatabase(process.env.DATABASE_URL, request.backupDirectory))
-        console.log(JSON.stringify(result, null, 2))
+        return await runDatabaseOperation(request, pool, () => backupDatabase(process.env.DATABASE_URL, request.backupDirectory))
     } finally { await pool.end() }
 }
 
 if (process.argv[1] === '-') {
-    main().catch(error => {
+    runConfiguredOperation(JSON.parse(process.env.COEER_DB_REQUEST)).then(result => console.log(JSON.stringify(result, null, 2))).catch(error => {
         // pg errors can contain SQL, credentials or rows. Return only a stable code.
         console.error(error.code ? '数据库操作失败，错误代码：' + error.code : error.message)
         process.exitCode = 1

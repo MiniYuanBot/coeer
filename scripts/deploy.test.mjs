@@ -7,26 +7,26 @@ import { test } from 'node:test'
 import { createArchive, parseArgs, validateConfig } from './deploy.mjs'
 
 const config = { host: 'aliyun', root: '/var/www/coeer', service: 'coeer.service', pnpm: '/opt/node/bin/pnpm', pnpmVersion: '10.33.4', port: 3000, previewPort: 13000 }
+const backupName = 'coeer-db-20261022120000000-a1b2c3d4.dump'
 
-test('rejects ambiguous actions and shell/path injection before SSH', () => {
-  assert.throws(() => parseArgs(['--prepare', '--rollback']))
-  assert.throws(() => parseArgs(['--activate', '../current']))
-  assert.throws(() => parseArgs(['--delete', '../current']))
-  assert.throws(() => parseArgs(['--delete']))
-  assert.throws(() => parseArgs(['--list', '--delete', 'old-version']))
-  assert.throws(() => parseArgs(['--db-seed']))
-  assert.throws(() => parseArgs(['--db-seed', '--user', 'test@example.com;id']))
-  assert.throws(() => parseArgs(['--db-status', '--user', 'test@example.com']))
-  assert.throws(() => parseArgs(['--db-seed', '--user', 'test@example.com', '--clean']))
-  assert.throws(() => parseArgs(['--db-upgrade', '--prepare']))
-  assert.throws(() => parseArgs(['--unknown']))
+test('rejects ambiguous actions, retired seeds and unsafe filenames before SSH', () => {
+  for (const args of [
+    ['--prepare', '--rollback'], ['--activate', '../current'], ['--delete', '../current'], ['--delete'],
+    ['--list', '--delete', 'old-version'], ['--db-seed'], ['--db-seed', '--user', 'test@example.com'],
+    ['--db-reset', '--keep-admin', 'admin@example.com'], ['--db-setup', '--password', 'secret'],
+    ['--db-setup', '--execute'], ['--db-upgrade', '--execute'], ['--db-clear', '--execute', '--execute'],
+    ['--db-delete'], ['--db-delete', backupName, '--db-backups'], ['--unknown'],
+  ]) assert.throws(() => parseArgs(args))
+  for (const invalid of ['', '../' + backupName, '..\\' + backupName, '/tmp/' + backupName, '*.dump', backupName + '.partial', backupName + '\n']) {
+    assert.throws(() => parseArgs(['--db-delete', invalid]))
+  }
   for (const change of [{ host: 'aliyun;id' }, { root: '/var/www/../etc' }, { service: 'nginx.service;id' }, { pnpm: '/opt/node/../bin/pnpm' }, { previewPort: 3000 }, { port: '3000' }]) {
     assert.throws(() => validateConfig({ ...config, ...change }))
   }
-  assert.equal(parseArgs(['--prepare', '--dry-run']).action, 'prepare')
+  assert.deepEqual(parseArgs(['--db-clear', '--execute']), { action: 'db-clear', dryRun: false, execute: true })
+  assert.deepEqual(parseArgs(['--db-setup']), { action: 'db-setup', dryRun: false })
+  assert.deepEqual(parseArgs(['--db-delete', backupName]), { action: 'db-delete', dryRun: false, backup: backupName })
   assert.deepEqual(parseArgs(['--delete', 'old-version']), { action: 'delete', dryRun: false, release: 'old-version' })
-  assert.equal(parseArgs(['--list']).action, 'list')
-  assert.deepEqual(parseArgs(['--db-seed', '--user', 'test@example.com']), { action: 'db-seed', dryRun: false, user: 'test@example.com' })
   assert.equal(validateConfig(config), config)
 })
 
@@ -52,11 +52,25 @@ test('archives current working files but excludes secrets and local artifacts', 
   } finally { rmSync(directory, { recursive: true, force: true }) }
 })
 
-test('dry-run never contacts SSH or a package registry', () => {
-  for (const args of [[], ['--list'], ['--delete', 'old-version'], ['--db-status'], ['--db-backup'], ['--db-backups'], ['--db-upgrade'], ['--db-seed', '--user', 'test@example.com']]) {
+test('dry-run never contacts SSH, a database or a package registry and never prompts', () => {
+  for (const args of [[], ['--list'], ['--delete', 'old-version'], ['--db-status'], ['--db-backup'],
+    ['--db-backups'], ['--db-delete', backupName], ['--db-upgrade'], ['--db-setup'], ['--db-clear'], ['--db-clear', '--execute']]) {
     const result = spawnSync(process.execPath, ['scripts/deploy.mjs', ...args, '--dry-run'], { encoding: 'utf8', env: { ...process.env, PATH: '' } })
     assert.equal(result.status, 0, result.stderr)
     assert.match(result.stdout, /dry-run/)
-    if (args[0] === '--delete') assert.match(result.stdout, /old-version/)
+    if (args[0] === '--db-delete') assert.ok(result.stdout.includes(backupName))
+  }
+  for (const action of ['clear', 'setup']) {
+    const result = spawnSync(process.execPath, ['scripts/database.mjs', action, '--dry-run'], { encoding: 'utf8', env: { ...process.env, DATABASE_URL: '' } })
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /dry-run/)
+  }
+})
+
+test('setup rejects a noninteractive terminal without connecting or accepting a password argument', () => {
+  for (const command of [['scripts/deploy.mjs', '--db-setup'], ['scripts/database.mjs', 'setup']]) {
+    const result = spawnSync(process.execPath, command, { encoding: 'utf8', env: { ...process.env, PATH: '' } })
+    assert.equal(result.status, 1)
+    assert.doesNotMatch(result.stdout + result.stderr, /passwordHash|\$2[aby]\$/)
   }
 })

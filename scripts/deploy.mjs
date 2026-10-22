@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { COMMUNITY_SCHEMA_CHECK_SQL } from '../src/server/database/community-schema-query.mjs'
+import { promptAdministrator } from './admin-input.mjs'
 
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sshOptions = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=3']
@@ -35,13 +36,12 @@ export function parseArgs(args) {
       options.config = args[index]
       continue
     }
-    if (arg === '--user') {
-      if (options.user) throw new Error('--user 只能指定一次。')
-      options.user = args[++index]
-      if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(options.user || '') || options.user.length > 255) throw new Error('--user 需要有效的已有账号邮箱。')
+    if (arg === '--execute') {
+      if (options.execute) throw new Error('--execute 只能指定一次。')
+      options.execute = true
       continue
     }
-    if (['--check', '--prepare', '--rollback', '--activate', '--list', '--delete', '--db-status', '--db-backup', '--db-backups', '--db-upgrade', '--db-seed'].includes(arg)) {
+    if (['--check', '--prepare', '--rollback', '--activate', '--list', '--delete', '--db-status', '--db-backup', '--db-backups', '--db-delete', '--db-upgrade', '--db-setup', '--db-clear'].includes(arg)) {
       if (actionSet) throw new Error('只能指定一个发布动作。')
       options.action = arg.slice(2)
       actionSet = true
@@ -49,12 +49,15 @@ export function parseArgs(args) {
         options.release = args[++index]
         if (!/^[A-Za-z0-9][A-Za-z0-9_-]{5,100}$/.test(options.release || '')) throw new Error(arg + ' 缺少有效的版本 ID。')
       }
+      if (arg === '--db-delete') {
+        options.backup = args[++index]
+        if (!/^coeer-db-\d{17}-[a-f0-9]{8}\.dump$/.test(options.backup || '') || options.backup.trim() !== options.backup) throw new Error('--db-delete 需要备份列表中的完整 .dump 文件名，不能使用路径或通配符。')
+      }
       continue
     }
     throw new Error('未知参数：' + arg)
   }
-  if (options.action === 'db-seed' && !options.user) throw new Error('导入测试数据必须指定 --user <已有账号邮箱>。')
-  if (options.user && options.action !== 'db-seed') throw new Error('--user 只能用于 --db-seed。')
+  if (options.execute && options.action !== 'db-clear') throw new Error('--execute 只能用于 --db-clear。')
   return options
 }
 
@@ -80,16 +83,17 @@ function quote(value) { return "'" + String(value).replaceAll("'", "'\\''") + "'
 function remoteArgs(config, options) {
   const args = [options.action, '--root', config.root, '--service', config.service, '--pnpm', config.pnpm, '--pnpm-version', config.pnpmVersion, '--port', String(config.port), '--preview-port', String(config.previewPort)]
   if (options.release) args.push('--release', options.release)
-  if (options.user) args.push('--user', options.user)
+  if (options.backup) args.push('--backup', options.backup)
+  if (options.execute) args.push('--execute')
   if (options.archive) args.push('--archive', options.archive, '--sha256', options.sha256)
   return args
 }
 
-function remote(config, args) {
+function remote(config, args, admin) {
   let script = readFileSync(join(project, 'deploy', 'remote.py'), 'utf8')
   if (args[0].startsWith('db-')) {
     const directory = join(project, 'deploy', 'migrations')
-    const payload = { source: readFileSync(join(project, 'deploy', 'database.mjs'), 'utf8'), schemaCheck: COMMUNITY_SCHEMA_CHECK_SQL,
+    const payload = { source: readFileSync(join(project, 'deploy', 'database.mjs'), 'utf8'), schemaCheck: COMMUNITY_SCHEMA_CHECK_SQL, admin,
       migrations: readdirSync(directory).filter(name => /^\d{8}-[a-z0-9-]+\.sql$/.test(name)).sort().map(name => ({ name, sql: readFileSync(join(directory, name), 'utf8') })) }
     // Payload travels through stdin rather than shell arguments or an uploaded release.
     script = "import base64, json\nDATABASE_PAYLOAD = json.loads(base64.b64decode('" + Buffer.from(JSON.stringify(payload)).toString('base64') + "'))\n" + script
@@ -97,11 +101,11 @@ function remote(config, args) {
   run('ssh', [...sshOptions, config.host, ['sudo', '-n', 'python3', '-', ...args].map(quote).join(' ')], { input: script, stdio: ['pipe', 'inherit', 'inherit'] })
 }
 
-function main() {
+async function main() {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
     console.log('npm run deploy                     发布当前本地代码\nnpm run deploy:check               只读检查服务器\nnpm run deploy:list                查看线上及历史版本\nnpm run deploy:delete -- <ID>       删除未使用的历史版本\nnpm run deploy -- --dry-run         查看计划，不连接服务器\nnpm run deploy -- --prepare         构建并预检，不切换线上\nnpm run deploy -- --activate <ID>   发布已预检版本\nnpm run deploy:rollback            回滚到上一版本\n可选：--config <JSON 文件>')
-    console.log('pnpm run deploy:db:status          检查线上数据库与表结构\npnpm run deploy:db:backup          创建并验证数据库备份\npnpm run deploy:db:backups         列出数据库备份\npnpm run deploy:db:upgrade         自动备份后执行本地增量迁移\npnpm run deploy:db:seed --user <邮箱> 自动备份后向已有账号导入测试数据\n数据库命令支持 --dry-run，不发布代码或重启服务。')
+    console.log('pnpm run deploy:db:status          检查线上数据库与表结构\npnpm run deploy:db:backup          创建并验证数据库备份\npnpm run deploy:db:list            列出数据库备份（也可用 deploy:db:backups）\npnpm run deploy:db:delete <文件名>  永久删除指定备份文件\npnpm run deploy:db:upgrade         自动备份后执行本地增量迁移\npnpm run deploy:setup              终端输入邮箱、昵称和密码，仅创建一个管理员\npnpm run deploy:db:clear           只读预览全部社区和预约数据\npnpm run deploy:db:clear --execute 暂停服务、无备份清空全部账号及数据，再恢复服务\n各命令支持 --dry-run，不连接服务器。')
     return
   }
   const defaultFile = join(project, 'deploy', 'aliyun.json')
@@ -112,9 +116,18 @@ function main() {
   if (options.dryRun) {
     console.log('动作：' + options.action + '；线上端口 ' + config.port + '；隔离预检端口 ' + config.previewPort)
     if (options.release) console.log('版本：' + options.release)
-    if (options.user) console.log('测试数据账号：' + options.user)
+    if (options.backup) console.log('备份文件：' + options.backup)
     if (options.action.startsWith('db-')) {
-      console.log('使用服务器当前版本及生产数据库配置；升级/导入前自动备份，不复制本机数据库，不清理已有数据。')
+      if (options.action === 'db-clear') {
+        console.log(options.execute ? '正式清空：暂停原本运行的服务，不备份，以事务删除全部账号、社区数据及预约数据，再恢复服务。' : '只读预览：核对数据库、清理表和行数，不停止服务、不删除数据。')
+        console.log('保留表结构、迁移版本及服务器私密文件；不会取消官网预约，不注入演示数据。')
+      } else if (options.action === 'db-setup') {
+        console.log('终端输入管理员邮箱、昵称和两次密码；密码不回显，仅创建一个管理员，已有管理员时拒绝，不注入演示数据。')
+      } else if (options.action === 'db-delete') {
+        console.log('永久删除服务器 ' + config.root + '/.deploy/backups 下的指定备份文件，不修改当前数据库，不重启服务。')
+      } else if (options.action === 'db-backups') {
+        console.log('只读列出服务器 ' + config.root + '/.deploy/backups 下的备份文件、时间和大小，不连接数据库。')
+      } else console.log('使用服务器当前版本及生产数据库配置；升级前自动备份，不复制本机数据库。')
       console.log('dry-run：不连接服务器、不执行 SQL、不创建备份。')
       return
     }
@@ -124,7 +137,8 @@ function main() {
     return
   }
   if (options.action.startsWith('db-') || ['check', 'rollback', 'activate', 'list', 'delete'].includes(options.action)) {
-    remote(config, remoteArgs(config, options))
+    const admin = options.action === 'db-setup' ? await promptAdministrator() : undefined
+    remote(config, remoteArgs(config, options), admin)
     return
   }
   console.log('检查本地 TypeScript…')
@@ -157,5 +171,5 @@ function main() {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try { main() } catch (error) { console.error('发布未完成：' + error.message); process.exitCode = 1 }
+  main().catch(error => { console.error('发布未完成：' + error.message); process.exitCode = 1 })
 }
