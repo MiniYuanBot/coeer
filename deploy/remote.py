@@ -1,6 +1,7 @@
 """COEER release controller. Invoked over SSH stdin; never reads local secrets."""
 import argparse
 import contextlib
+from datetime import datetime, timezone
 import fcntl
 import hashlib
 import json
@@ -22,12 +23,12 @@ class DeployError(RuntimeError):
 
 
 class Runner:
-    def run(self, args, cwd=None, env=None, capture=False, timeout=120):
+    def run(self, args, cwd=None, env=None, capture=False, timeout=120, input=None):
         process = subprocess.Popen(args, cwd=cwd, env=env, text=True,
-                                   stdout=subprocess.PIPE if capture else None,
+                                   stdout=subprocess.PIPE if capture else None, stdin=subprocess.PIPE if input is not None else None,
                                    start_new_session=True)
         try:
-            output, _ = process.communicate(timeout=timeout)
+            output, _ = process.communicate(input=input, timeout=timeout)
         except BaseException:
             with contextlib.suppress(ProcessLookupError):
                 os.killpg(process.pid, signal.SIGKILL)
@@ -99,8 +100,8 @@ class Deployment:
             raise DeployError("pnpm 版本不匹配：需要 " + self.args.pnpm_version + "，实际 " + version)
         node_version = self.runner.run([str(self.node), "--version"], capture=True)
         numbers = tuple(int(value) for value in node_version.lstrip("v").split(".")[:3])
-        if numbers < (20, 19, 0):
-            raise DeployError("Node.js 必须至少为 20.19。")
+        if not (26 <= numbers[0] < 27):
+            raise DeployError("Node.js 必须为 26.x，与项目 engines 保持一致。")
         if shutil.disk_usage(self.root).free < 512 * 1024 * 1024:
             raise DeployError("可用磁盘不足 512 MiB。")
         self.probe(self.args.port, None, legacy=True)
@@ -160,11 +161,12 @@ class Deployment:
             raise DeployError("发布包的 packageManager 与远程 pnpm 不匹配。")
         commands = [("install", ["install", "--frozen-lockfile", "--prod=false"], 900),
                     ("env", ["run", "check:env"], 30),
+                    ("community schema", ["run", "db:check:community"], 30),
                     ("types", ["exec", "tsc", "--noEmit"], 180),
                     ("build", ["run", "build"], 600)]
         for title, command, timeout in commands:
             self.log("独立版本目录：" + title)
-            self.runner.run([str(self.pnpm), *command], cwd=release, env=self.environment, timeout=timeout)
+            self.runner.run([str(self.pnpm), *command], cwd=release, env={**self.environment, "NODE_ENV": "production"}, timeout=timeout)
         if not (release / "dist/server/server.js").is_file() or not (release / "node_modules/srvx/bin/srvx.mjs").is_file():
             raise DeployError("缺少服务端产物或锁定的 srvx 运行时。")
         # Keep old hashed assets available to already-open browser tabs.
@@ -317,6 +319,97 @@ class Deployment:
         self.restore(release, snapshot)
         self.log("回滚完成，目标版本健康。")
 
+    def validate_release_layout(self):
+        if not self.root.is_dir() or not (self.root / "package.json").is_file():
+            raise DeployError("部署目录不是现有 COEER 项目。")
+        for path in (self.control, self.releases):
+            if path.is_symlink():
+                raise DeployError("拒绝使用符号链接控制目录：" + str(path))
+
+    def protected_releases(self):
+        self.validate_release_layout()
+        if not self.current.is_symlink():
+            if self.current.exists():
+                raise DeployError("current 必须是发布脚本管理的符号链接。")
+            return {self.root: "原始部署"}
+        current = self.current.resolve()
+        self.validate_target(current)
+        protected = {current: "当前线上"}
+        previous = current / "previous.json"
+        if previous.exists():
+            snapshot = json.loads(previous.read_text())
+            if not isinstance(snapshot, dict) or not isinstance(snapshot.get("target"), str):
+                raise DeployError("上一版本记录无效，无法确认回滚版本。")
+            target = Path(snapshot["target"])
+            self.validate_target(target)
+            if target not in protected:
+                protected[target] = "可回滚"
+        return protected
+
+    @staticmethod
+    def release_size(release):
+        # node_modules and .env contain links; never follow them outside the release.
+        total = 0
+        for directory, _, files in os.walk(release, followlinks=False):
+            for name in files:
+                path = Path(directory) / name
+                if not path.is_symlink():
+                    total += path.stat().st_size
+        return total
+
+    def list_releases(self):
+        protected = self.protected_releases()
+        current = self.current.resolve() if self.current.is_symlink() else self.root
+        self.log("线上版本：" + (current.name if current != self.root else "原始部署（" + str(self.root) + "）"))
+        records = []
+        if self.releases.is_dir():
+            for release in sorted(self.releases.iterdir(), reverse=True):
+                if release.is_symlink() or not release.is_dir() or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{5,100}", release.name):
+                    continue
+                status = protected.get(release, "就绪" if (release / "ready.json").is_file() else "未就绪")
+                records.append({"release": release.name, "status": status,
+                    "created": datetime.fromtimestamp(release.stat().st_mtime, timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                    "bytes": self.release_size(release)})
+        if not records:
+            self.log("没有历史发布版本。")
+        else:
+            self.log("版本 ID\t状态\t目录时间 (UTC)\t大小 (MiB)")
+            for record in records:
+                self.log(record["release"] + "\t" + record["status"] + "\t" + record["created"] + "\t" + format(record["bytes"] / 1024 ** 2, ".1f"))
+        return records
+
+    def delete_release(self, release_id):
+        protected = self.protected_releases()
+        release = self.release_path(release_id)
+        # Require a real direct child of this project's release directory.
+        if not release.is_dir() or release.resolve() != release or release.parent != self.releases:
+            raise DeployError("版本不存在或不属于本项目的发布目录。")
+        if release in protected:
+            raise DeployError("不能删除" + protected[release] + "版本：" + release.name)
+        self.validate_target(release)
+        shutil.rmtree(release)
+        self.log("已删除历史版本：" + release.name + "；线上服务与数据库未更改。")
+
+    def database(self, payload):
+        # Database repair must work when readiness or the service is unavailable.
+        self.validate_release_layout()
+        release = self.current.resolve() if self.current.is_symlink() else self.root
+        self.validate_target(release)
+        if self.current.exists() and not self.current.is_symlink():
+            raise DeployError("current 必须是发布脚本管理的符号链接。")
+        if not (release / ".env").is_file() or not (release / "node_modules/pg").is_dir() or not (release / "node_modules/dotenv").is_dir():
+            raise DeployError("当前服务器版本缺少环境文件或数据库运行依赖。")
+        if not os.access(self.node, os.X_OK):
+            raise DeployError("Node 运行时路径不可用。")
+        if not isinstance(payload, dict) or not isinstance(payload.get("source"), str) or not isinstance(payload.get("schemaCheck"), str):
+            raise DeployError("缺少本地数据库操作脚本。")
+        if self.args.action == "db-seed" and not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", self.args.user or ""):
+            raise DeployError("测试数据导入必须指定有效的已有账号邮箱。")
+        request = {"action": self.args.action, "user": self.args.user, "schemaCheck": payload["schemaCheck"],
+                   "migrations": payload.get("migrations", []), "backupDirectory": str(self.control / "backups")}
+        environment = {**self.environment, "NODE_ENV": "production", "COEER_DB_REQUEST": json.dumps(request)}
+        self.runner.run([str(self.node), "--input-type=module", "-"], cwd=release, env=environment, input=payload["source"], timeout=300)
+
 
 def main():
     def interrupted(signum, _frame):
@@ -324,7 +417,7 @@ def main():
     for signum in (signal.SIGHUP, signal.SIGTERM):
         signal.signal(signum, interrupted)
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["check", "prepare", "deploy", "activate", "rollback"])
+    parser.add_argument("action", choices=["check", "prepare", "deploy", "activate", "rollback", "list", "delete", "db-status", "db-backup", "db-backups", "db-upgrade", "db-seed"])
     parser.add_argument("--root", required=True)
     parser.add_argument("--service", required=True)
     parser.add_argument("--pnpm", required=True)
@@ -334,6 +427,7 @@ def main():
     parser.add_argument("--archive")
     parser.add_argument("--sha256")
     parser.add_argument("--release")
+    parser.add_argument("--user")
     args = parser.parse_args()
     if os.geteuid() != 0:
         raise DeployError("需要 sudo -n 访问现有 systemd 服务及部署目录。")
@@ -344,6 +438,22 @@ def main():
     if not (1024 <= args.port <= 65535 and 1024 <= args.preview_port <= 65535) or args.port == args.preview_port:
         raise DeployError("线上与预检端口必须有效且不同。")
     deployment = Deployment(args)
+    if args.action.startswith("db-"):
+        if args.action in ("db-status", "db-backups"):
+            deployment.database(globals().get("DATABASE_PAYLOAD"))
+        else:
+            deployment.validate_release_layout()
+            with deployment.lock():
+                deployment.database(globals().get("DATABASE_PAYLOAD"))
+        return
+    if args.action == "list":
+        deployment.list_releases()
+        return
+    if args.action == "delete":
+        deployment.validate_release_layout()
+        with deployment.lock():
+            deployment.delete_release(args.release)
+        return
     deployment.preflight()
     if args.action == "check":
         return

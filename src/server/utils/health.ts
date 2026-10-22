@@ -1,5 +1,6 @@
 import { Pool } from 'pg'
 import { env } from '../config'
+import { checkCommunitySchema } from '../database/community-schema'
 
 // Readiness has a separate, bounded connection so a failed probe cannot exhaust
 // the business pool. Return only readiness, never connection details or errors.
@@ -14,7 +15,7 @@ healthPool.on('error', () => { /* The next probe reports unavailable. */ })
 
 export async function readinessResponse() {
   try {
-    await healthPool.query('SELECT 1')
+    await checkCommunitySchema(healthPool)
     return Response.json(
       { status: 'ok', release: process.env.COEER_RELEASE_ID || 'development' },
       { headers: { 'Cache-Control': 'no-store' } },

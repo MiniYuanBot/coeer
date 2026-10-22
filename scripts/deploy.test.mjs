@@ -11,11 +11,22 @@ const config = { host: 'aliyun', root: '/var/www/coeer', service: 'coeer.service
 test('rejects ambiguous actions and shell/path injection before SSH', () => {
   assert.throws(() => parseArgs(['--prepare', '--rollback']))
   assert.throws(() => parseArgs(['--activate', '../current']))
+  assert.throws(() => parseArgs(['--delete', '../current']))
+  assert.throws(() => parseArgs(['--delete']))
+  assert.throws(() => parseArgs(['--list', '--delete', 'old-version']))
+  assert.throws(() => parseArgs(['--db-seed']))
+  assert.throws(() => parseArgs(['--db-seed', '--user', 'test@example.com;id']))
+  assert.throws(() => parseArgs(['--db-status', '--user', 'test@example.com']))
+  assert.throws(() => parseArgs(['--db-seed', '--user', 'test@example.com', '--clean']))
+  assert.throws(() => parseArgs(['--db-upgrade', '--prepare']))
   assert.throws(() => parseArgs(['--unknown']))
   for (const change of [{ host: 'aliyun;id' }, { root: '/var/www/../etc' }, { service: 'nginx.service;id' }, { pnpm: '/opt/node/../bin/pnpm' }, { previewPort: 3000 }, { port: '3000' }]) {
     assert.throws(() => validateConfig({ ...config, ...change }))
   }
   assert.equal(parseArgs(['--prepare', '--dry-run']).action, 'prepare')
+  assert.deepEqual(parseArgs(['--delete', 'old-version']), { action: 'delete', dryRun: false, release: 'old-version' })
+  assert.equal(parseArgs(['--list']).action, 'list')
+  assert.deepEqual(parseArgs(['--db-seed', '--user', 'test@example.com']), { action: 'db-seed', dryRun: false, user: 'test@example.com' })
   assert.equal(validateConfig(config), config)
 })
 
@@ -42,7 +53,10 @@ test('archives current working files but excludes secrets and local artifacts', 
 })
 
 test('dry-run never contacts SSH or a package registry', () => {
-  const result = spawnSync(process.execPath, ['scripts/deploy.mjs', '--dry-run'], { encoding: 'utf8', env: { ...process.env, PATH: '' } })
-  assert.equal(result.status, 0, result.stderr)
-  assert.match(result.stdout, /dry-run/)
+  for (const args of [[], ['--list'], ['--delete', 'old-version'], ['--db-status'], ['--db-backup'], ['--db-backups'], ['--db-upgrade'], ['--db-seed', '--user', 'test@example.com']]) {
+    const result = spawnSync(process.execPath, ['scripts/deploy.mjs', ...args, '--dry-run'], { encoding: 'utf8', env: { ...process.env, PATH: '' } })
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /dry-run/)
+    if (args[0] === '--delete') assert.match(result.stdout, /old-version/)
+  }
 })

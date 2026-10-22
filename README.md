@@ -230,6 +230,21 @@ pnpm seed:all:clean
 
 已部署的阿里云服务器支持在本机执行 `npm run deploy` 一键发布当前代码；
 `npm run deploy:check` 只读预检，`npm run deploy:rollback` 回滚上一版本。
+使用 pnpm 时必须写 `pnpm run deploy`（PowerShell 可使用 `pnpm.cmd run deploy`）；
+`pnpm deploy` 是 pnpm 自带命令，会绕过本项目的发布脚本。发布脚本会自动在服务器执行 build。
+
+部署数据库也可直接从本机管理：
+
+```sh
+pnpm run deploy:db:status
+pnpm run deploy:db:backup
+pnpm run deploy:db:backups
+pnpm run deploy:db:upgrade
+pnpm run deploy:db:seed --user test@example.com
+```
+
+升级和指定账号的测试数据导入会先自动备份；不会同步本机数据库或清理线上数据。
+参数及导入内容见 [部署数据库命令](docs/deployment.md#部署数据库命令)。
 脚本会在独立目录构建并检查新版本，通过后才切换服务；失败自动恢复，不自动改数据库。
 目标配置见 `deploy/aliyun.json`，详细流程与首次搭建说明见下方部署文档。
 

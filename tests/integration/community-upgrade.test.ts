@@ -1,0 +1,59 @@
+import { afterAll, beforeAll, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { createTestDatabase } from '../support/postgres'
+import { checkCommunitySchema } from '../../src/server/database/community-schema'
+
+const scope = createTestDatabase('communityupgrade')
+const migrations = ['20261021-community.sql', '20261022-community-interactions.sql'].map((file) =>
+    readFileSync(new URL(`../../deploy/migrations/${file}`, import.meta.url), 'utf8'))
+const userId = '11111111-1111-4111-8111-111111111111'
+const postId = '22222222-2222-4222-8222-222222222222'
+
+beforeAll(async () => {
+    await scope.initialize()
+    await scope.client.query(`
+        CREATE TABLE users (id uuid PRIMARY KEY, name text NOT NULL);
+        CREATE TABLE group_posts (id uuid PRIMARY KEY, content text NOT NULL);
+        INSERT INTO users VALUES ('${userId}', '保留已有账号');
+        INSERT INTO group_posts VALUES ('${postId}', '保留已有帖子');
+    `)
+})
+afterAll(() => scope.close())
+
+it('upgrades a legacy database and can run again without changing existing accounts, posts or interactions', async () => {
+    await expect(checkCommunitySchema(scope.client)).rejects.toMatchObject({ code: '42P01' })
+    for (const migration of migrations) await scope.client.query(migration)
+    await expect(checkCommunitySchema(scope.client)).resolves.toBeUndefined()
+
+    await scope.client.query(`INSERT INTO notifications (user_id, type, title, content, href) VALUES ($1, 'test', '通知', '内容', '/')`, [userId])
+    await scope.client.query('INSERT INTO bookmarks (user_id, post_id) VALUES ($1, $2)', [userId, postId])
+    await scope.client.query(`INSERT INTO password_resets (user_id, email_hash, token_hash, expires_at) VALUES ($1, 'email', 'token', now() + interval '30 minutes')`, [userId])
+    const before = await scope.client.query('SELECT * FROM notifications')
+    for (const migration of migrations) await scope.client.query(migration)
+
+    expect((await scope.client.query('SELECT * FROM notifications')).rows).toEqual(before.rows)
+    expect((await scope.client.query('SELECT * FROM bookmarks')).rows).toMatchObject([{ user_id: userId, post_id: postId }])
+    expect((await scope.client.query('SELECT * FROM password_resets')).rowCount).toBe(1)
+    expect((await scope.client.query('SELECT * FROM users')).rows).toEqual([{ id: userId, name: '保留已有账号' }])
+    expect((await scope.client.query('SELECT * FROM group_posts')).rows).toEqual([{ id: postId, content: '保留已有帖子' }])
+})
+
+it('rejects missing tables or columns even when a database connection succeeds', async () => {
+    for (const migration of migrations) await scope.client.query(migration)
+    const connection = await scope.client.connect()
+    try {
+        for (const table of ['notifications', 'bookmarks', 'password_resets']) {
+            await connection.query('BEGIN')
+            try {
+                await connection.query(`DROP TABLE ${table}`)
+                await expect(checkCommunitySchema(connection)).rejects.toMatchObject({ code: '42P01' })
+            } finally { await connection.query('ROLLBACK') }
+        }
+        await connection.query('BEGIN')
+        try {
+            await connection.query('ALTER TABLE notifications DROP COLUMN read_at')
+            await expect(checkCommunitySchema(connection)).rejects.toMatchObject({ code: '42703' })
+        } finally { await connection.query('ROLLBACK') }
+    } finally { connection.release() }
+    await expect(checkCommunitySchema(scope.client)).resolves.toBeUndefined()
+})

@@ -33,3 +33,4 @@ data/
 
 # Local encrypted credentials, session files and keys
 /.coeer-local/
+/.deploy/

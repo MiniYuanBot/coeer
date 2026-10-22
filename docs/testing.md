@@ -20,6 +20,10 @@
   Chrome/Chromium/Edge，也可用 `COEER_TEST_BROWSER` 指定可执行文件；未安装浏览器时跳过。
 - `tests/integration/seed-data.test.ts`：种子幂等、保留已改密码与昵称、反馈时间顺序、
   官方活动主办方、状态覆盖、公告目标和本地演示图片。
+- `tests/integration/community-upgrade.test.ts`：从旧表结构执行真实增量迁移、重复升级保留数据，
+  并验证缺表/缺字段时拒绝就绪；`tests/health.test.ts` 检查健康响应及错误信息脱敏。
+- `tests/media-preview.test.ts`：真实 Chromium 中屏蔽外部占位图服务，验证六张旧演示图片改用
+  本地 SVG，覆盖桌面、手机深色模式、图片边界与容器匹配、自定义图片和加载失败后换图恢复。
 - `tests/private-path.test.ts`：项目内 `.coeer-local` 与仓库外私密文件可用，公开目录被拒绝。
 - `tests/navigation.test.ts`：登录回跳、外部地址和反斜杠绕过防护、服务 URL 参数校验。
 - `tests/development.test.ts`：生成路由文件不反过来触发生成器，保留源路由更新及 hook 行为。
@@ -44,6 +48,13 @@
   进入详情；后台独立处理、幂等、进度读取、失败/待审批/待核对状态、断开请求及重启后恢复。
   排队不能当作已确认预约。
 - `scripts/deploy.test.mjs`：已有的发布参数、路径、配置及打包规则。
+- `deploy/test_remote.py`：Linux 发布/回滚事务、Node 26 检查及缺少社区表结构时禁止构建和切换服务；
+  版本列表只读、删除未使用/失败版本、当前与直接回滚版本保护、路径和符号链接隔离，
+  数据库命令使用线上目录/生产配置且不重启服务。
+- `scripts/database.test.mjs`：备份通过环境传递凭据、排除无关 libpq 环境、仅发布验证通过的私有备份、
+  失败清理临时文件、备份列表只读/拒绝链接目录，以及备份失败时阻止迁移。
+- `tests/integration/deployment-database.test.ts`：真实 PostgreSQL 中验证指定账号的演示数据导入、
+  并发幂等/一次性积分、保留密码和编辑/已读状态、拒绝未知/停用用户、失败事务回滚及备份前置阻断。
 
 ## 数据库边界
 

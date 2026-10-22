@@ -1,9 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { COMMUNITY_SCHEMA_CHECK_SQL } from '../src/server/database/community-schema-query.mjs'
 
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sshOptions = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=3']
@@ -34,18 +35,26 @@ export function parseArgs(args) {
       options.config = args[index]
       continue
     }
-    if (['--check', '--prepare', '--rollback', '--activate'].includes(arg)) {
+    if (arg === '--user') {
+      if (options.user) throw new Error('--user 只能指定一次。')
+      options.user = args[++index]
+      if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(options.user || '') || options.user.length > 255) throw new Error('--user 需要有效的已有账号邮箱。')
+      continue
+    }
+    if (['--check', '--prepare', '--rollback', '--activate', '--list', '--delete', '--db-status', '--db-backup', '--db-backups', '--db-upgrade', '--db-seed'].includes(arg)) {
       if (actionSet) throw new Error('只能指定一个发布动作。')
       options.action = arg.slice(2)
       actionSet = true
-      if (arg === '--activate') {
+      if (arg === '--activate' || arg === '--delete') {
         options.release = args[++index]
-        if (!/^[A-Za-z0-9][A-Za-z0-9_-]{5,100}$/.test(options.release || '')) throw new Error('--activate 缺少有效的版本 ID。')
+        if (!/^[A-Za-z0-9][A-Za-z0-9_-]{5,100}$/.test(options.release || '')) throw new Error(arg + ' 缺少有效的版本 ID。')
       }
       continue
     }
     throw new Error('未知参数：' + arg)
   }
+  if (options.action === 'db-seed' && !options.user) throw new Error('导入测试数据必须指定 --user <已有账号邮箱>。')
+  if (options.user && options.action !== 'db-seed') throw new Error('--user 只能用于 --db-seed。')
   return options
 }
 
@@ -71,19 +80,28 @@ function quote(value) { return "'" + String(value).replaceAll("'", "'\\''") + "'
 function remoteArgs(config, options) {
   const args = [options.action, '--root', config.root, '--service', config.service, '--pnpm', config.pnpm, '--pnpm-version', config.pnpmVersion, '--port', String(config.port), '--preview-port', String(config.previewPort)]
   if (options.release) args.push('--release', options.release)
+  if (options.user) args.push('--user', options.user)
   if (options.archive) args.push('--archive', options.archive, '--sha256', options.sha256)
   return args
 }
 
 function remote(config, args) {
-  const script = readFileSync(join(project, 'deploy', 'remote.py'), 'utf8')
+  let script = readFileSync(join(project, 'deploy', 'remote.py'), 'utf8')
+  if (args[0].startsWith('db-')) {
+    const directory = join(project, 'deploy', 'migrations')
+    const payload = { source: readFileSync(join(project, 'deploy', 'database.mjs'), 'utf8'), schemaCheck: COMMUNITY_SCHEMA_CHECK_SQL,
+      migrations: readdirSync(directory).filter(name => /^\d{8}-[a-z0-9-]+\.sql$/.test(name)).sort().map(name => ({ name, sql: readFileSync(join(directory, name), 'utf8') })) }
+    // Payload travels through stdin rather than shell arguments or an uploaded release.
+    script = "import base64, json\nDATABASE_PAYLOAD = json.loads(base64.b64decode('" + Buffer.from(JSON.stringify(payload)).toString('base64') + "'))\n" + script
+  }
   run('ssh', [...sshOptions, config.host, ['sudo', '-n', 'python3', '-', ...args].map(quote).join(' ')], { input: script, stdio: ['pipe', 'inherit', 'inherit'] })
 }
 
 function main() {
   const options = parseArgs(process.argv.slice(2))
   if (options.help) {
-    console.log('npm run deploy                     发布当前本地代码\nnpm run deploy:check               只读检查服务器\nnpm run deploy -- --dry-run         查看计划，不连接服务器\nnpm run deploy -- --prepare         构建并预检，不切换线上\nnpm run deploy -- --activate <ID>   发布已预检版本\nnpm run deploy:rollback            回滚到上一版本\n可选：--config <JSON 文件>')
+    console.log('npm run deploy                     发布当前本地代码\nnpm run deploy:check               只读检查服务器\nnpm run deploy:list                查看线上及历史版本\nnpm run deploy:delete -- <ID>       删除未使用的历史版本\nnpm run deploy -- --dry-run         查看计划，不连接服务器\nnpm run deploy -- --prepare         构建并预检，不切换线上\nnpm run deploy -- --activate <ID>   发布已预检版本\nnpm run deploy:rollback            回滚到上一版本\n可选：--config <JSON 文件>')
+    console.log('pnpm run deploy:db:status          检查线上数据库与表结构\npnpm run deploy:db:backup          创建并验证数据库备份\npnpm run deploy:db:backups         列出数据库备份\npnpm run deploy:db:upgrade         自动备份后执行本地增量迁移\npnpm run deploy:db:seed --user <邮箱> 自动备份后向已有账号导入测试数据\n数据库命令支持 --dry-run，不发布代码或重启服务。')
     return
   }
   const defaultFile = join(project, 'deploy', 'aliyun.json')
@@ -93,12 +111,19 @@ function main() {
   console.log('目标：' + config.host + '  ' + config.root + '  ' + config.service)
   if (options.dryRun) {
     console.log('动作：' + options.action + '；线上端口 ' + config.port + '；隔离预检端口 ' + config.previewPort)
+    if (options.release) console.log('版本：' + options.release)
+    if (options.user) console.log('测试数据账号：' + options.user)
+    if (options.action.startsWith('db-')) {
+      console.log('使用服务器当前版本及生产数据库配置；升级/导入前自动备份，不复制本机数据库，不清理已有数据。')
+      console.log('dry-run：不连接服务器、不执行 SQL、不创建备份。')
+      return
+    }
     console.log('上传范围：' + sourceEntries.join(', '))
     console.log('排除本地 .env、密钥、依赖、构建产物和本机配置；不执行数据库迁移。')
     console.log('dry-run：不连接服务器、不上传、不重启。')
     return
   }
-  if (['check', 'rollback', 'activate'].includes(options.action)) {
+  if (options.action.startsWith('db-') || ['check', 'rollback', 'activate', 'list', 'delete'].includes(options.action)) {
     remote(config, remoteArgs(config, options))
     return
   }

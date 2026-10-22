@@ -15,20 +15,26 @@ class FakeRunner:
     def __init__(self, root):
         self.root = root
         self.calls = []
+        self.options = []
         self.fail_build = False
+        self.fail_schema = False
         self.restart_seconds = 0
+        self.node_version = 'v26.7.0'
 
     def run(self, args, **options):
         self.calls.append(args)
+        self.options.append(options)
         if args[:2] == ['systemctl', 'restart'] and options.get('timeout', 0) < self.restart_seconds:
             raise subprocess.TimeoutExpired(args, options.get('timeout', 0))
         if self.fail_build and args[-2:] == ['run', 'build']:
+            raise subprocess.CalledProcessError(1, args)
+        if self.fail_schema and args[-2:] == ['run', 'db:check:community']:
             raise subprocess.CalledProcessError(1, args)
         if options.get('capture'):
             if args[0] == 'systemctl':
                 return str(self.root)
             if args[-1] == '--version':
-                return 'v20.20.2' if args[0].endswith('/node') else '10.33.4'
+                return self.node_version if args[0].endswith('/node') else '10.33.4'
 
 
 class TestDeployment(Deployment):
@@ -103,6 +109,51 @@ class ReleaseTransactions(unittest.TestCase):
         self.assertFalse(self.deployment.control.exists())
         self.assertEqual((self.root / '.env').read_text(), 'DATABASE_URL=original-server-secret')
 
+    def test_check_rejects_runtime_outside_project_engines(self):
+        for version in ['v20.20.2', 'v27.0.0']:
+            self.runner.node_version = version
+            with self.assertRaisesRegex(DeployError, '26.x'):
+                self.deployment.preflight()
+
+    def test_database_status_uses_server_environment_without_creating_control_directory_or_restarting(self):
+        for name in ['pg', 'dotenv']:
+            (self.root / 'node_modules' / name).mkdir(parents=True)
+        self.args.action = 'db-status'
+        self.args.user = None
+        self.deployment.database({'source': 'server-only database operation', 'schemaCheck': 'SELECT 1', 'migrations': []})
+        self.assertFalse(self.deployment.control.exists())
+        self.assertEqual(self.runner.calls, [[str(self.deployment.node), '--input-type=module', '-']])
+        options = self.runner.options[-1]
+        self.assertEqual(options['cwd'], self.root)
+        self.assertEqual(options['env']['NODE_ENV'], 'production')
+        self.assertEqual(options['input'], 'server-only database operation')
+        request = json.loads(options['env']['COEER_DB_REQUEST'])
+        self.assertEqual(request['backupDirectory'], str(self.deployment.control / 'backups'))
+        self.assertNotIn('DATABASE_URL', request)
+
+    def test_database_commands_use_active_release_and_validate_target_and_account(self):
+        release = self.old_release()
+        (release / '.env').symlink_to(self.root / '.env')
+        for name in ['pg', 'dotenv']:
+            (release / 'node_modules' / name).mkdir(parents=True)
+        self.args.action = 'db-seed'
+        self.args.user = 'test@example.com'
+        payload = {'source': 'operation source', 'schemaCheck': 'SELECT 1', 'migrations': []}
+        self.deployment.database(payload)
+        self.assertEqual(self.runner.options[-1]['cwd'], release)
+        self.args.user = 'invalid;id'
+        with self.assertRaises(DeployError):
+            self.deployment.database(payload)
+        self.assertEqual(len(self.runner.calls), 1)
+        self.args.user = 'test@example.com'
+        outside = self.base / 'outside'
+        outside.mkdir()
+        self.deployment.current.unlink()
+        self.deployment.current.symlink_to(outside)
+        with self.assertRaises(DeployError):
+            self.deployment.database(payload)
+        self.assertEqual(len(self.runner.calls), 1)
+
     def test_failed_preview_never_switches_running_version(self):
         old = self.old_release()
         new = self.ready('new-version')
@@ -163,6 +214,92 @@ class ReleaseTransactions(unittest.TestCase):
             self.deployment.build(release)
         self.assertEqual(self.deployment.current.resolve(), old)
         self.assertFalse(any('restart' in args for args in self.runner.calls))
+
+    def test_missing_schema_stops_before_build_or_service_restart(self):
+        old = self.old_release()
+        release = self.ready('new-version')
+        (release / 'package.json').write_text(json.dumps({'packageManager': 'pnpm@10.33.4'}))
+        self.runner.fail_schema = True
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.deployment.build(release)
+        self.assertEqual(self.deployment.current.resolve(), old)
+        self.assertFalse(any(args[-2:] == ['run', 'build'] or 'restart' in args for args in self.runner.calls))
+
+    def test_version_list_is_read_only_even_before_first_release(self):
+        self.assertEqual(self.deployment.list_releases(), [])
+        self.assertFalse(self.deployment.control.exists())
+        self.assertEqual(self.runner.calls, [])
+
+    def test_version_list_labels_online_rollback_ready_and_incomplete_versions(self):
+        old = self.old_release()
+        new = self.ready('new-version')
+        self.deployment.activate(new)
+        self.ready('unused-version')
+        self.deployment.release_path('failed-version').mkdir()
+        calls = list(self.runner.calls)
+        records = self.deployment.list_releases()
+        statuses = {record['release']: record['status'] for record in records}
+        self.assertEqual(statuses, {new.name: '当前线上', old.name: '可回滚', 'unused-version': '就绪', 'failed-version': '未就绪'})
+        self.assertTrue(all(record['bytes'] >= 0 for record in records))
+        self.assertEqual(self.runner.calls, calls)
+
+    def test_deleting_unused_and_failed_releases_preserves_service_database_and_link_targets(self):
+        old = self.old_release()
+        new = self.ready('new-version')
+        self.deployment.activate(new)
+        unused = self.ready('unused-version')
+        failed = self.deployment.release_path('failed-version')
+        failed.mkdir()
+        outside = self.base / 'keep-this-file'
+        outside.write_text('private data')
+        (unused / '.env').symlink_to(self.root / '.env')
+        (unused / 'external').symlink_to(outside)
+        calls = list(self.runner.calls)
+        unit = self.deployment.override.read_text()
+        with self.deployment.lock():
+            self.deployment.delete_release(unused.name)
+            self.deployment.delete_release(failed.name)
+        self.assertFalse(unused.exists())
+        self.assertFalse(failed.exists())
+        self.assertEqual(outside.read_text(), 'private data')
+        self.assertEqual((self.root / '.env').read_text(), 'DATABASE_URL=original-server-secret')
+        self.assertEqual(self.deployment.current.resolve(), new)
+        self.assertTrue(old.is_dir())
+        self.assertEqual(self.deployment.override.read_text(), unit)
+        self.assertEqual(self.runner.calls, calls)
+
+    def test_delete_rejects_current_rollback_paths_and_symlinked_versions(self):
+        old = self.old_release()
+        new = self.ready('new-version')
+        self.deployment.activate(new)
+        outside = self.base / 'outside'
+        outside.mkdir()
+        linked = self.deployment.release_path('linked-version')
+        linked.symlink_to(outside)
+        for version in [new.name, old.name, '../coeer', str(self.root), 'missing-version', linked.name]:
+            with self.subTest(version=version):
+                with self.assertRaises(DeployError):
+                    self.deployment.delete_release(version)
+        self.assertTrue(new.is_dir())
+        self.assertTrue(old.is_dir())
+        self.assertTrue(outside.is_dir())
+
+    def test_delete_refuses_uncertain_rollback_metadata(self):
+        live = self.old_release()
+        unused = self.ready('unused-version')
+        for content in ['not json', '{}', json.dumps({'target': str(self.base)})]:
+            (live / 'previous.json').write_text(content)
+            with self.assertRaises((DeployError, ValueError)):
+                self.deployment.delete_release(unused.name)
+            self.assertTrue(unused.is_dir())
+
+    def test_release_size_never_counts_files_in_symlinked_directories(self):
+        unused = self.ready('unused-version')
+        outside = self.base / 'outside'
+        outside.mkdir()
+        (outside / 'large').write_bytes(b'x' * 4096)
+        (unused / 'linked-directory').symlink_to(outside)
+        self.assertEqual(self.deployment.release_size(unused), (unused / 'ready.json').stat().st_size)
 
     def test_concurrent_release_is_rejected(self):
         with self.deployment.lock():
