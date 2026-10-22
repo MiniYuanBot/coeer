@@ -26,6 +26,12 @@
 .coeer-markdown .katex * { box-sizing: content-box; }
 .coeer-markdown .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: .5em .125em; }
 
+.coeer-markdown-editor { container: markdown-editor / inline-size; }
+.coeer-markdown-editor-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+@container markdown-editor (min-width: 720px) {
+  .coeer-markdown-editor-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .coeer-post-content-viewport[data-collapsed] { max-height: var(--post-preview-height); overflow: hidden; }
 .coeer-post-content-viewport[data-collapsed][data-overflow] {
   mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);

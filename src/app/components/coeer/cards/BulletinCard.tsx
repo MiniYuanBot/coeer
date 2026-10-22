@@ -4,11 +4,12 @@ import { bulletinTypeLabels } from '../lib/labels'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
+import { MarkdownSummary } from '../ui/Markdown'
 
 export function BulletinCard({ bulletin }: { bulletin: any }) {
     return (
-        <Link to="/bulletins/$bulletinId" params={{ bulletinId: bulletin.id }} className="coeer-focus group block rounded-lg">
-            <Card className="h-full p-5 transition-colors group-hover:bg-muted/40">
+        <Link to="/bulletins/$bulletinId" params={{ bulletinId: bulletin.id }} className="coeer-focus group block min-w-0 rounded-lg">
+            <Card className="h-full min-w-0 p-5 transition-colors group-hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3">
                     <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(bulletin.createdAt)}</span>
@@ -17,7 +18,7 @@ export function BulletinCard({ bulletin }: { bulletin: any }) {
                     <h3 className="text-[15px] font-medium">{bulletin.title}</h3>
                     <Icon name="chevron" className="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))] opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
-                <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{bulletin.content}</p>
+                <MarkdownSummary content={bulletin.content} className="mt-2 text-muted-foreground" />
             </Card>
         </Link>
     )

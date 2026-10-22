@@ -1,10 +1,10 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
-import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
+import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createFeedbackFn } from '~/functions'
 import { FeedbackTargetType } from '@shared/constants'
 import { useState } from 'react'
-import { Alert, Button, Card, DetailLayout, Field, Icon, Input, SectionHeader, Select, Textarea, useToast } from '@/components/coeer'
+import { Alert, Button, Card, DetailLayout, Field, Icon, Input, SectionHeader, Select, useToast } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/feedbacks/create')({
     component: CreateFeedbackPage,
@@ -81,10 +81,8 @@ function CreateFeedbackPage() {
                         <Input name="title" required maxLength={200} placeholder="一句话说明问题" />
                     </Field>
 
-                    <Field label="内容">
-                        <Textarea name="content" required rows={10} maxLength={5000} placeholder="描述发生了什么、影响是什么、你期待怎样处理。" />
-                        <MarkdownHelp />
-                    </Field>
+                    <MarkdownEditor label="内容" name="content" required rows={10} maxLength={5000} disabled={isSubmitting}
+                        placeholder="描述发生了什么、影响是什么、你期待怎样处理。" />
 
                     <label className="flex min-h-11 items-center gap-2 text-[13px]">
                         <input name="isAnonymous" type="checkbox" className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />

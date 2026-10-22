@@ -1,5 +1,5 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
-import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
+import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createGroupPostFn } from '~/functions'
@@ -68,11 +68,8 @@ function CreatePostPage() {
                         <input name="title" required maxLength={200} placeholder="一句话说明帖子主题" className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
                     </label>
 
-                    <label className="block">
-                        <span className="text-sm font-medium">内容</span>
-                        <textarea name="content" required rows={10} maxLength={10000} placeholder="写下正文内容，例如：求助，这题怎么积？$$\int_0^1 x^2\,dx$$" className="coeer-focus mt-2 w-full resize-y rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
-                        <MarkdownHelp />
-                    </label>
+                    <MarkdownEditor label="内容" name="content" required rows={10} maxLength={10000} disabled={isSubmitting}
+                        placeholder="写下正文内容，例如：求助，这题怎么积？$$\int_0^1 x^2\,dx$$" />
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">
                         <Button type="button" variant="outline" onClick={() => navigate({ to: '/groups/$slug/posts', params: { slug } })}>取消</Button>

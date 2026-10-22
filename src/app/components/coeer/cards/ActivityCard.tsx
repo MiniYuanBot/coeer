@@ -6,6 +6,7 @@ import type { BadgeTone } from '../lib/types'
 import { Badge } from '../ui/Badge'
 import { Card } from '../ui/Card'
 import { Icon } from '../ui/Icon'
+import { MarkdownSummary } from '../ui/Markdown'
 import { activityStatusAt } from '@shared/activities'
 import { useActivityClock } from '@/hooks/useActivityClock'
 
@@ -24,7 +25,7 @@ export function ActivityCard({ activity, action }: { activity: any; action?: Rea
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(activity.startTime)}</span>
             </div>
             <h3 className="mt-3 text-[15px] font-medium leading-6"><Link to="/activities/$activityId" params={{ activityId: activity.id }} className="coeer-focus rounded hover:text-primary">{activity.title}</Link></h3>
-            <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">{activity.description}</p>
+            <MarkdownSummary content={activity.description} className="mt-2 text-muted-foreground" />
             <div className="mt-4 grid gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
                 <span className="inline-flex items-center gap-2"><Icon name="calendar" /> {formatDateTime(activity.startTime)}</span>
                 <span className="inline-flex items-center gap-2"><Icon name="bookmark" /> {activity.location || '待定地点'}</span>

@@ -1,5 +1,5 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
-import { MarkdownHelp } from '@/components/coeer/ui/Markdown'
+import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { updateGroupPostFn } from '~/functions'
@@ -48,7 +48,7 @@ function EditPostPage() {
 
             <Card className="rounded-lg p-5">
                 {error ? <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</div> : null}
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form key={post.id} onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <span className="text-sm font-medium">帖子类型</span>
                         <div className="mt-2"><Badge>{post.type === 'announcement' ? '公告' : '讨论'}</Badge></div>
@@ -59,11 +59,7 @@ function EditPostPage() {
                         <input name="title" required maxLength={200} defaultValue={post.title} className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
                     </label>
 
-                    <label className="block">
-                        <span className="text-sm font-medium">内容</span>
-                        <textarea name="content" required rows={10} maxLength={10000} defaultValue={post.content} className="coeer-focus mt-2 w-full resize-y rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6" />
-                        <MarkdownHelp />
-                    </label>
+                    <MarkdownEditor label="内容" name="content" required rows={10} maxLength={10000} defaultValue={post.content} disabled={isSubmitting} />
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">
                         <Button type="button" variant="outline" onClick={() => navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId } })}>取消</Button>

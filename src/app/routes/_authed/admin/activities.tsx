@@ -1,4 +1,5 @@
 import { Field } from '@/components/coeer/ui/Field'
+import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -24,13 +25,16 @@ function AdminActivitiesPage() {
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
+    const [error, setError] = useState('')
     const [participants, setParticipants] = useState<any[] | null>(null)
 
     const refresh = () => navigate({ to: '/admin/activities', search: { page } })
 
     const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const form = new FormData(e.currentTarget)
+        setError('')
+        const element = e.currentTarget
+        const form = new FormData(element)
         const payload = {
             title: form.get('title') as string,
             description: form.get('description') as string,
@@ -40,13 +44,17 @@ function AdminActivitiesPage() {
             endTime: new Date(form.get('endTime') as string),
             maxParticipants: form.get('maxParticipants') ? Number(form.get('maxParticipants')) : undefined,
         }
-        if (editing?.id) {
-            await updateActivityFn({ data: { id: editing.id, ...payload, status: form.get('status') as ActivityStatus } })
-        } else {
-            await createActivityFn({ data: payload })
+        try {
+            const result = editing?.id
+                ? await updateActivityFn({ data: { id: editing.id, ...payload, status: form.get('status') as ActivityStatus } })
+                : await createActivityFn({ data: payload })
+            if (!result.success) throw new Error(result.state.message || '保存活动失败')
+            element.reset()
+            setEditing(null)
+            refresh()
+        } catch (error) {
+            setError(error instanceof Error ? error.message : '保存活动失败，请重试')
         }
-        setEditing(null)
-        refresh()
     }
 
     const remove = async (id: string) => {
@@ -64,9 +72,10 @@ function AdminActivitiesPage() {
         <div className="space-y-6">
             <SectionHeader title="活动管理" description="发布、编辑、删除活动，并查看报名情况。" />
             <Card className="rounded-lg p-5">
+                {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
                     <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="活动标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                    <Field label="说明"><textarea name="description" required defaultValue={editing?.description} placeholder="活动说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
+                    <MarkdownEditor label="说明" name="description" required maxLength={5000} defaultValue={editing?.description} placeholder="活动说明" rows={6} />
                     <div className="grid gap-3 md:grid-cols-2">
                         <Field label="类型"><select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
                             {ACTIVITY_TYPE_ARRAY.map((type) => <option key={type} value={type}>{activityTypeLabels[type]}</option>)}

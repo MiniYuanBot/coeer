@@ -1,4 +1,5 @@
 import { Field } from '@/components/coeer/ui/Field'
+import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
@@ -24,22 +25,32 @@ function AdminBulletinsPage() {
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
+    const [error, setError] = useState('')
 
     const refresh = () => navigate({ to: '/admin/bulletins', search: { page } })
 
     const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const form = new FormData(e.currentTarget)
+        setError('')
+        const element = e.currentTarget
+        const form = new FormData(element)
         const payload = {
             type: form.get('type') as BulletinType,
             title: form.get('title') as string,
             content: form.get('content') as string,
             isPinned: form.get('isPinned') === 'on',
         }
-        if (editing?.id) await updateBulletinFn({ data: { id: editing.id, title: payload.title, content: payload.content, isPinned: payload.isPinned } })
-        else await createBulletinFn({ data: payload })
-        setEditing(null)
-        refresh()
+        try {
+            const result = editing?.id
+                ? await updateBulletinFn({ data: { id: editing.id, title: payload.title, content: payload.content, isPinned: payload.isPinned } })
+                : await createBulletinFn({ data: payload })
+            if (!result.success) throw new Error(result.state.message || '保存公告失败')
+            element.reset()
+            setEditing(null)
+            refresh()
+        } catch (error) {
+            setError(error instanceof Error ? error.message : '保存公告失败，请重试')
+        }
     }
 
     const remove = async (id: string) => {
@@ -52,12 +63,13 @@ function AdminBulletinsPage() {
         <div className="space-y-6">
             <SectionHeader title="公告管理" description="发布、编辑和删除公告。" />
             <Card className="rounded-lg p-5">
+                {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
                     <Field label="类型"><select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
                         {BULLETIN_TYPE_ARRAY.map((type) => <option key={type} value={type}>{bulletinTypeLabels[type]}</option>)}
                     </select></Field>
                     <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                    <Field label="内容"><textarea name="content" required defaultValue={editing?.content} placeholder="公告内容" rows={4} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
+                    <MarkdownEditor label="内容" name="content" required maxLength={5000} defaultValue={editing?.content} placeholder="公告内容" rows={6} />
                     <label className="flex items-center gap-2 text-sm"><input name="isPinned" type="checkbox" defaultChecked={editing?.isPinned} className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />置顶</label>
                     <div className="flex gap-2">
                         <Button type="submit">{editing ? '保存公告' : '发布公告'}</Button>

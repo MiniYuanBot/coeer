@@ -1,4 +1,5 @@
 import { TableScroll } from '@/components/coeer/ui/TableScroll'
+import { MarkdownSummary } from '@/components/coeer/ui/Markdown'
 import { createFileRoute, Link, useHydrated, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
 import z from 'zod'
@@ -130,7 +131,7 @@ function AdminFeedbacksPage() {
                                             <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="font-medium hover:text-[hsl(var(--primary))]">
                                                 {feedback.title}
                                             </Link>
-                                            <p className="mt-1 line-clamp-2 text-[hsl(var(--muted-foreground))]">{feedback.content}</p>
+                                            <MarkdownSummary content={feedback.content} className="mt-1 text-muted-foreground" />
                                             <div className="mt-2 flex flex-wrap gap-2">
                                                 <Badge>{feedbackTargetLabels[feedback.targetType]}</Badge>
                                                 {feedback.isAnonymous ? <Badge>匿名</Badge> : null}
