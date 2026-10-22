@@ -31,6 +31,13 @@
   mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
 }
 
+.coeer-reply-children { min-width: 0; margin-left: .5rem; padding-left: .75rem; border-left: 2px solid hsl(var(--border)); }
+/* Keep deep conversations readable on narrow screens; the level label preserves context. */
+.coeer-reply-children[data-deep] { margin-left: 0; padding-left: 0; border-left: 0; }
+@media (min-width: 640px) {
+  .coeer-reply-children:not([data-deep]) { margin-left: .75rem; padding-left: 1rem; }
+}
+
 /* HSL triplets preserve compatibility with existing business-page utilities. */
 :root {
   --background: 0 0% 100%;

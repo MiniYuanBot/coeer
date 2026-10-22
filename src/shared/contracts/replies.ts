@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { DbUser, Feedback, GroupPost, Reply } from '~/database/schemas'
 import { ReplyCode, REPLY_TARGET_TYPE_ARRAY } from '../constants'
-import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
+import { ActionResponse, PaginatedActionResponse, PaginatedData, PaginationSchema } from './shared'
 
 export const ReplyIdSchema = z.object({
     id: z.uuid(),
@@ -22,6 +22,7 @@ export const UpdateReplySchema = z.object({
 export const ListRepliesByTargetSchema = z.object({
     targetType: z.enum(REPLY_TARGET_TYPE_ARRAY),
     targetId: z.uuid(),
+    rootsOnly: z.boolean().optional(),
     ...PaginationSchema.shape,
 })
 
@@ -45,6 +46,10 @@ export type ListRepliesByAuthorInput = z.infer<typeof ListRepliesByAuthorSchema>
 export type ReplyWithAuthor = Reply & {
     author: Pick<DbUser, 'id' | 'name'> | null
 }
+
+export type ReplyListItem = ReplyWithAuthor & { childCount: number }
+// In rootsOnly mode, total paginates discussions; replyTotal counts replies at every level.
+export type ReplyListResponse = ReplyResponse<PaginatedData<ReplyListItem> & { replyTotal?: number }>
 
 export type ReplyWithTarget = Reply & {
     target?: Pick<GroupPost, 'id' | 'title'> | Pick<Feedback, 'id' | 'title'> | null

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, getTableColumns, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, isNull, ne, sql } from 'drizzle-orm'
 import { db } from '../client'
 import { groupMembers, groupPosts, groups, NewReply, replies, Reply } from '../schemas'
 import type {
@@ -8,6 +8,10 @@ import type {
     ReplyIdInput,
     UpdateReplyInput,
 } from '@shared/contracts'
+
+const childCount = sql<number>`(select count(*)::int from replies children
+    where children.parent_id = ${replies.id} and children.target_type = ${replies.targetType}
+    and children.target_id = ${replies.targetId})`.as('child_count')
 
 export const replyQueries = {
     async create(data: NewReply): Promise<Reply> {
@@ -25,22 +29,31 @@ export const replyQueries = {
 
     async listByTarget(data: ListRepliesByTargetInput) {
         return db.query.replies.findMany({
-            where: and(eq(replies.targetType, data.targetType), eq(replies.targetId, data.targetId)),
+            where: and(eq(replies.targetType, data.targetType), eq(replies.targetId, data.targetId),
+                data.rootsOnly ? isNull(replies.parentId) : undefined),
             with: { author: { columns: { id: true, name: true } } },
+            extras: { childCount },
             orderBy: [desc(replies.createdAt), desc(replies.id)],
             limit: data.limit,
             offset: data.offset,
         })
     },
 
-    async listChildren(data: ListChildRepliesInput) {
+    async listChildren(data: ListChildRepliesInput, target: Pick<Reply, 'targetType' | 'targetId'>) {
         return db.query.replies.findMany({
-            where: eq(replies.parentId, data.parentId),
+            where: and(eq(replies.parentId, data.parentId), eq(replies.targetType, target.targetType), eq(replies.targetId, target.targetId)),
             with: { author: { columns: { id: true, name: true } } },
+            extras: { childCount },
             orderBy: [desc(replies.createdAt), desc(replies.id)],
             limit: data.limit,
             offset: data.offset,
         })
+    },
+
+    async countChildren(parentId: string, target: Pick<Reply, 'targetType' | 'targetId'>): Promise<number> {
+        const [result] = await db.select({ value: count() }).from(replies)
+            .where(and(eq(replies.parentId, parentId), eq(replies.targetType, target.targetType), eq(replies.targetId, target.targetId)))
+        return result?.value ?? 0
     },
 
     async listByAuthor(data: ListRepliesByAuthorInput, viewer: { id: string; role: string }): Promise<Reply[]> {
@@ -70,7 +83,8 @@ export const replyQueries = {
 
     async countByTarget(data: ListRepliesByTargetInput): Promise<number> {
         const [result] = await db.select({ value: count() }).from(replies)
-            .where(and(eq(replies.targetType, data.targetType), eq(replies.targetId, data.targetId)))
+            .where(and(eq(replies.targetType, data.targetType), eq(replies.targetId, data.targetId),
+                data.rootsOnly ? isNull(replies.parentId) : undefined))
         return result?.value ?? 0
     },
 }

@@ -162,6 +162,51 @@ describe('COEER post interactions and author permissions', () => {
         await GroupPostService.delete({ id: post.id })
         expect(await db.select().from(replies)).toHaveLength(0)
     })
+    it('paginates roots and children independently while preserving deep threads and deleted ancestors', async () => {
+        const { group, post } = await postFixture()
+        await db.insert(groupMembers).values({ groupId: group.id, userId: ids.student, role: 'member', status: 'approved' })
+        signIn()
+        const target = { targetType: 'group_post' as const, targetId: post.id }
+        const root = (await ReplyService.create({ ...target, content: '第一段讨论' })).data!
+        const child = (await ReplyService.create({ ...target, parentId: root.id, content: '第二级' })).data!
+        const grandchild = (await ReplyService.create({ ...target, parentId: child.id, content: '第三级' })).data!
+        const leaf = (await ReplyService.create({ ...target, parentId: grandchild.id, content: '**第四级** $x^2$' })).data!
+        const another = (await ReplyService.create({ ...target, content: '另一段讨论' })).data!
+        await db.update(replies).set({ createdAt: new Date('2026-01-01') }).where(eq(replies.id, root.id))
+        await db.update(replies).set({ createdAt: new Date('2026-01-02') }).where(eq(replies.id, another.id))
+        await db.insert(replies).values(Array.from({ length: 22 }, (_, index) => ({
+            ...target, userId: ids.student, parentId: root.id, content: `并列子回复 ${index}`,
+        })))
+
+        const first = (await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 1, offset: 0 })).data!
+        const second = (await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 1, offset: 1 })).data!
+        expect(first.total).toBe(2)
+        expect(first.replyTotal).toBe(27)
+        expect(first.items).toMatchObject([{ id: another.id, childCount: 0 }])
+        expect(second.items).toMatchObject([{ id: root.id, childCount: 23 }])
+        // The original flat API remains compatible for other callers.
+        expect((await ReplyService.listByTarget({ ...target, limit: 30, offset: 0 })).data?.total).toBe(27)
+
+        const children = (await ReplyService.listChildren({ parentId: root.id, limit: 20, offset: 0 })).data!
+        const more = (await ReplyService.listChildren({ parentId: root.id, limit: 20, offset: 20 })).data!
+        expect(children.total).toBe(23)
+        expect(children.items).toHaveLength(20)
+        expect(more.items).toHaveLength(3)
+        expect(new Set([...children.items!, ...more.items!].map((item) => item.id)).size).toBe(23)
+        expect([...children.items!, ...more.items!].find((item) => item.id === child.id)?.childCount).toBe(1)
+        expect((await ReplyService.listChildren({ parentId: child.id, limit: 20, offset: 0 })).data?.items)
+            .toMatchObject([{ id: grandchild.id, childCount: 1 }])
+
+        expect((await ReplyService.delete({ id: child.id })).success).toBe(true)
+        expect((await ReplyService.listChildren({ parentId: root.id, limit: 30, offset: 0 })).data?.items?.find((item) => item.id === child.id))
+            .toMatchObject({ content: '', childCount: 1 })
+        expect((await ReplyService.listChildren({ parentId: grandchild.id, limit: 20, offset: 0 })).data?.items)
+            .toMatchObject([{ id: leaf.id, content: '**第四级** $x^2$', childCount: 0 }])
+
+        await db.delete(groupMembers).where(eq(groupMembers.userId, ids.student))
+        expect((await ReplyService.listChildren({ parentId: grandchild.id, limit: 20, offset: 0 })).success).toBe(false)
+        expect((await ReplyService.listByTarget({ ...target, rootsOnly: true, limit: 20, offset: 0 })).success).toBe(false)
+    })
     it('filters reply author histories before pagination and revokes access after leaving a group', async () => {
         const { group, post } = await postFixture(false)
         await db.insert(groupMembers).values({ groupId: group.id, userId: ids.student, role: 'member', status: 'approved' })

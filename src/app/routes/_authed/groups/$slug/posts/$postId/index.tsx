@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/')({
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
     if (!context.isAdmin && !context.isMember && context.user?.role !== 'admin') return null
-    const result = await listRepliesByTargetFn({ data: { targetType: 'group_post', targetId: context.post.id, limit: 20, offset: (deps.replyPage - 1) * 20 } })
+    const result = await listRepliesByTargetFn({ data: { targetType: 'group_post', targetId: context.post.id, rootsOnly: true, limit: 20, offset: (deps.replyPage - 1) * 20 } })
     if (!result.success) throw new Error(result.state.message || '回复加载失败')
     return result.data ?? null
   },
@@ -101,7 +101,8 @@ function PostIndexComponent() {
         <div className="mt-6 flex gap-4 border-t border-border pt-4"><PostLikeButton post={post} /><PostBookmarkButton post={post} /></div>
       </Card>
       {replies ? <>
-        <GroupReplies key={post.id} postId={post.id} replies={replies.items ?? []} total={replies.total ?? 0} userId={user!.id}
+        <GroupReplies key={post.id} postId={post.id} replies={replies.items ?? []} total={replies.replyTotal ?? 0} userId={user!.id}
+          onRootCreated={replyPage > 1 ? () => navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId }, search: { replyPage: 1 } }) : undefined}
           canReply={(isAdmin || isMember) && group.status === 'approved'} canManage={isAdmin || user?.role === 'admin'} />
         {(replies.total ?? 0) > 20 || replyPage > 1 ? <div className="mt-4 flex justify-end gap-3">
           <Button size="sm" variant="outline" disabled={replyPage <= 1} onClick={() => void navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId }, search: { replyPage: replyPage - 1 } })}>上一页</Button>

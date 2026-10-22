@@ -9,6 +9,7 @@ import type {
     ListRepliesByTargetInput,
     PaginatedReplyResponse,
     ReplyIdInput,
+    ReplyListResponse,
     ReplyResponse,
     ReplyWithAuthor,
     ReplyWithTarget,
@@ -48,22 +49,24 @@ export class ReplyService {
         return { success: true, data: reply as ReplyWithAuthor, state: REPLY.GET_SUCCESS }
     }
 
-    static async listByTarget(data: ListRepliesByTargetInput): Promise<PaginatedReplyResponse<ReplyWithAuthor>> {
+    static async listByTarget(data: ListRepliesByTargetInput): Promise<ReplyListResponse> {
         const current = await AuthService.getCurrentUser()
         if (!current.success || !current.data) return { success: false, state: REPLY.UNAUTHORIZED }
         if (!(await getDiscussionAccess(data, current.data)).canRead) return { success: false, state: REPLY.TARGET_NOT_FOUND }
         const items = await replyQueries.listByTarget(data)
         const total = await replyQueries.countByTarget(data)
-        return { success: true, data: { items: items as ReplyWithAuthor[], total, limit: data.limit, offset: data.offset }, state: REPLY.GET_SUCCESS }
+        const replyTotal = data.rootsOnly ? await replyQueries.countByTarget({ ...data, rootsOnly: false }) : total
+        return { success: true, data: { items, total, replyTotal, limit: data.limit, offset: data.offset }, state: REPLY.GET_SUCCESS }
     }
 
-    static async listChildren(data: ListChildRepliesInput): Promise<PaginatedReplyResponse<ReplyWithAuthor>> {
+    static async listChildren(data: ListChildRepliesInput): Promise<ReplyListResponse> {
         const current = await AuthService.getCurrentUser()
         if (!current.success || !current.data) return { success: false, state: REPLY.UNAUTHORIZED }
         const parent = await replyQueries.findById({ id: data.parentId })
         if (!parent || !(await getDiscussionAccess(parent, current.data)).canRead) return { success: false, state: REPLY.NOT_FOUND }
-        const items = await replyQueries.listChildren(data)
-        return { success: true, data: { items: items as ReplyWithAuthor[], limit: data.limit, offset: data.offset }, state: REPLY.GET_SUCCESS }
+        const items = await replyQueries.listChildren(data, parent)
+        const total = await replyQueries.countChildren(data.parentId, parent)
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REPLY.GET_SUCCESS }
     }
 
     static async listByAuthor(data: ListRepliesByAuthorInput): Promise<PaginatedReplyResponse<ReplyWithTarget>> {
