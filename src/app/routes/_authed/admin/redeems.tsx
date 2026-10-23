@@ -1,4 +1,4 @@
-import { Field } from '@/components/coeer/ui/Field'
+import { Field, Input, Select, Textarea } from '@/components/coeer/ui/Field'
 import { ImageUploadField, uploadFormImage } from '@/components/coeer/ui/ImageUploadField'
 import { CreateRedeemItemSchema } from '@shared/contracts/redeems'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -80,21 +80,40 @@ function AdminRedeemsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="商城管理" description="添加、编辑、删除商城物品，并查看兑换详情。" />
-            <Card className="rounded-lg p-5">
+            <Card className="coeer-admin-form rounded-lg p-5 sm:p-6">
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={`${editing?.id || 'new'}:${revision}`} onSubmit={submit}>
-                <fieldset disabled={pending} className="grid min-w-0 gap-4">
-                    <Field label="名称"><input name="name" required defaultValue={editing?.name} placeholder="物品名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                    <Field label="说明"><textarea name="description" defaultValue={editing?.description} placeholder="物品说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
-                    <ImageUploadField name="imageUrl" label="商品图片（选填）" defaultValue={editing?.imageUrl} />
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <Field label="所需积分"><input name="pointsCost" required type="number" min={1} defaultValue={editing?.pointsCost} placeholder="积分价格" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="库存（−1 表示不限）"><input name="stock" required type="number" min={-1} defaultValue={editing?.stock ?? -1} placeholder="库存" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="类型"><select name="type" defaultValue={editing?.type || 'physical'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_TYPE_ARRAY.map((type) => <option key={type} value={type}>{redeemItemTypeLabels[type]}</option>)}</select></Field>
-                        <Field label="状态"><select name="status" defaultValue={editing?.status || 'active'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{REDEEM_ITEM_STATUS_ARRAY.map((status) => <option key={status} value={status}>{redeemItemStatusLabels[status]}</option>)}</select></Field>
-                    </div>
-                    <div className="flex gap-2"><Button type="submit" loading={pending}>{editing ? '保存物品' : '添加物品'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}</div>
-                </fieldset>
+                    <fieldset disabled={pending} className="grid min-w-0 gap-5">
+                        <Field label="名称">
+                            <Input name="name" required maxLength={100} defaultValue={editing?.name} placeholder="物品名称" className="h-10" />
+                        </Field>
+                        <Field label="说明">
+                            <Textarea name="description" defaultValue={editing?.description} placeholder="物品说明" rows={3} />
+                        </Field>
+                        <div className="coeer-admin-form-grid">
+                            <Field label="所需积分">
+                                <Input name="pointsCost" required type="number" min={1} defaultValue={editing?.pointsCost} placeholder="积分价格" className="h-10" />
+                            </Field>
+                            <Field label="库存（−1 表示不限）">
+                                <Input name="stock" required type="number" min={-1} defaultValue={editing?.stock ?? -1} placeholder="库存" className="h-10" />
+                            </Field>
+                            <Field label="类型">
+                                <Select name="type" defaultValue={editing?.type || 'physical'} className="h-10">
+                                    {REDEEM_ITEM_TYPE_ARRAY.map((type) => <option key={type} value={type}>{redeemItemTypeLabels[type]}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label="状态">
+                                <Select name="status" defaultValue={editing?.status || 'active'} className="h-10">
+                                    {REDEEM_ITEM_STATUS_ARRAY.map((status) => <option key={status} value={status}>{redeemItemStatusLabels[status]}</option>)}
+                                </Select>
+                            </Field>
+                        </div>
+                        <ImageUploadField name="imageUrl" label="商品图片（选填）" defaultValue={editing?.imageUrl} disabled={pending} />
+                        <div className="coeer-form-actions border-t border-border pt-4">
+                            {editing ? <Button variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}
+                            <Button type="submit" loading={pending}>{editing ? '保存物品' : '添加物品'}</Button>
+                        </div>
+                    </fieldset>
                 </form>
             </Card>
             {orders ? <Card className="rounded-lg p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">兑换详情</h2><Button variant="outline" onClick={() => setOrders(null)}>关闭</Button></div>{orders.items.length ? orders.items.map((order) => <p key={order.id} className="py-1 text-sm">{order.user?.name || '未知用户'} · {order.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无兑换</p>}<Pagination total={orders.total} page={orders.page} onChange={(page) => void showOrders(orders.itemId, page)} label="兑换订单分页" /></Card> : null}

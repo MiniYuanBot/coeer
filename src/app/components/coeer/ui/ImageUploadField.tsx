@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type DragEvent } from 'react'
 import { IMAGE_MIME_TYPES, MAX_IMAGE_BYTES } from '@shared/images'
 import { Field, Input } from './Field'
 import { Button } from './Button'
+import { Icon } from './Icon'
+import { cn } from '../lib/cn'
 
 /** Upload only when the containing form is saved, retaining the selection after a failed save. */
-export function ImageUploadField({ name, label, defaultValue }: { name: string; label: string; defaultValue?: string | null }) {
+export function ImageUploadField({ name, label, defaultValue, disabled = false }: { name: string; label: string; defaultValue?: string | null; disabled?: boolean }) {
+    const id = useId()
     const [url, setUrl] = useState(defaultValue ?? '')
     const [file, setFile] = useState<File | null>(null)
     const [preview, setPreview] = useState('')
     const [error, setError] = useState('')
+    const [dragging, setDragging] = useState(false)
+    const [failedSrc, setFailedSrc] = useState('')
+    const dragDepth = useRef(0)
     const input = useRef<HTMLInputElement>(null)
     useEffect(() => {
         if (!file) { setPreview(''); return }
@@ -16,31 +22,101 @@ export function ImageUploadField({ name, label, defaultValue }: { name: string; 
         setPreview(localUrl)
         return () => URL.revokeObjectURL(localUrl)
     }, [file])
+    const imageSrc = preview || url
     const clearFile = () => { setFile(null); if (input.current) input.current.value = '' }
+    const setInputFile = (next: File | null) => {
+        if (!input.current) return
+        const transfer = new DataTransfer()
+        if (next) transfer.items.add(next)
+        input.current.files = transfer.files
+    }
+    const choose = (files: FileList | null) => {
+        if (disabled || input.current?.matches(':disabled')) return
+        if (!files?.length) { setInputFile(file); return }
+        const selected = files[0]
+        if (files.length !== 1 || !IMAGE_MIME_TYPES.some((type) => type === selected.type) || selected.size === 0 || selected.size > MAX_IMAGE_BYTES) {
+            setError(files.length !== 1 ? '一次只能选择一张图片' : '请选择不超过 5 MB 的 PNG、JPEG、GIF 或 WebP 图片')
+            setInputFile(file)
+            return
+        }
+        setInputFile(selected)
+        setFile(selected)
+        setUrl('')
+        setFailedSrc('')
+        setError('')
+    }
+    const stopDrag = () => { dragDepth.current = 0; setDragging(false) }
+    const isFileDrag = (event: DragEvent) => event.dataTransfer.types.includes('Files')
+    const blocked = () => disabled || !!input.current?.matches(':disabled')
     return (
-        <div className="grid min-w-0 gap-3">
-            <Field label={label} description="支持 PNG、JPEG、GIF、WebP，最大 5 MB。保存时上传。">
-                <input ref={input} type="file" name={`${name}File`} accept={IMAGE_MIME_TYPES.join(',')} className="coeer-focus w-full min-w-0 text-sm" onChange={(event) => {
-                    const selected = event.target.files?.[0]
-                    if (selected && (!IMAGE_MIME_TYPES.some((type) => type === selected.type) || selected.size === 0 || selected.size > MAX_IMAGE_BYTES)) {
-                        setError('请选择不超过 5 MB 的 PNG、JPEG、GIF 或 WebP 图片')
-                        clearFile()
-                        return
-                    }
-                    setError('')
-                    setFile(selected ?? null)
-                }} />
-            </Field>
-            <Field label="图片地址（也可手动填写）">
-                <Input name={name} value={url} placeholder="https://… 或上传后的图片地址" onChange={(event) => { clearFile(); setUrl(event.target.value); setError('') }} />
-            </Field>
-            {preview || url ? <div className="flex items-center gap-3">
-                <img src={preview || url} alt={`${label}预览`} className="h-24 w-24 rounded-lg border border-border bg-muted object-contain" />
-                <Button variant="outline" onClick={() => { clearFile(); setUrl(''); setError('') }}>移除图片</Button>
-            </div> : null}
-            {error ? <p role="alert" className="text-sm text-danger">{error}</p> : null}
+        <div role="group" aria-labelledby={`${id}-label`} className="grid min-w-0 gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <span id={`${id}-label`} className="text-xs font-medium">{label}</span>
+                <Button variant="outline" disabled={disabled} aria-controls={`${id}-file`} onClick={() => input.current?.click()}>
+                    <Icon name="plus" />选择本地文件
+                </Button>
+            </div>
+            <input ref={input} id={`${id}-file`} hidden type="file" name={`${name}File`} aria-label={`${label}本地文件`}
+                disabled={disabled} accept={IMAGE_MIME_TYPES.join(',')} onChange={(event) => choose(event.target.files)} />
+            <div role="region" aria-label={`${label}文件区域`} aria-describedby={`${id}-hint`} aria-disabled={disabled}
+                data-dragging={dragging && !disabled || undefined}
+                className={cn('coeer-image-dropzone grid min-h-40 min-w-0 content-center rounded-lg border border-dashed border-border bg-muted/30 p-4 transition-colors', disabled && 'opacity-50')}
+                onDragEnter={(event) => {
+                    if (!isFileDrag(event)) return
+                    event.preventDefault()
+                    if (blocked()) return
+                    dragDepth.current += 1
+                    setDragging(true)
+                }}
+                onDragOver={(event) => {
+                    if (!isFileDrag(event)) return
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = blocked() ? 'none' : 'copy'
+                }}
+                onDragLeave={(event) => {
+                    if (!isFileDrag(event)) return
+                    event.preventDefault()
+                    dragDepth.current = Math.max(0, dragDepth.current - 1)
+                    if (!dragDepth.current) setDragging(false)
+                }}
+                onDrop={(event) => {
+                    event.preventDefault()
+                    stopDrag()
+                    if (!blocked()) choose(event.dataTransfer.files)
+                }}>
+                {imageSrc ? <div className="flex min-w-0 flex-wrap items-center gap-4">
+                    <div className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-card text-muted-foreground">
+                        {failedSrc !== imageSrc ? <img src={imageSrc} alt={`${label}预览`} className="h-full w-full object-contain" onError={() => setFailedSrc(imageSrc)} /> : <Icon name="inbox" className="h-6 w-6" />}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                        <p className="break-all text-[13px] font-medium">{file?.name || '当前图片'}</p>
+                        <p className="text-xs leading-5 text-muted-foreground">{failedSrc === imageSrc ? '图片无法预览，可重新选择文件或修改链接。' : file ? `${formatSize(file.size)} · 保存后上传` : '可拖入新图片替换'}</p>
+                        <Button variant="ghost" size="sm" className="-ml-2.5" disabled={disabled} onClick={() => { clearFile(); setUrl(''); setError(''); setFailedSrc('') }}>
+                            <Icon name="x" />移除图片
+                        </Button>
+                    </div>
+                </div> : <div className="grid justify-items-center gap-2 py-3 text-center">
+                    <Icon name="inbox" className="h-7 w-7 text-muted-foreground" />
+                    <p className="text-[13px] font-medium">{dragging ? '松开鼠标，选择这张图片' : '拖动图片到这里'}</p>
+                    <p className="text-xs leading-5 text-muted-foreground">或点击上方按钮选择本地文件</p>
+                </div>}
+            </div>
+            <p id={`${id}-hint`} className="text-xs leading-5 text-muted-foreground">PNG、JPEG、GIF、WebP · 最大 5 MB</p>
+            {error ? <p role="alert" className="text-xs leading-5 text-danger">{error}</p> : null}
+            <details className="group min-w-0">
+                <summary className="coeer-focus flex w-fit cursor-pointer list-none items-center gap-1 rounded text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                    使用图片链接<Icon name="chevron" className="h-3 w-3 transition-transform group-open:rotate-90" />
+                </summary>
+                <Field label="图片地址" className="pt-3">
+                    <Input name={name} value={url} disabled={disabled} placeholder="https://… 或已上传的图片地址" onChange={(event) => { clearFile(); setUrl(event.target.value); setError(''); setFailedSrc('') }} />
+                </Field>
+            </details>
         </div>
     )
+}
+
+function formatSize(bytes: number) {
+    return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 export async function uploadFormImage(form: FormData, name: string): Promise<string | null> {

@@ -16,7 +16,7 @@ export function Field({
     className?: string
 }) {
     return (
-        <label className={cn('grid min-w-0 gap-2 text-xs font-medium', className)}>
+        <label className={cn('grid min-w-0 content-start gap-2 text-xs font-medium', className)}>
             <span>{label}</span>
             {children}
             {description && (
@@ -29,7 +29,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
     return <input {...props} className={cn(fieldClass, 'h-9', className)} />
 }
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-    return <select {...props} className={cn(fieldClass, 'h-9', className)} />
+    return <select {...props} className={cn(fieldClass, 'coeer-select h-9', className)} />
 }
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
     return <textarea {...props} className={cn(fieldClass, 'min-h-24 resize-y py-2 leading-6', className)} />

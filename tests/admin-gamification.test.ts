@@ -50,7 +50,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
     afterAll(async () => { await browser?.close(); await server?.close() })
     async function open(kind: string) {
         await page.goto(new URL(`/tests/fixtures/admin-gamification.html?kind=${kind}`, origin).href)
-        await page.locator('input[type=file]').waitFor()
+        await page.getByRole('button', { name: '选择本地文件', exact: true }).waitFor()
     }
     async function fill(kind: string) {
         await page.locator('[name=name]').fill('测试名称')
@@ -59,7 +59,20 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
     }
     async function data() { return JSON.parse((await page.locator('#submitted-data').textContent())!) }
 
-    it.each(cases)('uploads real image bytes and saves the returned URL in $kind, then clears the form', async ({ kind, field, add, action }) => {
+    async function drop(files = [{ name: 'dropped.png', mimeType: 'image/png', buffer: png }]) {
+        const transfer = await page.evaluateHandle((items) => {
+            const data = new DataTransfer()
+            for (const item of items) data.items.add(new File([new Uint8Array(item.bytes)], item.name, { type: item.mimeType }))
+            return data
+        }, files.map(({ buffer, ...file }) => ({ ...file, bytes: Array.from(buffer) })))
+        const area = page.getByRole('region', { name: /文件区域$/ })
+        await area.dispatchEvent('dragenter', { dataTransfer: transfer })
+        await area.dispatchEvent('dragover', { dataTransfer: transfer })
+        await area.dispatchEvent('drop', { dataTransfer: transfer })
+        await transfer.dispose()
+    }
+
+    it.each(cases.flatMap((item) => ['button', 'drop'].map((method) => ({ ...item, method }))))('uploads real image bytes through $method and saves the returned URL in $kind', async ({ kind, field, add, action, method }) => {
         await open(kind)
         await fill(kind)
         let uploaded: Buffer | null = null
@@ -68,7 +81,12 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
             expect(route.request().headers()['content-type']).toBe('image/png')
             await route.fulfill({ status: 201, json: { url: imageUrl } })
         })
-        await page.locator('input[type=file]').setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: png })
+        if (method === 'drop') await drop()
+        else {
+            const chooser = page.waitForEvent('filechooser')
+            await page.getByRole('button', { name: '选择本地文件', exact: true }).click()
+            await (await chooser).setFiles({ name: 'photo.png', mimeType: 'image/png', buffer: png })
+        }
         await page.waitForFunction(() => document.querySelector<HTMLImageElement>('img[alt$="预览"]')?.naturalWidth === 1)
         await page.getByRole('button', { name: add, exact: true }).click()
         await page.waitForFunction(() => document.querySelector('#submitted-action')?.textContent !== '')
@@ -78,6 +96,23 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
         if (kind === 'achievements') expect(await data()).toMatchObject({ conditionType: 'registration', conditionValue: 1 })
         await page.waitForFunction(() => document.querySelector<HTMLInputElement>('[name=name]')?.value === '')
         expect(await page.locator('img[alt$="预览"]').count()).toBe(0)
+    })
+
+    it.each(cases)('retains the selected image after invalid or multiple drops in $kind and can still save it', async ({ kind, add, action }) => {
+        await open(kind)
+        await fill(kind)
+        await page.locator('input[type=file]').setInputFiles({ name: 'original.png', mimeType: 'image/png', buffer: png })
+        await drop([{ name: 'script.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') }])
+        expect(await page.getByRole('alert').textContent()).toContain('请选择不超过 5 MB')
+        await drop([{ name: 'one.png', mimeType: 'image/png', buffer: png }, { name: 'two.png', mimeType: 'image/png', buffer: png }])
+        expect(await page.getByRole('alert').textContent()).toContain('一次只能选择一张图片')
+        const region = page.getByRole('region', { name: /文件区域$/ })
+        expect(await region.textContent()).toContain('original.png')
+        expect(await page.locator('input[type=file]').evaluate((element: HTMLInputElement) => element.files?.[0].name)).toBe('original.png')
+        await page.route('**/api/images/', (route) => route.fulfill({ status: 201, json: { url: imageUrl } }))
+        await page.getByRole('button', { name: add, exact: true }).click()
+        await page.waitForFunction(() => document.querySelector('#submitted-action')?.textContent !== '')
+        expect(await page.locator('#submitted-action').textContent()).toBe(action)
     })
 
     it.each(cases)('preserves the $kind draft on upload failure and rejected or failed saves', async ({ kind, add }) => {
@@ -129,13 +164,49 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
         expect(await page.locator('#achievement-card img').getAttribute('src')).toBe('/demo/card-common.svg')
     })
 
-    it.each(cases)('keeps $kind usable on mobile, including local image previews', async ({ kind }) => {
+    it.each(cases)('keeps $kind fields aligned and contained on desktop and mobile, in both themes', async ({ kind }) => {
         await open(kind)
-        await page.setViewportSize({ width: 390, height: 1000 })
-        await page.locator('input[type=file]').setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: png })
-        await page.locator('img[alt$="预览"]').waitFor()
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
         mkdirSync('tmp/admin-gamification-review', { recursive: true })
-        await page.screenshot({ path: `tmp/admin-gamification-review/${kind}-mobile.png`, fullPage: true })
+        if (kind === 'achievements') await page.locator('[name=conditionType]').selectOption('login_days')
+        for (const theme of ['light', 'dark']) {
+            await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), theme === 'dark')
+            for (const width of [1100, 851, 390]) {
+                await page.setViewportSize({ width, height: 1000 })
+                const fields = kind === 'achievements' ? ['conditionType', 'conditionValue'] : ['type', 'status']
+                const boxes = await Promise.all(fields.map((name) => page.locator(`[name=${name}]`).boundingBox()))
+                expect(boxes.every((box) => box && box.width > 100)).toBe(true)
+                if (width > 600) {
+                    expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(1)
+                    expect(Math.abs(boxes[0]!.height - boxes[1]!.height)).toBeLessThan(1)
+                }
+                await drop([{ name: 'long-image-name-'.repeat(12) + '.png', mimeType: 'image/png', buffer: png }])
+                await page.locator('img[alt$="预览"]').waitFor()
+                expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+                await page.screenshot({ path: `tmp/admin-gamification-review/${kind}-${theme}-${width}.png`, fullPage: true })
+            }
+        }
+    })
+
+    it.each(cases)('styles open $kind menus in both themes and retains native keyboard selection', async ({ kind }) => {
+        await open(kind)
+        const select = page.locator(kind === 'achievements' ? '[name=conditionType]' : '[name=status]')
+        const option = select.locator('option').nth(1)
+        for (const theme of ['light', 'dark']) {
+            await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), theme === 'dark')
+            await select.click()
+            await option.waitFor({ state: 'visible' })
+            const bounds = await option.boundingBox()
+            expect(bounds!.width).toBeGreaterThan(100)
+            const colors = await option.evaluate((element) => ({ background: getComputedStyle(element).backgroundColor, color: getComputedStyle(element).color }))
+            expect(colors.background).not.toBe(colors.color)
+            await page.screenshot({ path: `tmp/admin-gamification-review/${kind}-${theme}-select.png`, fullPage: true })
+            await option.click()
+            expect(await select.inputValue()).toBe(kind === 'achievements' ? 'login_days' : 'sold_out')
+        }
+        await select.focus()
+        await page.keyboard.press('Space')
+        await page.keyboard.press('ArrowDown')
+        await page.keyboard.press('Enter')
+        expect(await select.inputValue()).toBe(kind === 'achievements' ? 'points_earned' : 'discontinued')
     })
 })

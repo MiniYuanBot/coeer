@@ -1,4 +1,4 @@
-import { Field } from '@/components/coeer/ui/Field'
+import { Field, Input, Select, Textarea } from '@/components/coeer/ui/Field'
 import { ImageUploadField, uploadFormImage } from '@/components/coeer/ui/ImageUploadField'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -79,20 +79,37 @@ function AdminAchievementsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="成就管理" description="选择解锁条件和目标数值，系统会自动发放成就，并为符合条件的老用户补发。" />
-            <Card className="rounded-lg p-5">
+            <Card className="coeer-admin-form rounded-lg p-5 sm:p-6">
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={`${editing?.id || 'new'}:${revision}`} onSubmit={submit}>
-                <fieldset disabled={pending} className="grid min-w-0 gap-4">
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <Field label="成就代码（选填）"><input name="code" maxLength={50} defaultValue={editing?.code} placeholder="留空自动生成，无需用代码编写规则" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="名称"><input name="name" required defaultValue={editing?.name} placeholder="成就名称" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="解锁条件" description={conditionDescriptions[condition]}><select name="conditionType" value={condition} onChange={(event) => setCondition(event.target.value as ConfigurableAchievementCondition)} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">{CONFIGURABLE_ACHIEVEMENT_CONDITIONS.map((type) => <option key={type} value={type}>{achievementConditionTypeLabels[type]}</option>)}</select></Field>
-                        <Field label={condition === 'login_days' ? '目标天数' : condition === 'points_earned' ? '目标积分' : '目标数值'}><input key={condition} name="conditionValue" required type="number" min={1} max={2147483647} step={1} readOnly={condition === 'registration'} defaultValue={condition === 'registration' ? 1 : editing && resolveAchievementCondition(editing.conditionType, editing.code) === condition ? editing.conditionValue : condition === 'login_days' ? 100 : condition === 'points_earned' ? 10000 : 1} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                    </div>
-                    <ImageUploadField name="iconUrl" label="成就图标（选填）" defaultValue={editing?.iconUrl} />
-                    <Field label="说明"><textarea name="description" required defaultValue={editing?.description} placeholder="成就说明" rows={3} className="coeer-focus resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm leading-6" /></Field>
-                    <div className="flex gap-2"><Button type="submit" loading={pending}>{editing ? '保存成就' : '添加成就'}</Button>{editing ? <Button type="button" variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}</div>
-                </fieldset>
+                    <fieldset disabled={pending} className="grid min-w-0 gap-5">
+                        <div className="coeer-admin-form-grid">
+                            <Field label="名称">
+                                <Input name="name" required maxLength={100} defaultValue={editing?.name} placeholder="成就名称" className="h-10" />
+                            </Field>
+                            <Field label="成就代码（选填）">
+                                <Input name="code" maxLength={50} defaultValue={editing?.code} placeholder="留空自动生成" className="h-10" />
+                            </Field>
+                            <Field label="解锁条件" description={conditionDescriptions[condition]}>
+                                <Select name="conditionType" value={condition} onChange={(event) => setCondition(event.target.value as ConfigurableAchievementCondition)} className="h-10">
+                                    {CONFIGURABLE_ACHIEVEMENT_CONDITIONS.map((type) => <option key={type} value={type}>{achievementConditionTypeLabels[type]}</option>)}
+                                </Select>
+                            </Field>
+                            <Field label={condition === 'login_days' ? '目标天数' : condition === 'points_earned' ? '目标积分' : '目标数值'}>
+                                <Input key={condition} name="conditionValue" required type="number" min={1} max={2147483647} step={1} readOnly={condition === 'registration'}
+                                    defaultValue={condition === 'registration' ? 1 : editing && resolveAchievementCondition(editing.conditionType, editing.code) === condition ? editing.conditionValue : condition === 'login_days' ? 100 : condition === 'points_earned' ? 10000 : 1}
+                                    className="h-10 read-only:bg-muted/50 read-only:text-muted-foreground" />
+                            </Field>
+                        </div>
+                        <Field label="说明">
+                            <Textarea name="description" required defaultValue={editing?.description} placeholder="介绍成就和达成方式" rows={3} />
+                        </Field>
+                        <ImageUploadField name="iconUrl" label="成就图标（选填）" defaultValue={editing?.iconUrl} disabled={pending} />
+                        <div className="coeer-form-actions border-t border-border pt-4">
+                            {editing ? <Button variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}
+                            <Button type="submit" loading={pending}>{editing ? '保存成就' : '添加成就'}</Button>
+                        </div>
+                    </fieldset>
                 </form>
             </Card>
             {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div className="flex items-center gap-3">{item.iconUrl ? <img src={item.iconUrl} alt={item.name} className="h-12 w-12 rounded-lg object-contain" /> : null}<div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[resolveAchievementCondition(item.conditionType, item.code) ?? ''] ?? '请编辑并设置解锁条件'} · {item.conditionValue}</p></div></div><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={pending} onClick={() => edit(item)}>编辑</Button><Button variant="danger" disabled={pending} onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}

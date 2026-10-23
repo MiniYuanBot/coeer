@@ -131,6 +131,7 @@
   input::placeholder, textarea::placeholder { color: hsl(var(--muted-foreground)); opacity: 1; }
   input, textarea, select { transition: border-color 120ms ease-out; }
   input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: hsl(var(--primary)); }
+  select option, select optgroup { background: hsl(var(--card)); color: hsl(var(--foreground)); }
   :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
   ::selection { background: hsl(var(--primary) / .18); }
   h1, h2 { text-wrap: balance; }
@@ -143,6 +144,37 @@
   }
 }
 @layer components {
+  .coeer-admin-form { container: admin-form / inline-size; }
+  .coeer-admin-form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+  @container admin-form (min-width: 560px) {
+    .coeer-admin-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .coeer-image-dropzone[data-dragging] { border-color: hsl(var(--primary)); background: hsl(var(--primary-soft)); outline: 2px solid hsl(var(--primary) / .2); outline-offset: 2px; }
+  .coeer-select { cursor: pointer; }
+  /* Native selection and keyboard behavior, with a themed popup in supporting browsers. */
+  @supports (appearance: base-select) {
+    select:not([multiple]):not([size]), select:not([multiple]):not([size])::picker(select) { appearance: base-select; }
+    select:not([multiple]):not([size]) { align-items: center; gap: 12px; }
+    select:not([multiple]):not([size])::picker-icon { color: hsl(var(--muted-foreground)); transition: rotate 120ms ease-out; }
+    select:not([multiple]):not([size]):open::picker-icon { rotate: 180deg; }
+    select:not([multiple]):not([size])::picker(select) {
+      margin-block: 6px; padding: 4px; max-block-size: min(320px, 70dvh); overflow-y: auto;
+      border: 1px solid hsl(var(--border)); border-radius: 8px;
+      background: hsl(var(--card)); color: hsl(var(--foreground)); font: inherit;
+      box-shadow: 0 8px 24px hsl(var(--foreground) / .08);
+    }
+    select:not([multiple]):not([size]) option {
+      display: flex; align-items: center; gap: 12px; min-height: 36px; padding: 8px 12px;
+      border-radius: 4px; background: transparent; color: hsl(var(--foreground)); font: inherit;
+      cursor: pointer; white-space: normal; overflow-wrap: anywhere; outline-offset: -2px;
+    }
+    select:not([multiple]):not([size]) option:checked { background: hsl(var(--primary-soft)); color: hsl(var(--primary)); font-weight: 500; }
+    select:not([multiple]):not([size]) option:is(:hover, :focus-visible) { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+    select:not([multiple]):not([size]) option::checkmark { order: 1; margin-inline-start: auto; color: hsl(var(--primary)); }
+    @media (max-width: 639px) {
+      select:not([multiple]):not([size]) option { min-height: 44px; }
+    }
+  }
   .coeer-container { width: min(100% - 3rem, 84rem); margin-inline: auto; }
   .coeer-workspace { container: workspace / inline-size; width: calc(100% - var(--workspace-gutter) * 2); margin-inline: auto; padding-block: 1.75rem 4rem; }
   .coeer-page { width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
