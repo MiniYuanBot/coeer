@@ -7,8 +7,9 @@ const pool = new Pool({ connectionString: env.DATABASE_URL, connectionTimeoutMil
 try {
     await pool.query(readFileSync(new URL('../deploy/migrations/20261021-community.sql', import.meta.url), 'utf8'))
     await pool.query(readFileSync(new URL('../deploy/migrations/20261022-community-interactions.sql', import.meta.url), 'utf8'))
+    await pool.query(readFileSync(new URL('../deploy/migrations/20261023-achievements-images.sql', import.meta.url), 'utf8'))
     await checkCommunitySchema(pool)
-    console.log('通知、密码找回与收藏表已就绪，现有业务数据已保留。')
+    console.log('通知、密码找回、收藏、成就条件与图片存储已就绪，现有业务数据已保留。')
 } finally {
     await pool.end()
 }

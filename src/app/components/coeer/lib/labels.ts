@@ -60,6 +60,12 @@ export const achievementConditionTypeLabels: Record<string, string> = {
     count: '累计次数',
     action: '行动达成',
     level: '等级成长',
+    registration: '注册即得',
+    login_days: '累计登录天数',
+    points_earned: '累计获得积分',
+    feedback_count: '累计提交反馈',
+    group_count: '创建或管理群组数',
+    card_count: '收集不同卡片数',
 }
 
 export const cardRarityLabels: Record<string, string> = {

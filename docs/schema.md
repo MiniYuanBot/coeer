@@ -90,7 +90,8 @@ Session 有效期为 7 天，Cookie 使用 `httpOnly`、`sameSite=lax`，生产�
 
 先在共享 contracts 定义输入与类型，再补表结构和 Query，在 Service 中实现鉴权、业务规则及事务，
 通过 Server Function 接入页面。所有 ID、角色、主办方与目标归属都需要服务端验证。
-新增表时同步审阅清空范围；新增成就代码时实现对应条件判定。
+新增表时同步审阅清空范围。成就代码仅作标识，解锁由 `condition_type` 与 `condition_value` 决定；
+新增条件类型时同步实现判定、进度、共享校验与增量迁移。
 
 ```sh
 pnpm db:generate

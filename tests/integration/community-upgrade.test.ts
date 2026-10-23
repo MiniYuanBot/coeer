@@ -4,7 +4,7 @@ import { createTestDatabase } from '../support/postgres'
 import { checkCommunitySchema } from '../../src/server/database/community-schema'
 
 const scope = createTestDatabase('communityupgrade')
-const migrations = ['20261021-community.sql', '20261022-community-interactions.sql'].map((file) =>
+const migrations = ['20261021-community.sql', '20261022-community-interactions.sql', '20261023-achievements-images.sql'].map((file) =>
     readFileSync(new URL(`../../deploy/migrations/${file}`, import.meta.url), 'utf8'))
 const userId = '11111111-1111-4111-8111-111111111111'
 const postId = '22222222-2222-4222-8222-222222222222'
@@ -14,6 +14,9 @@ beforeAll(async () => {
     await scope.client.query(`
         CREATE TABLE users (id uuid PRIMARY KEY, name text NOT NULL);
         CREATE TABLE group_posts (id uuid PRIMARY KEY, content text NOT NULL);
+        CREATE TYPE achievement_condition_type AS ENUM ('count', 'action', 'level');
+        CREATE TABLE achievements (code text PRIMARY KEY, condition_type achievement_condition_type, condition_value integer);
+        INSERT INTO achievements VALUES ('FIRST_FEEDBACK', 'action', 1);
         INSERT INTO users VALUES ('${userId}', '保留已有账号');
         INSERT INTO group_posts VALUES ('${postId}', '保留已有帖子');
     `)
@@ -36,13 +39,18 @@ it('upgrades a legacy database and can run again without changing existing accou
     expect((await scope.client.query('SELECT * FROM password_resets')).rowCount).toBe(1)
     expect((await scope.client.query('SELECT * FROM users')).rows).toEqual([{ id: userId, name: '保留已有账号' }])
     expect((await scope.client.query('SELECT * FROM group_posts')).rows).toEqual([{ id: postId, content: '保留已有帖子' }])
+    expect((await scope.client.query('SELECT * FROM achievements')).rows).toEqual([{ code: 'FIRST_FEEDBACK', condition_type: 'action', condition_value: 1 }])
+    await scope.client.query(`INSERT INTO achievements VALUES ('WELCOME', 'registration', 1), ('HUNDRED_DAYS', 'login_days', 100), ('TEN_THOUSAND', 'points_earned', 10000)`)
+    await scope.client.query(`INSERT INTO uploaded_images(mime_type, data, uploaded_by) VALUES ('image/png', 'base64-image', $1)`, [userId])
+    for (const migration of migrations) await scope.client.query(migration)
+    expect((await scope.client.query('SELECT * FROM uploaded_images')).rows).toMatchObject([{ mime_type: 'image/png', data: 'base64-image', uploaded_by: userId }])
 })
 
 it('rejects missing tables or columns even when a database connection succeeds', async () => {
     for (const migration of migrations) await scope.client.query(migration)
     const connection = await scope.client.connect()
     try {
-        for (const table of ['notifications', 'bookmarks', 'password_resets']) {
+        for (const table of ['notifications', 'bookmarks', 'password_resets', 'uploaded_images']) {
             await connection.query('BEGIN')
             try {
                 await connection.query(`DROP TABLE ${table}`)

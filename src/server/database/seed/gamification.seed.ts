@@ -207,9 +207,9 @@ export async function seedGamification(options: { clean?: boolean } = {}) {
     }
 
     const sampleAchievements = [
-        { code: 'FIRST_FEEDBACK', name: '初次发声', description: '提交第一条反馈', conditionType: 'action' as const, conditionValue: 1 },
-        { code: 'GROUP_STARTER', name: '社群发起人', description: '创建或管理一个群组', conditionType: 'action' as const, conditionValue: 1 },
-        { code: 'CARD_COLLECTOR', name: '卡片收藏家', description: '收集 3 张不同卡片', conditionType: 'count' as const, conditionValue: 3 },
+        { code: 'FIRST_FEEDBACK', name: '初次发声', description: '提交第一条反馈', conditionType: 'feedback_count' as const, conditionValue: 1 },
+        { code: 'GROUP_STARTER', name: '社群发起人', description: '创建或管理一个群组', conditionType: 'group_count' as const, conditionValue: 1 },
+        { code: 'CARD_COLLECTOR', name: '卡片收藏家', description: '收集 3 张不同卡片', conditionType: 'card_count' as const, conditionValue: 3 },
     ]
 
     for (const achievement of sampleAchievements) {

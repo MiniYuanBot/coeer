@@ -14,7 +14,7 @@ const pool = db.$client
 const booking = createTestDatabase('managementbooking')
 const userId = '11111111-1111-4111-8111-111111111111'
 const admin = { email: 'custom-admin@example.test', name: '自定义管理员', passwordHash: '' }
-const migrations = ['20261021-community.sql', '20261022-community-interactions.sql'].map(name => ({
+const migrations = ['20261021-community.sql', '20261022-community-interactions.sql', '20261023-achievements-images.sql'].map(name => ({
     name, sql: readFileSync(new URL(`../../deploy/migrations/${name}`, import.meta.url), 'utf8'),
 }))
 

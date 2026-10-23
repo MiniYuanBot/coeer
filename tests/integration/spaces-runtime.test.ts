@@ -147,9 +147,11 @@ it('starts exactly one embedded engine and serves its API without a sibling proj
     expect(new URL(running.url).hostname).toBe('127.0.0.1')
     const headers = { 'x-coeer-identity': signCommunityIdentity({ id: 'runtime-student', email: '2026000001@stu.pku.edu.cn', name: '运行测试', role: 'student' }, communityIdentitySecret()) }
     const configuration = await (await fetch(running.url + '/api/config', { headers })).json()
-    expect(configuration.demo).toBe(true)
+    // The embedded engine never provisions demo accounts, even with a mock adapter.
+    expect(configuration.demo).toBe(false)
     expect(configuration.adapter).toBe('mock')
     const spaces = await (await fetch(running.url + '/api/spaces', { headers })).json()
-    expect(spaces.length).toBe(3)
+    expect(spaces).toEqual([])
+    expect((await scope.client.query("SELECT id FROM users WHERE role='admin'")).rows).toEqual([])
     expect((await fetch(running.url + '/')).status).toBe(404)
 })

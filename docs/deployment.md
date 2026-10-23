@@ -81,7 +81,9 @@ pnpm run deploy:db:upgrade
 无需先发布网站。`status` 只读检查数据库及社区表结构；`upgrade` 自动备份后按文件名执行
 `deploy/migrations` 中的增量 SQL，再检查表结构。备份失败会阻止升级。
 
-通知、收藏或密码找回缺表时，先升级再发布。也可在服务器当前应用目录执行：
+通知、收藏、密码找回、图片存储缺表或缺少新的成就条件类型时，先升级再发布。
+`20261023-achievements-images.sql` 保留已有成就与解锁记录，增加可配置条件及图片存储。
+也可在包含相应迁移文件的服务器应用目录执行：
 
 ```sh
 NODE_ENV=production pnpm db:check:community
@@ -89,7 +91,7 @@ NODE_ENV=production pnpm db:upgrade:community
 NODE_ENV=production pnpm db:check:community
 ```
 
-直接执行升级前自行备份。增量升级补齐通知、密码重置、收藏表与索引，不替代所有版本的结构迁移。
+直接执行升级前自行备份。增量升级补齐通知、密码重置、收藏、图片存储与成就条件类型，不替代所有版本的结构迁移。
 新环境可用 `db:push` 创建社区表；已有生产表的其他变更应单独生成、审阅并应用迁移。
 
 ## 创建唯一管理员

@@ -101,7 +101,7 @@ export async function applyDatabaseMigrations(pool, migrations, schemaCheck) {
 
 // Clear only application tables; never cascade into unrelated schemas.
 export const COMMUNITY_CLEAR_TABLES = [
-    'users', 'bookmarks', 'notifications', 'password_resets', 'dorm_rooms', 'dorm_questionnaires',
+    'users', 'uploaded_images', 'bookmarks', 'notifications', 'password_resets', 'dorm_rooms', 'dorm_questionnaires',
     'dorm_student_profiles', 'dorm_cycles', 'redeem_orders', 'redeem_items', 'user_achievements',
     'achievements', 'user_cards', 'cards', 'point_transactions', 'activity_participants', 'activities',
     'user_subscriptions', 'bulletins', 'reactions', 'replies', 'feedback_status_logs', 'feedbacks',

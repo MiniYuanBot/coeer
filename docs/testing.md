@@ -21,6 +21,7 @@ pnpm check
 pnpm test:watch
 pnpm exec vitest run tests/integration/community.test.ts
 pnpm exec vitest run tests/integration/engagement.test.ts
+pnpm exec vitest run tests/integration/gamification-admin.test.ts tests/admin-gamification.test.ts
 pnpm exec vitest run tests/integration/deployment-database.test.ts
 pnpm exec vitest run tests/integration/spaces-runtime.test.ts
 node --test scripts/deploy.test.mjs scripts/database.test.mjs

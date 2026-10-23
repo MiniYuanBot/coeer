@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { DbUser, RedeemItem, RedeemOrder } from '~/database/schemas'
 import { RedeemCode, REDEEM_ITEM_STATUS_ARRAY, REDEEM_ITEM_TYPE_ARRAY, REDEEM_ORDER_STATUS_ARRAY } from '../constants'
 import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
+import { ImageUrlSchema } from '../images'
 
 export const RedeemItemIdSchema = z.object({
     itemId: z.uuid(),
@@ -14,17 +15,18 @@ export const RedeemOrderIdSchema = z.object({
 export const CreateRedeemItemSchema = z.object({
     name: z.string().min(1).max(100),
     description: z.string().optional(),
-    imageUrl: z.string().url().optional(),
+    imageUrl: ImageUrlSchema.nullable().optional(),
     pointsCost: z.number().int().positive(),
     stock: z.number().int().min(-1).default(-1),
     type: z.enum(REDEEM_ITEM_TYPE_ARRAY),
+    status: z.enum(REDEEM_ITEM_STATUS_ARRAY).optional(),
 })
 
 export const UpdateRedeemItemSchema = z.object({
     itemId: z.uuid(),
     name: z.string().min(1).max(100).optional(),
     description: z.string().optional(),
-    imageUrl: z.string().url().optional(),
+    imageUrl: ImageUrlSchema.nullable().optional(),
     pointsCost: z.number().int().positive().optional(),
     stock: z.number().int().min(-1).optional(),
     type: z.enum(REDEEM_ITEM_TYPE_ARRAY).optional(),

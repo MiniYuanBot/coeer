@@ -4,6 +4,7 @@ import { AuthService } from './AuthService'
 import { db, type DbExecutor } from '../database/client'
 import type { PaginatedPointResponse, PointChangeInput, PointHistoryInput, PointResponse } from '@shared/contracts'
 import type { PointTransaction } from '../database/schemas'
+import { AchievementService } from './AchievementService'
 
 export type SpendOutcome =
     | { ok: true; transaction: PointTransaction }
@@ -55,7 +56,12 @@ export class PointService {
                 return { success: false, state: POINT.FORBIDDEN }
             }
 
-            const transaction = await pointQueries.create({ ...data, amount: data.amount, type: 'earn' })
+            const transaction = await db.transaction(async (tx) => {
+                await pointQueries.lockUser(data.userId, tx)
+                const earned = await pointQueries.create({ ...data, amount: data.amount, type: 'earn' }, tx)
+                await AchievementService.syncForUser(data.userId, tx)
+                return earned
+            })
             return { success: true, data: transaction, state: POINT.EARN_SUCCESS }
         } catch (err) {
             console.error('Earn point error:', err)

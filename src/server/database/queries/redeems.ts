@@ -18,6 +18,10 @@ function buildItemWhere(data: ListRedeemItemsInput): SQL | undefined {
 }
 
 export const redeemQueries = {
+    async countItems(data: ListRedeemItemsInput) {
+        const [result] = await db.select({ value: count() }).from(redeemItems).where(buildItemWhere(data))
+        return result.value
+    },
     async countOrders(data: ListRedeemOrdersInput, userId?: string) {
         const [result] = await db.select({ value: count() }).from(redeemOrders).where(and(
             data.itemId ? eq(redeemOrders.itemId, data.itemId) : undefined,
@@ -41,6 +45,7 @@ export const redeemQueries = {
     async listItems(data: ListRedeemItemsInput) {
         return db.query.redeemItems.findMany({
             where: buildItemWhere(data),
+            orderBy: [asc(redeemItems.name), asc(redeemItems.id)],
             limit: data.limit,
             offset: data.offset,
         })

@@ -29,6 +29,7 @@ import { Route as AuthedBulletinsRouteRouteImport } from './routes/_authed/bulle
 import { Route as AuthedAdminRouteRouteImport } from './routes/_authed/admin/route'
 import { Route as AuthedActivitiesRouteRouteImport } from './routes/_authed/activities/route'
 import { Route as AuthedAchievementsRouteRouteImport } from './routes/_authed/achievements/route'
+import { Route as ApiImagesIndexRouteImport } from './routes/api/images/index'
 import { Route as AuthedSpacesIndexRouteImport } from './routes/_authed/spaces/index'
 import { Route as AuthedRedeemsIndexRouteImport } from './routes/_authed/redeems/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
@@ -39,6 +40,7 @@ import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/ind
 import { Route as AuthedActivitiesIndexRouteImport } from './routes/_authed/activities/index'
 import { Route as AuthedAchievementsIndexRouteImport } from './routes/_authed/achievements/index'
 import { Route as ApiOpenSpaceSplatRouteImport } from './routes/api/open-space/$'
+import { Route as ApiImagesImageIdRouteImport } from './routes/api/images/$imageId'
 import { Route as AuthedSpacesLoginRouteImport } from './routes/_authed/spaces/login'
 import { Route as AuthedSpacesIdentityRouteImport } from './routes/_authed/spaces/identity'
 import { Route as AuthedSpacesAdminRouteImport } from './routes/_authed/spaces/admin'
@@ -185,6 +187,11 @@ const AuthedAchievementsRouteRoute = AuthedAchievementsRouteRouteImport.update({
   path: '/achievements',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const ApiImagesIndexRoute = ApiImagesIndexRouteImport.update({
+  id: '/api/images/',
+  path: '/api/images/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedSpacesIndexRoute = AuthedSpacesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -233,6 +240,11 @@ const AuthedAchievementsIndexRoute = AuthedAchievementsIndexRouteImport.update({
 const ApiOpenSpaceSplatRoute = ApiOpenSpaceSplatRouteImport.update({
   id: '/api/open-space/$',
   path: '/api/open-space/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImagesImageIdRoute = ApiImagesImageIdRouteImport.update({
+  id: '/api/images/$imageId',
+  path: '/api/images/$imageId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedSpacesLoginRoute = AuthedSpacesLoginRouteImport.update({
@@ -529,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/spaces/admin': typeof AuthedSpacesAdminRoute
   '/spaces/identity': typeof AuthedSpacesIdentityRoute
   '/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
   '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/achievements/': typeof AuthedAchievementsIndexRoute
   '/activities/': typeof AuthedActivitiesIndexRoute
@@ -539,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/profile/': typeof AuthedProfileIndexRoute
   '/redeems/': typeof AuthedRedeemsIndexRoute
   '/spaces/': typeof AuthedSpacesIndexRoute
+  '/api/images/': typeof ApiImagesIndexRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
@@ -590,6 +604,7 @@ export interface FileRoutesByTo {
   '/spaces/admin': typeof AuthedSpacesAdminRoute
   '/spaces/identity': typeof AuthedSpacesIdentityRoute
   '/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
   '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/achievements': typeof AuthedAchievementsIndexRoute
   '/activities': typeof AuthedActivitiesIndexRoute
@@ -600,6 +615,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthedProfileIndexRoute
   '/redeems': typeof AuthedRedeemsIndexRoute
   '/spaces': typeof AuthedSpacesIndexRoute
+  '/api/images': typeof ApiImagesIndexRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
   '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
@@ -667,6 +683,7 @@ export interface FileRoutesById {
   '/_authed/spaces/admin': typeof AuthedSpacesAdminRoute
   '/_authed/spaces/identity': typeof AuthedSpacesIdentityRoute
   '/_authed/spaces/login': typeof AuthedSpacesLoginRoute
+  '/api/images/$imageId': typeof ApiImagesImageIdRoute
   '/api/open-space/$': typeof ApiOpenSpaceSplatRoute
   '/_authed/achievements/': typeof AuthedAchievementsIndexRoute
   '/_authed/activities/': typeof AuthedActivitiesIndexRoute
@@ -677,6 +694,7 @@ export interface FileRoutesById {
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/redeems/': typeof AuthedRedeemsIndexRoute
   '/_authed/spaces/': typeof AuthedSpacesIndexRoute
+  '/api/images/': typeof ApiImagesIndexRoute
   '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
   '/_authed/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
@@ -746,6 +764,7 @@ export interface FileRouteTypes {
     | '/spaces/admin'
     | '/spaces/identity'
     | '/spaces/login'
+    | '/api/images/$imageId'
     | '/api/open-space/$'
     | '/achievements/'
     | '/activities/'
@@ -756,6 +775,7 @@ export interface FileRouteTypes {
     | '/profile/'
     | '/redeems/'
     | '/spaces/'
+    | '/api/images/'
     | '/groups/$slug/posts'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
@@ -807,6 +827,7 @@ export interface FileRouteTypes {
     | '/spaces/admin'
     | '/spaces/identity'
     | '/spaces/login'
+    | '/api/images/$imageId'
     | '/api/open-space/$'
     | '/achievements'
     | '/activities'
@@ -817,6 +838,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/redeems'
     | '/spaces'
+    | '/api/images'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
     | '/admin/spaces/allowlist'
@@ -883,6 +905,7 @@ export interface FileRouteTypes {
     | '/_authed/spaces/admin'
     | '/_authed/spaces/identity'
     | '/_authed/spaces/login'
+    | '/api/images/$imageId'
     | '/api/open-space/$'
     | '/_authed/achievements/'
     | '/_authed/activities/'
@@ -893,6 +916,7 @@ export interface FileRouteTypes {
     | '/_authed/profile/'
     | '/_authed/redeems/'
     | '/_authed/spaces/'
+    | '/api/images/'
     | '/_authed/groups/$slug/posts'
     | '/_authed/admin/feedbacks/pending'
     | '/_authed/admin/groups/pending'
@@ -931,7 +955,9 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  ApiImagesImageIdRoute: typeof ApiImagesImageIdRoute
   ApiOpenSpaceSplatRoute: typeof ApiOpenSpaceSplatRoute
+  ApiImagesIndexRoute: typeof ApiImagesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1076,6 +1102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAchievementsRouteRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/api/images/': {
+      id: '/api/images/'
+      path: '/api/images'
+      fullPath: '/api/images/'
+      preLoaderRoute: typeof ApiImagesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed/spaces/': {
       id: '/_authed/spaces/'
       path: '/'
@@ -1144,6 +1177,13 @@ declare module '@tanstack/react-router' {
       path: '/api/open-space/$'
       fullPath: '/api/open-space/$'
       preLoaderRoute: typeof ApiOpenSpaceSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/images/$imageId': {
+      id: '/api/images/$imageId'
+      path: '/api/images/$imageId'
+      fullPath: '/api/images/$imageId'
+      preLoaderRoute: typeof ApiImagesImageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/spaces/login': {
@@ -1829,7 +1869,9 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  ApiImagesImageIdRoute: ApiImagesImageIdRoute,
   ApiOpenSpaceSplatRoute: ApiOpenSpaceSplatRoute,
+  ApiImagesIndexRoute: ApiImagesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

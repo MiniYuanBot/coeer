@@ -16,6 +16,7 @@ import type {
 } from '@shared/contracts'
 import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_PATTERN, studentIdForUser } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
+import { EngagementService } from './EngagementService'
 
 /**
  * Build the signed-in session payload for a DB user.
@@ -100,6 +101,8 @@ export class AuthService {
             const session = await useAppSession()
             await session.update(toAppSessionData(user))
 
+            await EngagementService.recordDailyVisit(user.id)
+
             return { success: true, state: AUTH.LOGIN_SUCCESS }
         } catch (err) {
             console.error('Login error:', err)
@@ -130,6 +133,7 @@ export class AuthService {
                 // If the password matched, log in automatically.
                 const session = await useAppSession()
                 await session.update(toAppSessionData(existing))
+                await EngagementService.recordDailyVisit(existing.id)
 
                 return { success: true, state: AUTH.LOGIN_SUCCESS }
             }
@@ -144,6 +148,8 @@ export class AuthService {
 
             const session = await useAppSession()
             await session.update(toAppSessionData(user))
+
+            await EngagementService.recordDailyVisit(user.id)
 
             return { success: true, state: AUTH.SIGNUP_SUCCESS }
         } catch (err) {

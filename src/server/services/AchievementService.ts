@@ -1,5 +1,6 @@
 import { achievementQueries } from '../database/queries'
-import { ACHIEVEMENT } from '@shared/constants'
+import { ACHIEVEMENT, resolveAchievementCondition } from '@shared/constants'
+import { CreateAchievementSchema } from '@shared/contracts/achievements'
 import { AuthService } from './AuthService'
 import type {
     AchievementResponse,
@@ -12,10 +13,10 @@ import type {
     UserAchievementWithAchievement,
 } from '@shared/contracts'
 import type { Achievement } from '../database/schemas'
-import { achievements, feedbacks, groups, groupMembers, userCards } from '../database/schemas'
+import { achievements, feedbacks, groups, groupMembers, pointTransactions, userCards } from '../database/schemas'
 import { db, type DbTransaction } from '../database/client'
 import { pointQueries } from '../database/queries/points'
-import { and, count, countDistinct, eq, gt, ne, or } from 'drizzle-orm'
+import { and, count, countDistinct, eq, gt, ne, or, sql, sum } from 'drizzle-orm'
 
 export class AchievementService {
     /** Reconcile real persisted conditions, including users who qualified before this feature existed. */
@@ -31,11 +32,17 @@ export class AchievementService {
             .where(and(ne(groups.status, 'rejected'), or(eq(groups.creatorId, userId), eq(groupMembers.userId, userId))))
         const [cardCount] = await executor.select({ value: countDistinct(userCards.cardId) }).from(userCards)
             .where(and(eq(userCards.userId, userId), gt(userCards.count, 0)))
+        const [loginDays] = await executor.select({ value: countDistinct(sql`(${pointTransactions.createdAt} AT TIME ZONE 'Asia/Shanghai')::date`) })
+            .from(pointTransactions).where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.source, 'daily_login'), eq(pointTransactions.type, 'earn')))
+        const [earned] = await executor.select({ value: sum(pointTransactions.amount) }).from(pointTransactions)
+            .where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.type, 'earn'), gt(pointTransactions.amount, 0)))
         const values: Record<string, number> = {
-            FIRST_FEEDBACK: feedbackCount.value, GROUP_STARTER: groupCount.value, CARD_COLLECTOR: cardCount.value,
+            registration: 1, login_days: loginDays.value, points_earned: Number(earned.value ?? 0),
+            feedback_count: feedbackCount.value, group_count: groupCount.value, card_count: cardCount.value,
         }
         for (const achievement of definitions) {
-            const current = values[achievement.code]
+            const condition = resolveAchievementCondition(achievement.conditionType, achievement.code)
+            const current = condition ? values[condition] : undefined
             if (current !== undefined && current >= achievement.conditionValue) {
                 await achievementQueries.unlock(userId, achievement.id, executor)
             }
@@ -51,12 +58,13 @@ export class AchievementService {
             where: (table, { and, eq, inArray }) => and(eq(table.userId, current.data!.id), inArray(table.achievementId, items.map((item) => item.id))),
         }) : []
         const unlockedIds = new Set(unlocked.map((item) => item.achievementId))
-        return { success: true, data: { items: items.map((item) => ({ ...item, unlocked: unlockedIds.has(item.id),
-            progress: values[item.code] === undefined ? undefined : {
-                current: values[item.code], target: item.conditionValue,
-                percentage: Math.min(100, values[item.code] / item.conditionValue * 100),
-            },
-        })), total, limit: data.limit, offset: data.offset }, state: ACHIEVEMENT.GET_SUCCESS }
+        return { success: true, data: { items: items.map((item) => {
+            const condition = resolveAchievementCondition(item.conditionType, item.code)
+            const value = condition ? values[condition] : undefined
+            return { ...item, unlocked: unlockedIds.has(item.id), progress: value === undefined ? undefined : {
+                current: value, target: item.conditionValue, percentage: Math.min(100, value / item.conditionValue * 100),
+            } }
+        }), total, limit: data.limit, offset: data.offset }, state: ACHIEVEMENT.GET_SUCCESS }
     }
 
     static async listMine(data: ListAchievementsInput): Promise<PaginatedAchievementResponse<UserAchievementWithAchievement>> {
@@ -73,8 +81,15 @@ export class AchievementService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: ACHIEVEMENT.UNAUTHORIZED }
         if (user.role !== 'admin') return { success: false, state: ACHIEVEMENT.FORBIDDEN }
-        const achievement = await achievementQueries.create(data)
-        return { success: true, data: achievement, state: ACHIEVEMENT.CREATE_SUCCESS }
+        const parsed = CreateAchievementSchema.safeParse(data)
+        if (!parsed.success) return { success: false, state: ACHIEVEMENT.INVALID_INPUT }
+        try {
+            const achievement = await achievementQueries.create(parsed.data)
+            return { success: true, data: achievement, state: ACHIEVEMENT.CREATE_SUCCESS }
+        } catch (error) {
+            if (isDuplicateCode(error)) return { success: false, state: ACHIEVEMENT.ALREADY_EXISTS }
+            throw error
+        }
     }
 
     static async adminUpdate(data: UpdateAchievementInput): Promise<AchievementResponse<Achievement>> {
@@ -82,8 +97,17 @@ export class AchievementService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: ACHIEVEMENT.UNAUTHORIZED }
         if (user.role !== 'admin') return { success: false, state: ACHIEVEMENT.FORBIDDEN }
-        const achievement = await achievementQueries.update(data)
-        return { success: true, data: achievement, state: ACHIEVEMENT.UPDATE_SUCCESS }
+        const existing = await db.query.achievements.findFirst({ where: eq(achievements.id, data.achievementId) })
+        if (!existing) return { success: false, state: ACHIEVEMENT.NOT_FOUND }
+        const parsed = CreateAchievementSchema.safeParse({ ...existing, ...data })
+        if (!parsed.success) return { success: false, state: ACHIEVEMENT.INVALID_INPUT }
+        try {
+            const achievement = await achievementQueries.update({ ...parsed.data, achievementId: data.achievementId })
+            return { success: true, data: achievement, state: ACHIEVEMENT.UPDATE_SUCCESS }
+        } catch (error) {
+            if (isDuplicateCode(error)) return { success: false, state: ACHIEVEMENT.ALREADY_EXISTS }
+            throw error
+        }
     }
 
     static async adminDelete(data: AchievementIdInput): Promise<AchievementResponse<void>> {
@@ -94,4 +118,10 @@ export class AchievementService {
         await achievementQueries.delete(data)
         return { success: true, state: ACHIEVEMENT.DELETE_SUCCESS }
     }
+}
+
+function isDuplicateCode(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false
+    if ('code' in error && error.code === '23505') return true
+    return 'cause' in error && isDuplicateCode(error.cause)
 }

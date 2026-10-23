@@ -20,6 +20,14 @@ import type {
 import type { RedeemItem, RedeemOrder } from '../database/schemas'
 
 export class RedeemService {
+    static async adminListItems(data: ListRedeemItemsInput): Promise<PaginatedRedeemResponse<RedeemItem>> {
+        const payload = await AuthService.getCurrentUser()
+        if (!payload.success || !payload.data) return { success: false, state: REDEEM.UNAUTHORIZED }
+        if (payload.data.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
+        const [items, total] = await Promise.all([redeemQueries.listItems(data), redeemQueries.countItems(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
+    }
+
     static async listItems(data: ListRedeemItemsInput): Promise<PaginatedRedeemResponse<RedeemItem>> {
         const [items, total] = await Promise.all([redeemQueries.listAvailable(data), redeemQueries.countAvailable(data)])
         return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: REDEEM.GET_SUCCESS }
@@ -125,7 +133,7 @@ export class RedeemService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: REDEEM.UNAUTHORIZED }
         if (user.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
-        const item = await redeemQueries.createItem({ ...data, status: 'active' })
+        const item = await redeemQueries.createItem({ ...data, status: data.status ?? 'active' })
         return { success: true, data: item, state: REDEEM.CREATE_SUCCESS }
     }
 
