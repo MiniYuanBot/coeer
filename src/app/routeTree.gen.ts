@@ -50,6 +50,7 @@ import { Route as AuthedGroupsCreateRouteImport } from './routes/_authed/groups/
 import { Route as AuthedFeedbacksCreateRouteImport } from './routes/_authed/feedbacks/create'
 import { Route as AuthedAdminStatsRouteImport } from './routes/_authed/admin/stats'
 import { Route as AuthedAdminRedeemsRouteImport } from './routes/_authed/admin/redeems'
+import { Route as AuthedAdminCardsRouteImport } from './routes/_authed/admin/cards'
 import { Route as AuthedAdminBulletinsRouteImport } from './routes/_authed/admin/bulletins'
 import { Route as AuthedAdminActivitiesRouteImport } from './routes/_authed/admin/activities'
 import { Route as AuthedAdminAchievementsRouteImport } from './routes/_authed/admin/achievements'
@@ -292,6 +293,11 @@ const AuthedAdminRedeemsRoute = AuthedAdminRedeemsRouteImport.update({
   path: '/redeems',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
+const AuthedAdminCardsRoute = AuthedAdminCardsRouteImport.update({
+  id: '/cards',
+  path: '/cards',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
 const AuthedAdminBulletinsRoute = AuthedAdminBulletinsRouteImport.update({
   id: '/bulletins',
   path: '/bulletins',
@@ -532,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/admin/activities': typeof AuthedAdminActivitiesRoute
   '/admin/bulletins': typeof AuthedAdminBulletinsRoute
+  '/admin/cards': typeof AuthedAdminCardsRoute
   '/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
@@ -595,6 +602,7 @@ export interface FileRoutesByTo {
   '/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/admin/activities': typeof AuthedAdminActivitiesRoute
   '/admin/bulletins': typeof AuthedAdminBulletinsRoute
+  '/admin/cards': typeof AuthedAdminCardsRoute
   '/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
@@ -674,6 +682,7 @@ export interface FileRoutesById {
   '/_authed/admin/achievements': typeof AuthedAdminAchievementsRoute
   '/_authed/admin/activities': typeof AuthedAdminActivitiesRoute
   '/_authed/admin/bulletins': typeof AuthedAdminBulletinsRoute
+  '/_authed/admin/cards': typeof AuthedAdminCardsRoute
   '/_authed/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/_authed/admin/stats': typeof AuthedAdminStatsRoute
   '/_authed/feedbacks/create': typeof AuthedFeedbacksCreateRoute
@@ -755,6 +764,7 @@ export interface FileRouteTypes {
     | '/admin/achievements'
     | '/admin/activities'
     | '/admin/bulletins'
+    | '/admin/cards'
     | '/admin/redeems'
     | '/admin/stats'
     | '/feedbacks/create'
@@ -818,6 +828,7 @@ export interface FileRouteTypes {
     | '/admin/achievements'
     | '/admin/activities'
     | '/admin/bulletins'
+    | '/admin/cards'
     | '/admin/redeems'
     | '/admin/stats'
     | '/feedbacks/create'
@@ -896,6 +907,7 @@ export interface FileRouteTypes {
     | '/_authed/admin/achievements'
     | '/_authed/admin/activities'
     | '/_authed/admin/bulletins'
+    | '/_authed/admin/cards'
     | '/_authed/admin/redeems'
     | '/_authed/admin/stats'
     | '/_authed/feedbacks/create'
@@ -1247,6 +1259,13 @@ declare module '@tanstack/react-router' {
       path: '/redeems'
       fullPath: '/admin/redeems'
       preLoaderRoute: typeof AuthedAdminRedeemsRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/cards': {
+      id: '/_authed/admin/cards'
+      path: '/cards'
+      fullPath: '/admin/cards'
+      preLoaderRoute: typeof AuthedAdminCardsRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/admin/bulletins': {
@@ -1615,6 +1634,7 @@ interface AuthedAdminRouteRouteChildren {
   AuthedAdminAchievementsRoute: typeof AuthedAdminAchievementsRoute
   AuthedAdminActivitiesRoute: typeof AuthedAdminActivitiesRoute
   AuthedAdminBulletinsRoute: typeof AuthedAdminBulletinsRoute
+  AuthedAdminCardsRoute: typeof AuthedAdminCardsRoute
   AuthedAdminRedeemsRoute: typeof AuthedAdminRedeemsRoute
   AuthedAdminStatsRoute: typeof AuthedAdminStatsRoute
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
@@ -1628,6 +1648,7 @@ const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
   AuthedAdminAchievementsRoute: AuthedAdminAchievementsRoute,
   AuthedAdminActivitiesRoute: AuthedAdminActivitiesRoute,
   AuthedAdminBulletinsRoute: AuthedAdminBulletinsRoute,
+  AuthedAdminCardsRoute: AuthedAdminCardsRoute,
   AuthedAdminRedeemsRoute: AuthedAdminRedeemsRoute,
   AuthedAdminStatsRoute: AuthedAdminStatsRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,

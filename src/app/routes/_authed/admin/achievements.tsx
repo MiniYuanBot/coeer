@@ -104,7 +104,7 @@ function AdminAchievementsPage() {
                         <Field label="说明">
                             <Textarea name="description" required defaultValue={editing?.description} placeholder="介绍成就和达成方式" rows={3} />
                         </Field>
-                        <ImageUploadField name="iconUrl" label="成就图标（选填）" defaultValue={editing?.iconUrl} disabled={pending} />
+                        <ImageUploadField name="iconUrl" label="成就图标（选填）" defaultValue={editing?.iconUrl} disabled={pending} preset="achievement" />
                         <div className="coeer-form-actions border-t border-border pt-4">
                             {editing ? <Button variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}
                             <Button type="submit" loading={pending}>{editing ? '保存成就' : '添加成就'}</Button>

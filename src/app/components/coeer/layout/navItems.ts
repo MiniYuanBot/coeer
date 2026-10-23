@@ -57,6 +57,7 @@ export const adminNavItems: NavItem[] = [
     { to: '/admin/activities', label: '活动管理', icon: 'calendar' },
     { to: '/admin/redeems', label: '商城管理', icon: 'gift' },
     { to: '/admin/achievements', label: '成就管理', icon: 'award' },
+    { to: '/admin/cards', label: '卡片管理', icon: 'card' },
     { to: '/admin/dorms', label: '宿舍管理', icon: 'bed' },
     { to: '/admin/spaces', label: '空间预约', icon: 'calendar' },
     { to: '/admin/stats', label: '用户统计', icon: 'activity' },

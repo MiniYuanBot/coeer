@@ -1,6 +1,7 @@
 import { cardQueries } from '../database/queries/cards'
 import { db } from '../database/client'
-import { CARD } from '@shared/constants'
+import { CARD, CARD_DRAW_COST } from '@shared/constants'
+import { CreateCardSchema } from '@shared/contracts/cards'
 import { AuthService } from './AuthService'
 import { PointService } from './PointService'
 import { AchievementService } from './AchievementService'
@@ -12,14 +13,12 @@ import type {
     ListCardsInput,
     PaginatedCardResponse,
     UserCardWithCard,
+    UpdateCardInput,
 } from '@shared/contracts'
 import type { Card } from '../database/schemas'
 
-const DRAW_COST = 50
-
 /**
  * Weighted random pick over the card pool by `dropRate`.
- * Falls back to a uniform pick when all weights are zero/invalid.
  */
 function pickFromPool(pool: Card[]): Card | null {
     if (pool.length === 0) return null
@@ -27,14 +26,12 @@ function pickFromPool(pool: Card[]): Card | null {
     const weights = pool.map((card) => Math.max(0, Number.parseFloat(String(card.dropRate)) || 0))
     const total = weights.reduce((acc, w) => acc + w, 0)
 
-    if (total <= 0) {
-        return pool[Math.floor(Math.random() * pool.length)] ?? null
-    }
+    if (total <= 0) return null
 
     let cursor = Math.random() * total
     for (let i = 0; i < pool.length; i += 1) {
+        if (weights[i] > 0 && cursor < weights[i]) return pool[i] ?? null
         cursor -= weights[i]
-        if (cursor <= 0) return pool[i] ?? null
     }
     return pool[pool.length - 1] ?? null
 }
@@ -47,15 +44,17 @@ export class CardService {
 
         const count = data.count ?? 1
 
-        // Fail before charging when the pool is empty.
-        const prePool = await cardQueries.listPool()
-        if (prePool.length === 0) return { success: false, state: CARD.EMPTY_POOL }
-
         let result: CardResponse<DrawResult>
         try {
             await db.transaction(async (tx) => {
+                // Lock eligible definitions so an edit cannot empty the charged draw's pool.
+                const pool = await cardQueries.listPool(tx)
+                if (!pool.length) {
+                    result = { success: false, state: CARD.EMPTY_POOL }
+                    return
+                }
                 const spent = await PointService.spendInTx(
-                    { userId: user.id, amount: DRAW_COST * count, source: 'draw' },
+                    { userId: user.id, amount: CARD_DRAW_COST * count, source: 'draw' },
                     tx,
                 )
                 if (!spent.ok) {
@@ -66,20 +65,19 @@ export class CardService {
                     return
                 }
 
-                // Re-read the pool inside the transaction and draw weighted by dropRate.
-                const pool = await cardQueries.listPool(tx)
                 const results: UserCardWithCard[] = []
                 for (let i = 0; i < count; i += 1) {
                     const card = pickFromPool(pool)
-                    if (!card) break
+                    if (!card) throw new Error('Drawable card pool is empty')
                     const userCard = await cardQueries.upsertUserCard(user.id, card.id, tx)
-                    if (userCard) results.push({ ...userCard, card })
+                    if (!userCard) throw new Error('Failed to persist drawn card')
+                    results.push({ ...userCard, card })
                 }
 
                 await AchievementService.syncForUser(user.id, tx)
                 result = {
                     success: true,
-                    data: { cards: results, pointsSpent: DRAW_COST * count },
+                    data: { cards: results, pointsSpent: CARD_DRAW_COST * count },
                     state: CARD.DRAW_SUCCESS,
                 }
             })
@@ -108,7 +106,22 @@ export class CardService {
         const user = payload.data
         if (!payload.success || !user) return { success: false, state: CARD.UNAUTHORIZED }
         if (user.role !== 'admin') return { success: false, state: CARD.FORBIDDEN }
-        const card = await cardQueries.create({ ...data, dropRate: String(data.dropRate) })
+        const parsed = CreateCardSchema.safeParse(data)
+        if (!parsed.success) return { success: false, state: CARD.INVALID_INPUT }
+        const card = await cardQueries.create({ ...parsed.data, dropRate: String(parsed.data.dropRate) })
         return { success: true, data: card, state: CARD.CREATE_SUCCESS }
+    }
+
+    static async adminUpdate(data: UpdateCardInput): Promise<CardResponse<Card>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: CARD.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: CARD.FORBIDDEN }
+        const existing = await cardQueries.findById(data.cardId)
+        if (!existing) return { success: false, state: CARD.NOT_FOUND }
+        const parsed = CreateCardSchema.safeParse({ ...existing, description: existing.description ?? '', series: existing.series ?? '', dropRate: Number(existing.dropRate), ...data })
+        if (!parsed.success) return { success: false, state: CARD.INVALID_INPUT }
+        const card = await cardQueries.update({ cardId: data.cardId, ...parsed.data, dropRate: String(parsed.data.dropRate) })
+        if (!card) return { success: false, state: CARD.NOT_FOUND }
+        return { success: true, data: card, state: CARD.UPDATE_SUCCESS }
     }
 }

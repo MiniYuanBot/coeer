@@ -1,7 +1,7 @@
 import { and, asc, count, eq, gt, ilike, inArray, or, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { cards, NewCard, type Card, userCards } from '../schemas'
-import type { ListCardsInput } from '@shared/contracts'
+import type { ListCardsInput, UpdateCardInput } from '@shared/contracts'
 
 function cardFilter(data: ListCardsInput) {
     return and(data.rarity ? eq(cards.rarity, data.rarity) : undefined,
@@ -13,6 +13,12 @@ export const cardQueries = {
     async create(data: NewCard) {
         const [card] = await db.insert(cards).values(data).returning()
         if (!card) throw new Error('Create card failed')
+        return card
+    },
+
+    async update(data: Omit<UpdateCardInput, 'dropRate'> & { dropRate?: string }) {
+        const { cardId, ...values } = data
+        const [card] = await db.update(cards).set(values).where(eq(cards.id, cardId)).returning()
         return card
     },
 
@@ -31,7 +37,7 @@ export const cardQueries = {
 
     /** All drawable cards (the pool is small — weighted draw happens in JS). */
     async listPool(executor: DbExecutor = db): Promise<Card[]> {
-        return executor.select().from(cards)
+        return executor.select().from(cards).where(gt(cards.dropRate, '0')).orderBy(asc(cards.id)).for('share')
     },
 
     async upsertUserCard(userId: string, cardId: string, executor: DbExecutor = db) {

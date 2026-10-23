@@ -108,7 +108,7 @@ function AdminRedeemsPage() {
                                 </Select>
                             </Field>
                         </div>
-                        <ImageUploadField name="imageUrl" label="商品图片（选填）" defaultValue={editing?.imageUrl} disabled={pending} />
+                        <ImageUploadField name="imageUrl" label="商品图片（选填）" defaultValue={editing?.imageUrl} disabled={pending} preset="redeem" />
                         <div className="coeer-form-actions border-t border-border pt-4">
                             {editing ? <Button variant="outline" onClick={() => edit(null)}>取消编辑</Button> : null}
                             <Button type="submit" loading={pending}>{editing ? '保存物品' : '添加物品'}</Button>

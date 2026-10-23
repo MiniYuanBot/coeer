@@ -8,7 +8,7 @@ import { MediaPreview } from '../ui/MediaPreview'
 export function RedeemItemCard({ item, action }: { item: any; action?: React.ReactNode }) {
     return (
         <Card className="flex h-full flex-col overflow-hidden">
-            <MediaPreview src={item.imageUrl} alt={item.name} />
+            <MediaPreview src={item.imageUrl} alt={item.name} preset="redeem" />
             <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-start justify-between gap-3">
                     <h3 className="text-[15px] font-medium">{item.name}</h3>

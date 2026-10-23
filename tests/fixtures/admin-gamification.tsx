@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Route as Achievements } from '../../src/app/routes/_authed/admin/achievements'
 import { Route as Redeems } from '../../src/app/routes/_authed/admin/redeems'
+import { Route as Cards } from '../../src/app/routes/_authed/admin/cards'
+import { Route as Collection } from '../../src/app/routes/_authed/achievements/index'
+import { CollectibleCard } from '../../src/app/components/coeer/cards/CollectibleCard'
 import { AchievementCard } from '../../src/app/components/coeer/cards/AchievementCard'
 import { failure, submitted } from './admin-gamification-actions'
 import '../../src/app/styles/app.css'
@@ -14,7 +17,7 @@ function Fixture() {
         return () => window.removeEventListener('admin-submitted', update)
     }, [])
     const kind = new URLSearchParams(window.location.search).get('kind')
-    const Page = (kind === 'achievements' ? Achievements : Redeems).options.component!
+    const Page = (kind === 'collection' ? Collection : kind === 'cards' ? Cards : kind === 'achievements' ? Achievements : Redeems).options.component!
     return <main className="coeer-workspace max-w-5xl p-4">
         <Page />
         <output id="submitted-action">{submitted.action}</output>
@@ -23,6 +26,7 @@ function Fixture() {
             <option value="">正常提交</option><option value="response">服务器拒绝</option><option value="network">网络中断</option>
         </select>
         <section id="achievement-card"><AchievementCard unlocked achievement={{ name: '图片成就', description: '说明', iconUrl: '/demo/card-common.svg' }} /></section>
+        <section id="collectible-card" className="max-w-xs"><CollectibleCard card={{ name: '收藏卡面', imageUrl: '/demo/card-common.svg', rarity: 'common' }} /></section>
     </main>
 }
 createRoot(document.getElementById('root')!).render(<Fixture />)

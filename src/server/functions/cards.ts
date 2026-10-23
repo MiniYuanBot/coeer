@@ -1,12 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
-import { CreateCardSchema, DrawCardsSchema, ListCardsSchema } from '@shared/contracts'
+import { CreateCardSchema, DrawCardsSchema, ListCardsSchema, UpdateCardSchema } from '@shared/contracts'
 import { CardService } from '../services'
 
 export const drawCardsFn = createServerFn({ method: 'POST' })
     .inputValidator(DrawCardsSchema)
     .handler(async ({ data }) => {
         const result = await CardService.draw(data)
-        if (!result.success) {
+        if (!result.success || !result.data) {
             throw new Error(result.state.message || '抽卡失败')
         }
         return result.data
@@ -23,4 +23,8 @@ export const getMyCardsFn = createServerFn({ method: 'GET' })
 export const adminCreateCardFn = createServerFn({ method: 'POST' })
     .inputValidator(CreateCardSchema)
     .handler(async ({ data }) => CardService.adminCreate(data))
+
+export const adminUpdateCardFn = createServerFn({ method: 'POST' })
+    .inputValidator(UpdateCardSchema)
+    .handler(async ({ data }) => CardService.adminUpdate(data))
 

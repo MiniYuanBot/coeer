@@ -1,11 +1,12 @@
-import { MediaPreview, Pagination } from '@/components/coeer'
+import { Pagination, Modal } from '@/components/coeer'
+import { useState } from 'react'
+import { CollectibleCard } from '@/components/coeer/cards/CollectibleCard'
+import type { DrawResult } from '@shared/contracts/cards'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
     AchievementCard,
-    Badge,
     Button,
-    Card,
     EmptyState,
     FilterPanel,
     Icon,
@@ -15,7 +16,7 @@ import {
     useAsyncAction,
 } from '@/components/coeer'
 import { drawCardsFn, getAllAchievementsFn, getMyCardsFn } from '~/functions'
-import { ACHIEVEMENT_CONDITION_TYPE_ARRAY, AchievementConditionType, CARD_RARITY_ARRAY, CardRarity } from '@shared/constants'
+import { ACHIEVEMENT_CONDITION_TYPE_ARRAY, AchievementConditionType, CARD_DRAW_COST, CARD_RARITY_ARRAY, CardRarity } from '@shared/constants'
 
 const searchSchema = z.object({
     view: z.enum(['cards', 'achievements']).default('cards'),
@@ -53,9 +54,11 @@ function AchievementsPage() {
     const navigate = useNavigate()
     const { loadingKey, run } = useAsyncAction()
     const router = useRouter()
+    const [drawResult, setDrawResult] = useState<DrawResult | null>(null)
     const draw = async () => {
         const result = await drawCardsFn({ data: { count: 1 } })
         await router.invalidate()
+        setDrawResult(result)
         return result
     }
     const go = (next: { view?: 'cards' | 'achievements'; conditionType?: string; rarity?: string; search?: string; page?: number }) => {
@@ -75,7 +78,7 @@ function AchievementsPage() {
                             error: '抽卡失败',
                         })}
                     >
-                        <Icon name="card" /> 抽一张卡
+                        <Icon name="card" /> 抽一张卡 · {CARD_DRAW_COST} 积分
                     </Button>
                 }
             />
@@ -123,16 +126,9 @@ function AchievementsPage() {
                 <section className="space-y-3">
                     <h2 className="text-[15px] font-medium">我的卡片</h2>
                     {myCards.length ? (
-                        <div className="coeer-grid">
+                        <div className="coeer-collection-grid">
                             {myCards.map((item: any) => (
-                                <Card key={item.id} className="overflow-hidden rounded-lg">
-                                    <MediaPreview src={item.card.imageUrl} alt={item.card.name} icon="card" />
-                                    <div className="p-4">
-                                        <Badge tone="primary">{cardRarityLabels[item.card.rarity] || item.card.rarity}</Badge>
-                                        <h3 className="mt-2 text-[15px] font-medium">{item.card.name}</h3>
-                                        <p className="mt-1 text-[13px] text-[hsl(var(--muted-foreground))]">拥有 {item.count} 张</p>
-                                    </div>
-                                </Card>
+                                <CollectibleCard key={item.id} card={item.card} count={item.count} />
                             ))}
                         </div>
                     ) : (
@@ -154,6 +150,11 @@ function AchievementsPage() {
                 </section>
             )}
             <Pagination total={total} page={page} size={pageSize} onChange={(page) => go({ page })} />
+            <Modal open={!!drawResult} title="抽卡结果" onOpenChange={(open) => { if (!open) setDrawResult(null) }}>
+                <p className="mb-4 text-sm text-muted-foreground">本次消耗 {drawResult?.pointsSpent ?? 0} 积分，卡片已加入你的收藏。</p>
+                <div className="mx-auto grid max-w-xs gap-4">{drawResult?.cards.map((item, index) => <CollectibleCard key={`${item.cardId}:${index}`} card={item.card} count={item.count} />)}</div>
+                <div className="coeer-form-actions mt-4"><Button onClick={() => setDrawResult(null)}>收下卡片</Button></div>
+            </Modal>
         </div>
     )
 }

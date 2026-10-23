@@ -6,12 +6,14 @@ export const CARD_RARITY = {
 
 export type CardRarity = typeof CARD_RARITY[keyof typeof CARD_RARITY]
 export const CARD_RARITY_ARRAY = ['common', 'rare', 'legendary'] as const
+export const CARD_DRAW_COST = 50
 
 export const CARD = {
     DRAW_SUCCESS: { code: 'DRAW_SUCCESS', message: 'Draw successful' } as const,
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,
     CREATE_SUCCESS: { code: 'CREATE_SUCCESS', message: 'Create successful' } as const,
     UPDATE_SUCCESS: { code: 'UPDATE_SUCCESS', message: 'Update successful' } as const,
+    INVALID_INPUT: { code: 'INVALID_INPUT', message: '请检查卡片信息、图片地址和抽中权重' } as const,
     NOT_FOUND: { code: 'CARD_NOT_FOUND', message: 'Card not found' } as const,
     EMPTY_POOL: { code: 'EMPTY_POOL', message: '奖池暂时为空，请稍后再试' } as const,
     INSUFFICIENT_POINTS: { code: 'INSUFFICIENT_POINTS', message: '积分不足' } as const,

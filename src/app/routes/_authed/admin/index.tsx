@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_authed/admin/')({
 })
 
 type AdminLink = {
-    to: '/admin/feedbacks' | '/admin/feedbacks/pending' | '/admin/stats' | '/admin/groups' | '/admin/groups/pending' | '/admin/bulletins' | '/admin/activities' | '/admin/redeems' | '/admin/achievements' | '/admin/dorms' | '/admin/spaces'
+    to: '/admin/feedbacks' | '/admin/feedbacks/pending' | '/admin/stats' | '/admin/groups' | '/admin/groups/pending' | '/admin/bulletins' | '/admin/activities' | '/admin/redeems' | '/admin/achievements' | '/admin/cards' | '/admin/dorms' | '/admin/spaces'
     title: string
     description: string
     icon: IconName
@@ -53,6 +53,7 @@ const adminGroups: Array<{ title: string; links: AdminLink[] }> = [
             { to: '/admin/activities', title: '活动管理', description: '管理活动报名', icon: 'calendar', badge: '活动', tone: 'primary' },
             { to: '/admin/redeems', title: '商城管理', description: '维护兑换物品', icon: 'gift', badge: '商城', tone: 'success' },
             { to: '/admin/achievements', title: '成就管理', description: '配置成长成就', icon: 'award', badge: '成就', tone: 'primary' },
+            { to: '/admin/cards', title: '卡片管理', description: '添加卡面、配置稀有度和抽中权重', icon: 'card', badge: '抽卡', tone: 'primary' },
             { to: '/admin/dorms', title: '宿舍管理', description: '运行宿舍分配、调整房间并下发结果', icon: 'bed', badge: '宿舍', tone: 'warning' },
             { to: '/admin/spaces', title: '空间预约', description: '管理空间、预约审核、白名单及同步状态', icon: 'calendar', badge: '预约', tone: 'primary' },
         ],
@@ -72,7 +73,7 @@ function AdminDashboardPage() {
         <div className="space-y-8">
             <SectionHeader
                 title="管理工作台"
-                description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就与宿舍。"
+                description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就、卡片与宿舍。"
             />
             <StatsBar label="管理概览" items={metricCards} />
 

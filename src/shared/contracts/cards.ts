@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { Card, UserCard } from '~/database/schemas'
 import { CardCode, CARD_RARITY_ARRAY } from '../constants'
 import { ActionResponse, PaginatedActionResponse, PaginationSchema } from './shared'
+import { ImageUrlSchema } from '../images'
 
 export const CardIdSchema = z.object({
     cardId: z.uuid(),
@@ -19,18 +20,21 @@ export const ListCardsSchema = z.object({
 })
 
 export const CreateCardSchema = z.object({
-    name: z.string().min(1).max(100),
-    description: z.string().optional(),
-    imageUrl: z.string().url(),
+    name: z.string().trim().min(1).max(100),
+    description: z.string().trim().max(5000).optional(),
+    imageUrl: ImageUrlSchema,
     rarity: z.enum(CARD_RARITY_ARRAY),
-    series: z.string().max(100).optional(),
-    dropRate: z.number().min(0).max(1),
+    series: z.string().trim().max(100).optional(),
+    dropRate: z.number().min(0).max(1).multipleOf(0.0001),
 })
+
+export const UpdateCardSchema = CreateCardSchema.partial().extend({ cardId: z.uuid() })
 
 export type CardIdInput = z.infer<typeof CardIdSchema>
 export type DrawCardsInput = z.infer<typeof DrawCardsSchema>
 export type ListCardsInput = z.infer<typeof ListCardsSchema>
 export type CreateCardInput = z.infer<typeof CreateCardSchema>
+export type UpdateCardInput = z.infer<typeof UpdateCardSchema>
 
 export type UserCardWithCard = UserCard & {
     card: Card

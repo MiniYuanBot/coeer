@@ -9,7 +9,7 @@ vi.mock('~/utils/session', () => ({ useAppSession: async () => session }))
 vi.mock('~/database/client', async () => ({ db: (await import('../support/database')).db }))
 
 import { client, db, initializeDatabase, resetDatabase } from '../support/database'
-import { achievements, feedbacks, pointTransactions, uploadedImages, userAchievements, users } from '~/database/schemas'
+import { achievements, cards, feedbacks, pointTransactions, uploadedImages, userAchievements, userCards, users } from '~/database/schemas'
 import { AchievementService } from '~/services/AchievementService'
 import { AuthService } from '~/services/AuthService'
 import { EngagementService } from '~/services/EngagementService'
@@ -21,6 +21,9 @@ import { CreateRedeemItemSchema, UpdateRedeemItemSchema } from '@shared/contract
 import { MAX_IMAGE_BYTES } from '@shared/images'
 import { engagementDay } from '@shared/constants/engagement'
 import { env } from '~/config'
+import { CardService } from '~/services/CardService'
+import { CreateCardSchema } from '@shared/contracts/cards'
+import { cardQueries } from '~/database/queries/cards'
 
 const admin = '11111111-1111-4111-8111-111111111111'
 const student = '22222222-2222-4222-8222-222222222222'
@@ -46,6 +49,72 @@ beforeEach(async () => {
     ])
 })
 afterAll(() => client.close())
+
+describe('card administration and drawable pool', () => {
+    const input = { name: '校园纪念卡', imageUrl: '/demo/card-common.svg', rarity: 'common' as const, series: '校园', dropRate: .1 }
+    it('authorizes card changes and validates uploaded URLs and decimal weights', async () => {
+        expect((await CardService.adminCreate(input)).state.code).toBe('UNAUTHORIZED')
+        signIn(student)
+        expect((await CardService.adminCreate(input)).state.code).toBe('FORBIDDEN')
+        signIn()
+        const { url } = await (await upload()).json()
+        const created = (await CardService.adminCreate(CreateCardSchema.parse({ ...input, imageUrl: url }))).data!
+        expect(created).toMatchObject({ imageUrl: url, dropRate: '0.1000' })
+        signIn(student)
+        expect((await CardService.adminUpdate({ cardId: created.id, name: '未经授权的修改' })).state.code).toBe('FORBIDDEN')
+        signIn()
+        expect((await CardService.adminUpdate({ cardId: created.id, rarity: 'legendary', dropRate: .0001 })).data).toMatchObject({ rarity: 'legendary', dropRate: '0.0001' })
+        for (const dropRate of [-1, 1.1, .00001]) expect((await CardService.adminCreate({ ...input, dropRate })).state.code).toBe('INVALID_INPUT')
+        expect((await CardService.adminUpdate({ cardId: created.id, imageUrl: 'javascript:alert(1)' })).state.code).toBe('INVALID_INPUT')
+        expect((await CardService.adminUpdate({ cardId: randomUUID(), dropRate: .1 })).state.code).toBe('CARD_NOT_FOUND')
+    })
+
+    it('draws newly added cards, excludes zero weights, and keeps ownership after removing a card from the pool', async () => {
+        signIn()
+        const active = (await CardService.adminCreate(input)).data!
+        await CardService.adminCreate({ ...input, name: '暂不开放的卡片', dropRate: 0 })
+        await db.insert(pointTransactions).values({ userId: student, amount: 200, type: 'earn', source: 'adjustment' })
+        signIn(student)
+        vi.spyOn(Math, 'random').mockReturnValue(0)
+        const draw = (await CardService.draw({ count: 2 })).data!
+        expect(draw.pointsSpent).toBe(100)
+        expect(draw.cards.map((item) => item.card.id)).toEqual([active.id, active.id])
+        expect((await PointService.getBalance()).data?.balance).toBe(100)
+        signIn()
+        expect((await CardService.adminUpdate({ cardId: active.id, dropRate: 0, description: '保留已有收藏' })).success).toBe(true)
+        signIn(student)
+        expect((await CardService.draw({ count: 1 })).state.code).toBe('EMPTY_POOL')
+        expect((await PointService.getBalance()).data?.balance).toBe(100)
+        expect((await CardService.listMine(page)).data).toMatchObject({ total: 1, items: [{ count: 2, card: { id: active.id, description: '保留已有收藏' } }] })
+        expect(await db.select().from(userCards)).toHaveLength(1)
+    })
+
+    it('normalizes relative weights rather than treating each weight as an independent percentage', async () => {
+        const pool = await db.insert(cards).values([
+            { ...input, id: '10000000-0000-4000-8000-000000000001', name: '普通', dropRate: '0.6000' },
+            { ...input, id: '10000000-0000-4000-8000-000000000002', name: '稀有', dropRate: '0.3000' },
+            { ...input, id: '10000000-0000-4000-8000-000000000003', name: '传说', dropRate: '0.1000' },
+        ]).returning()
+        await db.insert(pointTransactions).values({ userId: student, amount: 150, type: 'earn', source: 'adjustment' })
+        signIn(student)
+        vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(.7).mockReturnValueOnce(.99)
+        const result = (await CardService.draw({ count: 3 })).data!
+        expect(result.cards.map((item) => item.card.id)).toEqual(pool.map((item) => item.id))
+        expect((await PointService.getBalance()).data?.balance).toBe(0)
+    })
+
+    it('rolls back the charge when ownership cannot be persisted', async () => {
+        signIn()
+        await CardService.adminCreate(input)
+        await db.insert(pointTransactions).values({ userId: student, amount: 50, type: 'earn', source: 'adjustment' })
+        signIn(student)
+        vi.spyOn(cardQueries, 'upsertUserCard').mockRejectedValueOnce(new Error('card write failed'))
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        expect((await CardService.draw({ count: 1 })).state.code).toBe('SERVER_ERROR')
+        expect((await PointService.getBalance()).data?.balance).toBe(50)
+        expect(await db.select().from(userCards)).toHaveLength(0)
+    })
+})
 
 describe('configurable achievement rules', () => {
     it('awards any registration rule immediately during signup, and logs in once per Beijing date', async () => {

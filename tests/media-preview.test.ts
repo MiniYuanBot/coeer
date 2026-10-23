@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { existsSync, realpathSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { chromium, type Browser, type Page } from 'playwright-core'
 import { createServer, type ViteDevServer } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
@@ -24,6 +25,7 @@ describe.skipIf(!executablePath)('collection artwork in Chromium', () => {
             configFile: false,
             cacheDir: 'tmp/vite-media-preview-tests',
             plugins: [tailwindcss()],
+            resolve: { alias: { '@shared': fileURLToPath(new URL('../src/shared', import.meta.url)) } },
             server: { host: '127.0.0.1', port: 0, hmr: false, fs: { allow: [process.cwd(), realpathSync('node_modules')] } },
             optimizeDeps: { entries: ['tests/fixtures/media-preview.html'] },
         })
