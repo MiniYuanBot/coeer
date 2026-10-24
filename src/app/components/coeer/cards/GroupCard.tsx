@@ -7,7 +7,7 @@ import type { GroupWithStats } from '@shared/contracts'
 export function GroupCard({ group }: { group: GroupWithStats }) {
     return (
         <Link to="/groups/$slug" params={{ slug: group.slug }} className="coeer-focus block rounded-lg">
-            <Card className="h-full p-5 transition-colors hover:bg-muted/40">
+            <Card className="h-full p-5 transition-colors hover:bg-muted">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <h3 className="break-words text-[15px] font-medium leading-6">{group.name}</h3>

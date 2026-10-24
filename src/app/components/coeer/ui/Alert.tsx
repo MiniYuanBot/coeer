@@ -15,10 +15,10 @@ export function Alert({
             role={tone === 'danger' ? 'alert' : 'status'}
             className={cn(
                 'rounded-md border px-3.5 py-3 text-[13px] leading-6',
-                tone === 'default' && 'border-border bg-muted/40 text-muted-foreground',
-                tone === 'danger' && 'border-danger/20 bg-danger/5 text-danger',
-                tone === 'success' && 'border-success/20 bg-success/5 text-success',
-                tone === 'warning' && 'border-warning/20 bg-warning/5 text-warning',
+                tone === 'default' && 'border-border bg-muted text-muted-foreground',
+                tone === 'danger' && 'border-danger/25 bg-danger-soft text-danger',
+                tone === 'success' && 'border-success/25 bg-success-soft text-success',
+                tone === 'warning' && 'border-warning/25 bg-warning-soft text-warning',
                 className,
             )}
         >

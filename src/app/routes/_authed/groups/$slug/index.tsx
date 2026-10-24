@@ -48,7 +48,7 @@ function GroupHomePage() {
                     </Link>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-[hsl(var(--primary))]">
                         {group.creator?.name?.[0] || '?'}
                     </div>
                     <span className="text-[15px] font-medium">{group.creator?.name || '未知用户'}</span>

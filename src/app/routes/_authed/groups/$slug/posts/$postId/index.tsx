@@ -68,7 +68,7 @@ function PostIndexComponent() {
       {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
       <DetailLayout asideLabel="帖子信息" aside={
-        <section className="space-y-5 rounded-lg border border-border bg-muted/20 p-5">
+        <section className="space-y-5 rounded-lg border border-border bg-muted p-5">
           <h2 className="text-xs font-semibold">帖子信息</h2>
           <div className="flex flex-wrap gap-2">
             {post.isPinned ? <Badge tone="primary">置顶</Badge> : null}
@@ -85,7 +85,7 @@ function PostIndexComponent() {
       }>
       <Card className="p-5 sm:p-6">
         <div className="mb-5 flex items-center gap-3 border-b border-border pb-5">
-          <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-[hsl(var(--primary))]">
             {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
           </div>
           <div>

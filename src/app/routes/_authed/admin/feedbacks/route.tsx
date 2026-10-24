@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 
 const tabClass = 'coeer-focus rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]'
-const activeClass = 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))]'
+const activeClass = 'bg-primary-soft text-[hsl(var(--primary))]'
 
 export const Route = createFileRoute('/_authed/admin/feedbacks')({
     component: AdminFeedbacksLayout,

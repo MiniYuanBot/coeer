@@ -26,7 +26,7 @@ function ResetPasswordPage() {
     }
     return <main className="flex min-h-dvh items-center justify-center px-6 py-20">
         <div className="fixed right-4 top-4"><ThemeToggle /></div>
-        <div className="w-full max-w-[340px]"><h1 className="text-2xl font-semibold">设置新密码</h1><p className="mt-3 text-sm text-muted-foreground">重置后，所有设备需要重新登录。</p>
+        <div className="coeer-auth-panel"><h1 className="text-2xl font-semibold">设置新密码</h1><p className="mt-3 text-sm text-muted-foreground">重置后，所有设备需要重新登录。</p>
             <form onSubmit={(event) => void submit(event)} className="mt-7 space-y-5">
                 <Field label="新密码" description="至少 8 位，不超过 72 字节"><Input name="newPassword" type="password" autoComplete="new-password" minLength={8} required disabled={pending || notice?.success} /></Field>
                 <Field label="确认新密码"><Input name="confirmPassword" type="password" autoComplete="new-password" minLength={8} required disabled={pending || notice?.success} /></Field>

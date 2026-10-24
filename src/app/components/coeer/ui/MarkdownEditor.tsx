@@ -36,8 +36,8 @@ export function MarkdownEditor({ label, previewLabel, id, value, defaultValue = 
             <textarea {...props} ref={input} id={inputId} rows={rows} value={content}
                 aria-describedby={[describedBy, helpId].filter(Boolean).join(' ')}
                 onChange={(event) => { setDraft(event.target.value); onChange?.(event) }}
-                className="coeer-focus min-w-0 w-full resize-y rounded-md border border-border bg-card p-3 text-sm leading-6 disabled:opacity-50" />
-            <section aria-label={previewLabel ?? `${label || '内容'}实时预览`} className="max-h-[32rem] min-w-0 overflow-auto rounded-md border border-border bg-muted/20 p-3">
+                className="coeer-focus coeer-field min-w-0 w-full resize-y rounded-md border border-control-border bg-card p-3 text-sm leading-6 disabled:bg-muted disabled:text-muted-foreground" />
+            <section aria-label={previewLabel ?? `${label || '内容'}实时预览`} className="max-h-[32rem] min-w-0 overflow-auto rounded-md border border-border bg-card p-3">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">实时预览</p>
                 {content.trim() ? <Markdown content={content} /> : <p className="text-sm text-muted-foreground">输入内容后，这里会实时显示排版和公式。</p>}
             </section>

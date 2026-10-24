@@ -22,12 +22,12 @@ export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; va
     const tone: BadgeTone = feedback.status === 'resolved' ? 'success' : feedback.status === 'processing' ? 'primary' : feedback.status === 'invalid' ? 'danger' : 'warning'
     if (variant !== 'card') {
         return (
-            <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus group grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-3 transition-colors hover:bg-muted/50 sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:items-center sm:px-4">
+            <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus group grid grid-cols-[20px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-3 py-3 transition-colors hover:bg-muted sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:items-center sm:px-4">
                 <span className="mt-0.5 sm:mt-0"><StatusIcon status={feedback.status} /></span>
                 <div className="min-w-0">
                     <span className={'block truncate font-medium group-hover:text-primary ' + (variant === 'home' ? 'text-[15px]' : 'text-[13px]')}>{feedback.title}</span>
                     <MarkdownSummary content={feedback.content} className="mt-1 max-h-16 text-xs leading-5 text-muted-foreground" />
-                    <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{feedbackTargetLabels[feedback.targetType] || '综合建议'}</span>
                         {feedback.isAnonymous ? <span className="rounded border border-border px-1">匿名</span> : null}
                         <span className="sm:hidden">{feedbackStatusLabels[feedback.status] || feedback.status}</span>
@@ -35,13 +35,13 @@ export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; va
                     </span>
                 </div>
                 <span className="hidden sm:block"><Badge tone={tone}>{feedbackStatusLabels[feedback.status] || feedback.status}</Badge></span>
-                <span className="hidden text-right text-[11px] text-muted-foreground sm:block">{formatDate(feedback.createdAt)}</span>
+                <span className="hidden text-right text-xs text-muted-foreground sm:block">{formatDate(feedback.createdAt)}</span>
             </Link>
         )
     }
     return (
         <Link to="/feedbacks/$feedbackId" params={{ feedbackId: feedback.id }} className="coeer-focus block min-w-0 rounded-lg">
-            <Card className="h-full min-w-0 p-5 transition-colors hover:bg-muted/40">
+            <Card className="h-full min-w-0 p-5 transition-colors hover:bg-muted">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2"><StatusIcon status={feedback.status} /><Badge tone={tone}>{feedbackStatusLabels[feedback.status] || feedback.status}</Badge>{feedback.isAnonymous ? <Badge>匿名</Badge> : null}</div>
                     <span className="text-xs text-muted-foreground">{formatDate(feedback.createdAt)}</span>

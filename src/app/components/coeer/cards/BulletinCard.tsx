@@ -9,7 +9,7 @@ import { MarkdownSummary } from '../ui/Markdown'
 export function BulletinCard({ bulletin }: { bulletin: any }) {
     return (
         <Link to="/bulletins/$bulletinId" params={{ bulletinId: bulletin.id }} className="coeer-focus group block min-w-0 rounded-lg">
-            <Card className="h-full min-w-0 p-5 transition-colors group-hover:bg-muted/40">
+            <Card className="h-full min-w-0 p-5 transition-colors group-hover:bg-muted">
                 <div className="flex items-start justify-between gap-3">
                     <Badge tone={bulletin.isPinned ? 'primary' : 'default'}>{bulletinTypeLabels[bulletin.type] || bulletin.type}</Badge>
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(bulletin.createdAt)}</span>

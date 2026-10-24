@@ -5,16 +5,13 @@ import { Icon } from '../ui/Icon'
 import { BrandMark } from './BrandMark'
 import { ThemeToggle } from './ThemeToggle'
 import { adminNavItem, adminNavItems, navSections } from './navItems'
+import { useDialog } from '../hooks/useDialog'
 
 export function Sidebar({ user, open, onClose, onSearch }: {
     user: SessionUser; open: boolean; onClose: () => void; onSearch: () => void
 }) {
-    const drawer = React.useRef<HTMLDialogElement>(null)
+    const drawer = useDialog(open)
     React.useEffect(() => {
-        const dialog = drawer.current
-        if (!dialog) return
-        if (open && !dialog.open) dialog.showModal()
-        if (!open && dialog.open) dialog.close()
         if (!open) return
         const closeOnDesktop = () => { if (window.innerWidth >= 1024) onClose() }
         window.addEventListener('resize', closeOnDesktop)
@@ -22,7 +19,7 @@ export function Sidebar({ user, open, onClose, onSearch }: {
     }, [open, onClose])
     return (
         <>
-            <dialog ref={drawer} aria-label="主导航" className="coeer-mobile-drawer" onCancel={onClose} onClose={onClose}
+            <dialog ref={drawer} aria-label="主导航" className="coeer-mobile-drawer coeer-surface-floating" onCancel={onClose} onClose={onClose}
                 onClick={(event) => {
                     if (event.target !== event.currentTarget) return
                     const bounds = event.currentTarget.getBoundingClientRect()
@@ -30,7 +27,7 @@ export function Sidebar({ user, open, onClose, onSearch }: {
                 }}>
                 <SidebarBody user={user} onNavigate={onClose} onSearch={() => { onClose(); onSearch() }} />
             </dialog>
-            <aside aria-label="主导航" className="fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] flex-col border-r border-border bg-sidebar lg:flex">
+            <aside aria-label="主导航" className="coeer-surface-chrome fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] flex-col border-r border-border lg:flex">
                 <SidebarBody user={user} onSearch={onSearch} />
             </aside>
         </>
@@ -47,12 +44,12 @@ function SidebarBody({ user, onNavigate, onSearch }: {
             <div className="flex h-[60px] shrink-0 items-center gap-2.5 px-5">
                 <Link to="/" onClick={onNavigate} className="coeer-focus flex min-w-0 items-center gap-2.5 rounded-md">
                     <BrandMark className="h-7 w-7 shrink-0 text-primary" />
-                    <span className="text-[15px] font-semibold tracking-[-0.025em]">COEER</span>
+                    <span className="text-[15px] font-semibold ">COEER</span>
                 </Link>
                 {onNavigate ? <button type="button" aria-label="关闭导航" onClick={onNavigate} className="coeer-focus ml-auto grid h-11 w-11 place-items-center rounded text-muted-foreground"><Icon name="x" /></button> : null}
             </div>
             <div className="px-3">
-                <button type="button" onClick={onSearch} aria-label="搜索页面" className="coeer-focus flex min-h-9 w-full items-center gap-2 rounded-md border border-border bg-background/70 px-2.5 text-xs text-muted-foreground hover:border-primary/40">
+                <button type="button" data-command-trigger onClick={onSearch} aria-label="搜索页面" className="coeer-focus coeer-button flex min-h-9 w-full items-center gap-2 rounded-md border border-control-border bg-card px-2.5 text-xs text-muted-foreground hover:border-primary">
                     <Icon name="search" className="h-3.5 w-3.5" /><span>搜索页面</span><kbd className="coeer-kbd ml-auto">Ctrl K</kbd>
                 </button>
             </div>
@@ -60,7 +57,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                 <div className="grid gap-5">
                     {inAdmin ? <Link to="/" onClick={onNavigate} className="coeer-focus coeer-nav-link"><Icon name="chevron" className="h-4 w-4 rotate-180" />返回学院社区</Link> : navSections.map((section) => (
                         <div key={section.label}>
-                            <div className="px-2.5 pb-2 text-[11px] font-medium text-muted-foreground">{section.label}</div>
+                            <div className="px-2.5 pb-2 text-xs font-medium text-muted-foreground">{section.label}</div>
                             <div className="grid gap-0.5">
                                 {section.items.map((item) => (
                                     <Link key={item.to} to={item.to as any} activeOptions={item.active === 'exact' ? { exact: true } : undefined}
@@ -73,7 +70,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                     ))}
                     {user?.role === 'admin' ? (
                         <div>
-                            <div className="px-2.5 pb-2 text-[11px] font-medium text-muted-foreground">管理</div>
+                            <div className="px-2.5 pb-2 text-xs font-medium text-muted-foreground">管理</div>
                             <Link to={adminNavItem.to as any} activeOptions={{ exact: inAdmin }} onClick={onNavigate} className="coeer-focus coeer-nav-link"><Icon name={adminNavItem.icon} />{inAdmin ? '管理工作台' : adminNavItem.label}</Link>
                             {inAdmin ? <div className="mt-2 grid gap-0.5">
                                 {adminNavItems.filter(item => item.to !== '/admin').map(item => <Link key={item.to} to={item.to as any}
@@ -84,7 +81,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                     ) : null}
                 </div>
             </nav>
-            <div className="shrink-0 border-t border-border px-3 py-3">
+            <div className="coeer-sidebar-footer shrink-0 border-t border-border px-3 py-3">
                 <Link to="/profile" onClick={onNavigate} className="coeer-focus mb-2 block rounded-md px-2 py-2 text-xs text-muted-foreground hover:bg-muted">设置</Link>
                 <div className="mb-3 flex items-center justify-between px-2"><span className="text-xs text-muted-foreground">外观</span><ThemeToggle /></div>
                 <div className="flex items-center gap-2 px-1">
@@ -92,7 +89,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{(user?.name || user?.email || 'U').slice(0, 1).toUpperCase()}</span>
                         <span className="min-w-0">
                             <span className="block truncate text-xs font-medium">{user?.name || user?.email || '未登录'}</span>
-                            <span className="mt-0.5 block text-[11px] text-muted-foreground">{roles[user?.role || ''] || '访客'}</span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">{roles[user?.role || ''] || '访客'}</span>
                         </span>
                     </Link>
                     <Link to="/logout" onClick={onNavigate} aria-label="退出登录" title="退出登录" className="coeer-focus rounded p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><Icon name="logout" className="h-3.5 w-3.5" /></Link>

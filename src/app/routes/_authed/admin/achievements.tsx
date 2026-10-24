@@ -98,7 +98,7 @@ function AdminAchievementsPage() {
                             <Field label={condition === 'login_days' ? '目标天数' : condition === 'points_earned' ? '目标积分' : '目标数值'}>
                                 <Input key={condition} name="conditionValue" required type="number" min={1} max={2147483647} step={1} readOnly={condition === 'registration'}
                                     defaultValue={condition === 'registration' ? 1 : editing && resolveAchievementCondition(editing.conditionType, editing.code) === condition ? editing.conditionValue : condition === 'login_days' ? 100 : condition === 'points_earned' ? 10000 : 1}
-                                    className="h-10 read-only:bg-muted/50 read-only:text-muted-foreground" />
+                                    className="h-10 read-only:bg-muted read-only:text-muted-foreground" />
                             </Field>
                         </div>
                         <Field label="说明">

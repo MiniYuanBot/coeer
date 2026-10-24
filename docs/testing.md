@@ -36,7 +36,12 @@ node --test scripts/deploy.test.mjs scripts/database.test.mjs
 ```powershell
 $env:COEER_TEST_BROWSER = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 pnpm exec vitest run tests/replies.test.ts tests/markdown-editor.test.ts
+pnpm exec vitest run tests/workspace-ui.test.ts
 ```
+
+`workspace-ui.test.ts` 使用真实前端组件与隔离 UI 数据检查工作区、主题、移动布局、浮层焦点和效果降级，
+不连接业务数据库或预约官网。代表页面截图写入 `tmp/glass-review`；完整实施与验收范围见
+[毛玻璃实施记录](../.impeccable/implementation-review.md)。
 
 ## Linux 部署控制器
 

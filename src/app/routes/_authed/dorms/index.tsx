@@ -254,7 +254,7 @@ function CycleSelectCard({ cycles, selectedCycleId, onChange }: { cycles: DormCy
             <select
                 value={selectedCycleId || ''}
                 onChange={(e) => onChange(e.target.value)}
-                className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
+                className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm"
             >
                 <option value="">选择届次</option>
                 {cycles.map((cycle) => (
@@ -363,4 +363,4 @@ function resolveOptionValue(question: DormQuestionConfig, raw: string) {
     return match ? match.value : raw
 }
 
-const fieldClass = 'coeer-focus h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm'
+const fieldClass = 'coeer-field coeer-focus h-10 w-full rounded-md border border-control-border bg-card px-3 text-sm'

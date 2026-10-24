@@ -121,7 +121,7 @@ function ProfileIndexComponent() {
                     </SettingsSection>
                 </div>
 
-                <section className="min-w-0 border-t border-border pt-6" aria-labelledby="profile-points-title">
+                <section className="coeer-content-panel min-w-0" aria-labelledby="profile-points-title">
                     <div className="mb-4 flex items-center justify-between">
                         <h2 id="profile-points-title" className="text-sm font-semibold">积分流水</h2>
                     </div>

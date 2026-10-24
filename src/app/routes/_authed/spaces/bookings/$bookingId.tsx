@@ -68,7 +68,7 @@ function BookingDetailPage() {
             />
             {(error || resource.error) && <Alert tone="danger">{error || resource.error}</Alert>}
             <DetailLayout asideLabel="预约处理进度" aside={
-                <section className="space-y-5 border-t border-border pt-5">
+                <section className="coeer-content-panel space-y-5">
                     <h2 className="text-sm font-semibold">处理进度</h2>
                     <ol aria-label="预约处理记录" className="ml-2 space-y-6 border-l border-border pl-5">
                         {booking.events?.map((event) => (
@@ -124,7 +124,7 @@ function BookingDetailPage() {
                         </div>
                     )}
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                             申请号 {booking.id.slice(0, 8)} · {formatSpaceTime(booking.createdAt)}
                         </p>
                         {!['cancelled', 'failed', 'cancel_requested', 'cancelling', 'cancel_uncertain'].includes(

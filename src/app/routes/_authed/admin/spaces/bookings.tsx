@@ -254,7 +254,7 @@ function AdminBooking({
                     </p>
                 </form>
             )}
-            <p className="break-all text-[11px] text-muted-foreground">
+            <p className="break-all text-xs text-muted-foreground">
                 申请号 {booking.id} · {formatSpaceTime(booking.createdAt)}
             </p>
             <Modal

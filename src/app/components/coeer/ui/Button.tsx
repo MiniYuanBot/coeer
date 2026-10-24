@@ -11,17 +11,17 @@ export function Button({
     asChild?: boolean
 }) {
     const classes = cn(
-        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50',
+        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:border-control-border disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted',
         size === 'xs' ? 'h-7 gap-1.5 px-1.5 text-xs' : 'gap-2 text-[13px]',
         size === 'sm' && 'h-8 px-2.5',
         size === 'md' && 'h-9 px-3.5',
         size === 'lg' && 'h-11 px-5',
         size === 'icon' && 'h-8 w-8',
-        variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary/90',
-        variant === 'secondary' && 'border border-border bg-card text-foreground hover:bg-muted',
-        variant === 'outline' && 'border border-border bg-transparent hover:bg-muted',
+        variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary-hover',
+        variant === 'secondary' && 'border border-control-border bg-card text-foreground hover:bg-muted',
+        variant === 'outline' && 'border border-control-border bg-transparent text-foreground hover:bg-muted',
         variant === 'ghost' && 'text-muted-foreground hover:bg-muted hover:text-foreground',
-        variant === 'danger' && 'bg-danger text-white hover:bg-danger/90 dark:text-background',
+        variant === 'danger' && 'bg-danger text-danger-foreground hover:bg-danger-hover',
         className,
     )
     if (asChild && React.isValidElement<{ className?: string }>(children)) {

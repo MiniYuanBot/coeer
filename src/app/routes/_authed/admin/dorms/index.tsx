@@ -114,7 +114,7 @@ function AdminDormPage() {
                     <select
                         value={cycleId || activeCycle?.id || ''}
                         onChange={(e) => navigate({ to: '/admin/dorms', search: { cycleId: e.target.value || undefined } })}
-                        className="coeer-focus h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
+                        className="coeer-field coeer-focus h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm"
                     >
                         <option value="">选择届次</option>
                         {cycles.map((cycle: DormCycle) => (
@@ -133,10 +133,10 @@ function AdminDormPage() {
 
             <Card className="rounded-lg p-5">
                 <form onSubmit={submitCycle} className="grid gap-3 md:grid-cols-4">
-                    <input name="code" required placeholder="届次代码，例如 2026-freshman" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="label" required placeholder="届次名称，例如 2026 新生宿舍" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="cohortLabel" required placeholder="批次标签，例如 2026级" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="questionnaireVersion" placeholder="问卷版本" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                    <input name="code" required placeholder="届次代码，例如 2026-freshman" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
+                    <input name="label" required placeholder="届次名称，例如 2026 新生宿舍" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
+                    <input name="cohortLabel" required placeholder="批次标签，例如 2026级" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
+                    <input name="questionnaireVersion" placeholder="问卷版本" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                     <div className="md:col-span-4 flex justify-end">
                         <Button type="submit" loading={creating}>
                             <Icon name="spark" /> 创建届次
@@ -226,15 +226,15 @@ function AdminDormPage() {
                         <div className="grid gap-3 sm:grid-cols-2">
                             <label className="block text-sm font-medium">
                                 <span>房间号</span>
-                                <input name="roomCode" defaultValue={editingRoom.roomCode} className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                                <input name="roomCode" defaultValue={editingRoom.roomCode} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                             </label>
                             <label className="block text-sm font-medium">
                                 <span>宿舍楼</span>
-                                <input name="building" defaultValue={editingRoom.building || ''} className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                                <input name="building" defaultValue={editingRoom.building || ''} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                             </label>
                             <label className="block text-sm font-medium">
                                 <span>楼层</span>
-                                <input name="floor" type="number" defaultValue={editingRoom.floor ?? ''} className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                                <input name="floor" type="number" defaultValue={editingRoom.floor ?? ''} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                             </label>
                         </div>
                         <label className="block text-sm font-medium">
@@ -243,7 +243,7 @@ function AdminDormPage() {
                                 multiple
                                 name="members"
                                 defaultValue={editingRoom.members}
-                                className="coeer-focus mt-2 min-h-40 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm"
+                                className="coeer-field coeer-focus mt-2 min-h-40 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-2 text-sm"
                             >
                                 {submissions.map((item: DormQuestionnaireSummary) => (
                                     <option key={item.userId} value={item.userId}>
@@ -274,15 +274,15 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function HeaderMetric({ label, value, tone }: { label: string; value: string; tone: 'primary' | 'warning' | 'success' | 'default' }) {
     const toneClass = {
-        primary: 'border-[hsl(var(--primary)/0.22)] bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))]',
-        warning: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-        success: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-        default: 'border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-[hsl(var(--foreground))]',
+        primary: 'border-[hsl(var(--primary)/0.22)] bg-primary-soft text-[hsl(var(--primary))]',
+        warning: 'border-warning/25 bg-warning-soft text-warning',
+        success: 'border-success/25 bg-success-soft text-success',
+        default: 'border-[hsl(var(--border))] bg-muted text-[hsl(var(--foreground))]',
     }[tone]
 
     return (
         <div className={`min-h-16 rounded-lg border px-3 py-2 ${toneClass}`}>
-            <div className="text-xs text-current/70">{label}</div>
+            <div className="text-xs text-current">{label}</div>
             <div className="mt-1 truncate text-sm font-medium tabular-nums" title={value}>{value}</div>
         </div>
     )

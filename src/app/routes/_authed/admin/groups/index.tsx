@@ -92,12 +92,12 @@ function AdminGroupsPage() {
             <Modal open={!!reviewing} title="审核群组" onOpenChange={(open) => !open && setReviewing(null)}>
                 <form onSubmit={submitReview} className="space-y-4">
                     <label className="block text-sm font-medium">审核状态
-                        <select name="status" defaultValue={reviewing?.status || 'pending'} className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                        <select name="status" defaultValue={reviewing?.status || 'pending'} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                             {GROUP_STATUS_ARRAY.map((item) => <option key={item} value={item}>{groupStatusLabels[item]}</option>)}
                         </select>
                     </label>
                     <label className="block text-sm font-medium">审核备注
-                        <textarea name="reviewNote" defaultValue={reviewing?.reviewNote || ''} rows={4} className="coeer-focus mt-2 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm" />
+                        <textarea name="reviewNote" defaultValue={reviewing?.reviewNote || ''} rows={4} className="coeer-field coeer-focus mt-2 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-2 text-sm" />
                     </label>
                     <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setReviewing(null)}>取消</Button><Button type="submit">保存</Button></div>
                 </form>

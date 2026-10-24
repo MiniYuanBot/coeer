@@ -3,9 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import type { SessionUser } from '../lib/types'
 import { Icon } from '../ui/Icon'
 import { navItems, adminNavItem } from './navItems'
+import { useDialog } from '../hooks/useDialog'
 
 export function CommandMenu({ open, onClose, user }: { open: boolean; onClose: () => void; user: SessionUser }) {
-    const dialog = React.useRef<HTMLDialogElement>(null)
+    const dialog = useDialog(open, '[data-command-trigger]')
     const input = React.useRef<HTMLInputElement>(null)
     const resultsRef = React.useRef<HTMLDivElement>(null)
     const [query, setQuery] = React.useState('')
@@ -22,14 +23,13 @@ export function CommandMenu({ open, onClose, user }: { open: boolean; onClose: (
         if (open) {
             setQuery('')
             setSelected(0)
-            if (!dialog.current?.open) dialog.current?.showModal()
             input.current?.focus()
-        } else dialog.current?.close()
+        }
     }, [open])
     React.useEffect(() => { resultsRef.current?.children[active]?.scrollIntoView({ block: 'nearest' }) }, [active])
     const choose = (to: string) => { onClose(); void navigate({ to: to as any }) }
     return (
-        <dialog ref={dialog} className="coeer-command" aria-label="搜索页面" onCancel={onClose} onClose={onClose}
+        <dialog ref={dialog} className="coeer-command coeer-surface-floating" aria-label="搜索页面" onCancel={onClose} onClose={onClose}
             onClick={(event) => {
                 if (event.target !== event.currentTarget) return
                 const bounds = event.currentTarget.getBoundingClientRect()
@@ -40,7 +40,7 @@ export function CommandMenu({ open, onClose, user }: { open: boolean; onClose: (
                 <input ref={input} value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0) }}
                     role="combobox" aria-expanded={open} aria-controls="coeer-page-results"
                     aria-autocomplete="list" aria-activedescendant={filtered.length ? 'coeer-command-' + active : undefined}
-                    aria-label="搜索页面名称" placeholder="跳转到页面…" className="h-14 min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    aria-label="搜索页面名称" placeholder="跳转到页面…" className="coeer-field h-14 min-w-0 flex-1 bg-transparent text-sm outline-none"
                     onKeyDown={(event) => {
                         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                             event.preventDefault()
@@ -48,18 +48,18 @@ export function CommandMenu({ open, onClose, user }: { open: boolean; onClose: (
                         }
                         if (event.key === 'Enter' && filtered[active]) { event.preventDefault(); choose(filtered[active].to) }
                     }} />
-                <button type="button" onClick={onClose} aria-label="关闭搜索" className="coeer-focus rounded p-1 text-muted-foreground"><Icon name="x" /></button>
+                <button type="button" onClick={onClose} aria-label="关闭搜索" className="coeer-focus coeer-icon-button coeer-dialog-close text-muted-foreground hover:bg-muted"><Icon name="x" /></button>
             </div>
             <div id="coeer-page-results" role="listbox" aria-label="页面" ref={resultsRef} className="coeer-scrollbar max-h-[45dvh] overflow-y-auto p-2">
                 {filtered.map((item, index) => (
                     <button key={item.to} id={'coeer-command-' + index} role="option" aria-selected={index === active} type="button" onClick={() => choose(item.to)}
-                        className={'coeer-focus flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[13px] ' + (index === active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60')}>
+                        className={'coeer-focus flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-[13px] ' + (index === active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted')}>
                         <Icon name={item.icon} /><span>{item.label}</span>{index === active ? <span className="ml-auto text-xs text-muted-foreground">Enter</span> : null}
                     </button>
                 ))}
                 {!filtered.length ? <p className="px-3 py-8 text-center text-[13px] text-muted-foreground">未找到页面，试试“反馈”或“活动”。</p> : null}
             </div>
-            <div className="flex gap-4 border-t border-border px-4 py-2.5 text-[11px] text-muted-foreground"><span>方向键选择</span><span>Enter 打开</span><span className="ml-auto">Esc 关闭</span></div>
+            <div className="flex gap-4 border-t border-border px-4 py-2.5 text-xs text-muted-foreground"><span>方向键选择</span><span>Enter 打开</span><span className="ml-auto">Esc 关闭</span></div>
         </dialog>
     )
 }

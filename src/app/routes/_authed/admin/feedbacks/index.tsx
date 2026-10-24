@@ -95,7 +95,7 @@ function AdminFeedbacksPage() {
                     aria-label="按反馈状态筛选"
                     value={status || ''}
                     onChange={(e) => navigate({ to: '/admin/feedbacks', search: { status: e.target.value as FeedbackStatus || undefined, search, page: 1 } })}
-                    className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm"
+                    className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm"
                 >
                     <option value="">全部状态</option>
                     <option value="pending">待审核</option>
@@ -113,7 +113,7 @@ function AdminFeedbacksPage() {
                 {feedbacks.length ? (
                     <TableScroll label="反馈管理表">
                         <table className="w-full min-w-[760px] text-sm">
-                            <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
+                            <thead className="border-b border-[hsl(var(--border))] bg-muted text-left text-xs text-[hsl(var(--muted-foreground))]">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">反馈</th>
                                     <th className="px-4 py-3 font-medium">提交人</th>
@@ -197,7 +197,7 @@ function ReviewModal({
             >
                 <label className="block text-sm font-medium">
                     <span>审核状态</span>
-                    <select name="status" className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                    <select name="status" className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                         <option value="processing">处理中</option>
                         <option value="resolved">已解决</option>
                         <option value="invalid">无效</option>
@@ -206,7 +206,7 @@ function ReviewModal({
                 </label>
                 <label className="block text-sm font-medium">
                     <span>公开性</span>
-                    <select name="isPublic" className="coeer-focus mt-2 h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                    <select name="isPublic" className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                         <option value="true">公开</option>
                         <option value="false">不公开</option>
                     </select>
@@ -216,7 +216,7 @@ function ReviewModal({
                     <textarea
                         name="note"
                         rows={4}
-                        className="coeer-focus mt-2 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm"
+                        className="coeer-field coeer-focus mt-2 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-2 text-sm"
                         placeholder="说明处理原因，备注会进入状态记录。"
                     />
                 </label>

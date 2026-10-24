@@ -47,7 +47,7 @@ function EditPostPage() {
             <SectionHeader level="h2" title="编辑帖子" description={`更新 ${group.name} 中的帖子内容。`} />
 
             <Card className="rounded-lg p-5">
-                {error ? <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</div> : null}
+                {error ? <div className="mb-4 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">{error}</div> : null}
                 <form key={post.id} onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <span className="text-sm font-medium">帖子类型</span>
@@ -56,7 +56,7 @@ function EditPostPage() {
 
                     <label className="block">
                         <span className="text-sm font-medium">标题</span>
-                        <input name="title" required maxLength={200} defaultValue={post.title} className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                        <input name="title" required maxLength={200} defaultValue={post.title} className="coeer-field coeer-focus mt-2 h-11 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                     </label>
 
                     <MarkdownEditor label="内容" name="content" required rows={10} maxLength={10000} defaultValue={post.content} disabled={isSubmitting} />

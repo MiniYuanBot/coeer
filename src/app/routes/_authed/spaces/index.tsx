@@ -98,7 +98,7 @@ function SpacesPage() {
             ) : (
                 <>
                     <p className="text-xs text-muted-foreground">共 {page.total} 处空间</p>
-                    <div className="divide-y divide-border">
+                    <div className="coeer-list-panel divide-y divide-border px-4">
                         {page.items.map((space) => (
                             <SpaceRow key={space.id} space={space} date={date} />
                         ))}
@@ -162,7 +162,7 @@ function SpaceRow({ space, date }: { space: Space; date: string }) {
                         />
                     ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                     {syncLabel(availability.data?.observedAt)}
                 </p>
             </div>

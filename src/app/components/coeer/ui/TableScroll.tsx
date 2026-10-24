@@ -16,6 +16,6 @@ export function TableScroll({ label, children }: { label: string; children: Reac
     return <div className="min-w-0">
         <div ref={ref} role="region" aria-label={label} tabIndex={overflow ? 0 : undefined}
             className="coeer-focus coeer-table-scroll">{children}</div>
-        {overflow ? <p className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground">左右滚动查看完整表格，可聚焦后使用方向键。</p> : null}
+        {overflow ? <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">左右滚动查看完整表格，可聚焦后使用方向键。</p> : null}
     </div>
 }

@@ -1,9 +1,14 @@
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric' })
+const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
 export function formatDate(value?: string | Date | null) {
     if (!value) return '刚刚'
-    return new Date(value).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? date.toString() : dateFormatter.format(date)
 }
 
 export function formatDateTime(value?: string | Date | null) {
     if (!value) return '待定'
-    return new Date(value).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? date.toString() : dateTimeFormatter.format(date)
 }

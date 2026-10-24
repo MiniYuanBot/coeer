@@ -27,7 +27,7 @@ export function MediaPreview({ src, alt, icon = 'gift', className, preset }: {
     const imageSrc = src ? legacyDemoMedia.get(src) ?? src : undefined
     const spec = preset ? IMAGE_SPECS[preset] : undefined
     return <div style={spec ? { aspectRatio: `${spec.width}/${spec.height}` } : undefined}
-        className={cn('relative grid w-full place-items-center overflow-hidden bg-muted/60 text-muted-foreground', !spec && 'aspect-video max-h-44', className)}>
+        className={cn('relative grid w-full place-items-center overflow-hidden bg-muted text-muted-foreground', !spec && 'aspect-video max-h-44', className)}>
         {imageSrc && failedSrc !== imageSrc ? <img src={imageSrc} alt={alt} loading="lazy" decoding="async"
             onError={() => setFailedSrc(imageSrc)} className={cn('absolute inset-0 h-full w-full', spec ? 'object-contain' : 'object-cover')} /> :
             <Icon name={icon} className="h-8 w-8" />}

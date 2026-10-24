@@ -37,7 +37,7 @@ export function PostContent({ content, className, collapsedHeight = 168 }: {
             style={{ '--post-preview-height': `${collapsedHeight}px` } as CSSProperties}
             data-collapsed={!expanded || undefined} data-overflow={overflow || undefined}
             onFocusCapture={() => { if (overflow) setExpanded(true) }}>
-            <div ref={body} className="flow-root"><Markdown content={content} /></div>
+            <div ref={body} className="flow-root"><Markdown content={content} className="text-sm leading-[1.7]" /></div>
         </div>
         {overflow ? <Button variant="ghost" size="sm" className="mt-1 px-0 text-primary hover:bg-transparent"
             aria-expanded={expanded} aria-controls={id} onClick={toggle}>

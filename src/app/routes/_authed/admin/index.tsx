@@ -84,8 +84,8 @@ function AdminDashboardPage() {
                     <div className="coeer-grid">
                         {group.links.map((item) => (
                             <Link key={item.to} to={item.to} className="coeer-focus group block rounded-lg">
-                                <Card className="flex h-full items-start gap-3 p-4 transition-colors group-hover:bg-muted/40">
-                                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border bg-muted/50 text-muted-foreground">
+                                <Card className="flex h-full items-start gap-3 p-4 transition-colors group-hover:bg-muted">
+                                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border bg-muted text-muted-foreground">
                                             <Icon name={item.icon} />
                                         </div>
                                     <div className="min-w-0 flex-1">

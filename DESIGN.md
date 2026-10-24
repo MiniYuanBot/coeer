@@ -1,88 +1,133 @@
 ---
 name: "COEER"
-description: "以 Linear 产品界面为参考的学院社区工作区；浅色默认，可切换深色。"
+description: "低饱和紫灰画布、导航与浮层毛玻璃、实底正文的全宽学院社区工作区；支持深浅主题与移动端。"
+contract: "coeer-glass-v1"
+status: "implemented"
 colors:
-  background: "hsl(0 0% 100%)"
-  foreground: "hsl(240 6% 15%)"
-  card: "hsl(0 0% 100%)"
-  card-foreground: "hsl(240 6% 15%)"
-  sidebar: "hsl(240 14% 97%)"
-  muted: "hsl(240 8% 96%)"
-  muted-foreground: "hsl(240 4% 43%)"
-  border: "hsl(240 7% 90%)"
-  ring: "hsl(243 48% 56%)"
-  primary: "hsl(243 48% 56%)"
+  background: "hsl(260 18% 95%)"
+  foreground: "hsl(250 16% 18%)"
+  card: "hsl(255 20% 99%)"
+  card-foreground: "hsl(250 16% 18%)"
+  sidebar: "hsl(258 20% 96%)"
+  chrome: "hsl(258 20% 98%)"
+  overlay: "hsl(255 20% 99%)"
+  muted: "hsl(258 16% 93%)"
+  muted-foreground: "hsl(252 10% 34%)"
+  border: "hsl(252 14% 84%)"
+  control-border: "hsl(252 10% 46%)"
+  ring: "hsl(252 42% 44%)"
+  primary: "hsl(252 42% 44%)"
   primary-foreground: "hsl(0 0% 100%)"
-  primary-soft: "hsl(243 55% 96%)"
-  success: "hsl(158 64% 30%)"
-  warning: "hsl(35 90% 32%)"
-  danger: "hsl(0 65% 46%)"
-  inverted: "hsl(240 6% 15%)"
+  primary-hover: "hsl(252 42% 39%)"
+  primary-soft: "hsl(252 32% 94%)"
+  success: "hsl(158 56% 28%)"
+  success-soft: "hsl(158 24% 94%)"
+  warning: "hsl(35 88% 30%)"
+  warning-soft: "hsl(38 48% 94%)"
+  danger: "hsl(0 64% 42%)"
+  danger-foreground: "hsl(0 0% 100%)"
+  danger-hover: "hsl(0 64% 37%)"
+  danger-soft: "hsl(0 36% 96%)"
+  inverted: "hsl(250 16% 18%)"
   inverted-foreground: "hsl(0 0% 100%)"
-  dark-background: "hsl(240 7% 10%)"
-  dark-foreground: "hsl(240 5% 92%)"
-  dark-card: "hsl(240 6% 12%)"
-  dark-card-foreground: "hsl(240 5% 92%)"
-  dark-sidebar: "hsl(240 7% 8%)"
-  dark-muted: "hsl(240 5% 16%)"
-  dark-muted-foreground: "hsl(240 5% 64%)"
-  dark-border: "hsl(240 5% 21%)"
-  dark-ring: "hsl(243 75% 73%)"
-  dark-primary: "hsl(243 75% 73%)"
-  dark-primary-foreground: "hsl(240 12% 12%)"
-  dark-primary-soft: "hsl(243 25% 18%)"
-  dark-success: "hsl(158 48% 58%)"
-  dark-warning: "hsl(38 85% 65%)"
-  dark-danger: "hsl(0 76% 70%)"
-  dark-inverted: "hsl(240 5% 92%)"
-  dark-inverted-foreground: "hsl(240 7% 10%)"
+  canvas-tint-a: "hsl(260 22% 78%)"
+  canvas-tint-b: "hsl(238 18% 82%)"
+  glass-highlight: "hsl(0 0% 100%)"
+  dark-background: "hsl(252 16% 10%)"
+  dark-foreground: "hsl(252 12% 93%)"
+  dark-card: "hsl(252 14% 14%)"
+  dark-card-foreground: "hsl(252 12% 93%)"
+  dark-sidebar: "hsl(252 16% 12%)"
+  dark-chrome: "hsl(252 16% 14%)"
+  dark-overlay: "hsl(252 16% 16%)"
+  dark-muted: "hsl(252 14% 19%)"
+  dark-muted-foreground: "hsl(252 10% 76%)"
+  dark-border: "hsl(252 12% 28%)"
+  dark-control-border: "hsl(252 10% 62%)"
+  dark-ring: "hsl(252 62% 76%)"
+  dark-primary: "hsl(252 62% 76%)"
+  dark-primary-foreground: "hsl(252 20% 12%)"
+  dark-primary-hover: "hsl(252 62% 80%)"
+  dark-primary-soft: "hsl(252 26% 22%)"
+  dark-success: "hsl(158 44% 64%)"
+  dark-success-soft: "hsl(158 20% 18%)"
+  dark-warning: "hsl(38 85% 70%)"
+  dark-warning-soft: "hsl(38 24% 18%)"
+  dark-danger: "hsl(0 74% 74%)"
+  dark-danger-foreground: "hsl(252 20% 12%)"
+  dark-danger-hover: "hsl(0 74% 79%)"
+  dark-danger-soft: "hsl(0 24% 19%)"
+  dark-inverted: "hsl(252 12% 93%)"
+  dark-inverted-foreground: "hsl(252 16% 10%)"
+  dark-canvas-tint-a: "hsl(260 22% 44%)"
+  dark-canvas-tint-b: "hsl(238 20% 36%)"
+  dark-glass-highlight: "hsl(252 30% 90%)"
+  chrome-muted-foreground: "hsl(252 10% 25%)"
+  dark-chrome-muted-foreground: "hsl(252 10% 90%)"
+  chrome-ring: "hsl(252 42% 38%)"
+  dark-chrome-ring: "hsl(252 62% 86%)"
+  chrome-control-border: "hsl(252 10% 34%)"
+  dark-chrome-control-border: "hsl(252 10% 78%)"
 typography:
   display:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "32px"
     fontWeight: 600
     lineHeight: 1.35
-    letterSpacing: "-0.03em"
+    letterSpacing: "0"
   headline:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "22px"
     fontWeight: 600
-    lineHeight: 1.25
-    letterSpacing: "-0.025em"
+    lineHeight: 1.4
+  section:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
+    fontSize: "14px"
+    fontWeight: 600
+    lineHeight: 1.5
   title:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "15px"
     fontWeight: 500
+    lineHeight: 1.5
   body:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "14px"
     fontWeight: 400
+    lineHeight: 1.7
     fontFeature: "'cv02', 'cv03', 'cv04', 'cv11'"
+  reading:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.8
   copy:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "13px"
     fontWeight: 400
-    lineHeight: "24px"
+    lineHeight: "22px"
   field:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "13px"
     fontWeight: 400
+    lineHeight: 1.5
   label:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
     fontSize: "13px"
     fontWeight: 500
+    lineHeight: 1.5
   caption:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "11px"
+    fontSize: "12px"
     fontWeight: 500
-    lineHeight: "16px"
+    lineHeight: "18px"
 rounded:
   sm: "4px"
-  nav: "5px"
-  md: "6px"
-  lg: "8px"
-  dialog: "10px"
-  xl: "12px"
+  nav: "8px"
+  md: "8px"
+  lg: "12px"
+  dialog: "16px"
+  xl: "20px"
 spacing:
   "4": "4px"
   "8": "8px"
@@ -92,6 +137,195 @@ spacing:
   "24": "24px"
   "32": "32px"
   "40": "40px"
+  "48": "48px"
+  "64": "64px"
+layout:
+  sidebarWidth: "224px"
+  topbarHeight: "52px"
+  guestHeaderHeight: "64px"
+  workspaceMaxWidth: "none"
+  workspaceGutter: "32px"
+  mobileGutter: "16px"
+  workspacePaddingBlock: "28px 64px"
+  mobilePaddingBlock: "24px 48px"
+  sectionGap: "24px"
+  columnGap: "32px"
+  cardGap: "16px"
+  readingMeasure: "76ch"
+  fieldMeasure: "704px"
+  authMeasure: "340px"
+  publicMaxWidth: "84rem"
+  publicGutter: "24px"
+  detailAside: "clamp(280px, 26%, 400px)"
+  detailStickyTop: "76px"
+  homeAside: "264px"
+  collectionMin: "280px"
+  collectibleMin: "200px"
+  drawerWidth: "min(288px, 86vw)"
+  modalMaxWidth: "512px"
+  commandMaxWidth: "560px"
+  overlayViewportGutter: "16px"
+  commandTop: "16vh"
+  mobileCommandTop: "10vh"
+  buttonHeight: "36px"
+  buttonXs: "28px"
+  buttonSm: "32px"
+  buttonLg: "44px"
+  buttonIcon: "32px"
+  touchTarget: "44px"
+  touchFieldFont: "16px"
+  displayWideFont: "44px"
+  authTitleFont: "25px"
+  focusWidth: "2px"
+  focusOffset: "3px"
+  homePreviewHeight: "140px"
+  cropMobileMaxHeight: "32dvh"
+materials:
+  canvas:
+    colorRole: "background"
+    opacity: 1
+    blur: "0px"
+    shadow: "none"
+  chrome:
+    colorRole: "chrome"
+    solidFallbackRole: "sidebar"
+    blur: "16px"
+    shadow: "shadow-chrome"
+    borderRole: "border"
+    light:
+      opacity: 0.68
+      highlightOpacity: 0.76
+      background: "hsl(var(--chrome) / .68)"
+    dark:
+      opacity: 0.72
+      highlightOpacity: 0.22
+      background: "hsl(var(--chrome) / .72)"
+    touch:
+      condition: "(max-width: 639px), (pointer: coarse)"
+      blur: "8px"
+      lightOpacity: 0.84
+      darkOpacity: 0.88
+    highlightShape: "inset 0 1px 0"
+    allowed: ["sidebar","topbar","guest-header"]
+    textRoles:
+      mutedForeground: "chrome-muted-foreground"
+      ring: "chrome-ring"
+      controlBorder: "chrome-control-border"
+  floating:
+    colorRole: "overlay"
+    solidFallbackRole: "overlay"
+    blur: "20px"
+    shadow: "shadow-floating"
+    borderRole: "border"
+    light:
+      opacity: 0.84
+      highlightOpacity: 0.8
+      background: "hsl(var(--overlay) / .84)"
+    dark:
+      opacity: 0.86
+      highlightOpacity: 0.24
+      background: "hsl(var(--overlay) / .86)"
+    touch:
+      condition: "(max-width: 639px), (pointer: coarse)"
+      blur: "8px"
+      lightOpacity: 0.92
+      darkOpacity: 0.94
+    highlightShape: "inset 0 1px 0"
+    allowed: ["modal","drawer","command-menu","toast","existing-popup"]
+  reading:
+    colorRole: "card"
+    opacity: 1
+    blur: "0px"
+    shadow: "none"
+    borderRole: "border"
+  subtle:
+    colorRole: "muted"
+    opacity: 1
+    blur: "0px"
+    shadow: "none"
+  scrim:
+    light: "hsl(252 20% 10% / .36)"
+    dark: "hsl(252 25% 3% / .60)"
+    blur: "0px"
+canvas:
+  maxGradients: 2
+  animated: false
+  light: "radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .72) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .64) 0%, transparent 78%)"
+  dark: "radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .62) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .56) 0%, transparent 78%)"
+  layer: "body::before; fixed viewport; pointer-events:none; no backdrop-filter"
+shadows:
+  shadow-chrome:
+    light: "0 4px 16px hsl(250 20% 20% / .07)"
+    dark: "0 4px 16px hsl(252 35% 3% / .20)"
+  shadow-floating:
+    light: "0 12px 32px hsl(250 20% 20% / .12), 0 2px 6px hsl(250 20% 20% / .06)"
+    dark: "0 12px 32px hsl(252 35% 3% / .34), 0 2px 6px hsl(252 35% 3% / .20)"
+motion:
+  state-color: "120ms ease-out"
+  button-color: "150ms ease-out"
+  overlay-enter: "160ms ease-out"
+  reduced-motion: "0ms"
+breakpoints:
+  sm: "640px"
+  lg: "1024px"
+  xl: "1280px"
+containerQueries:
+  workspaceDetail: "880px"
+  workspaceHome: "880px"
+  workspaceBookingRow: "880px"
+  workspaceProfileSummary: "720px"
+  workspaceProfileContent: "1080px"
+  settings: "640px"
+  adminForm: "560px"
+  markdownEditor: "720px"
+zIndex:
+  content: 0
+  localSticky: 20
+  topbar: 30
+  sidebar: 40
+  pageProgress: 60
+  toast: 70
+  skipLink: 100
+  modal: "browser-top-layer"
+accessibility:
+  textContrast: 4.5
+  largeTextContrast: 3
+  nonTextContrast: 3
+  bodyContrastGoal: 7
+  chromeWorstCaseMutedContrast:
+    light: 4.79
+    dark: 5.08
+  contrastEvidence: "单层 sRGB 颜色合成推算，非浏览器实测；实际合成结果必须重新验收。"
+  toastMinDurationMs: 5000
+  toastPauseOnHoverOrFocus: true
+  persistentErrorsInline: true
+performance:
+  desktopPersistentBackdropLimit: 2
+  desktopTransientBackdropLimit: 3
+  touchBackdropLimit: 2
+  maxBlurPx: 20
+  nestedBackdrop: false
+  animatedBackdrop: false
+  addedVisualRuntimeDependencies: 0
+  targets:
+    lcpP75Ms: 2500
+    inpP75Ms: 200
+    clsP75: 0.1
+    desktopScrollFrameP95Ms: 20
+    mobileScrollFrameP95Ms: 33
+    maxFrameP95RegressionPercent: 10
+    maxAddedMainThreadTaskMs: 50
+  measurementStatus: "lab-production-fixture-measured"
+  fallbackOrder: ["opaque-fill-and-zero-blur","remove-canvas-gradients","remove-decorative-shadows"]
+  evidence: "implementation-review.md"
+fallback:
+  default: "opaque"
+  enhancement: "@supports standard or -webkit-backdrop-filter"
+  reducedTransparency: "opaque; no blur, gradients or highlight"
+  moreContrast: "opaque; no blur, gradients, highlight or shadows; stronger boundaries"
+  forcedColors: "system colors; no blur, gradients or shadows"
+  reducedMotion: "instant state changes; no decorative motion"
+  print: "white background, dark text, no navigation, gradients, blur or shadows"
 components:
   button-primary:
     typography: "{typography.label}"
@@ -107,6 +341,7 @@ components:
     height: "36px"
     backgroundColor: "{colors.card}"
     textColor: "{colors.foreground}"
+    borderColor: "{colors.control-border}"
   button-outline:
     typography: "{typography.label}"
     rounded: "{rounded.md}"
@@ -114,6 +349,7 @@ components:
     height: "36px"
     backgroundColor: "transparent"
     textColor: "{colors.foreground}"
+    borderColor: "{colors.control-border}"
   button-ghost:
     typography: "{typography.label}"
     rounded: "{rounded.md}"
@@ -127,17 +363,18 @@ components:
     padding: "0 14px"
     height: "36px"
     backgroundColor: "{colors.danger}"
-    textColor: "{colors.primary-foreground}"
+    textColor: "{colors.danger-foreground}"
   button-danger-dark:
-    backgroundColor: "{colors.dark-danger}"
-    textColor: "{colors.dark-background}"
     typography: "{typography.label}"
     rounded: "{rounded.md}"
     padding: "0 14px"
     height: "36px"
+    backgroundColor: "{colors.dark-danger}"
+    textColor: "{colors.dark-danger-foreground}"
   search-input:
-    backgroundColor: "{colors.background}"
+    backgroundColor: "{colors.card}"
     textColor: "{colors.foreground}"
+    borderColor: "{colors.control-border}"
     typography: "{typography.field}"
     rounded: "{rounded.md}"
     padding: "0 12px 0 32px"
@@ -146,6 +383,7 @@ components:
     textColor: "{colors.muted-foreground}"
     rounded: "{rounded.nav}"
     padding: "7px 10px"
+    minHeight: "34px"
   badge-primary:
     backgroundColor: "{colors.primary-soft}"
     textColor: "{colors.primary}"
@@ -156,167 +394,126 @@ components:
     backgroundColor: "{colors.card}"
     textColor: "{colors.card-foreground}"
     rounded: "{rounded.lg}"
+    shadow: "none"
+    blur: "0px"
   feedback-row:
     textColor: "{colors.foreground}"
     padding: "12px 12px"
+    backgroundColor: "{colors.card}"
+  surface-chrome:
+    backgroundColor: "{materials.chrome.light.background}"
+    rounded: "0px"
+    blur: "16px"
+    shadow: "{shadows.shadow-chrome.light}"
+  surface-floating:
+    backgroundColor: "{materials.floating.light.background}"
+    rounded: "{rounded.dialog}"
+    blur: "20px"
+    shadow: "{shadows.shadow-floating.light}"
 ---
 
 # Design System: COEER
 
-## Overview
+版本：**coeer-glass-v1** · 2026-10-24。前端已接入本规范；代表页面的 Chromium 验证已完成，详细范围与遗留项见[实施与验收记录](.impeccable/implementation-review.md)。
 
-**Creative North Star: "学院社区工作区"**
+## 规范入口与依据
 
-COEER 采用用户指定的 Linear 产品界面语言：白色内容面、冷灰侧栏、石墨文字与低饱和紫色主操作。页面保持紧凑、清晰和克制，让学生在同一工作区浏览社区内容、跟进反馈并完成服务任务。
+[PRODUCT.md](PRODUCT.md) 定义产品能力和业务约束；[UI/UX 规范](.impeccable/ui-layout.md) 定义布局、材质、交互与模块应用；[design.json](.impeccable/design.json) 保存规范颜色与设计令牌。本文 frontmatter 是其同步镜像。外壳见 [AppShell 设计记录](.impeccable/surfaces/src-app-components-coeer-layout-appshell-tsx.md)，实施步骤见[分阶段重构计划](.impeccable/refactor-plan.md)。
 
-浅色是首次访问的默认主题，深色使用相同语义令牌切换为石墨画布。Inter 与中文系统无衬线字体共同承担界面排版；分隔线、状态图标、精简徽章和真实内容构成页面，组件形态由现有代码统一约束。
+实现沿用 React/TanStack/Tailwind 架构。颜色与尺寸位于 `src/app/styles/tokens.css`，材质与降级位于 `app.css`。代表页面使用真实前端组件与隔离 UI 数据验证，未连接真实预约写入。生产 Web Vitals 仍是目标，不能用实验室数据代替。
 
-**Key Characteristics:**
-- 紧凑侧栏、路径栏与左对齐内容区。
-- 低饱和紫色用于主操作、焦点和进行中状态。
-- 细边框、小圆角、平面层级；列表通过对齐和分隔线组织。
-- 浅色默认、深色可切换；键盘焦点和移动抽屉保持可用。
+## 视觉方向
 
-依据 `PRODUCT.md`、已确认的界面方向与当前源代码整理。主要实现位于 `src/app/styles/app.css` 以及 `components/coeer`；工作区首页、反馈列表、认证入口提供实际应用示例。界面图形使用现有 CSS 与内联 SVG，本次未生成或新增 raster 视觉资产。
+低饱和紫灰画布上使用最多两处静态柔和渐变。侧栏、顶栏与浮层使用半透明背景、背景模糊、细高光边缘和轻阴影；正文、信息流、表单与数据表使用更实的不透明表面。保留紧凑导航与清晰行式信息结构，主操作使用协作紫。
 
-## Colors
+首次默认浅色，保留用户保存的深色选择，首帧前应用主题。全站消费相同语义令牌；不在模块内另写主题颜色。
 
-中性底色承担大部分面积，紫色集中在操作与当前状态；成功绿、待处理琥珀色与错误红保留各自语义。规范值位于 frontmatter，沿用源代码的 HSL 表达。
+## 颜色与令牌
 
-### Primary
+frontmatter 的 colors 与 design.json 的 colorMeta canonical 一致；dark- 前缀表示深色覆写。现有 CSS 继续使用 HSL 三元组与 `hsl(var(--token))`，新增 alpha 只用于背景填充，不能降低包含文字的整个容器的不透明度。
 
-- **协作紫（primary / ring）**：主按钮、选中导航图标、链接、焦点和处理中状态。
-- **紫色浅底（primary-soft）**：主题内的轻量强调底色、头像与主色徽章；文字使用 primary。
-- **主操作文字（primary-foreground）**：适配当前主题的按钮文字。
+- background / canvas-tint-a / canvas-tint-b：紫灰画布与静态渐变。
+- card / card-foreground：实底内容；sidebar：导航不透明回退；chrome / overlay：玻璃底色。
+- foreground / muted-foreground：正文与次要文字；border：装饰分隔；control-border / ring：控件边界与焦点。
+- primary、primary-foreground、primary-hover、primary-soft：主操作与实底选中层。
+- success / warning / danger 和对应的 soft：业务状态文字与不透明浅底，配合标签和图形；danger-foreground 与 danger-hover 专用于危险按钮。
+- inverted / inverted-foreground：既有反相用法；glass-highlight：内侧细高光基色。
 
-### Neutral
+新旧令牌迁移、完整作用域及消费规则见 UI/UX 规范。JSON 的 tonalRamp 只用于派生预览，生产颜色以 canonical 语义值为准，不从预览色阶任意取色。
 
-- **内容画布（background / foreground）**：页面与主要文字；深色切换到石墨画布和浅灰文字。
-- **独立表面（card / card-foreground）**：卡片、弹窗和命令菜单。
-- **冷灰侧栏（sidebar）**：稳定的导航区域，与内容面形成轻微色差。
-- **辅助层（muted / muted-foreground）**：筛选选中背景、悬停层和日期、描述等辅助文字。
-- **细分界（border）**：卡片边框、页面分隔线和表单边界。
-- **反相对比（inverted / inverted-foreground）**：现有业务页面使用的主题兼容对比令牌。
+## 材质与层级
 
-### Semantic states
+| 材质 | 浅 / 深 alpha | 桌面 blur | 触屏或小屏 | 用途 |
+| --- | --- | --- | --- | --- |
+| Canvas | 1 / 1 | 0 | 静态低对比渐变 | 根画布 |
+| Chrome | .68 / .72 | 16px | .84 / .88，8px | 侧栏、顶栏、游客页头 |
+| Floating | .84 / .86 | 20px | .92 / .94，8px | Modal、抽屉、命令菜单、Toast、已有弹出菜单 |
+| Reading | 1 / 1 | 0 | 同桌面 | 正文、卡片、表格、表单 |
+| Subtle | 1 / 1 | 0 | 同桌面 | 表头、辅助分区、代码和统计格 |
 
-success 表示已完成，warning 表示待处理，danger 表示错误或危险操作。反馈行还使用描边圆、半填充圆、对勾和叉号区分状态。frontmatter 中的 `dark-*` 是 `.dark` 对应的实际覆写值；两种主题均通过同一语义角色消费，不通过页面局部改色实现。
+Chrome 与 Floating 使用 1px 边界、内侧顶边高光及各自主题投影；遮罩只用 scrim，不做全屏 blur。固定于视口的单层背景提供可感知的透色，游客页头以 sticky 保持滚动后可见。Chrome 专用文字、边界与焦点角色保证降低填充 alpha 后仍可读。普通 Card 默认 Reading、无投影，hover 只改色；不逐行玻璃化，不嵌套 blur。浮层内的长文、裁剪与字段保持实底。
 
-**The Semantic Color Rule.** 主操作与进行中状态使用 primary；成功、待处理和错误沿用独立语义色，并配文字或图形表达状态。
+控件与导航项 8px、普通内容容器 12px、浮层 16px、Badge/键帽 4px 圆角。侧栏与顶栏贴边，不增加外边距或大型外壳圆角。
 
-## Typography
+普通层级为内容 0、局部 sticky 20、顶栏 30、侧栏 40、进度 60、Toast 70、跳转链接 100。原生 modal dialog 位于浏览器 top layer，不能用普通 z-index 覆盖；当前模态的关键结果与错误须在其内部可见。
 
-**Display Font:** Inter，中文回退 PingFang SC / Microsoft YaHei，再回退系统 sans-serif。
-**Body Font:** 与 display 相同；拉丁字符开启 cv02、cv03、cv04、cv11 特性。
+## 布局与响应式
 
-Inter 是已确认 Linear 界面方向的一部分；不新增第二套展示字体。日期、表格和积分数值使用等宽数字。
+登录工作区占满侧栏以外的可用宽度，页面容器不设固定最大宽度。标题、主要操作、父路由的一次模块导航、筛选、主体与分页共用左右边界。局部正文默认 76ch、账号字段最多 704px；这些限制不收窄整页。
 
-### Hierarchy
+| 项目 | 规范 |
+| --- | --- |
+| 桌面外壳 | viewport ≥1024px，侧栏 224px，sticky 顶栏 52px |
+| 页边距 | ≥640px：左右 32px、上下 28/64px；<640px：左右 16px、上下 24/48px |
+| 区块与分栏 | 区块 24px、分栏 32px、卡片 16px；4px 间距体系 |
+| 详情与预约行 | workspace ≥880px 分栏；详情辅助区 `clamp(280px, 26%, 400px)`，不足时堆叠 |
+| 首页 | workspace ≥880px 主栏 + 264px 信息栏 |
+| 个人中心 | workspace ≥720px 摘要 2:1，≥1080px 设置/记录 3:2；settings 自身 ≥640px 说明/字段分栏 |
+| 表单/编辑器 | admin-form ≥560px 两列；markdown-editor ≥720px 编辑/预览并排 |
+| 集合网格 | 普通卡片最小 280px、收藏卡片最小 200px，按容器自适应 |
+| 移动抽屉 | viewport <1024px，宽 `min(288px, 86vw)`，高 100dvh |
+| 公开与认证例外 | 游客页头 64px，公开容器保留 84rem 上限；认证字段区 340px。这些局部例外不用于登录工作区 |
 
-- **Display**：游客首页主介绍；手机使用 frontmatter 的 display，sm 起增至（44px），保持（1.35）行高。
-- **Headline**：工作区页面标题，紧凑字距与（1.25）行高；认证标题使用（25px）的局部变体。
-- **Title**：帖子、群组、活动等内容标题；部分章节标题使用（14px / 600）。
-- **Body**：基础界面文字。常见说明文案采用 copy，页面介绍最多（70ch）。
-- **Field / Label**：field 用于搜索字段，label 用于按钮与短操作；筛选与辅助标签也使用（12px）。
-- **Caption**：徽章、日期和元信息；避免让其承担正文阅读。
+分栏按内容容器判断；外壳显隐与全局页边距按 viewport。长昵称、邮箱、用途可换行。手机搜索独占一行，操作按空间换行；Tabs、表格、代码和公式只在自身区域滚动。触屏目标至少 44×44px，输入文字至少 16px，固定内容考虑安全区和软键盘。
 
-**The Task Hierarchy Rule.** 产品页标题、操作标签与辅助信息按已有角色分级；首页公开介绍的 display 字号不扩散到工作区列表。
+旧的 PageLayout reading/form 宽度变体、整页最大宽度与 workspace-width 描述已废止；PageLayout 保持现有全宽职责。
 
-## Layout
+## 排版、可读性与交互
 
-桌面在 lg（1024px）起固定左侧导航（224px），内容区上方为（52px）sticky 路径栏。`--sidebar-width`、`--workspace-gutter` 与 `--workspace-width` 统一控制外壳尺寸；桌面左右各留（32px），内容最大（1440px），上下内边距为（28px / 64px）。路径栏、页面标题、筛选和内容共用左边界。
+沿用 Inter 和中文系统无衬线回退，中文正文无负字距，日期/积分/表格使用等宽数字。游客 display 为 32px，sm 起 44px；页面标题 22px/600/1.4；分区标题 14px/600；内容标题 15px/500；基础正文 14px/1.7，详情长文 16px/1.8；说明和桌面字段 13px；元信息与 Badge 12px。完整值见 frontmatter。
 
-`PageLayout` 提供 full、reading（896px）、form（704px）三种宽度，均左对齐；列表使用完整画布，详情限制阅读长度，填写任务限制字段长度。分区间距统一（24px）。`SectionHeader` 用两列网格排列标题与操作，说明位于下一行；手机上说明占满整行，日期字段另起一行。群组内的子页面使用 h2，避免重复的页面主标题。
+按 WCAG 2.2 AA 验收最终合成背景：普通文字至少 4.5:1、大字和必要非文本至少 3:1，正文推荐 7:1。装饰边界可弱于控件边界；字段使用 control-border，焦点 2px ring + 3px offset。浅/深 Chrome 专用次要文字的最不利背景推算约 4.79/5.08:1，浏览器回归同时核对实际合成颜色。玻璃上的状态文字采用不透明语义浅底，不能仅靠增加 blur 修复不达标对比度。
 
-包含辅助信息的详情和填写任务可采用 `.coeer-detail-page`（最大 1200px）配合 `DetailLayout`：内容区达到 880px 时，正文与 280px 辅助栏并排，更窄时顺序堆叠。正文限制约 76ch，避免为填满画布而拉长文本。活动可将时间、地点和报名在窄屏上排到说明前；帖子信息和反馈提示排在主要内容后。多按钮的页面头使用 `actionLayout="stack-on-mobile"`，在可用宽度小于 640px 时将操作独立成行。
+保留原生 dialog、焦点进入/返回、Esc、正确内外点击与背景滚动锁；命令菜单保留 Cmd/Ctrl+K、方向键与 Enter，仅搜索已有页面。页面导航使用链接，筛选按钮有 aria-pressed。pending 保留标签与表单输入、阻止重复提交；错误与字段关联，背景刷新失败保留已有内容。普通 Toast 至少 5s、可暂停和关闭，重要错误持久内联，模态任务反馈在活动上下文中显示。
 
-手机低于（640px）时，工作区与公开页容器保留左右各（16px）空隙，工作区上下内边距为（24px / 48px）。lg 以下使用顶部导航触发器和原生 dialog 抽屉，抽屉宽度为 `min(288px, 86vw)`。sm（640px）起反馈行显示独立的状态、日期列；更窄时它们进入标题下方元信息行。
+颜色过渡 120ms，按钮 150ms，浮层最多 160ms 的 opacity 与 4px 位移。禁止动画 blur、投影、背景位置和 `transition: all`。减少动画偏好下即时切换非必要效果，真实加载仍有文字。
 
-登录首页在内容区达到（880px）时使用弹性主栏和（264px）信息侧栏，栏间距（32px），侧栏以细线分隔并保留（24px）内边距；更窄时顺序堆叠。集合网格使用 `.coeer-grid`，按内容区自动排列最小（280px）的列，避免桌面侧栏挤压三列卡片。游客首页保留品牌、主题切换和登录/注册的（64px）页头，公开介绍与动态左对齐；公开信息侧栏为（300px）。认证页保持最大（340px）的居中表单。
+## 公共组件与模块应用
 
-空间以现有的（4px）节奏为主，紧凑控件也使用（6px / 10px / 14px）微调。内容块通常间隔（24px / 32px / 40px）；卡片本身不规定统一内边距，由用途采用（16px / 20px）。
+复用现有 components/coeer；Card 默认实底，PageLayout 全宽，DetailLayout/SettingsSection 按容器分栏。Button、Field、Badge、Alert、FilterPanel、NavTabs、TableScroll、Markdown/Editor、媒体上传裁剪和覆盖层的状态、尺寸、焦点及降级契约见 [UI/UX 规范](.impeccable/ui-layout.md)。JSON 中 HTML/CSS 是静态设计预览；实际运行代码位于现有组件目录。
 
-## Elevation & Depth
+| 模块 | 应用重点 |
+| --- | --- |
+| 首页、群组、帖子、公告、通知、收藏 | 实底信息流与长文，保持原有置顶/混排/展开及阅读权限，通知入口与页面搜索沿用现有能力 |
+| 反馈、活动 | 行式状态与详情分栏；处理进度、时间/地点、报名或提交操作清晰 |
+| 空间预约、宿舍 | 实底日期/时段/问卷/结果；保留异步申请、真实状态、后台处理及权限语义 |
+| 商城、卡片、成就 | 实底图文网格，图片原色；商品 16:9、卡面 3:4、图标 1:1，稀有度与进度同时有文字 |
+| 个人中心 | 全宽设置与记录；字段局部限宽，说明和结果留在对应表单 |
+| 全部管理模块与预约管理 | 表格、审核、编辑、白名单和审计实底；复用外壳与主题，保留危险确认和服务判断 |
+| 游客与认证 | 公开页头可玻璃，认证字段实底，保存错误与登录跳转流程 |
 
-公共组件没有投影令牌。卡片、提示与列表以表面色、细边框和分隔线呈现层级；hover 改色，不上浮。弹窗、导航抽屉与命令菜单使用原生 dialog 的遮罩（`rgb(18 18 24 / .35)`），以覆盖关系建立前后层次。
+逐模块路由、状态细则、首页条数/折叠/置顶、图片上传裁剪与预约异步契约完整保存在 UI/UX 规范中，后续重构不能因更换材质而改变它们。
 
-**The Flat Surface Rule.** 卡片与列表在默认状态保持平面，以边框、分隔线和表面色组织层级；悬停仅改变颜色。
+## 性能与降级
 
-交互颜色通常在（120ms ease-out）内切换，按钮使用（150ms）颜色过渡。加载条、加载旋转只表达真实 pending 状态；路由进度条与反馈更新提示在 hydration 后启用。系统减少动态效果时，动画和过渡被缩短至（0.01ms）。
+先定义 sidebar/overlay 不透明回退，再通过标准或 WebKit backdrop-filter 能力检测开启玻璃。桌面常驻 blur 区域最多 2、临时含浮层最多 3；触屏/小屏最多 2，blur 8px；绝不超过 20px，不在整个工作区、遮罩、列表行或卡片网格使用 blur，不常驻 will-change，不引入视觉运行库。
 
-## Shapes
+无支持、减少透明、增强对比或实测性能超预算时回退实底；强制颜色使用系统颜色并保留边界/状态/焦点；减少动画独立处理；打印为白底深字且移除装饰。默认实底确保增强样式未加载时仍可读，不能留下只有透明而没有模糊的版本。
 
-控件使用轻微圆角（6px），侧栏导航使用（5px），普通容器与 Modal 使用（8px），命令菜单使用（10px）。徽章和键帽使用（4px）；空状态图标框使用（12px）。头像、状态圆与进度条端点保留圆形形态，它们不改变普通容器的小圆角规则。所有普通边框为（1px）。
+生产目标 p75 LCP ≤2.5s、INP ≤200ms、CLS ≤0.1；实验室滚动帧间隔 p95 桌面 ≤20ms、代表移动设备 ≤33ms，同条件相比实底基线恶化不超过 10%，不引入 >50ms 的视觉主线程长任务。已完成优化构建的隔离页面实底/玻璃对照及滚动 trace；数值和测试边界见实施记录。生产 p75 指标尚未采样，超预算场景仍按实底交付。
 
-## Components
+## 分阶段实施
 
-### Buttons
+P0 文档、P1 令牌、P2 外壳、P3 公共控件与 P4 各模块适配均已落实；P5 已完成 Chromium 代表页面、主题、移动尺寸、可访问交互及实验室性能验证。实体手机、Firefox/Safari 和生产指标列为后续验收。
 
-紧凑、清晰的任务操作。默认高度（36px）、水平内边距（14px）；sm 为（32px / 10px），lg 为（44px / 20px），icon 为（32px）正方形。文字采用 label，圆角采用 md。
-
-primary 用主色实底；secondary 用 card 与细边框；outline 透明底带边框；ghost 透明底加弱文字；danger 用错误色。hover 使用透明度或 muted 背景变化。focus-visible 使用 ring 的（2px）描边与（3px）间隙。disabled 降至（50%）不透明度，loading 保留标签、显示旋转标记、禁用重复提交并暴露 aria-busy。手机按钮最小高度（44px）。表单先放取消，再放提交，操作靠右。
-
-### Chips
-
-Badge 是（11px）短状态标签，内边距（2px 6px），边框（1px）。primary 使用浅紫底；success、warning、danger 使用各自颜色的轻透明底与边框。筛选按钮采用（32px）最小高度、muted 选中底色与 aria-pressed；反馈范围切换以底部主色线表示当前范围。
-
-Badge 不换行、不收缩，避免“已通过”等短状态被挤成多行。`FilterPanel` 的搜索组宽度上限（288px），与筛选组按可用空间并排或换行；手机搜索独占一行，筛选按钮最小高度（40px）。`NavTabs` 使用一致的下划线激活态，超出宽度时只滚动导航自身。
-
-### Cards / Containers
-
-Card 提供表面、细边框与 lg 圆角，不内置投影或内边距。内容卡常用（20px），信息侧栏卡常用（16px）。首页信息流将 PostCard 的外框和圆角清除，以分隔线、上下留白组织连续内容；不要把这种列表重新包成逐条卡片。
-
-首页按“官方公告 → 最新动态 → 近期反馈”排列，每个板块各有细边框和浅色标题栏，板块之间间隔（24px），各展示最多 5 条，不在首页分页。公告置顶优先；公告和每个群组的帖子分别最多置顶 5 条。最新动态将活动与已审核公开群组的帖子按发布时间倒序混排，忽略群组置顶，不展示回复或回复输入框。内容标题统一（15px），正文使用 body；长公告和动态默认限制（140px）高度，底部渐隐，可展开全文。首页点赞、收藏使用 xs 按钮：桌面高度（28px）、文字（12px）、图标（14px），手机仍保留（44px）的最小点击高度。
-
-### Inputs / Fields
-
-SearchInput 高度（36px），圆角 md，background 底与细边框；前置搜索图标、左内边距（32px）与右内边距（12px）。认证字段高度（44px）、水平内边距（12px），标签置于字段上方。placeholder 使用 muted-foreground；focus-visible 同时保留可见 ring 和主色边框。错误提示采用 danger 文字、轻透明底与边框，并保留 alert 语义。
-
-手机输入框、选择器和文本域使用（16px）文字，输入框和选择器最小高度（44px），保留浏览器缩放。管理表单使用持久标签，切换编辑对象时重建非受控字段，确保显示值对应当前对象。个人中心采用 `.coeer-settings-section` 分区，内容区达到（720px）后将说明与字段分为两栏。
-
-字段的标签、控件与说明从顶部排列，帮助文字不会撑开相邻字段的标签行。成就与商城管理按表单可用宽度排列：内容区达到（560px）时采用两列，窄屏使用单列，提交操作位于底部分隔线右侧。
-
-选择器沿用原生的表单、键盘与触屏行为。支持 `base-select` 的浏览器使用主题色菜单：细边框、（8px）外圆角、（4px）选项圆角，选中项带主色浅底和勾选标记，悬停使用 muted。手机选项最小高度（44px）；其他浏览器保留原生菜单，并设置与主题一致的文字和背景。
-
-图片字段上方显示“选择本地文件”按钮，下方始终保留带虚线边框的文件区域。拖入时边框和背景使用主色，选中后在区域内展示预览、文件名、大小、调整裁剪和移除操作。文件名允许换行，预览不拉伸。可选的图片链接收在展开项中，避免与本地上传争夺层级。
-
-卡面固定为 3:4（600 × 800）、成就图标为 1:1（512 × 512）、商品图为 16:9（960 × 540），上传前说明比例及建议尺寸。裁剪弹窗保持对应比例，支持拖动、缩放、方向键和重置，确认后按约定尺寸输出 PNG。手机裁剪区域高度最多为视口的 32%，为说明和操作留出空间；取消保留原图。收藏与抽卡结果共用竖向卡片组件，旧图使用 contain 完整展示。
-
-### Navigation
-
-侧栏链接最小高度（34px），内边距（7px 10px），图标与文字间隔（10px）。默认弱文字；hover 使用 foreground 的（4%）背景，active 使用（6.5%）背景、（550）字重与主色图标。侧栏含品牌、页面搜索、分组导航与底部主题/用户区。主图标默认（16px）；上下文可使用（14px）。
-
-手机侧栏链接最小高度（44px）。进入管理后台后，导航区显示管理模块与“返回学院社区”，用户与主题区仍固定于底部。路径栏展示可点击父级及当前页面，不直接显示数据库 ID。
-
-### Feedback rows
-
-反馈列表按状态图标、内容、状态徽章、提交日期排列，桌面列宽为 `20px minmax(0, 1fr) 84px 64px`，列间距（12px），上下留白（12px）。整行可进入详情，hover 使用 muted 的（50%）底色，标题改为 primary。手机保留图标与内容两列，将状态、日期移至内容元信息；简介最多两行，桌面最多一行，行间用细线分隔。
-
-### Shared data surfaces
-
-`StatsBar` 用一个有分隔线的容器呈现同类真实数值，避免大块图标与重复卡片抢占层级。`MediaPreview` 限制集合图片高度；缺图或加载失败时以中性图标占位，不留下破图标记。`TableScroll` 将表格横向滚动限制在容器内；内容超宽时提供滚动提示与键盘焦点。个人中心不显示写死的群组、反馈或成就数量。
-
-### Dialogs and command menu
-
-Modal 使用带标题关联的原生 dialog，宽度最多（512px）、距视口至少（16px），内边距（20px），内容超高可滚动。Esc、关闭按钮和真正位于弹窗边界外的遮罩点击关闭；点击弹窗内边距保留打开。开启时锁定背景滚动。
-
-页面搜索是导航命令菜单，由 Cmd/Ctrl+K 或搜索按钮触发。宽度最多（560px），桌面顶距（16vh），手机（10vh）；支持输入过滤、方向键选择、Enter 跳转和 Esc 关闭。点击菜单内部留白保留打开，真正点击外部遮罩才关闭。它按现有页面名称与路径过滤，不代表全站内容搜索能力。
-
-### Empty states and notifications
-
-空状态采用小图标框、明确标题、说明与适用的下一步按钮。Toast 沿用 Card 和语义 Badge，位于右下角；加载、失败、无数据均使用真实状态。开发工具及早期截图中 hydration 前的进度条残影不属于组件规范。
-
-## Do's and Don'ts
-
-### Do:
-- **Do** 使用语义颜色和已有组件扩展页面，保持两种主题一致。
-- **Do** 让页面标题、主操作、筛选与内容遵循清晰的任务顺序。
-- **Do** 在手机上让筛选换行，并将反馈的状态、日期收进内容区。
-- **Do** 为交互保留可见焦点、可访问名称与键盘操作。
-- **Do** 用真实数据和明确空状态表达业务结果。
-
-### Don't:
-- **Don't** 为普通卡片增加装饰性投影或悬浮位移。
-- **Don't** 将所有内容改成独立大卡片；已有信息流与反馈列表使用行和分隔线。
-- **Don't** 用颜色单独表达状态，或移除状态文字与图形。
-- **Don't** 为界面填充虚构统计、内容或尚未存在的业务入口。
+每批目标文件、依赖、完成条件、回退方式及页面验收矩阵见[重构计划](.impeccable/refactor-plan.md)。本次修改限定于前端展示、交互与测试；29 份路由文件的事件处理、loader、校验与路由 ID 已核对保持一致，服务端和 shared contracts 无差异。未执行部署。

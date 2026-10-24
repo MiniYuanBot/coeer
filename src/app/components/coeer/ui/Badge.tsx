@@ -5,13 +5,13 @@ import type { BadgeTone } from '../lib/types'
 export function Badge({ tone = 'default', children, className }: { tone?: BadgeTone; children: React.ReactNode; className?: string }) {
     return (
         <span className={cn(
-            'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded border px-1.5 py-0.5 text-[11px] font-medium leading-4',
-            tone === 'default' && 'border-border bg-muted/50 text-muted-foreground',
+            'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded border px-1.5 py-0.5 text-xs font-medium leading-[18px]',
+            tone === 'default' && 'border-border bg-muted text-muted-foreground',
             tone === 'primary' && 'border-primary/15 bg-primary-soft text-primary',
-            tone === 'success' && 'border-success/15 bg-success/8 text-success',
-            tone === 'warning' && 'border-warning/15 bg-warning/8 text-warning',
-            tone === 'danger' && 'border-danger/15 bg-danger/8 text-danger',
-            tone === 'muted' && 'border-transparent bg-transparent text-muted-foreground',
+            tone === 'success' && 'border-success/25 bg-success-soft text-success',
+            tone === 'warning' && 'border-warning/25 bg-warning-soft text-warning',
+            tone === 'danger' && 'border-danger/25 bg-danger-soft text-danger',
+            tone === 'muted' && 'border-transparent bg-muted text-muted-foreground',
             className,
         )}>{children}</span>
     )

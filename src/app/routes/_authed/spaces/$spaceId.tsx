@@ -145,8 +145,8 @@ function SpaceDetailPage() {
                     <Badge key={item}>{item}</Badge>
                 ))}
             </div>
-            <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
-                <section className="min-w-0 space-y-5">
+            <div className="coeer-space-layout">
+                <section className="coeer-content-panel min-w-0 space-y-5">
                     <p className="max-w-[70ch] text-[13px] leading-6 text-muted-foreground">
                         {space.description}
                     </p>
@@ -176,7 +176,7 @@ function SpaceDetailPage() {
                             />
                         </Field>
                     </div>
-                    <div className="grid grid-cols-7 gap-1.5">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-1.5 sm:grid-cols-7">
                         {Array.from({ length: Math.min(7, config!.horizon + 1) }, (_, index) =>
                             addDays(today(), index),
                         ).map((day) => (
@@ -193,7 +193,7 @@ function SpaceDetailPage() {
                                     })
                                 }
                             >
-                                <span className="text-[10px]">
+                                <span className="text-xs">
                                     {new Date(`${day}T12:00:00+08:00`).toLocaleDateString('zh-CN', {
                                         weekday: 'short',
                                         timeZone: 'Asia/Shanghai',
@@ -246,13 +246,13 @@ function SpaceDetailPage() {
                                         onClick={() => select(slot)}
                                         className={cn(
                                             'h-auto min-h-16 flex-col items-start gap-1 px-3 py-2',
-                                            !selected && canUse(slot) && 'border-success/25 bg-success/5',
+                                            !selected && canUse(slot) && 'border-success/25 bg-success-soft',
                                         )}
                                     >
                                         <strong className="text-xs tabular-nums">
                                             {timeLabel(slot.start)}–{timeLabel(slot.end)}
                                         </strong>
-                                        <span className="text-[11px]">
+                                        <span className="text-xs">
                                             {slotLabels[slot.state]}
                                             {slot.kind === 'activity' && slot.state === 'available'
                                                 ? ` · 余 ${slot.remaining} 人`
@@ -263,11 +263,11 @@ function SpaceDetailPage() {
                             })}
                         </div>
                     )}
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                         {syncLabel(availability.data?.observedAt)} · 北京时间 UTC+8
                     </p>
                 </section>
-                <Card className="space-y-5 p-5 xl:sticky xl:top-20">
+                <Card className="space-y-5 p-5">
                     <h2 className="text-sm font-medium">预约申请</h2>
                     <div aria-live="polite" className="space-y-2 border-y border-border py-4">
                         <p className="text-xs text-muted-foreground">{date}</p>

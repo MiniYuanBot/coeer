@@ -114,7 +114,7 @@ function GroupMembersPage() {
                     {members.map((member) => (
                         <div key={member.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-sm font-medium text-[hsl(var(--primary))]">
+                                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-[hsl(var(--primary))]">
                                     {member.user.name?.[0] || 'U'}
                                 </div>
                                 <div>
@@ -144,7 +144,7 @@ function GroupMembersPage() {
                                         value={member.role}
                                         onChange={(e) => handleRoleChange(member.id, e.target.value)}
                                         disabled={processingId !== null}
-                                        className="coeer-focus h-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm disabled:opacity-50"
+                                        className="coeer-field coeer-focus h-8 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm disabled:bg-muted disabled:text-muted-foreground"
                                     >
                                         <option value="member">成员</option>
                                         <option value="admin">管理员</option>

@@ -11,11 +11,11 @@ export function AuthForm({ actionText, onSubmit, status, afterSubmit }: {
     const isLogin = actionText.toLowerCase().includes('login')
     return (
         <main className="flex min-h-dvh flex-col items-center justify-center px-6 py-20">
-            <div className="w-full max-w-[340px]">
+            <div className="coeer-auth-panel">
                 <Link to="/" aria-label="COEER 首页" className="coeer-focus mx-auto flex w-fit items-center gap-2.5 rounded-md">
                     <BrandMark className="h-9 w-9 text-primary" /><span className="text-xl font-semibold tracking-tight">COEER</span>
                 </Link>
-                <h1 className="mt-9 text-center text-[25px] font-semibold tracking-[-0.025em]">{isLogin ? '欢迎回来' : '创建 COEER 账号'}</h1>
+                <h1 className="mt-9 text-center text-[25px] font-semibold ">{isLogin ? '欢迎回来' : '创建 COEER 账号'}</h1>
                 <p className="mt-2 text-center text-[13px] leading-6 text-muted-foreground">{isLogin ? '继续你的社区协作和成长记录。' : '加入你的学院内部社区。'}</p>
                 <form method="post" onSubmit={(event) => { event.preventDefault(); onSubmit(event) }} className="mt-8 space-y-5">
                     <Field label="邮箱" description={isLogin ? undefined : '使用 10 位学号的 @stu.pku.edu.cn 邮箱注册；管理员请使用已有账号登录。'}>

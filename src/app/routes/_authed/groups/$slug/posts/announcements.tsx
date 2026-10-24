@@ -59,7 +59,7 @@ function AnnouncementsPage() {
                             </Link>
                             <PostContent content={post.content} className="mt-2 text-muted-foreground" />
                             <div className="mt-4 flex items-center gap-2 text-[13px] text-[hsl(var(--muted-foreground))]">
-                                <div className="grid h-8 w-8 place-items-center rounded-[10px] bg-[hsl(var(--primary)/0.08)] text-xs font-medium text-[hsl(var(--primary))]">
+                                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary-soft text-xs font-medium text-[hsl(var(--primary))]">
                                     {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
                                 </div>
                                 <span className="font-medium text-[hsl(var(--foreground))]">{post.author?.name || '未知用户'}</span>

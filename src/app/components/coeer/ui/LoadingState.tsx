@@ -2,7 +2,7 @@ export function LoadingState({ label = '正在加载…' }: { label?: string }) 
     return (
         <div
             role="status"
-            className="flex min-h-40 items-center justify-center gap-2 text-[13px] text-muted-foreground"
+            className="coeer-surface-reading flex min-h-40 items-center justify-center gap-2 text-[13px] text-muted-foreground"
         >
             <span
                 aria-hidden="true"

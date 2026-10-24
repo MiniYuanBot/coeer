@@ -46,7 +46,7 @@ function CreatePostPage() {
             <SectionHeader level="h2" title="发布帖子" description={`分享内容到 ${group.name}。`} />
 
             <Card className="rounded-lg p-5">
-                {error ? <div className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-600 dark:text-rose-400">{error}</div> : null}
+                {error ? <div className="mb-4 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">{error}</div> : null}
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="mb-2 block text-sm font-medium">帖子类型</label>
@@ -65,7 +65,7 @@ function CreatePostPage() {
 
                     <label className="block">
                         <span className="text-sm font-medium">标题</span>
-                        <input name="title" required maxLength={200} placeholder="一句话说明帖子主题" className="coeer-focus mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" />
+                        <input name="title" required maxLength={200} placeholder="一句话说明帖子主题" className="coeer-field coeer-focus mt-2 h-11 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                     </label>
 
                     <MarkdownEditor label="内容" name="content" required rows={10} maxLength={10000} disabled={isSubmitting}

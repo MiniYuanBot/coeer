@@ -71,7 +71,7 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
                 disabled={disabled} accept={IMAGE_MIME_TYPES.join(',')} onChange={(event) => choose(event.target.files)} />
             <div role="region" aria-label={`${label}文件区域`} aria-describedby={`${id}-hint`} aria-disabled={disabled}
                 data-dragging={dragging && !disabled || undefined}
-                className={cn('coeer-image-dropzone grid min-h-40 min-w-0 content-center rounded-lg border border-dashed border-border bg-muted/30 p-4 transition-colors', disabled && 'opacity-50')}
+                className={cn('coeer-image-dropzone grid min-h-40 min-w-0 content-center rounded-lg border border-dashed border-control-border bg-muted p-4 transition-colors', disabled && 'cursor-not-allowed')}
                 onDragEnter={(event) => {
                     if (!isFileDrag(event)) return
                     event.preventDefault()

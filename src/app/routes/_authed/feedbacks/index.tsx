@@ -37,8 +37,8 @@ function FeedbacksListPage() {
         <PageLayout>
             <SectionHeader title="反馈" description="每一个建议，都是让学院变得更好的开始。查看问题进展，参与社区改进。"
                 action={<Button asChild><Link to="/feedbacks/create"><Icon name="plus" />提交反馈</Link></Button>} />
-            <div>
-                <div role="group" aria-label="反馈范围" className="flex gap-6 border-b border-border">
+            <div className="coeer-list-panel">
+                <div role="group" aria-label="反馈范围" className="flex gap-6 border-b border-border px-4 pt-4">
                     {[{ key: 'public', label: '公开反馈' }, { key: 'mine', label: '我提交的' }].map((item) => {
                         const active = item.key === (view || 'public')
                         return (
@@ -59,7 +59,7 @@ function FeedbacksListPage() {
                         ],
                     }]} />
                 <section aria-label="反馈列表" aria-busy={isLoading}>
-                    <div className="flex items-center gap-2 bg-muted/40 px-4 py-2.5 text-[11px] text-muted-foreground sm:grid sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:gap-3">
+                    <div className="flex items-center gap-2 bg-muted px-4 py-2.5 text-xs text-muted-foreground sm:grid sm:grid-cols-[20px_minmax(0,1fr)_84px_64px] sm:gap-3">
                         <Icon name="list" className="h-3.5 w-3.5" />
                         <span>{isLoading ? '正在更新…' : '反馈内容'}</span>
                         <span className="hidden sm:block">状态</span>

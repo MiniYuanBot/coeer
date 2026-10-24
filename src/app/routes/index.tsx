@@ -101,13 +101,13 @@ function HomeContent({ data }: { data: HomeData }) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xs font-semibold">我的群组</h2>
-              <Link to="/groups" className="coeer-focus rounded text-[11px] text-muted-foreground hover:text-foreground">全部</Link>
+              <Link to="/groups" className="coeer-focus rounded text-xs text-muted-foreground hover:text-foreground">全部</Link>
             </div>
             {myGroups.length ? <div className="space-y-1">{myGroups.slice(0, 6).map((group: any) => (
               <Link key={group.id} to="/groups/$slug" params={{ slug: group.slug }} className="coeer-focus flex items-center gap-2.5 rounded-md px-2 py-2 text-[13px] hover:bg-muted">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-border bg-muted/50 text-[11px] font-medium">{group.name.slice(0, 1)}</span>
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-border bg-muted text-xs font-medium">{group.name.slice(0, 1)}</span>
                 <span className="min-w-0 flex-1 truncate">{group.name}</span>
-                <span className="text-[10px] text-muted-foreground">{groupCategoryLabels[group.category] || group.category}</span>
+                <span className="text-xs text-muted-foreground">{groupCategoryLabels[group.category] || group.category}</span>
               </Link>
             ))}</div> : <p className="text-xs leading-6 text-muted-foreground">还没有加入群组。<Link to="/groups" className="coeer-focus rounded text-primary hover:underline">发现感兴趣的组织</Link></p>}
           </section>
@@ -120,8 +120,8 @@ function HomeContent({ data }: { data: HomeData }) {
 
 function GuestLanding({ data }: { data: HomeData }) {
   return (
-    <div className="min-h-dvh bg-background">
-      <header className="border-b border-border">
+    <div className="min-h-dvh">
+      <header className="coeer-guest-header coeer-surface-chrome sticky top-0 z-30 border-b border-border">
         <div className="coeer-container flex h-16 items-center gap-3">
           <Link to="/" className="coeer-focus flex items-center gap-2 rounded-md"><BrandMark className="h-7 w-7 text-primary" /><span className="text-[15px] font-semibold tracking-tight">COEER</span></Link>
           <span className="hidden border-l border-border pl-3 text-xs text-muted-foreground sm:block">学院社区</span>
@@ -130,7 +130,7 @@ function GuestLanding({ data }: { data: HomeData }) {
       </header>
       <main className="coeer-container pb-16">
         <section className="max-w-3xl py-14 sm:py-20">
-          <h1 className="text-[32px] font-semibold leading-[1.35] tracking-[-0.03em] sm:text-[44px]">把学院社区、反馈协作与成长激励放在一个可信赖的地方</h1>
+          <h1 className="text-[32px] font-semibold leading-[1.35]  sm:text-[44px]">把学院社区、反馈协作与成长激励放在一个可信赖的地方</h1>
           <p className="mt-5 max-w-xl text-sm leading-7 text-muted-foreground">COEER：群组与帖子、反馈闭环、公告订阅、活动报名、积分卡片成就与校园权益兑换。</p>
           <div className="mt-7 flex flex-wrap gap-3"><Button asChild size="lg"><Link to="/login">进入学院社区<Icon name="chevron" className="h-3.5 w-3.5" /></Link></Button><Button asChild variant="secondary" size="lg"><Link to="/signup">创建账号</Link></Button></div>
         </section>
@@ -213,17 +213,17 @@ function RightRail({ activities, user }: {
 }) {
   return (
     <aside className="min-w-0 space-y-7">
-      {!user ? <div className="rounded-lg border border-border bg-muted/30 p-4">
+      {!user ? <div className="rounded-lg border border-border bg-muted p-4">
         <h2 className="text-sm font-medium">加入你的学院社区</h2>
         <p className="mt-2 text-xs leading-6 text-muted-foreground">加入群组、提交反馈、参与活动并积累积分。</p>
         <Button asChild size="sm" variant="secondary" className="mt-4"><Link to="/login">立即登录</Link></Button>
       </div> : null}
       <section>
-        <div className="mb-3 flex items-center justify-between"><h2 className="text-xs font-semibold">近期活动</h2><Link to="/activities" className="coeer-focus rounded text-[11px] text-muted-foreground hover:text-foreground">全部</Link></div>
+        <div className="mb-3 flex items-center justify-between"><h2 className="text-xs font-semibold">近期活动</h2><Link to="/activities" className="coeer-focus rounded text-xs text-muted-foreground hover:text-foreground">全部</Link></div>
         {activities.length ? <div className="divide-y divide-border">{activities.slice(0, 4).map((activity: any) => (
           <Link key={activity.id} to="/activities/$activityId" params={{ activityId: activity.id }} className="coeer-focus group flex items-start gap-3 rounded py-3">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-border text-muted-foreground"><Icon name="calendar" className="h-3.5 w-3.5" /></span>
-            <span className="min-w-0"><span className="block line-clamp-2 text-xs font-medium leading-5 group-hover:text-primary">{activity.title}</span><span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{formatDate(activity.startTime)} · {activity.location || '待定地点'}</span><span className="mt-1 block text-[10px] text-primary">{activityStatusLabels[activity.status] || activity.status}</span></span>
+            <span className="min-w-0"><span className="block line-clamp-2 text-xs font-medium leading-5 group-hover:text-primary">{activity.title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{formatDate(activity.startTime)} · {activity.location || '待定地点'}</span><span className="mt-1 block text-xs text-primary">{activityStatusLabels[activity.status] || activity.status}</span></span>
           </Link>
         ))}</div> : <p className="py-4 text-xs text-muted-foreground">活动发布后会出现在这里。</p>}
       </section>

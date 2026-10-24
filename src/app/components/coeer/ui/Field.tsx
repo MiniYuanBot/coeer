@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTML
 import { cn } from '../lib/cn'
 
 const fieldClass =
-    'coeer-focus w-full min-w-0 rounded-md border border-border bg-background px-3 text-[13px] text-foreground disabled:cursor-not-allowed disabled:opacity-50'
+    'coeer-focus coeer-field w-full min-w-0 rounded-md border border-control-border bg-card px-3 text-[13px] text-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground'
 
 export function Field({
     label,

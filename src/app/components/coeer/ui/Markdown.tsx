@@ -2,20 +2,21 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
+import { memo } from 'react'
 import { cn } from '../lib/cn'
 
 /** Raw HTML stays disabled; KaTeX cannot create trusted HTML or external resources. */
-export function Markdown({ content, className, disableLinks = false }: { content: string; className?: string; disableLinks?: boolean }) {
+export const Markdown = memo(function Markdown({ content, className, disableLinks = false }: { content: string; className?: string; disableLinks?: boolean }) {
     const components: Components = { img: ({ alt }) => <span>{alt}</span> }
     if (disableLinks) components.a = ({ children, title }) => <span title={title}>{children}</span>
-    return <div className={cn('coeer-markdown min-w-0 text-sm leading-7', className)}>
+    return <div className={cn('coeer-markdown min-w-0 text-base leading-[1.8] text-foreground', className)}>
         <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[[rehypeKatex, { trust: false, strict: 'ignore', maxExpand: 200, maxSize: 20, minRuleThickness: 0.06 }]]}
             skipHtml components={components}>
             {content}
         </ReactMarkdown>
     </div>
-}
+})
 
 /** Render complete source before clipping; suppress links inside clickable cards. */
 export function MarkdownSummary({ content, className }: { content: string; className?: string }) {

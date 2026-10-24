@@ -74,21 +74,21 @@ function AdminActivitiesPage() {
             <Card className="rounded-lg p-5">
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
-                    <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="活动标题" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                    <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="活动标题" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     <MarkdownEditor label="说明" name="description" required maxLength={5000} defaultValue={editing?.description} placeholder="活动说明" rows={6} />
                     <div className="grid gap-3 md:grid-cols-2">
-                        <Field label="类型"><select name="type" defaultValue={editing?.type || 'official'} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                        <Field label="类型"><select name="type" defaultValue={editing?.type || 'official'} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                             {ACTIVITY_TYPE_ARRAY.map((type) => <option key={type} value={type}>{activityTypeLabels[type]}</option>)}
                         </select></Field>
                         {editing ? (
-                            <Field label="状态"><select name="status" defaultValue={editing.status} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm">
+                            <Field label="状态"><select name="status" defaultValue={editing.status} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                                 {ACTIVITY_STATUS_ARRAY.map((status) => <option key={status} value={status}>{activityStatusLabels[status]}</option>)}
                             </select></Field>
                         ) : null}
-                        <Field label="地点（选填）"><input name="location" defaultValue={editing?.location} placeholder="地点" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="人数上限（选填）"><input name="maxParticipants" type="number" min={1} defaultValue={editing?.maxParticipants ?? ''} placeholder="人数上限" className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="开始时间"><input name="startTime" type="datetime-local" required defaultValue={toDateTimeInput(editing?.startTime)} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                        <Field label="结束时间"><input name="endTime" type="datetime-local" required defaultValue={toDateTimeInput(editing?.endTime)} className="coeer-focus h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="地点（选填）"><input name="location" defaultValue={editing?.location} placeholder="地点" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="人数上限（选填）"><input name="maxParticipants" type="number" min={1} defaultValue={editing?.maxParticipants ?? ''} placeholder="人数上限" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="开始时间"><input name="startTime" type="datetime-local" required defaultValue={toDateTimeInput(editing?.startTime)} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                        <Field label="结束时间"><input name="endTime" type="datetime-local" required defaultValue={toDateTimeInput(editing?.endTime)} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     </div>
                     <div className="flex gap-2">
                         <Button type="submit">{editing ? '保存活动' : '发布活动'}</Button>

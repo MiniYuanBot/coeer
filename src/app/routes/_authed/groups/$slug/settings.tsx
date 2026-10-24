@@ -87,7 +87,7 @@ function GroupSettingsPage() {
                             defaultValue={group.name}
                             required
                             disabled={updateLoading}
-                            className="coeer-focus mt-2 block h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm disabled:opacity-50"
+                            className="coeer-field coeer-focus mt-2 block h-11 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm disabled:bg-muted disabled:text-muted-foreground"
                         />
                     </div>
 
@@ -100,7 +100,7 @@ function GroupSettingsPage() {
                             rows={4}
                             defaultValue={group.description || ''}
                             disabled={updateLoading}
-                            className="coeer-focus mt-2 block w-full resize-none rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6 disabled:opacity-50"
+                            className="coeer-field coeer-focus mt-2 block w-full resize-none rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-3 text-sm leading-6 disabled:bg-muted disabled:text-muted-foreground"
                         />
                     </div>
 
@@ -129,8 +129,8 @@ function GroupSettingsPage() {
                 </form>
             </Card>
 
-            <Card className="rounded-lg border-rose-500/20 p-5">
-                <h2 className="mb-4 text-[15px] font-medium text-rose-600 dark:text-rose-400">危险区域</h2>
+            <Card className="rounded-lg border-danger/25 p-5">
+                <h2 className="mb-4 text-[15px] font-medium text-danger">危险区域</h2>
                 <p className="mb-4 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     删除群组将永久移除所有数据和内容，此操作不可撤销。
                 </p>

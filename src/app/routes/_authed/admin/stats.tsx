@@ -25,7 +25,7 @@ function AdminStatsPage() {
             <Card className="overflow-hidden">
                 <TableScroll label="用户统计表">
                     <table className="w-full min-w-[680px] text-sm">
-                        <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.45)] text-left text-xs text-[hsl(var(--muted-foreground))]">
+                        <thead className="border-b border-[hsl(var(--border))] bg-muted text-left text-xs text-[hsl(var(--muted-foreground))]">
                             <tr>
                                 <th className="px-4 py-3 font-medium">用户</th>
                                 <th className="px-4 py-3 font-medium">邮箱</th>

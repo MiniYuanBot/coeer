@@ -112,7 +112,7 @@ function SpaceHistoryPage() {
                 <Card className="overflow-hidden">
                     <TableScroll label="任务与审计表">
                         <table className="w-full min-w-[620px] text-left text-xs">
-                            <thead className="border-b border-border bg-muted/40 text-muted-foreground">
+                            <thead className="border-b border-border bg-muted text-muted-foreground">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">记录</th>
                                     <th className="px-4 py-3 font-medium">状态 / 操作者</th>
@@ -122,7 +122,7 @@ function SpaceHistoryPage() {
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {resource.data.items.map((entry) => (
-                                    <tr key={entry.id} className="align-top hover:bg-muted/30">
+                                    <tr key={entry.id} className="align-top hover:bg-muted">
                                         <td className="px-4 py-4">
                                             <p className="font-medium">
                                                 {entry.action
@@ -131,7 +131,7 @@ function SpaceHistoryPage() {
                                                       ? jobTypes[entry.type] || entry.type
                                                       : '空间状态同步'}
                                             </p>
-                                            <p className="mt-2 break-all text-[11px] text-muted-foreground">
+                                            <p className="mt-2 break-all text-xs text-muted-foreground">
                                                 {String(entry.id)}
                                             </p>
                                         </td>
@@ -170,7 +170,7 @@ function SpaceHistoryPage() {
                                                 <summary className="coeer-focus cursor-pointer rounded text-primary">
                                                     查看详情
                                                 </summary>
-                                                <dl className="mt-3 space-y-2 break-all text-[11px] text-muted-foreground">
+                                                <dl className="mt-3 space-y-2 break-all text-xs text-muted-foreground">
                                                     {entry.booking_id && (
                                                         <div>
                                                             <dt>申请号</dt>
