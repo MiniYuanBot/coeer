@@ -50,7 +50,7 @@ export type LoginInput = z.infer<typeof loginSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
-export type SessionUser = Pick<DbUser, 'id' | 'email' | 'role' | 'name'> & { lastUpdated: number; studentId?: string }
+export type SessionUser = Pick<DbUser, 'id' | 'email' | 'role' | 'name'> & { lastUpdated: number; studentId?: string; avatarUrl?: string | null }
 // Kept inside the encrypted session cookie; never returned to the browser as user data.
 export type AppSessionData = SessionUser & { passwordVersion: string }
 

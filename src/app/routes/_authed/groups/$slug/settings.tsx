@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_authed/groups/$slug/settings')({
 })
 
 function GroupSettingsPage() {
-    const { group } = Route.useRouteContext()
+    const { group, isOwner } = Route.useRouteContext()
     const navigate = useNavigate()
     const { slug } = Route.useParams()
 
@@ -131,7 +131,7 @@ function GroupSettingsPage() {
                 </form>
             </Card>
 
-            <Card className="rounded-lg border-danger/25 p-5">
+            {isOwner && <Card className="rounded-lg border-danger/25 p-5">
                 <h2 className="mb-4 text-[15px] font-medium text-danger">危险区域</h2>
                 <p className="mb-4 text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                     删除群组将永久移除所有数据和内容，此操作不可撤销。
@@ -145,7 +145,7 @@ function GroupSettingsPage() {
                         删除群组
                     </Button>
                 </form>
-            </Card>
+            </Card>}
         </PageLayout>
     )
 }

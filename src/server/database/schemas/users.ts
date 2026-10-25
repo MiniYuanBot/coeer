@@ -12,7 +12,7 @@ export const users = pgTable('users', {
     isActive: boolean('is_active').default(true).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-    // avatarUrl: text('avatar_url'),
+    avatarUrl: text('avatar_url'),
     // points: integer('points').notNull().default(0),
 })
 

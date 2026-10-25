@@ -1,4 +1,5 @@
-import { boolean, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, check, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { BULLETIN_SOURCE_TYPE_ARRAY, BULLETIN_TYPE_ARRAY, BulletinSourceType, BulletinType } from '@shared/constants'
 
 export const bulletinTypeEnum = pgEnum('bulletin_type', BULLETIN_TYPE_ARRAY)
@@ -11,10 +12,11 @@ export const bulletins = pgTable('bulletins', {
     content: text('content').notNull(),
     sourceId: uuid('source_id'),
     sourceType: bulletinSourceTypeEnum('source_type'),
+    notificationMode: varchar('notification_mode', { length: 10 }).$type<'none' | 'modal' | 'banner'>().default('none').notNull(),
     isPinned: boolean('is_pinned').default(false).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, table => [check('bulletins_notification_mode_check', sql`${table.notificationMode} in ('none', 'modal', 'banner')`)])
 
 export type Bulletin = typeof bulletins.$inferSelect & { type: BulletinType, sourceType: BulletinSourceType | null }
 export type NewBulletin = typeof bulletins.$inferInsert & { type: BulletinType, sourceType?: BulletinSourceType }

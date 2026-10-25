@@ -30,11 +30,12 @@ export function BulletinForm({ editing, page }: { editing?: RecordDefinition; pa
             title: form.get('title') as string,
             content: form.get('content') as string,
             isPinned: form.get('isPinned') === 'on',
+            notificationMode: form.get('notificationMode') as 'none' | 'modal' | 'banner',
         }
         setPending(true)
         try {
             const result = editing?.id
-                ? await updateBulletinFn({ data: { id: editing.id, title: payload.title, content: payload.content, isPinned: payload.isPinned } })
+                ? await updateBulletinFn({ data: { id: editing.id, title: payload.title, content: payload.content, isPinned: payload.isPinned, notificationMode: payload.notificationMode } })
                 : await createBulletinFn({ data: payload })
             if (!result.success) throw new Error(result.state.message || '保存公告失败')
             await finish()
@@ -52,6 +53,9 @@ export function BulletinForm({ editing, page }: { editing?: RecordDefinition; pa
                     </select></Field>
                     <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     <MarkdownEditor label="内容" name="content" required maxLength={5000} defaultValue={editing?.content} placeholder="公告内容" rows={6} />
+                    <Field label="通知方式"><select name="notificationMode" defaultValue={editing?.notificationMode || 'none'} className="coeer-field coeer-focus rounded-lg border border-control-border bg-card p-3 text-sm">
+                        <option value="none">无特殊通知</option><option value="modal">居中弹窗</option><option value="banner">顶部横幅</option>
+                    </select></Field>
                     <label className="flex items-center gap-2 text-sm"><input name="isPinned" type="checkbox" defaultChecked={editing?.isPinned} className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />置顶</label>
                     <div className="flex gap-2">
                         <Button type="submit" loading={pending}>{editing ? '保存公告' : '发布公告'}</Button>

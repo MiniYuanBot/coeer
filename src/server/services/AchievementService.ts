@@ -45,7 +45,7 @@ export class AchievementService {
         const [feedbackCount] = await executor.select({ value: count() }).from(feedbacks).where(eq(feedbacks.authorId, userId))
         const [groupCount] = await executor.select({ value: countDistinct(groups.id) }).from(groups)
             .leftJoin(groupMembers, and(eq(groupMembers.groupId, groups.id), eq(groupMembers.userId, userId),
-                eq(groupMembers.role, 'admin'), eq(groupMembers.status, 'approved')))
+                or(eq(groupMembers.role, 'admin'), eq(groupMembers.role, 'owner')), eq(groupMembers.status, 'approved')))
             .where(and(ne(groups.status, 'rejected'), or(eq(groups.creatorId, userId), eq(groupMembers.userId, userId))))
         const [cardCount] = await executor.select({ value: countDistinct(userCards.cardId) }).from(userCards)
             .where(and(eq(userCards.userId, userId), gt(userCards.count, 0)))

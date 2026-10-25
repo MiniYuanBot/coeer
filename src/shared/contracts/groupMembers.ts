@@ -61,7 +61,7 @@ export type ListMembersByUserInput = z.infer<typeof ListMembersByUserSchema>
 
 // Group member with user info
 export type GroupMemberWithUser = GroupMember & {
-    user: Pick<DbUser, 'id' | 'name'>
+    user: (Pick<DbUser, 'id' | 'name'> & { avatarUrl?: string | null })
 }
 
 // Group member with group info

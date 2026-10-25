@@ -27,6 +27,8 @@ export function Icon({ name, className = 'h-4 w-4' }: { name: IconName; classNam
         calendar: <><path d="M8 2v4M16 2v4M3 10h18" /><rect x="3" y="5" width="18" height="16" rx="2" /></>,
         card: <><rect x="4" y="3" width="16" height="18" rx="3" /><path d="M8 8h8M8 12h5" /></>,
         check: <><path d="m5 12 5 5L20 7" /></>,
+        pause: <><path d="M9 5v14M15 5v14" /></>,
+        play: <path d="m8 5 11 7-11 7z" />,
         chevron: <><path d="m9 18 6-6-6-6" /></>,
         coins: <><ellipse cx="12" cy="6" rx="7" ry="3" /><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" /><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></>,
         comment: <><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></>,

@@ -1,3 +1,4 @@
+import { Avatar } from '@/components/coeer/ui/Avatar'
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { Markdown } from '@/components/coeer/ui/Markdown'
 import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
@@ -6,18 +7,20 @@ import { useState } from 'react'
 import { PostLikeButton } from '@/components/coeer/cards/PostLikeButton'
 import { PostBookmarkButton } from '@/components/coeer/cards/PostBookmarkButton'
 import { GroupReplies } from '@/components/coeer/cards/GroupReplies'
-import { listRepliesByTargetFn } from '~/functions/replies'
+import { getReplyByIdFn, listRepliesByTargetFn } from '~/functions/replies'
 import { deleteGroupPostFn, togglePinPostFn } from '~/functions'
 import { Badge, Button, Card, DetailLayout, Icon, Modal, formatDateTime } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/')({
-  validateSearch: z.object({ replyPage: z.coerce.number().int().min(1).catch(1).default(1) }),
+  validateSearch: z.object({ replyPage: z.coerce.number().int().min(1).catch(1).default(1), mentionReply: z.uuid().optional().catch(undefined) }),
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
     if (!context.isAdmin && !context.isMember && context.user?.role !== 'admin') return null
     const result = await listRepliesByTargetFn({ data: { targetType: 'group_post', targetId: context.post.id, rootsOnly: true, limit: 20, offset: (deps.replyPage - 1) * 20 } })
     if (!result.success) throw new Error(result.state.message || '回复加载失败')
-    return result.data ?? null
+    const focused = deps.mentionReply ? await getReplyByIdFn({ data: { id: deps.mentionReply } }) : undefined
+    const mentionedReply = focused?.success && focused.data?.targetType === 'group_post' && focused.data.targetId === context.post.id ? focused.data : null
+    return result.data ? { ...result.data, mentionedReply } : null
   },
   component: PostIndexComponent,
 })
@@ -65,6 +68,10 @@ function PostIndexComponent() {
         }>
 
       {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
+      {replies?.mentionedReply && <section id={`mention-reply-${replies.mentionedReply.id}`} className="scroll-mt-20"><Card className="space-y-3 border-primary/30 p-5">
+        <h2 className="text-sm font-semibold">提及你的回复 · {replies.mentionedReply.author?.name || '成员'}</h2>
+        {replies.mentionedReply.content ? <Markdown content={replies.mentionedReply.content} /> : <p className="text-sm text-muted-foreground">这条回复已删除。</p>}
+      </Card></section>}
 
       <DetailLayout asideLabel="帖子信息" aside={
         <section className="space-y-5 rounded-lg border border-border bg-muted p-5">
@@ -84,9 +91,7 @@ function PostIndexComponent() {
       }>
       <Card className="p-5 sm:p-6">
         <div className="mb-5 flex items-center gap-3 border-b border-border pb-5">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-[hsl(var(--primary))]">
-            {(post.author?.name || '未知用户').charAt(0).toUpperCase()}
-          </div>
+          <Avatar src={post.author?.avatarUrl} name={post.author?.name} />
           <div>
             <p className="text-[15px] font-medium">{post.author?.name || '未知用户'}</p>
             <p className="text-[13px] text-[hsl(var(--muted-foreground))]">
@@ -100,9 +105,9 @@ function PostIndexComponent() {
         <div className="mt-6 flex gap-4 border-t border-border pt-4"><PostLikeButton post={post} /><PostBookmarkButton post={post} /></div>
       </Card>
       {replies ? <>
-        <GroupReplies key={post.id} postId={post.id} replies={replies.items ?? []} total={replies.replyTotal ?? 0} userId={user!.id}
+        <GroupReplies groupId={group.id} key={post.id} postId={post.id} replies={replies.items ?? []} total={replies.replyTotal ?? 0} userId={user!.id}
           onRootCreated={replyPage > 1 ? () => navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId }, search: { replyPage: 1 } }) : undefined}
-          canReply={(isAdmin || isMember) && group.status === 'approved'} canManage={isAdmin || user?.role === 'admin'} />
+          canReply={(isAdmin || isMember) && group.status === 'approved'} canManage={isAdmin} />
         {(replies.total ?? 0) > 20 || replyPage > 1 ? <div className="mt-4 flex justify-end gap-3">
           <Button size="sm" variant="outline" disabled={replyPage <= 1} onClick={() => void navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId }, search: { replyPage: replyPage - 1 } })}>上一页</Button>
           <Button size="sm" variant="outline" disabled={replyPage * 20 >= (replies.total ?? 0)} onClick={() => void navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId }, search: { replyPage: replyPage + 1 } })}>下一页</Button>

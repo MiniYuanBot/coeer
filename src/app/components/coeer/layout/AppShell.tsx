@@ -1,3 +1,5 @@
+import { BulletinNotices } from '../feedback/BulletinNotices'
+import { Avatar } from '../ui/Avatar'
 import { Link, useLocation } from '@tanstack/react-router'
 import * as React from 'react'
 import type { SessionUser } from '../lib/types'
@@ -41,8 +43,9 @@ export function AppShell({ user, children }: { user: NonNullable<SessionUser> & 
                     </nav>
                     <NotificationBell userId={user.id} />
                     <button type="button" data-command-trigger aria-label="搜索页面" onClick={() => { setOpen(false); setSearchOpen(true) }} className="coeer-focus grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted"><Icon name="search" /></button>
-                    <Link to="/profile" aria-label="个人中心" className="coeer-focus grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-medium text-primary lg:hidden">{(user?.name || user?.email || 'U').slice(0, 1).toUpperCase()}</Link>
+                    <Link to="/profile" aria-label="个人中心" className="coeer-focus grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-medium text-primary lg:hidden"><Avatar src={user?.avatarUrl} name={user?.name || user?.email} className="h-8 w-8 text-xs" /></Link>
                 </header>
+                <BulletinNotices userId={user.id} />
                 <main id="main-content" tabIndex={-1} className="coeer-workspace min-w-0 flex-1">{children}</main>
             </div>
             <CommandMenu user={user} open={searchOpen} onClose={closeSearch} />

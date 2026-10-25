@@ -8,8 +8,8 @@ import { MarkdownEditor } from '../ui/MarkdownEditor'
 import { ReplyThread } from './ReplyThread'
 import { newestRepliesFirst } from '../lib/replies'
 
-export function GroupReplies({ postId, replies, total, userId, canReply, canManage, onRootCreated }: {
-    postId: string; replies: ReplyListItem[]; total: number; userId: string; canReply: boolean; canManage: boolean
+export function GroupReplies({ groupId, postId, replies, total, userId, canReply, canManage, onRootCreated }: {
+    groupId?: string; postId: string; replies: ReplyListItem[]; total: number; userId: string; canReply: boolean; canManage: boolean
     onRootCreated?: () => Promise<unknown>
 }) {
     const router = useRouter()
@@ -69,12 +69,12 @@ export function GroupReplies({ postId, replies, total, userId, canReply, canMana
         </ol>
         {!replies.length ? <p className="py-4 text-sm text-muted-foreground">还没有回复。</p> : null}
         {error ? <p role="alert" className="my-3 text-sm text-danger">{error}</p> : null}
-        {canReply ? <form onSubmit={(event) => void submit(event)} className="mt-4 border-t border-border pt-4">
+        {(canReply || (canManage && editing)) ? <form onSubmit={(event) => void submit(event)} className="mt-4 border-t border-border pt-4">
             <div className="mb-2 flex items-center justify-between gap-3">
                 <label htmlFor="group-reply-content" className="text-sm font-medium">{editing ? '编辑回复' : replyTo ? `回复 ${replyTo.author?.name || '成员'}` : '发表回复'}</label>
                 {editing || replyTo ? <Button size="sm" variant="ghost" disabled={pending} onClick={() => { setEditing(undefined); setReplyTo(undefined); setContent('') }}>取消</Button> : null}
             </div>
-            <MarkdownEditor ref={input} id="group-reply-content" previewLabel="回复实时预览" value={content} onChange={(event) => setContent(event.target.value)}
+            <MarkdownEditor groupId={groupId} ref={input} id="group-reply-content" previewLabel="回复实时预览" value={content} onValueChange={setContent}
                 required maxLength={2000} rows={6} disabled={pending} placeholder="分享思路，也可以用 $…$ 或 $$…$$ 写公式" />
             <div className="mt-3 flex justify-end"><Button type="submit" loading={pending} disabled={!content.trim()}>{editing ? '保存修改' : '发送回复'}</Button></div>
         </form> : <p className="mt-4 text-xs text-muted-foreground">仅已加入且通过审核的成员可以在群内回复。</p>}

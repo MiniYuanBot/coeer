@@ -7,7 +7,7 @@ import { cn } from '../lib/cn'
 import { ImageCropper } from './ImageCropper'
 
 /** Upload only when the containing form is saved, retaining the selection after a failed save. */
-export function ImageUploadField({ name, label, defaultValue, disabled = false, preset }: { name: string; label: string; defaultValue?: string | null; disabled?: boolean; preset?: ImageSpecName }) {
+export function ImageUploadField({ name, label, defaultValue, disabled = false, preset, maxBytes = MAX_IMAGE_BYTES, allowUrl = true, allowRemove = true, onFileChange }: { name: string; label: string; defaultValue?: string | null; disabled?: boolean; preset?: ImageSpecName; maxBytes?: number; allowUrl?: boolean; allowRemove?: boolean; onFileChange?: (file: File | null) => void }) {
     const id = useId()
     const spec = preset ? IMAGE_SPECS[preset] : undefined
     const [url, setUrl] = useState(defaultValue ?? '')
@@ -27,7 +27,7 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
         return () => URL.revokeObjectURL(localUrl)
     }, [file])
     const imageSrc = preview || url
-    const clearFile = () => { setFile(null); setOriginalSource(null); if (input.current) input.current.value = '' }
+    const clearFile = () => { setFile(null); onFileChange?.(null); setOriginalSource(null); if (input.current) input.current.value = '' }
     const setInputFile = (next: File | null) => {
         if (!input.current) return
         const transfer = new DataTransfer()
@@ -38,8 +38,8 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
         if (disabled || input.current?.matches(':disabled')) return
         if (!files?.length) { setInputFile(file); return }
         const selected = files[0]
-        if (files.length !== 1 || !IMAGE_MIME_TYPES.some((type) => type === selected.type) || selected.size === 0 || selected.size > MAX_IMAGE_BYTES) {
-            setError(files.length !== 1 ? '一次只能选择一张图片' : '请选择不超过 5 MB 的 PNG、JPEG、GIF 或 WebP 图片')
+        if (files.length !== 1 || !IMAGE_MIME_TYPES.some((type) => type === selected.type) || selected.size === 0 || selected.size > maxBytes) {
+            setError(files.length !== 1 ? '一次只能选择一张图片' : `请选择不超过 ${formatSize(maxBytes)} 的 PNG、JPEG、GIF 或 WebP 图片`)
             setInputFile(file)
             return
         }
@@ -51,6 +51,7 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
         } else {
             setInputFile(selected)
             setFile(selected)
+            onFileChange?.(selected)
             setUrl('')
             setFailedSrc('')
         }
@@ -96,7 +97,7 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
                     if (!blocked()) choose(event.dataTransfer.files)
                 }}>
                 {imageSrc ? <div className="flex min-w-0 flex-wrap items-center gap-4">
-                    <div className="grid w-24 shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-card text-muted-foreground"
+                    <div className={cn('grid w-24 shrink-0 place-items-center overflow-hidden border border-border bg-card text-muted-foreground', preset === 'avatar' ? 'rounded-full' : 'rounded-md')}
                         style={{ aspectRatio: spec ? `${spec.width}/${spec.height}` : '1' }}>
                         {failedSrc !== imageSrc ? <img src={imageSrc} alt={`${label}预览`} className="h-full w-full object-contain" onError={() => setFailedSrc(imageSrc)} /> : <Icon name="inbox" className="h-6 w-6" />}
                     </div>
@@ -105,9 +106,9 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
                         <p className="text-xs leading-5 text-muted-foreground">{failedSrc === imageSrc ? '图片无法预览，可重新选择文件或修改链接。' : file ? `${formatSize(file.size)} · 保存后上传` : '可拖入新图片替换'}</p>
                         <div className="-ml-2.5 flex flex-wrap gap-1">
                             {spec ? <Button variant="ghost" size="sm" disabled={disabled} onClick={() => setCropSource(originalSource ?? url)}>调整裁剪</Button> : null}
-                            <Button variant="ghost" size="sm" disabled={disabled} onClick={() => { clearFile(); setUrl(''); setError(''); setFailedSrc('') }}>
+                            {allowRemove ? <Button variant="ghost" size="sm" disabled={disabled} onClick={() => { clearFile(); setUrl(''); setError(''); setFailedSrc('') }}>
                                 <Icon name="x" />移除图片
-                            </Button>
+                            </Button> : null}
                         </div>
                     </div>
                 </div> : <div className="grid justify-items-center gap-2 py-3 text-center">
@@ -116,20 +117,26 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
                     <p className="text-xs leading-5 text-muted-foreground">或点击上方按钮选择本地文件</p>
                 </div>}
             </div>
-            <p id={`${id}-hint`} className="text-xs leading-5 text-muted-foreground">PNG、JPEG、GIF、WebP · 最大 5 MB</p>
+            <p id={`${id}-hint`} className="text-xs leading-5 text-muted-foreground">PNG、JPEG、GIF、WebP · 最大 {formatSize(maxBytes)}</p>
             {error ? <p role="alert" className="text-xs leading-5 text-danger">{error}</p> : null}
-            <details className="group min-w-0">
+            {allowUrl ? <details className="group min-w-0">
                 <summary className="coeer-focus flex w-fit cursor-pointer list-none items-center gap-1 rounded text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
                     使用图片链接<Icon name="chevron" className="h-3 w-3 transition-transform group-open:rotate-90" />
                 </summary>
                 <Field label="图片地址" className="pt-3">
                     <Input name={name} value={url} disabled={disabled} placeholder="https://… 或已上传的图片地址" onChange={(event) => { clearFile(); setUrl(event.target.value); setError(''); setFailedSrc('') }} />
                 </Field>
-            </details>
+            </details> : null}
             {cropSource && spec ? <ImageCropper key={typeof cropSource === 'string' ? cropSource : `${cropSource.name}:${cropSource.lastModified}`} source={cropSource} spec={spec}
                 onCancel={() => setCropSource(null)} onConfirm={(cropped) => {
+                    if (cropped.size > maxBytes) {
+                        setError(`裁剪后的图片不能超过 ${formatSize(maxBytes)}，请换一张图片`)
+                        setCropSource(null)
+                        return
+                    }
                     setInputFile(cropped)
                     setFile(cropped)
+                    onFileChange?.(cropped)
                     setOriginalSource(cropSource)
                     setUrl('')
                     setFailedSrc('')
@@ -141,13 +148,13 @@ export function ImageUploadField({ name, label, defaultValue, disabled = false, 
 }
 
 function formatSize(bytes: number) {
-    return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
+    return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${Number((bytes / 1024 / 1024).toFixed(1))} MB`
 }
 
-export async function uploadFormImage(form: FormData, name: string): Promise<string | null> {
+export async function uploadFormImage(form: FormData, name: string, purpose?: 'avatar'): Promise<string | null> {
     const file = form.get(`${name}File`)
     if (file instanceof File && file.size) {
-        const response = await fetch('/api/images/', { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
+        const response = await fetch(purpose === 'avatar' ? '/api/images?purpose=avatar' : '/api/images/', { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
         const result = await response.json().catch(() => ({}))
         if (!response.ok || typeof result.url !== 'string') throw new Error(result.message || '图片上传失败，请重试')
         return result.url

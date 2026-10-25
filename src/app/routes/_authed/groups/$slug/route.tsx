@@ -12,7 +12,7 @@ export const Route = createFileRoute('/_authed/groups/$slug')({
 
         const membership = await getMyGroupMembershipFn({ data: { groupId: group.id } })
         const approved = membership?.status === 'approved'
-        return { group, isAdmin: approved && membership.role === 'admin', isMember: approved, isPending: membership?.status === 'pending' }
+        return { group, isOwner: approved && membership.role === 'owner', isAdmin: approved && (membership.role === 'admin' || membership.role === 'owner'), isMember: approved, isPending: membership?.status === 'pending' }
     },
     errorComponent: ({ error }) => {
         if (error.message === 'Group not found') {

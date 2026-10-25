@@ -19,7 +19,7 @@ export async function getDiscussionAccess(data: TargetRef, user: Viewer) {
     return {
         canRead: member || user.role === 'admin',
         canReply: member && group.status === GROUP_STATUS.APPROVED,
-        canManage: user.role === 'admin' || (member && membership.role === 'admin'),
+        canManage: member && (membership.role === 'admin' || membership.role === 'owner'),
     }
 }
 

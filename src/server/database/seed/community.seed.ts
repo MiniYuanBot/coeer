@@ -31,7 +31,7 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             isPublic: true,
             // 谁可以以什么身份出现在这个群（key = 自然身份，value = 预设成员状态）
             members: [
-                { userId: adminUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: adminUser.id, role: 'owner' as const, status: 'approved' as const },
                 { userId: testUser.id, role: 'member' as const, status: 'approved' as const },
                 { userId: demoUser.id, role: 'member' as const, status: 'approved' as const },
             ],
@@ -45,7 +45,7 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             status: 'approved' as const,
             isPublic: true,
             members: [
-                { userId: demoUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: demoUser.id, role: 'owner' as const, status: 'approved' as const },
                 { userId: testUser.id, role: 'member' as const, status: 'approved' as const },
                 { userId: adminUser.id, role: 'member' as const, status: 'approved' as const },
             ],
@@ -60,7 +60,7 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             isPublic: false,
             // 未审核的私密群：只有创建者可见（其它“已批准成员”是错的）
             members: [
-                { userId: testUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: testUser.id, role: 'owner' as const, status: 'approved' as const },
             ],
         },
         {
@@ -72,7 +72,7 @@ export async function seedCommunity(options: { clean?: boolean } = {}) {
             status: 'approved' as const,
             isPublic: false,
             members: [
-                { userId: testUser.id, role: 'admin' as const, status: 'approved' as const },
+                { userId: testUser.id, role: 'owner' as const, status: 'approved' as const },
                 { userId: demoUser.id, role: 'member' as const, status: 'approved' as const },
                 // 待审核申请：用于演示群管理员的“成员审核”流程
                 { userId: adminUser.id, role: 'member' as const, status: 'pending' as const },

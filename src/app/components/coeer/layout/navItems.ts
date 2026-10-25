@@ -18,28 +18,29 @@ export const navSections: NavSection[] = [
     {
         label: '社区',
         items: [
-            { to: '/', label: '动态', icon: 'home', active: 'exact' },
-            { to: '/groups', label: '群组', icon: 'group', active: 'prefix' },
-            { to: '/bulletins', label: '公告', icon: 'bell', active: 'prefix' },
+            { to: '/', label: '全站动态', icon: 'home', active: 'exact' },
+            { to: '/groups', label: '站内群组', icon: 'group', active: 'prefix' },
+            { to: '/bulletins', label: '全站公告', icon: 'bell', active: 'prefix' },
             { to: '/notifications', label: '站内通知', icon: 'inbox', active: 'prefix' },
             { to: '/bookmarks', label: '我的收藏', icon: 'bookmark', active: 'prefix' },
-            { to: '/activities', label: '活动', icon: 'calendar', active: 'prefix' },
+            { to: '/activities', label: '全站活动', icon: 'calendar', active: 'prefix' },
         ],
     },
     {
         label: '服务',
         items: [
-            { to: '/feedbacks', label: '反馈', icon: 'feedback', active: 'prefix' },
+            { to: '/feedbacks', label: '反馈意见', icon: 'feedback', active: 'prefix' },
             { to: '/spaces', label: '空间预约', icon: 'calendar', active: 'prefix' },
-            { to: '/dorms', label: '宿舍', icon: 'bed', active: 'prefix' },
+            { to: '/dorms', label: '宿舍分配', icon: 'bed', active: 'prefix' },
         ],
     },
     {
         label: '成长',
         items: [
-            { to: '/redeems', label: '商城', icon: 'gift', active: 'prefix' },
-            { to: '/cards', label: '卡片', icon: 'card', active: 'prefix' },
-            { to: '/achievements', label: '成就', icon: 'award', active: 'prefix' },
+            { to: '/daily-points', label: '每日积分', icon: 'award', active: 'prefix' },
+            { to: '/redeems', label: '商城兑换', icon: 'gift', active: 'prefix' },
+            { to: '/cards', label: '卡片收集', icon: 'card', active: 'prefix' },
+            { to: '/achievements', label: '成就收集', icon: 'award', active: 'prefix' },
         ],
     },
 ]

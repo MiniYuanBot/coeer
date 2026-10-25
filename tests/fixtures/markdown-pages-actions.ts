@@ -1,4 +1,5 @@
 export const submitted = { action: '', data: {} as Record<string, unknown> }
+export const getMentionCandidatesFn = async () => [{ id: '11111111-1111-4111-8111-111111111111', name: '小明' }]
 export const failure = { mode: '' }
 
 function action(name: string) {

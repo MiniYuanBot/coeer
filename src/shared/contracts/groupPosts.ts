@@ -93,7 +93,7 @@ export interface GroupPostWithAuthor extends GroupPost {
     reactionCount?: number;
     hasReacted?: boolean;
     isBookmarked?: boolean;
-    author: Pick<DbUser, 'id' | 'name'> | null;
+    author: (Pick<DbUser, 'id' | 'name'> & { avatarUrl?: string | null }) | null;
 }
 
 export interface GroupPostWithGroup extends GroupPost {
@@ -105,7 +105,7 @@ export interface PublicGroupPost extends GroupPostWithAuthor {
 }
 
 export interface GroupPostFull extends GroupPost {
-    author: Pick<DbUser, 'id' | 'name'>;
+    author: (Pick<DbUser, 'id' | 'name'> & { avatarUrl?: string | null });
     group: Pick<Group, 'id' | 'name' | 'slug'>;
 }
 

@@ -1,4 +1,5 @@
 export type SessionUser = {
+    avatarUrl?: string | null
     email: string
     name?: string | null
     role: 'student' | 'moderator' | 'admin'
@@ -21,6 +22,8 @@ export type IconName =
     | 'calendar'
     | 'card'
     | 'check'
+    | 'pause'
+    | 'play'
     | 'chevron'
     | 'coins'
     | 'comment'

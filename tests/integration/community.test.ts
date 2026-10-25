@@ -180,7 +180,7 @@ describe('COEER post interactions and author permissions', () => {
         expect((await ReplyService.delete({ id: root.id })).success).toBe(false)
         await db.update(groupMembers).set({ status: 'approved' }).where(eq(groupMembers.id, applicant.id))
         expect((await ReplyService.listByTarget(page)).data?.total).toBe(2)
-        expect((await ReplyService.update({ id: root.id, content: '管理员不能冒充作者编辑' })).success).toBe(false)
+        expect((await ReplyService.update({ id: root.id, content: '管理员修订回复' })).success).toBe(true)
         expect((await ReplyService.delete({ id: root.id })).success).toBe(true)
         expect((await ReplyService.getById({ id: child.id })).data?.content).toBe('谢谢！')
         signIn()
@@ -312,7 +312,7 @@ describe('COEER group administrator capabilities', () => {
     async function fixture() {
         const [group] = await db.insert(groups).values({ name: '管理测试', slug: 'management', category: GROUP_CATEGORY_ARRAY[0], creatorId: ids.student, status: 'approved', isPublic: false }).returning()
         const [owner, member, applicant] = await db.insert(groupMembers).values([
-            { groupId: group.id, userId: ids.student, role: 'admin', status: 'approved' },
+            { groupId: group.id, userId: ids.student, role: 'owner', status: 'approved' },
             { groupId: group.id, userId: ids.other, role: 'member', status: 'approved' },
             { groupId: group.id, userId: ids.admin, role: 'member', status: 'pending' },
         ]).returning()
@@ -371,7 +371,7 @@ describe('COEER group administrator capabilities', () => {
         expect((await GroupService.listAllGroups({ ...page, search: group.slug })).data?.items?.[0]?.memberCount).toBe(2)
     })
 
-    it('allows group admins to review members, set roles and moderate posts without platform review powers', async () => {
+    it('allows owners to set roles and group admins to review members and moderate posts without platform review powers', async () => {
         const { group, member, applicant } = await fixture()
         signIn(ids.other)
         expect((await GroupService.update({ id: group.id, name: '越权修改' })).success).toBe(false)
@@ -392,25 +392,25 @@ describe('COEER group administrator capabilities', () => {
         expect((await GroupPostService.delete({ id: post.id })).success).toBe(true)
         expect((await GroupService.removeMember({ memberId: applicant.id })).success).toBe(true)
     })
-    it('protects the last admin from removal, demotion, leaving and concurrent role changes', async () => {
+    it('protects the owner from removal, demotion, leaving and concurrent role changes', async () => {
         const { group, owner, member } = await fixture()
         signIn()
-        expect((await GroupService.updateMember({ memberId: owner.id, role: 'member' })).state.code).toBe('LAST_ADMIN')
-        expect((await GroupService.removeMember({ memberId: owner.id })).state.code).toBe('LAST_ADMIN')
-        expect((await GroupService.leaveGroup({ groupId: group.id })).state.code).toBe('LAST_ADMIN')
+        expect((await GroupService.updateMember({ memberId: owner.id, role: 'member' })).state.code).toBe('OWNER_PROTECTED')
+        expect((await GroupService.removeMember({ memberId: owner.id })).state.code).toBe('OWNER_PROTECTED')
+        expect((await GroupService.leaveGroup({ groupId: group.id })).state.code).toBe('OWNER_PROTECTED')
         await GroupService.updateMember({ memberId: member.id, role: 'admin' })
         const results = await Promise.all([
             GroupService.updateMember({ memberId: owner.id, role: 'member' }),
             GroupService.updateMember({ memberId: member.id, role: 'member' }),
         ])
         expect(results.filter((result) => result.success)).toHaveLength(1)
-        const admins = (await db.select().from(groupMembers).where(eq(groupMembers.groupId, group.id))).filter((item) => item.role === 'admin' && item.status === 'approved')
-        expect(admins).toHaveLength(1)
+        const owners = (await db.select().from(groupMembers).where(eq(groupMembers.groupId, group.id))).filter((item) => item.role === 'owner' && item.status === 'approved')
+        expect(owners).toHaveLength(1)
     })
-    it('revokes a creator’s management rights after removal and keeps unreviewed groups manageable by their admins', async () => {
+    it('revokes a creator’s management rights after transfer and keeps unreviewed groups manageable by their owner', async () => {
         const { group, owner, member } = await fixture()
         signIn()
-        await GroupService.updateMember({ memberId: member.id, role: 'admin' })
+        await GroupService.updateMember({ memberId: member.id, role: 'owner' })
         signIn(ids.other)
         expect((await GroupService.removeMember({ memberId: owner.id })).success).toBe(true)
         signIn()
@@ -482,7 +482,7 @@ describe('COEER notification delivery and ownership', () => {
         expect((await db.select().from(notifications))[0]).toMatchObject({ userId: ids.student, type: 'group_review' })
         const [member] = await db.insert(groupMembers).values({ groupId: group.id, userId: ids.other, role: 'member', status: 'pending' }).returning()
         signIn()
-        expect((await GroupService.updateMember({ memberId: member.id, role: 'member', status: 'rejected' })).success).toBe(true)
+        expect((await GroupService.updateMember({ memberId: member.id, status: 'rejected' })).success).toBe(true)
         expect((await db.select().from(notifications).where(eq(notifications.userId, ids.other)))[0]).toMatchObject({ type: 'membership_review', href: '/groups' })
     })
 })

@@ -72,8 +72,8 @@ export const groupPostQueries = {
     },
 
     // Update content of post
-    async update(data: UpdateGroupPostInput): Promise<void> {
-        const [post] = await db
+    async update(data: UpdateGroupPostInput, executor: DbExecutor = db): Promise<void> {
+        const [post] = await executor
             .update(groupPosts)
             .set({
                 ...data,
@@ -103,7 +103,7 @@ export const groupPostQueries = {
             where: eq(groupPosts.id, data.id),
             with: {
                 author: {
-                    columns: { id: true, name: true },
+                    columns: { id: true, name: true, avatarUrl: true },
                 },
             },
         })
@@ -116,7 +116,7 @@ export const groupPostQueries = {
         return db.query.groupPosts.findMany({
             where: buildWhereClause({ publicOnly: true }),
             with: {
-                author: { columns: { id: true, name: true } },
+                author: { columns: { id: true, name: true, avatarUrl: true } },
                 group: { columns: { id: true, name: true, slug: true } },
             },
             orderBy: [desc(groupPosts.createdAt), desc(groupPosts.id)],
@@ -132,7 +132,7 @@ export const groupPostQueries = {
             where: buildWhereClause({ groupId, type, isPinned }),
             with: {
                 author: {
-                    columns: { id: true, name: true },
+                    columns: { id: true, name: true, avatarUrl: true },
                 },
             },
             orderBy: [

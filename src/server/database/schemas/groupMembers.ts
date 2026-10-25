@@ -1,4 +1,5 @@
-import { pgTable, uuid, pgEnum, timestamp, unique, index } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { pgTable, uuid, pgEnum, timestamp, unique, index, uniqueIndex } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { groups } from './groups'
 import { GROUP_MEMBER_ROLE_ARRAY, GroupMemberRole, GROUP_MEMBER_STATUS_ARRAY, GroupMemberStatus } from '@shared/constants'
@@ -19,6 +20,7 @@ export const groupMembers = pgTable('group_members', {
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
+    uniqueIndex('group_members_one_owner_idx').on(table.groupId).where(sql`${table.role} = 'owner'`),
     // constraint
     unique('group_members_group_id_user_id_unique').on(table.groupId, table.userId),
     index('group_members_user_status_idx').on(table.userId, table.status, table.groupId),

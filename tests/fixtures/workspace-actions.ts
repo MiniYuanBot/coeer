@@ -33,7 +33,6 @@ export const adminCreateAchievementFn = action,
     getActivityParticipantsFn = action,
     getAllAchievementsFn = action,
     getBulletinByIdFn = action,
-    getBulletinFeedFn = action,
     getCardPoolFn = action,
     getDormAdminOverviewFn = action,
     getDormQuestionnaireConfigFn = action,
@@ -84,6 +83,19 @@ export const adminCreateAchievementFn = action,
     updateReplyFn = action
 
 export const getHomeFn = action
+export const getMentionCandidatesFn = async () => []
+export const getDailyPointTasksFn = async () => (await import('./workspace-data')).dailyPoints
+export const getAdminPointBalanceFn = async () => ({ success: true, data: { balance: 125 } })
+export const adjustUserPointsFn = async ({ data }: any) => {
+    if ((window as any).__pointsFail) throw new Error('调整失败，请重试')
+    ;(window as any).__pointAdjustment = data
+    return { balance: 125 + data.amount }
+}
+export const getBulletinFeedFn = async ({ data }: any) => {
+    const query = new URLSearchParams(location.search)
+    const items = query.has('notices') ? [{ id: data.notificationMode, title: data.notificationMode === 'modal' ? '弹窗公告' : '横幅公告', content: '请查看新的校园公告。', notificationMode: data.notificationMode, updatedAt: query.has('noticeVersion') ? '2026-10-27T00:00:00Z' : '2026-10-26T00:00:00Z' }] : []
+    return { success: true, data: { items, total: items.length } }
+}
 
 export async function updateFeedbackStatusFn({ data }: any) {
     if ((window as any).__feedbackFail) throw new Error('保存失败，请重试')

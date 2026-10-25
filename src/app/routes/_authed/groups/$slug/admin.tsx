@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_authed/groups/$slug/admin')({
 })
 
 function GroupAdminPage() {
-    const { group } = Route.useRouteContext()
+    const { group, isOwner } = Route.useRouteContext()
     const { slug } = Route.useParams()
 
     const stats = [
@@ -54,7 +54,7 @@ function GroupAdminPage() {
                         <Icon name="group" className="h-5 w-5 text-primary" />
                         <div>
                             <div className="text-sm font-medium">成员审核</div>
-                            <div className="text-xs text-muted-foreground">审批入群申请、调整角色与移除成员</div>
+                            <div className="text-xs text-muted-foreground">{isOwner ? '审批入群申请、调整角色与移除成员' : '审批入群申请与移除成员'}</div>
                         </div>
                     </Link>
                     <Link
@@ -65,7 +65,7 @@ function GroupAdminPage() {
                         <Icon name="spark" className="h-5 w-5 text-primary" />
                         <div>
                             <div className="text-sm font-medium">群组设置</div>
-                            <div className="text-xs text-muted-foreground">编辑资料、解散群组</div>
+                            <div className="text-xs text-muted-foreground">{isOwner ? '编辑资料、解散群组' : '编辑群组资料'}</div>
                         </div>
                     </Link>
                 </div>

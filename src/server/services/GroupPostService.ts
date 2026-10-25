@@ -1,3 +1,4 @@
+import { MentionService } from './MentionService'
 // services/GroupPostService.ts
 import type {
     GroupPostWithAuthor,
@@ -100,7 +101,7 @@ export class GroupPostService {
 
             // Check admin permission for announcement
             if (data.type === GROUP_POST_TYPE.ANNOUNCEMENT) {
-                const isAdmin = membership.role === GROUP_MEMBER_ROLE.ADMIN
+                const isAdmin = (membership.role === GROUP_MEMBER_ROLE.ADMIN || membership.role === GROUP_MEMBER_ROLE.OWNER)
                 if (!isAdmin) {
                     return {
                         success: false,
@@ -125,6 +126,7 @@ export class GroupPostService {
                     updatedAt: new Date(),
                 }, tx)
                 await EngagementService.recordInTx(user.id, 'post', post.id, tx)
+                await MentionService.notify({ postId: post.id, actorId: user.id, actorName: user.name, content: data.content }, tx)
             })
 
             return {
@@ -176,9 +178,9 @@ export class GroupPostService {
                 }
             }
 
-            await groupPostQueries.update({
-                ...data,
-                updatedAt: new Date(),
+            await db.transaction(async tx => {
+                await groupPostQueries.update({ ...data, updatedAt: new Date() }, tx)
+                if (data.content !== undefined) await MentionService.notify({ postId: post.id, actorId: user.id, actorName: user.name, content: data.content }, tx)
             })
 
             return {

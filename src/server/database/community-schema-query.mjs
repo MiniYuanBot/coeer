@@ -5,8 +5,8 @@ export const COMMUNITY_SCHEMA_CHECK_SQL = `
            p.id, p.user_id, p.email_hash, p.token_hash, p.password_version,
            p.created_at, p.expires_at, p.consumed_at,
            i.id, i.mime_type, i.data, i.uploaded_by, i.created_at,
-           a.is_hidden, c.is_hidden
+           a.is_hidden, c.is_hidden, u.avatar_url, bulletin.notification_mode
     FROM notifications n CROSS JOIN bookmarks b CROSS JOIN password_resets p CROSS JOIN uploaded_images i
-         CROSS JOIN achievements a CROSS JOIN cards c
+         CROSS JOIN achievements a CROSS JOIN cards c CROSS JOIN users u CROSS JOIN bulletins bulletin
     LIMIT 0
 `

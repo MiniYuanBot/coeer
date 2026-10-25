@@ -30,7 +30,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
             plugins: [tailwindcss()],
             resolve: { alias: [
                 { find: /^@\/components\/coeer$/, replacement: fixture('markdown-pages-ui.ts') },
-                { find: /^~\/functions$/, replacement: fixture('markdown-pages-actions.ts') },
+                { find: /^~\/functions(?:\/mentions)?$/, replacement: fixture('markdown-pages-actions.ts') },
                 { find: '@tanstack/react-router', replacement: fixture('markdown-pages-router.tsx') },
                 { find: '@', replacement: fileURLToPath(new URL('../src/app', import.meta.url)) },
                 { find: '@shared', replacement: fileURLToPath(new URL('../src/shared', import.meta.url)) },
@@ -58,6 +58,24 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         if (kind === 'bulletins' || kind === 'activities') await page.getByRole('link', { name: /^新建/ }).click()
         await page.locator('textarea').waitFor()
     }
+
+    it('inserts a member selected with the keyboard and submits their stable mention ID', async () => {
+        await open('createPost')
+        const input = page.locator('textarea')
+        await input.fill('@小')
+        await page.getByRole('button', { name: /@小明/ }).waitFor()
+        await input.press('Enter')
+        expect(await input.inputValue()).toContain('[@小明](#mention-11111111-1111-4111-8111-111111111111)')
+        expect(await page.getByRole('region', { name: '内容实时预览' }).getByText('@小明', { exact: true }).count()).toBe(1)
+    })
+
+    it('offers independent bulletin notification and pin controls', async () => {
+        await open('bulletins')
+        await page.locator('[name=notificationMode]').selectOption('banner')
+        await page.locator('[name=isPinned]').check()
+        expect(await page.locator('[name=notificationMode]').inputValue()).toBe('banner')
+        expect(await page.locator('[name=isPinned]').isChecked()).toBe(true)
+    })
 
     it('moves activity registrations into their scope and retains the activity type filter', async () => {
         await page.goto(new URL('/tests/fixtures/markdown-pages.html?kind=activities', origin).href)

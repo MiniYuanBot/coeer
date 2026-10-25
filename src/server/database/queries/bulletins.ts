@@ -5,6 +5,7 @@ import type { BulletinIdInput, ListBulletinsInput, UpdateBulletinInput } from '@
 
 function buildWhere(data: ListBulletinsInput): SQL | undefined {
     const conditions: SQL[] = []
+    if (data.notificationMode) conditions.push(eq(bulletins.notificationMode, data.notificationMode))
     if (data.type) conditions.push(eq(bulletins.type, data.type))
     if (data.isPinned !== undefined) conditions.push(eq(bulletins.isPinned, data.isPinned))
     if (data.search) {

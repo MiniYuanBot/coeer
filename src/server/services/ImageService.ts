@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../database/client'
 import { uploadedImages } from '../database/schemas/images'
+import { users } from '../database/schemas/users'
 import { AuthService } from './AuthService'
-import { IMAGE_MIME_TYPES, MAX_IMAGE_BYTES } from '@shared/images'
+import { IMAGE_MIME_TYPES, MAX_IMAGE_BYTES, MAX_AVATAR_BYTES } from '@shared/images'
 import { env } from '../config'
 
 function failure(message: string, status: number) {
@@ -25,7 +26,10 @@ function imageType(bytes: Buffer): string | undefined {
 export async function uploadImage(request: Request): Promise<Response> {
     const identity = await AuthService.getCurrentUser()
     if (!identity.success || !identity.data) return failure('请先登录', 401)
-    if (identity.data.role !== 'admin') return failure('只有管理员可以上传图片', 403)
+    const avatar = new URL(request.url).searchParams.get('purpose') === 'avatar'
+    const maxBytes = avatar ? MAX_AVATAR_BYTES : MAX_IMAGE_BYTES
+    const sizeError = avatar ? '头像不能超过 1 MB' : '图片不能超过 5 MB'
+    if (!avatar && identity.data.role !== 'admin') return failure('只有管理员可以上传图片', 403)
     const origin = request.headers.get('origin')
     const allowedOrigins = [new URL(request.url).origin, new URL(env.CLIENT_URL).origin]
     if ((origin && !allowedOrigins.includes(origin)) || request.headers.get('sec-fetch-site') === 'cross-site') {
@@ -33,7 +37,7 @@ export async function uploadImage(request: Request): Promise<Response> {
     }
     const mime = request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()
     if (!IMAGE_MIME_TYPES.some((type) => type === mime)) return failure('请选择 PNG、JPEG、GIF 或 WebP 图片', 415)
-    if (Number(request.headers.get('content-length')) > MAX_IMAGE_BYTES) return failure('图片不能超过 5 MB', 413)
+    if (Number(request.headers.get('content-length')) > maxBytes) return failure(sizeError, 413)
     if (!request.body) return failure('请选择图片', 400)
 
     const reader = request.body.getReader()
@@ -44,9 +48,9 @@ export async function uploadImage(request: Request): Promise<Response> {
             const { done, value } = await reader.read()
             if (done) break
             size += value.byteLength
-            if (size > MAX_IMAGE_BYTES) {
+            if (size > maxBytes) {
                 await reader.cancel()
-                return failure('图片不能超过 5 MB', 413)
+                return failure(sizeError, 413)
             }
             chunks.push(value)
         }
@@ -56,9 +60,14 @@ export async function uploadImage(request: Request): Promise<Response> {
     const bytes = Buffer.concat(chunks)
     const detected = imageType(bytes)
     if (!detected || detected !== mime) return failure('图片内容与格式不符，请选择有效图片', 415)
-    const [stored] = await db.insert(uploadedImages).values({
-        mimeType: detected, data: bytes.toString('base64'), uploadedBy: identity.data.id,
-    }).returning({ id: uploadedImages.id })
+    const userId = identity.data.id
+    const stored = await db.transaction(async tx => {
+        const [image] = await tx.insert(uploadedImages).values({
+            mimeType: detected, data: bytes.toString('base64'), uploadedBy: userId,
+        }).returning({ id: uploadedImages.id })
+        if (avatar) await tx.update(users).set({ avatarUrl: '/api/images/' + image.id, updatedAt: new Date() }).where(eq(users.id, userId))
+        return image
+    })
     return Response.json({ url: `/api/images/${stored.id}` }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
 }
 

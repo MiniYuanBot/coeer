@@ -79,7 +79,7 @@ function AdminGroupsPage() {
     }
 
     const remove = async (groupId: string) => {
-        if (working || !confirm('确定删除这个群组吗？')) return
+        if (working || !confirm('确定删除这个群组吗？群组内的帖子和回复也会被删除，此操作不可撤销。')) return
         setWorking(true)
         setError('')
         try {

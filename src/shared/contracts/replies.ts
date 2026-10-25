@@ -44,7 +44,7 @@ export type ListChildRepliesInput = z.infer<typeof ListChildRepliesSchema>
 export type ListRepliesByAuthorInput = z.infer<typeof ListRepliesByAuthorSchema>
 
 export type ReplyWithAuthor = Reply & {
-    author: Pick<DbUser, 'id' | 'name'> | null
+    author: (Pick<DbUser, 'id' | 'name'> & { avatarUrl?: string | null }) | null
 }
 
 export type ReplyListItem = ReplyWithAuthor & { childCount: number }

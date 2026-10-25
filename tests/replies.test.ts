@@ -28,6 +28,8 @@ describe.skipIf(!executablePath)('reply previews and nested discussions in Chrom
             plugins: [tailwindcss()],
             resolve: { alias: [
                 { find: '~/functions/replies', replacement: actions },
+                { find: '~/functions/mentions', replacement: actions },
+                { find: '@shared', replacement: fileURLToPath(new URL('../src/shared', import.meta.url)) },
                 { find: '@tanstack/react-router', replacement: actions },
             ] },
             server: { host: '127.0.0.1', port: 0, hmr: false, fs: { allow: [process.cwd(), realpathSync('node_modules')] } },

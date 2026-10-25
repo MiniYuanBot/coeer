@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-r
 import { useState, type FormEvent } from 'react'
 import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, Pagination, PointsSummaryCard } from '@/components/coeer'
 import { z } from 'zod'
-import { ENGAGEMENT_REWARDS } from '@shared/constants/engagement'
+import { AvatarUpload } from '@/components/coeer/ui/AvatarUpload'
+import { Avatar } from '@/components/coeer/ui/Avatar'
 import { changePasswordFn, getMyPointBalanceFn, getMyPointHistoryFn, updateProfileFn } from '~/functions'
 import { SettingsSection } from '@/components/coeer/ui/SettingsSection'
 import { pointSourceLabels } from '@/components/coeer/lib/labels'
@@ -85,9 +86,7 @@ function ProfileIndexComponent() {
 
             <div className="coeer-profile-summary grid gap-4">
                 <Card className="flex min-w-0 items-center gap-4 p-4">
-                    <div aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-primary-soft text-xl font-medium text-primary">
-                        {(user.name || user.email).slice(0, 1).toUpperCase()}
-                    </div>
+                    <Avatar src={user.avatarUrl} name={user.name || user.email} className="h-12 w-12 text-xl" />
                     <div className="min-w-0">
                         <h2 className="break-words text-sm font-semibold">{user.name || 'COEER 成员'}</h2>
                         <p className="mt-1 break-all text-[13px] text-muted-foreground">{user.email}</p>
@@ -96,10 +95,36 @@ function ProfileIndexComponent() {
                     </div>
                 </Card>
 
-                <PointsSummaryCard balance={balance} />
+                <PointsSummaryCard balance={balance} showHelp={false} />
             </div>
 
             <div className="coeer-profile-content">
+                <div className="coeer-profile-settings">
+                    <SettingsSection id="profile-avatar-title" title="头像" description="为社区中的你，换一张喜欢的头像。"><AvatarUpload src={user.avatarUrl} /></SettingsSection>
+                    <section className="coeer-content-panel min-w-0" aria-labelledby="profile-points-title">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 id="profile-points-title" className="text-sm font-semibold">积分流水</h2>
+                        </div>
+                        <div className="coeer-record-list">
+                            {history.map((item: any) => (
+                                <div key={item.id} className="coeer-record-row">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="min-w-0 space-y-1">
+                                            <div className="text-sm font-medium">{item.description || pointSourceLabels[item.source] || '积分记录'}</div>
+                                            <div className="text-xs text-muted-foreground">{pointSourceLabels[item.source] || '其他记录'}</div>
+                                        </div>
+                                        <div className={item.amount > 0 ? 'shrink-0 font-medium tabular-nums text-success' : 'shrink-0 font-medium tabular-nums text-danger'}>
+                                            {item.amount > 0 ? '+' : ''}{item.amount}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {historyFailed ? <Alert tone="danger">暂时无法读取积分记录。<Button variant="ghost" size="sm" onClick={() => void router.invalidate()}>重试</Button></Alert> : !history.length ? <p className="py-6 text-sm text-[hsl(var(--muted-foreground))]">暂无积分流水</p> : null}
+                        </div>
+                        <Pagination total={total} page={page} size={8} onChange={(page) => void navigate({ to: '/profile', search: { page } })} />
+
+                    </section>
+                </div>
                 <div className="coeer-profile-settings">
                     <SettingsSection id="profile-name-title" title="个人资料" description="昵称会显示在社区内容和预约管理中。">
                         <form method="post" onSubmit={(event) => void updateProfile(event)} className="space-y-4">
@@ -120,34 +145,6 @@ function ProfileIndexComponent() {
                         </form>
                     </SettingsSection>
                 </div>
-
-                <section className="coeer-content-panel min-w-0" aria-labelledby="profile-points-title">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 id="profile-points-title" className="text-sm font-semibold">积分流水</h2>
-                    </div>
-                    <div className="coeer-record-list">
-                        {history.map((item: any) => (
-                            <div key={item.id} className="coeer-record-row">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="min-w-0 space-y-1">
-                                        <div className="text-sm font-medium">{item.description || pointSourceLabels[item.source] || '积分记录'}</div>
-                                        <div className="text-xs text-muted-foreground">{pointSourceLabels[item.source] || '其他记录'}</div>
-                                    </div>
-                                    <div className={item.amount > 0 ? 'shrink-0 font-medium tabular-nums text-success' : 'shrink-0 font-medium tabular-nums text-danger'}>
-                                        {item.amount > 0 ? '+' : ''}{item.amount}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {historyFailed ? <Alert tone="danger">暂时无法读取积分记录。<Button variant="ghost" size="sm" onClick={() => void router.invalidate()}>重试</Button></Alert> : !history.length ? <p className="py-6 text-sm text-[hsl(var(--muted-foreground))]">暂无积分流水</p> : null}
-                    </div>
-                    <Pagination total={total} page={page} size={8} onChange={(page) => void navigate({ to: '/profile', search: { page } })} />
-                    <div className="mt-6 space-y-2 border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-                        <h3 className="font-semibold text-foreground">如何获得积分</h3>
-                        {Object.entries(ENGAGEMENT_REWARDS).map(([key, rule]) => <p key={key}>{rule.label}：每次 +{rule.amount}，每日最多 {rule.dailyLimit} 次。</p>)}
-                        <p>每日额度按北京时间零点重置，活动签到由管理员或主办方确认。</p>
-                    </div>
-                </section>
             </div>
         </PageLayout>
     )

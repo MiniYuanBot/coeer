@@ -1,7 +1,7 @@
 // groupMemberQueries.ts
 import { db } from '../client'
 import { groupMembers, groups } from '../schemas'
-import { eq, desc, and, inArray, count, asc, SQL, ilike, or } from 'drizzle-orm'
+import { eq, desc, and, inArray, count, asc, SQL, ilike, or, sql } from 'drizzle-orm'
 import type { NewGroupMember, GroupMember } from '../schemas'
 import {
     GroupMemberWithUser,
@@ -46,7 +46,7 @@ function buildWhereClause(params: {
     }
 
     if (role) {
-        conditions.push(eq(groupMembers.role, role))
+        conditions.push(role === 'admin' ? inArray(groupMembers.role, ['owner', 'admin']) : eq(groupMembers.role, role))
     }
 
     if (params.category || params.search) {
@@ -106,11 +106,11 @@ export const groupMemberQueries = {
             where: buildWhereClause({ groupId, status, role }),
             with: {
                 user: {
-                    columns: { id: true, name: true, email: true },
+                    columns: { id: true, name: true, avatarUrl: true },
                 },
             },
             orderBy: [
-                asc(groupMembers.role), // Admins first
+                sql`case ${groupMembers.role} when 'owner' then 0 when 'admin' then 1 else 2 end`,
                 asc(groupMembers.joinedAt)
             ],
             limit,
@@ -165,7 +165,8 @@ export const groupMemberQueries = {
             .select()
             .from(groupMembers)
             .where(
-                buildWhereClause({ ...data, status: GROUP_MEMBER_STATUS.APPROVED })
+                and(buildWhereClause({ ...data, role: undefined, status: GROUP_MEMBER_STATUS.APPROVED }),
+                    data.role === 'admin' ? inArray(groupMembers.role, ['owner', 'admin']) : eq(groupMembers.role, data.role))
             )
             .limit(1)
 

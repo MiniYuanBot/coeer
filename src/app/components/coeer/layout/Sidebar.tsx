@@ -1,3 +1,4 @@
+import { Avatar } from '../ui/Avatar'
 import { Link, useLocation } from '@tanstack/react-router'
 import * as React from 'react'
 import type { SessionUser } from '../lib/types'
@@ -86,7 +87,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                 <div className="mb-3 flex items-center justify-between px-2"><span className="text-xs text-muted-foreground">外观</span><ThemeToggle /></div>
                 <div className="flex items-center gap-2 px-1">
                     <Link to="/profile" onClick={onNavigate} className="coeer-focus flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1 py-1">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{(user?.name || user?.email || 'U').slice(0, 1).toUpperCase()}</span>
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-semibold text-primary"><Avatar src={user?.avatarUrl} name={user?.name || user?.email} className="h-8 w-8 text-xs" /></span>
                         <span className="min-w-0">
                             <span className="block truncate text-xs font-medium">{user?.name || user?.email || '未登录'}</span>
                             <span className="mt-0.5 block text-xs text-muted-foreground">{roles[user?.role || ''] || '访客'}</span>

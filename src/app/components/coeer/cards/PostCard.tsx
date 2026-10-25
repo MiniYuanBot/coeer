@@ -1,3 +1,4 @@
+import { Avatar } from '../ui/Avatar'
 import { Link } from '@tanstack/react-router'
 import { formatDate } from '../lib/date'
 import { Badge } from '../ui/Badge'
@@ -17,6 +18,7 @@ export function PostCard({ post, to, variant = 'default', source }: { post: any;
             <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={pinned ? 'primary' : 'default'}>{pinned ? '置顶' : post.type === 'announcement' ? '公告' : post.type === 'discussion' ? '讨论' : post.type}</Badge>
                 {source ? <span className="text-xs text-muted-foreground">{source}</span> : null}
+                <Avatar src={post.author?.avatarUrl} name={post.author?.name} className="h-6 w-6 text-xs" /><span className="text-xs text-muted-foreground">{post.author?.name || '成员'}</span>
                 <span className="text-xs text-[hsl(var(--muted-foreground))]">{formatDate(post.createdAt)}</span>
             </div>
             <h3 className="mt-3 text-[15px] font-medium">{to ? <Link to={to as any} className="coeer-card-link rounded hover:text-primary">{post.title}</Link> : post.title}</h3>

@@ -10,6 +10,14 @@ export const PointChangeSchema = z.object({
     description: z.string().max(200).optional(),
 })
 
+export const AdminPointAdjustmentSchema = z.object({
+    userId: z.uuid(),
+    requestId: z.uuid(),
+    amount: z.number().int().min(-1000000).max(1000000).refine(value => value !== 0, '积分调整不能为零'),
+    reason: z.string().trim().min(1, '请填写调整原因').max(120),
+})
+export type AdminPointAdjustmentInput = z.infer<typeof AdminPointAdjustmentSchema>
+
 export const PointHistorySchema = z.object({
     userId: z.uuid().optional(),
     type: z.enum(POINT_TRANSACTION_TYPE_ARRAY).optional(),

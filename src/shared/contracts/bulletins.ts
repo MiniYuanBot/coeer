@@ -13,6 +13,7 @@ export const CreateBulletinSchema = z.object({
     content: z.string().min(1).max(5000),
     sourceId: z.uuid().optional(),
     sourceType: z.enum(BULLETIN_SOURCE_TYPE_ARRAY).optional(),
+    notificationMode: z.enum(['none', 'modal', 'banner']).optional(),
     isPinned: z.boolean().optional().default(false),
 })
 
@@ -20,11 +21,13 @@ export const UpdateBulletinSchema = z.object({
     id: z.uuid(),
     title: z.string().min(1).max(200).optional(),
     content: z.string().min(1).max(5000).optional(),
+    notificationMode: z.enum(['none', 'modal', 'banner']).optional(),
     isPinned: z.boolean().optional(),
 })
 
 export const ListBulletinsSchema = z.object({
     type: z.enum(BULLETIN_TYPE_ARRAY).optional(),
+    notificationMode: z.enum(['none', 'modal', 'banner']).optional(),
     isPinned: z.boolean().optional(),
     search: z.string().optional(),
     ...PaginationSchema.shape,

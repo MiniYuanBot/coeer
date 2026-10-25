@@ -1,4 +1,6 @@
 import { Route as AdminGroups } from '../../src/app/routes/_authed/admin/groups/index'
+import { Route as DailyPoints } from '../../src/app/routes/_authed/daily-points'
+import { Route as AdminStats } from '../../src/app/routes/_authed/admin/stats'
 import { Route as AdminBookings } from '../../src/app/routes/_authed/admin/spaces/bookings'
 import { Route as AdminAllowlist } from '../../src/app/routes/_authed/admin/spaces/allowlist'
 import { Route as AdminCatalog } from '../../src/app/routes/_authed/admin/spaces/catalog'
@@ -58,6 +60,8 @@ function Components() {
 }
 const pages: Record<string, any> = { bulletins: Bulletins, activities: Activities, bookmarks: Bookmarks, redeems: Redeems, notifications: Notifications, adminGroups: AdminGroups, adminBookings: AdminBookings, adminAllowlist: AdminAllowlist, adminCatalog: AdminCatalog, feedbacks: Feedbacks, detail: Detail, profile: Profile, spaces: Spaces, slots: Slots, bookings: Bookings, booking: Booking, admin: Admin, groups: Groups, groupPending: GroupHome, groupMember: GroupHome, groupJoin: GroupHome }
 const HomeComponent = Home.options.component!
+pages.dailyPoints = DailyPoints
+pages.adminStats = AdminStats
 function Fixture() {
     const Component = pages[screen]?.options.component
     if (screen === 'home' || screen === 'guest') return <HomeComponent />

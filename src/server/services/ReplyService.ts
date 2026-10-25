@@ -1,3 +1,4 @@
+import { MentionService } from './MentionService'
 import { replyQueries } from '../database/queries'
 import { AuthService } from './AuthService'
 import { db } from '../database/client'
@@ -39,6 +40,7 @@ export class ReplyService {
                 await pointQueries.lockUser(user.id, tx)
                 const created = await replyQueries.create({ ...data, userId: user.id }, tx)
                 await EngagementService.recordInTx(user.id, 'reply', created.id, tx)
+                await MentionService.notify({ postId: data.targetId, replyId: created.id, actorId: user.id, actorName: user.name, content: data.content }, tx)
                 return created
             })
             const withAuthor = await replyQueries.findById({ id: reply.id })
@@ -92,8 +94,11 @@ export class ReplyService {
             const reply = await replyQueries.findById({ id: data.id })
             if (!reply || !reply.content) return { success: false, state: REPLY.NOT_FOUND }
             const access = await getDiscussionAccess(reply, user)
-            if (!access.canReply || reply.userId !== user.id) return { success: false, state: REPLY.FORBIDDEN }
-            await replyQueries.update(data)
+            if (!access.canRead || (!access.canManage && (!access.canReply || reply.userId !== user.id))) return { success: false, state: REPLY.FORBIDDEN }
+            await db.transaction(async tx => {
+                await replyQueries.update(data, tx)
+                await MentionService.notify({ postId: reply.targetId, replyId: reply.id, actorId: user.id, actorName: user.name, content: data.content }, tx)
+            })
             return { success: true, state: REPLY.UPDATE_SUCCESS }
         } catch (err) {
             console.error('Update reply error:', err)

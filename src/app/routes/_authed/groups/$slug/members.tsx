@@ -1,3 +1,4 @@
+import { Avatar } from '@/components/coeer/ui/Avatar'
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { z } from 'zod'
@@ -38,7 +39,7 @@ export const Route = createFileRoute('/_authed/groups/$slug/members')({
 })
 
 function GroupMembersPage() {
-    const { isAdmin } = Route.useRouteContext()
+    const { isAdmin, isOwner } = Route.useRouteContext()
     const { members, total, group, pageSize } = Route.useLoaderData()
     const { status, page } = Route.useSearch()
     const navigate = useNavigate()
@@ -76,6 +77,7 @@ function GroupMembersPage() {
     }
 
     const handleRoleChange = async (memberId: string, role: string) => {
+        if (role === 'owner' && !confirm('转让后你将成为普通成员，确定转让群主身份吗？')) return
         setProcessingId(memberId)
         setActionError('')
         try {
@@ -93,7 +95,7 @@ function GroupMembersPage() {
     return (
         <PageLayout level="h2"
             title="群组成员"
-            description="查看群组成员与入群申请。"
+            description="查看群组成员与入群申请。每群 1 名群主、至多 3 名管理员，仅群主可以调整身份。"
             filters={{
                 onClear: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } }),
                 groups: [
@@ -117,19 +119,17 @@ function GroupMembersPage() {
                     {members.map((member) => (
                         <div key={member.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary-soft text-sm font-medium text-[hsl(var(--primary))]">
-                                    {member.user.name?.[0] || 'U'}
-                                </div>
+                                <Avatar src={member.user.avatarUrl} name={member.user.name} />
                                 <div>
                                     <p className="text-[15px] font-medium">{member.user.name}</p>
                                     <div className="mt-1 flex flex-wrap gap-2">
-                                        <Badge>{member.role === 'admin' ? '管理员' : '成员'}</Badge>
+                                        <Badge>{member.role === 'owner' ? '群主' : member.role === 'admin' ? '管理员' : '成员'}</Badge>
                                         {member.status === 'pending' ? <Badge tone="warning">待审核</Badge> : member.status === 'rejected' ? <Badge tone="danger">已拒绝</Badge> : <Badge tone="success">已通过</Badge>}
                                     </div>
                                 </div>
                             </div>
 
-                            {isAdmin && (
+                            {isAdmin && member.role !== 'owner' && (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {member.status === 'pending' && (
                                         <><Button
@@ -142,7 +142,7 @@ function GroupMembersPage() {
                                         </Button><Button size="sm" variant="outline" disabled={processingId !== null} onClick={() => void handleApprove(member.id, false)}>拒绝</Button></>
                                     )}
 
-                                    {member.status === 'approved' ? <select
+                                    {isOwner && member.status === 'approved' ? <select
                                         aria-label={`调整 ${member.user.name || '成员'} 的角色`}
                                         value={member.role}
                                         onChange={(e) => handleRoleChange(member.id, e.target.value)}
@@ -151,6 +151,7 @@ function GroupMembersPage() {
                                     >
                                         <option value="member">成员</option>
                                         <option value="admin">管理员</option>
+                                        <option value="owner">转让群主</option>
                                     </select> : null}
 
                                     <Button

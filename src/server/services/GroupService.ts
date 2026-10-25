@@ -1,7 +1,8 @@
 // services/GroupService.ts
 import { db } from '../database/client'
-import { Group, GroupMember, groups, groupMembers } from '../database/schemas'
-import { eq } from 'drizzle-orm'
+import { Group, GroupMember, groups, groupMembers, groupPosts, replies, reactions } from '../database/schemas'
+import { membershipChangeError } from '@shared/group-permissions'
+import { and, eq, inArray } from 'drizzle-orm'
 import { NotificationService } from './NotificationService'
 import { AchievementService } from './AchievementService'
 import { pointQueries } from '../database/queries/points'
@@ -45,7 +46,7 @@ export class GroupService {
         return { success: true, data: membership ?? null, state: GROUP_MEMBER.GET_SUCCESS }
     }
 
-    /** Serialize roster changes per group, then recheck the actor and last admin. */
+    /** Serialize roster changes per group, then recheck ownership and the administrator cap. */
     private static async changeMembership(memberId: string, actorId: string,
         change: { remove: true; selfLeave?: boolean } | { update: UpdateGroupMemberInput },
     ): Promise<GroupMemberResponse<void>> {
@@ -60,13 +61,11 @@ export class GroupService {
             if (!member) return { success: false, state: GROUP_MEMBER.NOT_FOUND }
             const actor = roster.find((item) => item.userId === actorId)
             const leaving = 'remove' in change && change.selfLeave && member.userId === actorId
-            if (!leaving && (actor?.role !== 'admin' || actor.status !== 'approved')) return { success: false, state: GROUP_MEMBER.FORBIDDEN }
+            const error = membershipChangeError(actor, member, roster, change)
+            if (error) return { success: false, state: GROUP_MEMBER[error] }
             const update = 'update' in change ? change.update : undefined
-            if (update?.status && (member.status !== 'pending' || update.status === 'pending')) return { success: false, state: GROUP_MEMBER.INVALID_STATUS }
-            const losesAdmin = member.role === 'admin' && member.status === 'approved' &&
-                ('remove' in change || (update?.role !== undefined && update.role !== 'admin'))
-            if (losesAdmin && roster.filter((item) => item.role === 'admin' && item.status === 'approved').length <= 1) {
-                return { success: false, state: GROUP_MEMBER.LAST_ADMIN }
+            if (update?.role === 'owner' && actor) {
+                await tx.update(groupMembers).set({ role: 'member', updatedAt: new Date() }).where(eq(groupMembers.id, actor.id))
             }
             if ('remove' in change) {
                 await tx.delete(groupMembers).where(eq(groupMembers.id, memberId))
@@ -112,11 +111,11 @@ export class GroupService {
                     updatedAt: new Date()
                 }).returning()
 
-                // Add creator as admin
+                // Add the creator as the sole owner.
                 await tx.insert(groupMembers).values({
                     groupId: group.id,
                     userId: user.id,
-                    role: GROUP_MEMBER_ROLE.ADMIN,
+                    role: GROUP_MEMBER_ROLE.OWNER,
                     status: GROUP_MEMBER_STATUS.APPROVED,
                     joinedAt: new Date(),
                     updatedAt: new Date()
@@ -189,38 +188,18 @@ export class GroupService {
                 return { success: false, state: GROUP.UNAUTHORIZED }
             }
 
-            const group = await groupQueries.findById(data)
-            if (!group) {
-                return {
-                    success: false,
-                    state: GROUP.NOT_FOUND,
-                }
-            }
-
-            // Creation history does not retain management rights after a role change.
-            {
-                const isAdmin = await groupMemberQueries.checkRole({
-                    groupId: data.groupId,
-                    userId: user.id,
-                    role: 'admin'
-                })
-                if (!isAdmin) {
-                    return {
-                        success: false,
-                        state: {
-                            ...GROUP.FORBIDDEN,
-                            message: 'Only admin can delete the group'
-                        },
-                    }
-                }
-            }
-
-            await groupQueries.delete(data)
-
-            return {
-                success: true,
-                state: GROUP.DELETE_SUCCESS,
-            }
+            return await db.transaction(async tx => {
+                const [group] = await tx.select().from(groups).where(eq(groups.id, data.groupId)).for('update')
+                if (!group) return { success: false, state: GROUP.NOT_FOUND }
+                const [owner] = await tx.select().from(groupMembers).where(and(eq(groupMembers.groupId, group.id),
+                    eq(groupMembers.userId, user.id), eq(groupMembers.role, 'owner'), eq(groupMembers.status, 'approved')))
+                if (!owner && user.role !== 'admin') return { success: false, state: { ...GROUP.FORBIDDEN, message: '只有群主或平台管理员可以删除群组' } }
+                const postIds = tx.select({ id: groupPosts.id }).from(groupPosts).where(eq(groupPosts.groupId, group.id))
+                await tx.delete(replies).where(and(eq(replies.targetType, 'group_post'), inArray(replies.targetId, postIds)))
+                await tx.delete(reactions).where(and(eq(reactions.targetType, 'group_post'), inArray(reactions.targetId, postIds)))
+                await tx.delete(groups).where(eq(groups.id, group.id))
+                return { success: true, state: GROUP.DELETE_SUCCESS }
+            })
         } catch (err) {
             console.error('Delete group error:', err)
             return {
@@ -558,21 +537,6 @@ export class GroupService {
                 }
             }
 
-            // Prevent last admin from leaving
-            if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
-                const adminCount = await groupMemberQueries.countByGroup({
-                    groupId: data.groupId,
-                    role: GROUP_MEMBER_ROLE.ADMIN,
-                    status: GROUP_MEMBER_STATUS.APPROVED
-                })
-                if (adminCount <= 1) {
-                    return {
-                        success: false,
-                        state: GROUP_MEMBER.LAST_ADMIN,
-                    }
-                }
-            }
-
             return await this.changeMembership(membership.id, user.id, { remove: true, selfLeave: true })
         } catch (err) {
             console.error('Leave group error:', err)
@@ -699,20 +663,6 @@ export class GroupService {
                 }
             }
 
-            // Prevent self-demotion if last admin
-            if (membership.userId === user.id && data.role === GROUP_MEMBER_ROLE.MEMBER) {
-                const adminCount = await groupMemberQueries.countByGroup({
-                    groupId: membership.groupId,
-                    role: GROUP_MEMBER_ROLE.ADMIN,
-                    status: GROUP_MEMBER_STATUS.APPROVED
-                })
-                if (adminCount <= 1) {
-                    return {
-                        success: false,
-                        state: GROUP_MEMBER.LAST_ADMIN,
-                    }
-                }
-            }
 
             // Check status
             if (data.status && membership.status !== GROUP_MEMBER_STATUS.PENDING) {
@@ -758,20 +708,6 @@ export class GroupService {
                 }
             }
 
-            // Prevent removing last admin
-            if (membership.role === GROUP_MEMBER_ROLE.ADMIN) {
-                const adminCount = await groupMemberQueries.countByGroup({
-                    groupId: membership.groupId,
-                    role: GROUP_MEMBER_ROLE.ADMIN,
-                    status: GROUP_MEMBER_STATUS.APPROVED
-                })
-                if (adminCount <= 1) {
-                    return {
-                        success: false,
-                        state: GROUP_MEMBER.LAST_ADMIN,
-                    }
-                }
-            }
 
             return await this.changeMembership(data.memberId, user.id, { remove: true })
         } catch (err) {

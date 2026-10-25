@@ -63,6 +63,7 @@ function AdminBulletinsPage() {
         <DataTable label="公告管理表" rows={bulletins} rowKey={item => item.id} emptyTitle="暂无公告" columns={[
             { key: 'title', header: '公告', render: item => <span className="font-medium">{item.title}</span> },
             { key: 'type', header: '类型', width: '8rem', render: item => bulletinTypeLabels[item.type] || item.type },
+            { key: 'notification', header: '通知方式', width: '8rem', render: item => ({ none: '无特殊通知', modal: '居中弹窗', banner: '顶部横幅' })[item.notificationMode] },
             { key: 'pin', header: '置顶状态', width: '7rem', render: item => <StatusBadge status={item.isPinned ? 'pinned' : 'normal'} labels={{ pinned: '已置顶', normal: '未置顶' }} tone={item.isPinned ? 'primary' : 'default'} /> },
             { key: 'actions', header: '操作', width: '10rem', align: 'right', render: item => <RowActions><Button size="sm" asChild variant="outline"><Link to="/admin/bulletins/$bulletinId/edit" params={{ bulletinId: item.id }} search={{ page }}>编辑</Link></Button><Button size="sm" variant="danger" disabled={pending} onClick={() => remove(item.id)}>删除</Button></RowActions> },
         ]} />

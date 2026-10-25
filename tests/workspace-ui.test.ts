@@ -34,6 +34,106 @@ describe.skipIf(!executablePath)('workspace surfaces and interaction in Chromium
         await page.waitForFunction(() => getComputedStyle(document.body).fontSize === '14px')
     }
 
+    it('shows daily reward tasks, completed state, and the growth navigation on mobile', async () => {
+        await open('dailyPoints')
+        expect(await page.getByRole('heading', { name: '每日积分' }).count()).toBe(1)
+        expect(await page.getByText('今日已完成', { exact: true }).count()).toBe(1)
+        expect(await page.getByRole('progressbar').count()).toBe(6)
+        await page.screenshot({ path: 'tmp/glass-review/daily-points-desktop.png', fullPage: true })
+        for (const width of [320, 390]) {
+            await page.setViewportSize({ width, height: 844 })
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        }
+        await page.screenshot({ path: 'tmp/glass-review/daily-points-mobile.png', fullPage: true })
+    })
+
+    it('uploads an avatar from settings and removes the old points explanation', async () => {
+        await open('profile')
+        const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64')
+        await page.route('**/api/images/avatar-test', route => route.fulfill({ contentType: 'image/png', body: png }))
+        let uploads = 0
+        await page.route('**/api/images?purpose=avatar', route => {
+            uploads++
+            const body = route.request().postDataBuffer()!
+            expect(body.readUInt32BE(16)).toBe(256)
+            expect(body.readUInt32BE(20)).toBe(256)
+            return route.fulfill({ status: uploads === 1 ? 500 : 201, contentType: 'application/json', body: JSON.stringify(uploads === 1 ? { message: '上传失败，请重试' } : { url: '/api/images/avatar-test' }) })
+        })
+        const input = page.getByLabel('头像图片本地文件')
+        await input.setInputFiles({ name: 'large.png', mimeType: 'image/png', buffer: Buffer.alloc(1024 * 1024 + 1) })
+        await page.getByText('请选择不超过 1 MB 的 PNG、JPEG、GIF 或 WebP 图片').waitFor()
+        expect(uploads).toBe(0)
+        await input.setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png })
+        const crop = page.getByRole('dialog', { name: '裁剪头像' })
+        await crop.getByRole('button', { name: '确认裁剪' }).click()
+        await crop.waitFor({ state: 'hidden' })
+        expect(uploads).toBe(0)
+        await page.getByRole('button', { name: '保存头像', exact: true }).click()
+        await page.getByText('上传失败，请重试', { exact: true }).waitFor()
+        await page.getByRole('button', { name: '保存头像', exact: true }).click()
+        await page.getByText('头像已更新', { exact: true }).waitFor()
+        expect(uploads).toBe(2)
+        expect(await page.getByText('如何获得积分', { exact: true }).count()).toBe(0)
+        await page.screenshot({ path: 'tmp/glass-review/profile-upload-desktop.png', fullPage: true })
+        for (const width of [320, 390]) {
+            await page.setViewportSize({ width, height: 844 })
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        }
+        await page.screenshot({ path: 'tmp/glass-review/profile-upload-mobile.png', fullPage: true })
+    })
+
+    it('preserves an administrator point adjustment through failure and submits its reason', async () => {
+        await open('adminStats')
+        await page.getByRole('button', { name: '调整积分', exact: true }).click()
+        const dialog = page.getByRole('dialog', { name: /调整积分/ })
+        await dialog.getByText('当前积分：125', { exact: true }).waitFor()
+        await dialog.locator('[name=amount]').fill('-20')
+        await dialog.locator('[name=reason]').fill('修正重复奖励')
+        await page.evaluate(() => { (window as any).__pointsFail = true })
+        await dialog.getByRole('button', { name: '确认调整' }).click()
+        await dialog.getByRole('alert').waitFor()
+        expect(await dialog.locator('[name=amount]').inputValue()).toBe('-20')
+        await page.evaluate(() => { (window as any).__pointsFail = false })
+        await dialog.getByRole('button', { name: '确认调整' }).click()
+        await dialog.waitFor({ state: 'hidden' })
+        expect(await page.evaluate(() => (window as any).__pointAdjustment)).toMatchObject({ amount: -20, reason: '修正重复奖励' })
+    })
+
+    it('shows modal and banner notices independently and remembers dismissed versions', async () => {
+        const url = new URL('tests/fixtures/workspace.html?screen=profile&notices=1', origin).href
+        await page.goto(url)
+        const modal = page.getByRole('dialog', { name: '弹窗公告' })
+        await modal.waitFor()
+        await page.screenshot({ path: 'tmp/glass-review/bulletin-modal.png' })
+        await modal.getByRole('button', { name: '我知道了' }).click()
+        await modal.waitFor({ state: 'hidden' })
+        await page.getByRole('complementary', { name: '公告通知' }).getByRole('link', { name: /横幅公告/ }).waitFor()
+        await page.mouse.move(0, 0)
+        await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
+        await page.waitForFunction(() => {
+            const track = document.querySelector('.coeer-bulletin-track')!
+            return getComputedStyle(track).animationPlayState === 'running' && Number(track.getAnimations()[0]?.currentTime) > 100
+        })
+        expect(await page.getByRole('button', { name: /暂停公告滚动|继续公告滚动/ }).count()).toBe(0)
+        await page.locator('.coeer-bulletin-viewport').hover()
+        expect(await page.locator('.coeer-bulletin-track').evaluate(el => getComputedStyle(el).animationPlayState)).toBe('paused')
+        await page.mouse.move(0, 0)
+        await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
+        expect(await page.locator('.coeer-bulletin-track').evaluate(el => getComputedStyle(el).animationPlayState)).toBe('running')
+        await page.setViewportSize({ width: 390, height: 844 })
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        await page.screenshot({ path: 'tmp/glass-review/bulletin-banner-mobile.png' })
+        await page.emulateMedia({ reducedMotion: 'reduce' })
+        expect(await page.locator('.coeer-bulletin-track').evaluate(el => getComputedStyle(el).animationName)).toBe('none')
+        await page.getByRole('button', { name: '关闭公告：横幅公告' }).click()
+        await page.reload()
+        await page.locator('h1').waitFor()
+        expect(await modal.isVisible()).toBe(false)
+        expect(await page.getByRole('complementary', { name: '公告通知' }).count()).toBe(0)
+        await page.goto(url + '&noticeVersion=2')
+        await modal.waitFor()
+    })
+
     it.each(['groups', 'feedbacks', 'bulletins', 'activities', 'bookmarks', 'redeems', 'admin', 'adminGroups'])('composes %s as header, scope, toolbar, filter groups and content at both widths', async screen => {
         await open(screen)
         for (const width of [1440, 390]) {

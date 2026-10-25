@@ -13,6 +13,17 @@ function rewardId(userId: string, action: EngagementAction, eventId: string) {
 
 /** Server-only rewards: the caller must have validated and persisted the action. */
 export class EngagementService {
+    static async dailyProgress(userId: string, now = new Date()) {
+        const { day, start, end } = engagementDay(now)
+        const records = await db.select({ source: pointTransactions.source, description: pointTransactions.description, count: count() })
+            .from(pointTransactions).where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.type, 'earn'),
+                gte(pointTransactions.createdAt, start), lt(pointTransactions.createdAt, end)))
+            .groupBy(pointTransactions.source, pointTransactions.description)
+        return { day, tasks: Object.entries(ENGAGEMENT_REWARDS).map(([action, rule]) => ({
+            action: action as EngagementAction, ...rule,
+            completed: Math.min(rule.dailyLimit, records.find(record => record.source === rule.source && record.description === rule.label)?.count ?? 0),
+        })) }
+    }
     static async recordInTx(userId: string, action: EngagementAction, eventId: string, tx: DbTransaction, now = new Date()) {
         const rule = ENGAGEMENT_REWARDS[action]
         const { start, end } = engagementDay(now)

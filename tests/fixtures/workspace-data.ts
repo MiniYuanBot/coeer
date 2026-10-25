@@ -1,4 +1,6 @@
 // UI-only fixtures: never connect these modules to a database or the booking engine.
+import { ENGAGEMENT_REWARDS } from '../../src/shared/constants/engagement'
+export const dailyPoints = { day: '2026-10-26', tasks: Object.entries(ENGAGEMENT_REWARDS).map(([action, rule]) => ({ action, ...rule, completed: action === 'daily' ? 1 : 0 })) }
 export const query = new URLSearchParams(location.search)
 export const screen = query.get('screen') ?? 'home'
 export const state = query.get('state') ?? 'normal'
@@ -15,6 +17,8 @@ export const post = { id: 'ui-post', title: long ? '讨论标题'.repeat(30) : '
 export const space = { id: 'ui-space', name: long ? '学院公共会议与学习交流空间'.repeat(8) : '学院共享讨论室', location: '学院楼 201', capacity: 12, module: 'meeting', description: content, amenities: ['投影', '白板'], enabled: true }
 export const booking = { id: 'ui-booking', spaceId: space.id, spaceName: space.name, module: 'meeting', date: '2099-10-25', start: 600, end: 660, quantity: 1, status: state === 'pending' ? 'queued' : 'confirmed', purpose: long ? '围绕课程学习与社团活动展开讨论。'.repeat(30) : '课程小组讨论', message: state === 'pending' ? '申请已保存，正在等待后台处理。' : '预约已确认，请按时使用。', createdAt: '2026-10-24T08:00:00Z', events: [{ id: 'event-1', status: 'queued', at: '2026-10-24T08:00:00Z', message: '申请已保存' }], applicantName: user.name, studentId: user.studentId }
 export function loaderData(route: string): any {
+    if (route.includes('/admin/stats')) return { total: 1, active: 1, inactive: 0, students: 1, moderators: 0, admins: 0, users: [{ ...user, createdAt: '2026-10-26T00:00:00Z', isActive: true }] }
+    if (route.includes('/daily-points')) return dailyPoints
     if (route.includes('/bulletins')) return { bulletins: [], total: 0 }
     if (route.includes('/activities')) return { activities: [], total: 0 }
     if (route.includes('/redeems')) return { items: [], total: 0, balance: 125 }

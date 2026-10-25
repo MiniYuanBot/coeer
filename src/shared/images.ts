@@ -1,9 +1,11 @@
 import { z } from 'zod'
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+export const MAX_AVATAR_BYTES = 1024 * 1024
 export const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const
 
 export const IMAGE_SPECS = {
+    avatar: { width: 256, height: 256, ratio: '1:1', label: '头像' },
     card: { width: 600, height: 800, ratio: '3:4', label: '卡面' },
     achievement: { width: 512, height: 512, ratio: '1:1', label: '成就图标' },
     redeem: { width: 960, height: 540, ratio: '16:9', label: '商品图片' },

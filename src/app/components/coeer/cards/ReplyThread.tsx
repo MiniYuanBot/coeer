@@ -1,3 +1,4 @@
+import { Avatar } from '../ui/Avatar'
 import { useEffect, useState } from 'react'
 import type { ReplyListItem, ReplyWithAuthor } from '@shared/contracts/replies'
 import { listChildRepliesFn } from '~/functions/replies'
@@ -63,6 +64,7 @@ export function ReplyThread({ reply, parent, depth = 0, ...actions }: ThreadActi
         <article id={`reply-${reply.id}`} data-depth={depth} className="min-w-0 scroll-mt-20 py-4">
             {!reply.content ? <p className="text-xs text-muted-foreground">该回复已删除</p> : <>
                 <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <Avatar src={reply.author?.avatarUrl} name={name} className="h-6 w-6 text-xs" />
                     <span className="break-all font-medium text-foreground">{name}</span>
                     <time dateTime={new Date(reply.createdAt).toISOString()}>{formatDateTime(reply.createdAt)}</time>
                 </div>
@@ -74,7 +76,7 @@ export function ReplyThread({ reply, parent, depth = 0, ...actions }: ThreadActi
                 <Markdown content={reply.content} />
                 <div className="mt-2 flex flex-wrap gap-2">
                     {actions.canReply ? <Button size="sm" variant="ghost" disabled={actions.pending} onClick={() => actions.onSelect(reply)}>回复</Button> : null}
-                    {actions.canReply && reply.userId === actions.userId ? <Button size="sm" variant="ghost" disabled={actions.pending} onClick={() => actions.onSelect(reply, true)}>编辑</Button> : null}
+                    {(actions.canManage || (actions.canReply && reply.userId === actions.userId)) ? <Button size="sm" variant="ghost" disabled={actions.pending} onClick={() => actions.onSelect(reply, true)}>编辑</Button> : null}
                     {actions.canManage || reply.userId === actions.userId ? <Button size="sm" variant="ghost" disabled={actions.pending} onClick={() => actions.onRemove(reply.id)}>删除</Button> : null}
                 </div>
             </>}

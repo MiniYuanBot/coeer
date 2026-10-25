@@ -1,10 +1,11 @@
 export const GROUP_MEMBER_ROLE = {
+    OWNER: 'owner',
     MEMBER: 'member',
     ADMIN: 'admin',
 } as const;
 
 export type GroupMemberRole = typeof GROUP_MEMBER_ROLE[keyof typeof GROUP_MEMBER_ROLE];
-export const GROUP_MEMBER_ROLE_ARRAY = ['member', 'admin'] as const;
+export const GROUP_MEMBER_ROLE_ARRAY = ['member', 'admin', 'owner'] as const;
 
 export const GROUP_MEMBER_STATUS = {
     PENDING: 'pending',
@@ -26,8 +27,9 @@ export const GROUP_MEMBER = {
     GROUP_NOT_FOUND: { code: 'GROUP_NOT_FOUND', message: 'Group not found' } as const,
     NOT_FOUND: { code: 'MEMBER_NOT_FOUND', message: 'Group member not found' } as const,
     UNAUTHORIZED: { code: 'UNAUTHORIZED', message: 'Unauthorized user' } as const,
-    LAST_ADMIN: { code: 'LAST_ADMIN', message: '群组至少需要一名已通过审核的管理员，请先任命其他管理员' } as const,
-    FORBIDDEN: { code: 'FORBIDDEN', message: '只有已通过审核的群组管理员可以管理成员' } as const,
+    OWNER_PROTECTED: { code: 'OWNER_PROTECTED', message: '群主不能被移除或降级，请先将群主身份转让给其他已通过审核的成员' } as const,
+    ADMIN_LIMIT: { code: 'ADMIN_LIMIT', message: '每个群组最多 3 名管理员' } as const,
+    FORBIDDEN: { code: 'FORBIDDEN', message: '当前身份无权执行此操作；只有群主可以变更成员身份' } as const,
     INVALID_STATUS: { code: 'INVALID_STATUS', message: 'Already reviewed' } as const,
     ALREADY_EXISTS: { code: 'ALREADY_EXISTS', message: 'Group member already exists' } as const,
     ALREADY_SUBMIT: { code: 'ALREADY_SUBMIT', message: 'Your request is already submited' } as const,

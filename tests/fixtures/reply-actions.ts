@@ -73,3 +73,4 @@ export async function deleteReplyFn({ data }: { data: { id: string } }) {
 export function useRouter() {
     return { invalidate: async () => { window.dispatchEvent(new Event('reload-replies')) } }
 }
+export const getMentionCandidatesFn = async () => []

@@ -39,7 +39,7 @@ function GroupHomePage() {
 
             <Card className="rounded-lg p-5">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-[15px] font-medium">管理员</h2>
+                    <h2 className="text-[15px] font-medium">群主</h2>
                     <Link
                         to="/groups/$slug/members"
                         params={{ slug: group.slug }}

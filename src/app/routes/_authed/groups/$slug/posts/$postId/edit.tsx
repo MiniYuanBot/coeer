@@ -60,7 +60,7 @@ function EditPostPage() {
                         <input name="title" required maxLength={200} defaultValue={post.title} className="coeer-field coeer-focus mt-2 h-11 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
                     </label>
 
-                    <MarkdownEditor label="内容" name="content" required rows={10} maxLength={10000} defaultValue={post.content} disabled={isSubmitting} />
+                    <MarkdownEditor groupId={group.id} label="内容" name="content" required rows={10} maxLength={10000} defaultValue={post.content} disabled={isSubmitting} />
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-[hsl(var(--border))] pt-4">
                         <Button type="button" variant="outline" onClick={() => navigate({ to: '/groups/$slug/posts/$postId', params: { slug, postId } })}>取消</Button>

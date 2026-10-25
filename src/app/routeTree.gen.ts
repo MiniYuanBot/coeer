@@ -18,6 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedNotificationsRouteImport } from './routes/_authed/notifications'
+import { Route as AuthedDailyPointsRouteImport } from './routes/_authed/daily-points'
 import { Route as AuthedBookmarksRouteImport } from './routes/_authed/bookmarks'
 import { Route as AuthedSpacesRouteRouteImport } from './routes/_authed/spaces/route'
 import { Route as AuthedRedeemsRouteRouteImport } from './routes/_authed/redeems/route'
@@ -144,6 +145,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthedNotificationsRoute = AuthedNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedDailyPointsRoute = AuthedDailyPointsRouteImport.update({
+  id: '/daily-points',
+  path: '/daily-points',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedBookmarksRoute = AuthedBookmarksRouteImport.update({
@@ -618,6 +624,7 @@ export interface FileRoutesByFullPath {
   '/redeems': typeof AuthedRedeemsRouteRouteWithChildren
   '/spaces': typeof AuthedSpacesRouteRouteWithChildren
   '/bookmarks': typeof AuthedBookmarksRoute
+  '/daily-points': typeof AuthedDailyPointsRoute
   '/notifications': typeof AuthedNotificationsRoute
   '/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
@@ -702,6 +709,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/bookmarks': typeof AuthedBookmarksRoute
+  '/daily-points': typeof AuthedDailyPointsRoute
   '/notifications': typeof AuthedNotificationsRoute
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
@@ -788,6 +796,7 @@ export interface FileRoutesById {
   '/_authed/redeems': typeof AuthedRedeemsRouteRouteWithChildren
   '/_authed/spaces': typeof AuthedSpacesRouteRouteWithChildren
   '/_authed/bookmarks': typeof AuthedBookmarksRoute
+  '/_authed/daily-points': typeof AuthedDailyPointsRoute
   '/_authed/notifications': typeof AuthedNotificationsRoute
   '/_authed/admin/dorms': typeof AuthedAdminDormsRouteRouteWithChildren
   '/_authed/admin/feedbacks': typeof AuthedAdminFeedbacksRouteRouteWithChildren
@@ -883,6 +892,7 @@ export interface FileRouteTypes {
     | '/redeems'
     | '/spaces'
     | '/bookmarks'
+    | '/daily-points'
     | '/notifications'
     | '/admin/dorms'
     | '/admin/feedbacks'
@@ -967,6 +977,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/groups'
     | '/bookmarks'
+    | '/daily-points'
     | '/notifications'
     | '/admin/stats'
     | '/feedbacks/create'
@@ -1052,6 +1063,7 @@ export interface FileRouteTypes {
     | '/_authed/redeems'
     | '/_authed/spaces'
     | '/_authed/bookmarks'
+    | '/_authed/daily-points'
     | '/_authed/notifications'
     | '/_authed/admin/dorms'
     | '/_authed/admin/feedbacks'
@@ -1204,6 +1216,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthedNotificationsRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/daily-points': {
+      id: '/_authed/daily-points'
+      path: '/daily-points'
+      fullPath: '/daily-points'
+      preLoaderRoute: typeof AuthedDailyPointsRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/bookmarks': {
@@ -2146,6 +2165,7 @@ interface AuthedRouteRouteChildren {
   AuthedRedeemsRouteRoute: typeof AuthedRedeemsRouteRouteWithChildren
   AuthedSpacesRouteRoute: typeof AuthedSpacesRouteRouteWithChildren
   AuthedBookmarksRoute: typeof AuthedBookmarksRoute
+  AuthedDailyPointsRoute: typeof AuthedDailyPointsRoute
   AuthedNotificationsRoute: typeof AuthedNotificationsRoute
   AuthedCardsIndexRoute: typeof AuthedCardsIndexRoute
 }
@@ -2162,6 +2182,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedRedeemsRouteRoute: AuthedRedeemsRouteRouteWithChildren,
   AuthedSpacesRouteRoute: AuthedSpacesRouteRouteWithChildren,
   AuthedBookmarksRoute: AuthedBookmarksRoute,
+  AuthedDailyPointsRoute: AuthedDailyPointsRoute,
   AuthedNotificationsRoute: AuthedNotificationsRoute,
   AuthedCardsIndexRoute: AuthedCardsIndexRoute,
 }

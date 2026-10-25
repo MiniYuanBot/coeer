@@ -27,11 +27,13 @@ function toSessionUser(user: {
     email: string
     role: SessionUser['role']
     name: string | null
+    avatarUrl?: string | null
 }): SessionUser {
     return {
         id: user.id,
         email: user.email,
         name: user.name ?? null,
+        avatarUrl: user.avatarUrl ?? null,
         role: user.role,
         studentId: studentIdForUser(user),
         lastUpdated: Date.now(),
