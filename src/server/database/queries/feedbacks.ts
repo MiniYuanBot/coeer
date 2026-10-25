@@ -1,3 +1,4 @@
+import { communityTextSchema } from '@shared/contracts/unicode'
 import { db, type DbExecutor } from '../client'
 import { feedbacks } from '../schemas'
 import { eq, desc, and, inArray, ilike, or, count, SQL } from 'drizzle-orm'
@@ -77,6 +78,9 @@ function buildVisibleWhereClause(params: CountFeedbacksInput & { viewerId: strin
 export const feedbackQueries = {
     // Create a feedback
     async create(data: NewFeedback, executor: DbExecutor = db): Promise<Feedback> {
+        if (data.content !== undefined) communityTextSchema(5000).parse(data.content)
+        if (data.title !== undefined) communityTextSchema(200).parse(data.title)
+        if (data.targetDesc != null) communityTextSchema(255, 0).parse(data.targetDesc)
         const [feedback] = await executor.insert(feedbacks).values(data).returning()
         
         if (!feedback) {

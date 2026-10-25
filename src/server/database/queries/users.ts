@@ -2,6 +2,9 @@ import { eq, like, and, count, inArray, ilike, SQL } from 'drizzle-orm'
 import { db } from '../client'
 import { type DbUser, type NewDbUser, users } from '../schemas'
 import { UserRole } from '@shared/constants'
+import { usernameSchema } from '@shared/contracts/unicode'
+import { isUsernameConflict } from '../../utils/username-conflict'
+import { randomUUID } from 'node:crypto'
 import {
     EmailInput,
     UpdateUserInput,
@@ -46,12 +49,26 @@ function buildWhereClause(params: {
 export const userQueries = {
     // Create user
     async create(data: NewDbUser): Promise<DbUser> {
+        if (data.name != null) data = { ...data, name: usernameSchema.parse(data.name) }
         const [user] = await db.insert(users).values(data).returning()
         return user
     },
 
+    // A student ID may already be somebody else's nickname. Keep email signup working.
+    async createWithDefaultName(data: NewDbUser): Promise<DbUser> {
+        const id = data.id ?? randomUUID()
+        const base = usernameSchema.parse(data.name)
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const name = attempt === 0 ? base : `${Array.from(base).slice(0, 20).join('')}-${randomUUID()}`
+            try { return await userQueries.create({ ...data, id, name }) }
+            catch (error) { if (!isUsernameConflict(error)) throw error }
+        }
+        throw new Error('暂时无法分配昵称，请重试')
+    },
+
     // Update user basic info
     async update(data: UpdateUserInput): Promise<DbUser> {
+        if (data.name !== undefined) data = { ...data, name: usernameSchema.parse(data.name) }
         const [user] = await db
             .update(users)
             .set(data)

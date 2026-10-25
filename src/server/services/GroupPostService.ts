@@ -1,3 +1,4 @@
+import { CreateGroupPostSchema, UpdateGroupPostSchema } from '@shared/contracts'
 import { MentionService } from './MentionService'
 // services/GroupPostService.ts
 import type {
@@ -69,6 +70,9 @@ export class GroupPostService {
     // Create a new post (announcement requires admin role)
     static async create(data: CreateGroupPostInput): Promise<GroupPostResponse<void>> {
         try {
+            const parsed = CreateGroupPostSchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...GROUP_POST.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {
@@ -145,6 +149,9 @@ export class GroupPostService {
     // Update post (author or admin only)
     static async update(data: UpdateGroupPostInput): Promise<GroupPostResponse<void>> {
         try {
+            const parsed = UpdateGroupPostSchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...GROUP_POST.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {

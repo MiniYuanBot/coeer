@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
+import type { ComponentProps, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 import { cn } from '../lib/cn'
 
 const fieldClass =
@@ -25,12 +25,12 @@ export function Field({
         </label>
     )
 }
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...props }: ComponentProps<'input'>) {
     return <input {...props} className={cn(fieldClass, 'h-9', className)} />
 }
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
     return <select {...props} className={cn(fieldClass, 'coeer-select h-9', className)} />
 }
-export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
     return <textarea {...props} className={cn(fieldClass, 'min-h-24 resize-y py-2 leading-6', className)} />
 }

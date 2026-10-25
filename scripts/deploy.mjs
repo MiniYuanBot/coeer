@@ -80,6 +80,12 @@ export function createArchive(projectPath, destination) {
 }
 
 function quote(value) { return "'" + String(value).replaceAll("'", "'\\''") + "'" }
+/** Standalone source for the SSH stdin runner, including the shared username policy. */
+export function databaseRunnerSource(projectPath = project) {
+  return readFileSync(join(projectPath, 'deploy', 'database.mjs'), 'utf8').replace(
+    "import { usernameError } from '../src/shared/username-policy.mjs'",
+    readFileSync(join(projectPath, 'src', 'shared', 'username-policy.mjs'), 'utf8'))
+}
 function remoteArgs(config, options) {
   const args = [options.action, '--root', config.root, '--service', config.service, '--pnpm', config.pnpm, '--pnpm-version', config.pnpmVersion, '--port', String(config.port), '--preview-port', String(config.previewPort)]
   if (options.release) args.push('--release', options.release)
@@ -93,7 +99,7 @@ function remote(config, args, admin) {
   let script = readFileSync(join(project, 'deploy', 'remote.py'), 'utf8')
   if (args[0].startsWith('db-')) {
     const directory = join(project, 'deploy', 'migrations')
-    const payload = { source: readFileSync(join(project, 'deploy', 'database.mjs'), 'utf8'), schemaCheck: COMMUNITY_SCHEMA_CHECK_SQL, admin,
+    const payload = { source: databaseRunnerSource(), schemaCheck: COMMUNITY_SCHEMA_CHECK_SQL, admin,
       migrations: readdirSync(directory).filter(name => /^\d{8}-[a-z0-9-]+\.sql$/.test(name)).sort().map(name => ({ name, sql: readFileSync(join(directory, name), 'utf8') })) }
     // Payload travels through stdin rather than shell arguments or an uploaded release.
     script = "import base64, json\nDATABASE_PAYLOAD = json.loads(base64.b64decode('" + Buffer.from(JSON.stringify(payload)).toString('base64') + "'))\n" + script

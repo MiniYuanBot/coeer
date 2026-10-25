@@ -1,3 +1,4 @@
+import { communityTextSchema } from '@shared/contracts/unicode'
 import { and, count, desc, eq, ilike, or, SQL } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { bulletins, NewBulletin, Bulletin } from '../schemas'
@@ -20,6 +21,8 @@ function buildWhere(data: ListBulletinsInput): SQL | undefined {
 
 export const bulletinQueries = {
     async create(data: NewBulletin, executor: DbExecutor = db): Promise<Bulletin> {
+        if (data.content !== undefined) communityTextSchema(5000).parse(data.content)
+        if (data.title !== undefined) communityTextSchema(200).parse(data.title)
         const [bulletin] = await executor.insert(bulletins).values(data).returning()
         if (!bulletin) throw new Error('Create bulletin failed')
         return bulletin
@@ -39,6 +42,8 @@ export const bulletinQueries = {
     },
 
     async update(data: UpdateBulletinInput, executor: DbExecutor = db): Promise<Bulletin> {
+        if (data.content !== undefined) communityTextSchema(5000).parse(data.content)
+        if (data.title !== undefined) communityTextSchema(200).parse(data.title)
         const [bulletin] = await executor.update(bulletins)
             .set({ ...data, updatedAt: new Date() })
             .where(eq(bulletins.id, data.id))

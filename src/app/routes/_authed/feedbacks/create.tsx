@@ -1,3 +1,4 @@
+import { UnicodeInput } from '@/components/coeer/ui/UnicodeInput'
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -74,15 +75,15 @@ function CreateFeedbackPage() {
                     </Field>
 
                     <Field label="对象补充（选填）">
-                        <Input name="targetDesc" placeholder="例如：选课系统、宿舍网络、活动报名" />
+                        <UnicodeInput name="targetDesc" maxLength={255} placeholder="例如：选课系统、宿舍网络、活动报名" />
                     </Field>
                     </div>
 
                     <Field label="标题">
-                        <Input name="title" required maxLength={200} placeholder="一句话说明问题" />
+                        <UnicodeInput name="title" required maxLength={200} placeholder="一句话说明问题" />
                     </Field>
 
-                    <MarkdownEditor label="内容" name="content" required rows={10} maxLength={5000} disabled={isSubmitting}
+                    <MarkdownEditor validateUnicode label="内容" name="content" required rows={10} maxLength={5000} disabled={isSubmitting}
                         placeholder="描述发生了什么、影响是什么、你期待怎样处理。" />
 
                     <label className="flex min-h-11 items-center gap-2 text-[13px]">

@@ -1,3 +1,4 @@
+import { communityTextSchema } from './unicode'
 import { z } from 'zod'
 import type { DbUser, Feedback, GroupPost, Reply } from '~/database/schemas'
 import { ReplyCode, REPLY_TARGET_TYPE_ARRAY } from '../constants'
@@ -11,12 +12,12 @@ export const CreateReplySchema = z.object({
     targetType: z.enum(REPLY_TARGET_TYPE_ARRAY),
     targetId: z.uuid(),
     parentId: z.uuid().optional(),
-    content: z.string().trim().min(1).max(2000),
+    content: communityTextSchema(2000).refine(value => value.trim().length > 0, '请输入回复内容'),
 })
 
 export const UpdateReplySchema = z.object({
     id: z.uuid(),
-    content: z.string().trim().min(1).max(2000),
+    content: communityTextSchema(2000).refine(value => value.trim().length > 0, '请输入回复内容'),
 })
 
 export const ListRepliesByTargetSchema = z.object({

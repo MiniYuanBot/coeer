@@ -1,3 +1,4 @@
+import { communityTextSchema } from '@shared/contracts/unicode'
 import { and, count, desc, eq, getTableColumns, isNull, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { groupMembers, groupPosts, groups, NewReply, replies, Reply } from '../schemas'
@@ -15,6 +16,7 @@ const childCount = sql<number>`(select count(*)::int from replies children
 
 export const replyQueries = {
     async create(data: NewReply, executor: DbExecutor = db): Promise<Reply> {
+        if (data.content !== undefined) communityTextSchema(2000).parse(data.content)
         const [reply] = await executor.insert(replies).values(data).returning()
         if (!reply) throw new Error('Create reply failed')
         return reply
@@ -68,6 +70,7 @@ export const replyQueries = {
     },
 
     async update(data: UpdateReplyInput, executor: DbExecutor = db): Promise<Reply> {
+        if (data.content !== undefined) communityTextSchema(2000).parse(data.content)
         const [reply] = await executor.update(replies)
             .set({ content: data.content, updatedAt: new Date() })
             .where(and(eq(replies.id, data.id), ne(replies.content, '')))

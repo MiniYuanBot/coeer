@@ -1,3 +1,4 @@
+import { communityTextSchema } from './unicode'
 import { z } from 'zod'
 import type { Activity, Bulletin, Feedback, GroupPost } from '~/database/schemas'
 import { BulletinCode, BULLETIN_SOURCE_TYPE_ARRAY, BULLETIN_TYPE_ARRAY } from '../constants'
@@ -9,8 +10,8 @@ export const BulletinIdSchema = z.object({
 
 export const CreateBulletinSchema = z.object({
     type: z.enum(BULLETIN_TYPE_ARRAY),
-    title: z.string().min(1).max(200),
-    content: z.string().min(1).max(5000),
+    title: communityTextSchema(200),
+    content: communityTextSchema(5000),
     sourceId: z.uuid().optional(),
     sourceType: z.enum(BULLETIN_SOURCE_TYPE_ARRAY).optional(),
     notificationMode: z.enum(['none', 'modal', 'banner']).optional(),
@@ -19,8 +20,8 @@ export const CreateBulletinSchema = z.object({
 
 export const UpdateBulletinSchema = z.object({
     id: z.uuid(),
-    title: z.string().min(1).max(200).optional(),
-    content: z.string().min(1).max(5000).optional(),
+    title: communityTextSchema(200).optional(),
+    content: communityTextSchema(5000).optional(),
     notificationMode: z.enum(['none', 'modal', 'banner']).optional(),
     isPinned: z.boolean().optional(),
 })

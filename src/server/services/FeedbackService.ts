@@ -1,3 +1,4 @@
+import { CreateFeedbackSchema, UpdateFeedbackStatusSchema } from '@shared/contracts'
 import { db } from '../database/client'
 import { Feedback, feedbacks, feedbackStatusLogs } from '../database/schemas'
 import type {
@@ -25,6 +26,9 @@ export class FeedbackService {
     // Create a feedback (records initial status log) — both writes in one transaction.
     static async create(data: CreateFeedbackInput): Promise<FeedbackResponse<Feedback>> {
         try {
+            const parsed = CreateFeedbackSchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...FEEDBACK.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {
@@ -184,6 +188,9 @@ export class FeedbackService {
     // Update feedback status (admin only)
     static async updateStatus(data: UpdateFeedbackStatusInput): Promise<FeedbackResponse<void>> {
         try {
+            const parsed = UpdateFeedbackStatusSchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...FEEDBACK.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) {

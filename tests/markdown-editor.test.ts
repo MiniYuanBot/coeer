@@ -123,6 +123,44 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         expect(await page.locator('h1').textContent()).toMatch(/^新建/)
     })
 
+    it('reports forbidden characters live in titles and Markdown, blocks submission and preserves emoji', async () => {
+        await open('createPost')
+        const title = page.locator('[name="title"]')
+        const body = page.locator('textarea[name="content"]')
+        await title.fill('Hi\u200b')
+        await body.fill('```js\n\ufeffcode\n```')
+        await page.getByRole('alert').filter({ hasText: 'U+200B' }).waitFor()
+        await page.getByRole('alert').filter({ hasText: 'U+FEFF' }).waitFor()
+        expect(await title.evaluate(el => (el as HTMLInputElement).checkValidity())).toBe(false)
+        expect(await body.evaluate(el => (el as HTMLTextAreaElement).checkValidity())).toBe(false)
+        await page.locator('button[type="submit"]').click()
+        expect(await page.locator('#submitted-action').textContent()).toBe('')
+        await title.fill('Hello 👩‍💻')
+        await body.fill('می\u200cروم ❤️\n```js\nconst text = "\\u200B";\n```')
+        expect(await body.evaluate(el => (el as HTMLTextAreaElement).checkValidity())).toBe(true)
+        await page.locator('button[type="submit"]').click()
+        await page.waitForFunction(() => document.querySelector('#submitted-action')?.textContent === 'createPost')
+        const data = JSON.parse((await page.locator('#submitted-data').textContent())!)
+        expect(data.title).toBe('Hello 👩‍💻')
+        expect(data.content).toContain('می\u200cروم ❤️')
+    })
+
+    it('validates nickname whitespace and code-point length live without deleting input', async () => {
+        await page.goto(`${origin}tests/fixtures/markdown-pages.html?kind=username`)
+        const name = page.locator('[name="name"]')
+        for (const value of ['a\u00a0b', ' a', 'a  b', 'a\u200b', '👩‍💻', '𠀀'.repeat(64)]) {
+            await name.fill(value)
+            await page.getByRole('alert').waitFor()
+            expect(await name.inputValue()).toBe(value)
+            expect(await name.evaluate(el => (el as HTMLInputElement).checkValidity())).toBe(false)
+        }
+        await name.fill('𠀀'.repeat(63))
+        await page.waitForFunction(() => document.querySelector('[name="name"]')?.getAttribute('aria-invalid') === 'false')
+        expect(await name.evaluate(el => (el as HTMLInputElement).checkValidity())).toBe(true)
+        await name.fill('bad boy')
+        expect(await name.evaluate(el => (el as HTMLInputElement).checkValidity())).toBe(true)
+    })
+
     it.each([
         { kind: 'createPost', label: '内容', action: 'createPost', announcement: false },
         { kind: 'createPost', label: '内容', action: 'createPost', announcement: true },

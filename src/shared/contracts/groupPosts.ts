@@ -1,3 +1,4 @@
+import { communityTextSchema } from './unicode'
 import { z } from 'zod';
 import type { DbUser, Group, GroupPost } from '~/database/schemas';
 import { GroupPostCode, GROUP_POST_TYPE_ARRAY } from '../constants'
@@ -15,15 +16,15 @@ export const AuthorIdSchema = z.object({
 
 export const CreateGroupPostSchema = z.object({
     groupId: z.uuid(),
-    title: z.string().min(1).max(200),
-    content: z.string().min(1).max(10000),
+    title: communityTextSchema(200),
+    content: communityTextSchema(10000),
     type: z.enum(GROUP_POST_TYPE_ARRAY),
 });
 
 export const UpdateGroupPostSchema = z.object({
     id: z.uuid(),
-    title: z.string().min(1).max(200).optional(),
-    content: z.string().min(1).max(10000).optional(),
+    title: communityTextSchema(200).optional(),
+    content: communityTextSchema(10000).optional(),
     updatedAt: z.date().optional(),
 });
 

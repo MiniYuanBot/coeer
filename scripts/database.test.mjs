@@ -7,6 +7,7 @@ import { test } from 'node:test'
 import { PassThrough, Writable } from 'node:stream'
 import { compare } from 'bcryptjs'
 import { promptAdministrator, validateAdministratorInput } from './admin-input.mjs'
+import { databaseRunnerSource } from './deploy.mjs'
 import { backupDatabase, deleteDatabaseBackup, listDatabaseBackups, postgresEnvironment, runDatabaseOperation } from '../deploy/database.mjs'
 
 const backupName = 'coeer-db-20261022120000000-a1b2c3d4.dump'
@@ -93,7 +94,7 @@ test('backup listing and deletion work without a database connection or credenti
     const directory = mkdtempSync(join(tmpdir(), 'coeer-db-offline-'))
     try {
         writeFileSync(join(directory, backupName), 'offline snapshot')
-        const source = readFileSync(new URL('../deploy/database.mjs', import.meta.url), 'utf8')
+        const source = databaseRunnerSource()
         for (const action of ['db-backups', 'db-delete']) {
             const result = spawnSync(process.execPath, ['--input-type=module', '-'], { input: source, encoding: 'utf8',
                 env: { ...process.env, DATABASE_URL: '', COEER_DB_REQUEST: JSON.stringify({ action, backupDirectory: directory, backup: backupName }) } })

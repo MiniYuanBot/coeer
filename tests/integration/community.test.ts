@@ -702,7 +702,7 @@ describe('COEER accounts and server permissions', () => {
     })
     it('updates only the signed-in account nickname, keeping its role and password private', async () => {
         signIn()
-        const result = await AuthService.updateProfile({ name: '  新昵称  ', id: ids.other, role: 'admin' } as { name: string })
+        const result = await AuthService.updateProfile({ name: '新昵称', id: ids.other, role: 'admin' } as { name: string })
         expect(result.success).toBe(true)
         expect(result.data).toMatchObject({ id: ids.student, name: '新昵称', role: 'student' })
         expect(result.data).not.toHaveProperty('passwordHash')
@@ -711,6 +711,7 @@ describe('COEER accounts and server permissions', () => {
         expect((await AuthService.getCurrentUser()).data?.name).toBe('新昵称')
         expect((await db.select().from(users).where(eq(users.id, ids.other)))[0].name).toBe('其他学生')
         expect((await AuthService.updateProfile({ name: '  ' })).success).toBe(false)
+        expect((await AuthService.updateProfile({ name: '  新昵称  ' })).success).toBe(false)
         expect((await AuthService.updateProfile({ name: '名'.repeat(64) })).success).toBe(false)
     })
     it('requires the current password and validates bcrypt byte limits before changing credentials', async () => {

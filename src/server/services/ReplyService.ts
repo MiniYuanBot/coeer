@@ -1,3 +1,4 @@
+import { CreateReplySchema, UpdateReplySchema } from '@shared/contracts'
 import { MentionService } from './MentionService'
 import { replyQueries } from '../database/queries'
 import { AuthService } from './AuthService'
@@ -23,6 +24,9 @@ import type {
 export class ReplyService {
     static async create(data: CreateReplyInput): Promise<ReplyResponse<ReplyWithAuthor>> {
         try {
+            const parsed = CreateReplySchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...REPLY.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) return { success: false, state: REPLY.UNAUTHORIZED }
@@ -88,6 +92,9 @@ export class ReplyService {
 
     static async update(data: UpdateReplyInput): Promise<ReplyResponse<void>> {
         try {
+            const parsed = UpdateReplySchema.safeParse(data)
+            if (!parsed.success) return { success: false, state: { ...REPLY.SERVER_ERROR, message: parsed.error.issues[0].message } }
+            data = parsed.data
             const payload = await AuthService.getCurrentUser()
             const user = payload.data
             if (!payload.success || !user) return { success: false, state: REPLY.UNAUTHORIZED }

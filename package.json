@@ -53,7 +53,8 @@
     "spaces:ops": "tsx scripts/open-space.ts ops",
     "spaces:connector": "tsx scripts/open-space.ts connector",
     "spaces:official": "tsx scripts/open-space.ts official",
-    "spaces:campus": "tsx scripts/campus-spaces.ts"
+    "spaces:campus": "tsx scripts/campus-spaces.ts",
+    "db:unicode": "tsx scripts/unicode-data.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",

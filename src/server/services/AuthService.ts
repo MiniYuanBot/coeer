@@ -18,6 +18,7 @@ import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_
 import { AUTH } from '@shared/constants'
 import { EngagementService } from './EngagementService'
 import { readScopedUser } from '../utils/auth-read-scope'
+import { isUsernameConflict } from '../utils/username-conflict'
 
 /**
  * Build the signed-in session payload for a DB user.
@@ -147,7 +148,7 @@ export class AuthService {
             }
 
             const passwordHash = await hashPassword(data.password)
-            const user = await userQueries.create({
+            const user = await userQueries.createWithDefaultName({
                 email: data.email,
                 name: data.email.slice(0, 10),
                 passwordHash,
@@ -171,13 +172,14 @@ export class AuthService {
             const current = await this.getCurrentUser()
             if (!current.success || !current.data) return { success: false, state: AUTH.UNAUTHORIZED }
             const parsed = updateProfileSchema.safeParse(input)
-            if (!parsed.success) return { success: false, state: AUTH.INVALID_INPUT }
+            if (!parsed.success) return { success: false, state: { ...AUTH.INVALID_INPUT, message: parsed.error.issues[0].message } }
             const user = await userQueries.update({ id: current.data.id, name: parsed.data.name, updatedAt: new Date() })
             const session = await useAppSession()
             // Keep the original credential version if a concurrent password change revoked this session.
             await session.update({ ...toSessionUser(user), passwordVersion: session.data.passwordVersion! })
             return { success: true, data: toSessionUser(user), state: AUTH.PROFILE_UPDATED }
         } catch (err) {
+            if (isUsernameConflict(err)) return { success: false, state: { ...AUTH.INVALID_INPUT, message: '该昵称已被使用（不区分大小写及 Unicode 兼容变体），请更换昵称。' } }
             console.error('Update profile error:', err)
             return { success: false, state: AUTH.SERVER_ERROR }
         }

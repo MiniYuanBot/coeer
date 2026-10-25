@@ -1,3 +1,4 @@
+import { usernameError } from '../src/shared/username-policy.mjs'
 import { createInterface } from 'node:readline/promises'
 import { Writable } from 'node:stream'
 import { hash } from 'bcryptjs'
@@ -5,10 +6,11 @@ import { hash } from 'bcryptjs'
 export function validateAdministratorInput(email, name, password, confirmation) {
   const normalized = email.trim().toLowerCase()
   if (!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(normalized) || normalized.length > 254) throw new Error('请输入有效的管理员邮箱。')
-  if (!name.trim() || name.trim().length > 63) throw new Error('昵称需要 1–63 个字符。')
+  const nameError = usernameError(name)
+  if (nameError) throw new Error(nameError)
   if (password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) throw new Error('密码至少 8 位，最多 72 字节。')
   if (password !== confirmation) throw new Error('两次密码输入不一致。')
-  return { email: normalized, name: name.trim() }
+  return { email: normalized, name: name.normalize('NFKC') }
 }
 
 export async function promptAdministrator({ input = process.stdin, output = process.stdout } = {}) {

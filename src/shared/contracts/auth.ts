@@ -1,3 +1,4 @@
+import { usernameSchema } from './unicode'
 import { z } from 'zod';
 import { AuthCode } from '../constants'
 import { DbUser } from '~/database/schemas'
@@ -29,7 +30,7 @@ export function studentIdForUser(user: { role: string; email: string }): string 
 }
 
 export const updateProfileSchema = z.object({
-    name: z.string().trim().min(1, '请输入昵称').max(63, '昵称不能超过 63 个字符'),
+    name: usernameSchema,
 });
 
 export const changePasswordSchema = z.object({

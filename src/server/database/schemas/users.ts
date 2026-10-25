@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, timestamp, boolean, uuid, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, text, timestamp, boolean, uuid, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { USER_ROLE_ARRAY, UserRole } from '@shared/constants';
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLE_ARRAY);
@@ -14,7 +15,10 @@ export const users = pgTable('users', {
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
     avatarUrl: text('avatar_url'),
     // points: integer('points').notNull().default(0),
-})
+}, (table) => [
+    // ASCII fold is deliberate: allowed normalized names contain only ASCII letters and Han.
+    uniqueIndex('users_name_unicode_key').on(sql`(translate(normalize(${table.name}, NFKC), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') COLLATE "C")`),
+])
 
 export const userProfiles = pgTable('user_profiles', {
     userId: uuid('user_id').references(() => users.id).primaryKey(),

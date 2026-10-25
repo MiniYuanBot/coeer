@@ -1,3 +1,4 @@
+import { communityTextSchema } from '@shared/contracts/unicode'
 // groupPostQueries.ts
 import { db, type DbExecutor } from '../client'
 import { groupPosts, groups, reactions, replies } from '../schemas'
@@ -63,6 +64,8 @@ function buildWhereClause(params: {
 export const groupPostQueries = {
     // Create a post
     async create(data: NewGroupPost, executor: DbExecutor = db) {
+        if (data.content !== undefined) communityTextSchema(10000).parse(data.content)
+        if (data.title !== undefined) communityTextSchema(200).parse(data.title)
         const [post] = await executor.insert(groupPosts).values(data).returning()
         
         if (!post) {
@@ -73,6 +76,8 @@ export const groupPostQueries = {
 
     // Update content of post
     async update(data: UpdateGroupPostInput, executor: DbExecutor = db): Promise<void> {
+        if (data.content !== undefined) communityTextSchema(10000).parse(data.content)
+        if (data.title !== undefined) communityTextSchema(200).parse(data.title)
         const [post] = await executor
             .update(groupPosts)
             .set({

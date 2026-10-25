@@ -14,6 +14,7 @@ import { BulletinCard } from '../../src/app/components/coeer/cards/BulletinCard'
 import { ActivityCard } from '../../src/app/components/coeer/cards/ActivityCard'
 import { FeedbackCard } from '../../src/app/components/coeer/cards/FeedbackCard'
 import { MarkdownEditor } from '../../src/app/components/coeer/ui/MarkdownEditor'
+import { UnicodeInput } from '../../src/app/components/coeer/ui/UnicodeInput'
 import { activityItems, bulletinItems, initialContent } from './markdown-pages-router'
 import { failure, submitted } from './markdown-pages-actions'
 import '../../src/app/styles/app.css'
@@ -44,7 +45,7 @@ function PageFixture() {
     const route = kind === 'bulletins' || kind === 'activities' ? adminRoutes[path.includes('/create') ? 1 : path.includes('/edit') ? 2 : 0] : pages[kind as keyof typeof pages]
     const Page = (route?.options.component ?? SummaryCards) as ComponentType
     return <main className="coeer-workspace max-w-5xl p-4">
-        {kind === 'reset' ? <form><MarkdownEditor label="正文" name="content" defaultValue={initialContent} />
+        {kind === 'username' ? <form><label>昵称<UnicodeInput policy="username" name="name" defaultValue="Alice" /></label><button type="submit">保存</button></form> : kind === 'reset' ? <form><MarkdownEditor label="正文" name="content" defaultValue={initialContent} />
             <button type="reset">重置正文</button></form> : <Page key={path} />}
         <output id="submitted-action">{submitted.action}</output>
         <output id="submitted-data">{JSON.stringify(submitted.data)}</output>

@@ -1,3 +1,4 @@
+import { UnicodeInput } from '@/components/coeer/ui/UnicodeInput'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import type { Bulletin as RecordDefinition } from '~/database/schemas/bulletins'
@@ -51,8 +52,8 @@ export function BulletinForm({ editing, page }: { editing?: RecordDefinition; pa
                     <Field label="类型"><select name="type" disabled={!!editing} defaultValue={editing?.type || 'official'} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm">
                         {BULLETIN_TYPE_ARRAY.map((type) => <option key={type} value={type}>{bulletinTypeLabels[type]}</option>)}
                     </select></Field>
-                    <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
-                    <MarkdownEditor label="内容" name="content" required maxLength={5000} defaultValue={editing?.content} placeholder="公告内容" rows={6} />
+                    <Field label="标题"><UnicodeInput name="title" required defaultValue={editing?.title} placeholder="公告标题" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
+                    <MarkdownEditor validateUnicode label="内容" name="content" required maxLength={5000} defaultValue={editing?.content} placeholder="公告内容" rows={6} />
                     <Field label="通知方式"><select name="notificationMode" defaultValue={editing?.notificationMode || 'none'} className="coeer-field coeer-focus rounded-lg border border-control-border bg-card p-3 text-sm">
                         <option value="none">无特殊通知</option><option value="modal">居中弹窗</option><option value="banner">顶部横幅</option>
                     </select></Field>

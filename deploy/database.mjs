@@ -1,3 +1,4 @@
+import { usernameError } from '../src/shared/username-policy.mjs'
 // Also sent over SSH stdin: imports resolve against the active release's dependencies.
 import { randomBytes } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
@@ -179,7 +180,7 @@ export async function clearDatabase(pool, bookingSchema = 'coeer_spaces', execut
 export async function setupAdministrator(pool, admin) {
     if (!admin || typeof admin.email !== 'string' || admin.email.length > 254 || admin.email !== admin.email.trim().toLowerCase()
         || !/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(admin.email)
-        || typeof admin.name !== 'string' || !admin.name.trim() || admin.name.length > 63
+        || typeof admin.name !== 'string' || usernameError(admin.name)
         || typeof admin.passwordHash !== 'string' || !/^\$2[aby]\$12\$[./A-Za-z0-9]{53}$/.test(admin.passwordHash)) {
         throw new Error('管理员输入无效，请通过交互终端运行 setup。')
     }
@@ -193,7 +194,7 @@ export async function setupAdministrator(pool, admin) {
         const { rows: conflicts } = await client.query('SELECT id FROM users WHERE lower(email)=lower($1)', [admin.email])
         if (conflicts.length) throw new Error('该邮箱已有账号，setup 不会提升已有账号权限。')
         const { rows: [created] } = await client.query(`INSERT INTO users(email,name,password_hash,role,is_active)
-            VALUES ($1,$2,$3,'admin',true) RETURNING id,email,name,role`, [admin.email, admin.name.trim(), admin.passwordHash])
+            VALUES ($1,$2,$3,'admin',true) RETURNING id,email,name,role`, [admin.email, admin.name.normalize('NFKC'), admin.passwordHash])
         await client.query('COMMIT')
         return { administrator: created }
     } catch (error) {

@@ -1,3 +1,4 @@
+import { CreateBulletinSchema, UpdateBulletinSchema } from '@shared/contracts'
 import { bulletinQueries } from '../database/queries'
 import { AuthService } from './AuthService'
 import { BULLETIN } from '@shared/constants'
@@ -23,6 +24,9 @@ export class BulletinService {
     }
 
     static async create(data: CreateBulletinInput): Promise<BulletinResponse<BulletinWithSource>> {
+        const parsed = CreateBulletinSchema.safeParse(data)
+        if (!parsed.success) return { success: false, state: { ...BULLETIN.SERVER_ERROR, message: parsed.error.issues[0].message } }
+        data = parsed.data
         const auth = await this.ensureAdmin()
         if (!auth.ok) return { success: false, state: auth.state }
         try {
@@ -53,6 +57,9 @@ export class BulletinService {
     }
 
     static async update(data: UpdateBulletinInput): Promise<BulletinResponse<void>> {
+        const parsed = UpdateBulletinSchema.safeParse(data)
+        if (!parsed.success) return { success: false, state: { ...BULLETIN.SERVER_ERROR, message: parsed.error.issues[0].message } }
+        data = parsed.data
         const auth = await this.ensureAdmin()
         if (!auth.ok) return { success: false, state: auth.state }
         return db.transaction(async (tx) => {

@@ -1,3 +1,4 @@
+import { contentUnicodeError } from '@shared/unicode'
 import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref, type TextareaHTMLAttributes } from 'react'
 import { Markdown, MarkdownHelp } from './Markdown'
 import { cn } from '../lib/cn'
@@ -10,12 +11,13 @@ type MarkdownEditorProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'va
     value?: string
     defaultValue?: string
     ref?: Ref<HTMLTextAreaElement>
+    validateUnicode?: boolean
     groupId?: string
     onValueChange?: (value: string) => void
 }
 
 /** Uses the same safe renderer as published content, with native form submission and reset support. */
-export function MarkdownEditor({ label, previewLabel, id, value, defaultValue = '', onChange, onValueChange, groupId, ref, rows = 8, className,
+export function MarkdownEditor({ validateUnicode = false, label, previewLabel, id, value, defaultValue = '', onChange, onValueChange, groupId, ref, rows = 8, className,
     'aria-describedby': describedBy, ...props }: MarkdownEditorProps) {
     const generatedId = useId()
     const inputId = id ?? `markdown-${generatedId}`
@@ -23,6 +25,9 @@ export function MarkdownEditor({ label, previewLabel, id, value, defaultValue = 
     const input = useRef<HTMLTextAreaElement>(null)
     const [draft, setDraft] = useState(defaultValue)
     const content = value ?? draft
+    const unicodeError = validateUnicode ? contentUnicodeError(content) : undefined
+    const errorId = inputId + '-unicode-error'
+    useEffect(() => { input.current?.setCustomValidity(unicodeError ?? '') }, [unicodeError])
     const [mention, setMention] = useState<{ start: number; end: number; search: string }>()
     const [candidates, setCandidates] = useState<{ id: string; name: string | null }[]>([])
     const [mentionError, setMentionError] = useState('')
@@ -72,7 +77,8 @@ export function MarkdownEditor({ label, previewLabel, id, value, defaultValue = 
         {label ? <label htmlFor={inputId} className="mb-2 block text-sm font-medium">{label}</label> : null}
         <div className="coeer-markdown-editor-layout">
             <textarea {...props} ref={input} id={inputId} rows={rows} value={content}
-                aria-describedby={[describedBy, helpId].filter(Boolean).join(' ')}
+                aria-invalid={!!unicodeError}
+                aria-describedby={[describedBy, helpId, unicodeError && errorId].filter(Boolean).join(' ')}
                 onChange={(event) => { setDraft(event.target.value); onChange?.(event); onValueChange?.(event.target.value); findMention(event.target) }}
                 onClick={event => { props.onClick?.(event); findMention(event.currentTarget) }}
                 onKeyDown={event => {
@@ -99,6 +105,7 @@ export function MarkdownEditor({ label, previewLabel, id, value, defaultValue = 
                     @{member.name || '成员'} <span className="text-xs text-muted-foreground">{member.id.slice(0, 8)}</span>
                 </button>)}
         </div>}
+        {unicodeError && <p id={errorId} role="alert" className="mt-2 text-xs text-danger">{unicodeError}</p>}
         <div id={helpId}><MarkdownHelp /></div>
     </div>
 }

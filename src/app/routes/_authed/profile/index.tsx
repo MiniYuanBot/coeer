@@ -1,3 +1,4 @@
+import { UnicodeInput } from '@/components/coeer/ui/UnicodeInput'
 import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, Pagination, PointsSummaryCard } from '@/components/coeer'
@@ -129,7 +130,7 @@ function ProfileIndexComponent() {
                     <SettingsSection id="profile-name-title" title="个人资料" description="昵称会显示在社区内容和预约管理中。">
                         <form method="post" onSubmit={(event) => void updateProfile(event)} className="space-y-4">
                             <Field label="昵称">
-                                <Input key={user.name} name="name" defaultValue={user.name ?? ''} required maxLength={63} autoComplete="nickname" placeholder="输入你的昵称" disabled={profilePending} />
+                                <UnicodeInput policy="username" key={user.name} name="name" defaultValue={user.name ?? ''} required autoComplete="nickname" placeholder="输入你的昵称" disabled={profilePending} />
                             </Field>
                             {profileNotice && <Alert tone={profileNotice.success ? 'success' : 'danger'}>{profileNotice.message}</Alert>}
                             <Button type="submit" loading={profilePending}>保存昵称</Button>

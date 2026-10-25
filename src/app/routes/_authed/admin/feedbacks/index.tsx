@@ -1,3 +1,4 @@
+import { UnicodeTextarea } from '@/components/coeer/ui/UnicodeInput'
 import { MarkdownSummary } from '@/components/coeer/ui/Markdown'
 import { createFileRoute, Link, useHydrated, useRouter, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -149,8 +150,9 @@ function ReviewModal({
                 </label>
                 <label className="block text-sm font-medium">
                     <span>审核备注</span>
-                    <textarea
+                    <UnicodeTextarea
                         name="note"
+                        maxLength={1000}
                         rows={4}
                         className="coeer-field coeer-focus mt-2 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-2 text-sm"
                         placeholder="说明处理原因，备注会进入状态记录。"

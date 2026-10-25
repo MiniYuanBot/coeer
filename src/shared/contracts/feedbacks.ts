@@ -1,3 +1,4 @@
+import { communityTextSchema } from './unicode'
 import z from 'zod'
 import type { DbUser, Feedback, FeedbackStatusLog } from '~/database/schemas'
 import {
@@ -15,9 +16,9 @@ export const FeedbackIdSchema = z.object({
 
 export const CreateFeedbackSchema = z.object({
     targetType: z.enum(FEEDBACK_TARGET_TYPE_ARRAY),
-    targetDesc: z.string().optional(),
-    title: z.string().min(1).max(200),
-    content: z.string().min(1).max(5000),
+    targetDesc: communityTextSchema(255, 0).optional(),
+    title: communityTextSchema(200),
+    content: communityTextSchema(5000),
     isAnonymous: z.boolean().optional().default(false),
     // images: z.array(z.string().url()).optional(),
 })
@@ -64,7 +65,7 @@ export const UpdateFeedbackStatusSchema = z.object({
     isPublic: z.boolean().optional(),
     search: z.string().optional(),
     authorId: z.uuid().optional(),
-    note: z.string().max(1000).optional(),
+    note: communityTextSchema(1000, 0).optional(),
 })
 
 // ===== Typescript Types =====

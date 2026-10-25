@@ -1,4 +1,5 @@
 import { eq, inArray } from 'drizzle-orm'
+import { CreateGroupPostSchema } from '@shared/contracts/groupPosts'
 import { db } from '../client'
 import { groupMembers, groupPosts, groups } from '../schemas'
 import { getSeedUsers, hasCleanFlag, isMainModule, runSeedCli } from './seed-utils'
@@ -207,6 +208,7 @@ $$
     ].filter(isDefined)
 
     for (const post of samplePosts) {
+        CreateGroupPostSchema.parse(post)
         if (post.title === '校园活动日历上线') {
             const legacy = await db.query.groupPosts.findFirst({ where: (table, { and, eq }) => and(eq(table.groupId, post.groupId), eq(table.title, '九月校园活动日历上线'), eq(table.authorId, post.authorId)) })
             const current = await db.query.groupPosts.findFirst({ where: (table, { and, eq }) => and(eq(table.groupId, post.groupId), eq(table.title, post.title)) })
