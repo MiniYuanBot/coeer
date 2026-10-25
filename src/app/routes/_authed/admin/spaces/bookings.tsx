@@ -1,20 +1,9 @@
+import { DataTable, RowActions, StatusBadge } from '@/components/coeer'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, type SearchSchemaInput } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
-import {
-    Alert,
-    Badge,
-    Button,
-    Card,
-    EmptyState,
-    Field,
-    Input,
-    LoadingState,
-    Modal,
-    Pagination,
-    FilterPanel,
-    paginate,
-} from '@/components/coeer'
+import { Alert, Badge, Button, Card, Field, Input, LoadingState, Modal, Pagination, paginate } from '@/components/coeer'
 import { useSpaceAdmin } from '@/hooks/useSpaceAdmin'
 import { bookingStatusTone, formatSpaceTime } from '@/components/coeer/lib/spaces'
 import { statusLabels, timeLabel, type Booking } from '@shared/open-space/domain'
@@ -33,6 +22,8 @@ export const Route = createFileRoute('/_authed/admin/spaces/bookings')({
 
 function SpaceBookingsAdminPage() {
     const { data, loading, error, pending, mutate } = useSpaceAdmin()
+    const [selectedId, setSelectedId] = useState<string | null>(null)
+    const selected = data?.bookings.find(booking => booking.id === selectedId)
     const filters = Route.useSearch()
     const navigate = Route.useNavigate()
     const update = (values: Partial<typeof filters>) =>
@@ -54,32 +45,33 @@ function SpaceBookingsAdminPage() {
         filters.page,
     )
     return (
-        <div className="space-y-6">
-            {error && <Alert tone="danger">{error}</Alert>}
-            <FilterPanel searchValue={filters.q} searchPlaceholder="搜索空间、姓名、学号或申请号"
-                onSearch={q => update({ q })} onSearchChange={q => update({ q })}
-                onClear={() => update({ q: '', status: 'all' })}
-                groups={[{ title: '预约状态', items: [
+        <PageLayout filters={{
+                searchValue: filters.q,
+                searchPlaceholder: "搜索空间、姓名、学号或申请号",
+                onSearch: q => update({ q }),
+                onSearchChange: q => update({ q }),
+                onClear: () => update({ q: '', status: 'all' }),
+                groups: [{ title: '预约状态', items: [
                     { key: 'all', label: '全部申请' }, { key: 'issues', label: '需人工核对' },
                     ...Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
-                ].map(item => ({ ...item, active: filters.status === item.key, onClick: () => update({ status: item.key }) })) }]} />
+                ].map(item => ({ ...item, active: filters.status === item.key, onClick: () => update({ status: item.key }) })) }]
+            }}>
+            {error && <Alert tone="danger">{error}</Alert>}
+
             {loading ? (
                 <LoadingState />
-            ) : rows.total ? (
-                rows.items.map((booking) => (
-                    <AdminBooking
-                        key={booking.id}
-                        booking={booking}
-                        mock={data?.adapter === 'mock'}
-                        pending={pending}
-                        mutate={mutate}
-                    />
-                ))
-            ) : (
-                <EmptyState title="暂无匹配的申请" description="调整筛选条件，或等待用户提交预约。" />
-            )}
+            ) : <DataTable label="预约与异常表" rows={rows.items} rowKey={booking => booking.id} emptyTitle="暂无匹配的申请" emptyDescription="调整筛选条件，或等待用户提交预约。" columns={[
+                { key: 'space', header: '预约', render: booking => <><p className="font-medium">{booking.spaceName}</p><p className="mt-1 text-xs text-muted-foreground">{booking.date} · {timeLabel(booking.start)}–{timeLabel(booking.end)}</p></> },
+                { key: 'user', header: '申请人', width: '9rem', render: booking => <>{booking.applicantName || booking.userName}<p className="mt-1 text-xs text-muted-foreground">{booking.studentId}</p></> },
+                { key: 'status', header: '状态', width: '9rem', render: booking => <StatusBadge status={booking.status} labels={statusLabels} tone={bookingStatusTone(booking.status)} /> },
+                { key: 'actions', header: '操作', width: '7rem', align: 'right', render: booking => <RowActions><Button size="sm" variant="outline" onClick={() => setSelectedId(booking.id)}>查看处理</Button></RowActions> },
+            ]} />}
+            <Modal open={!!selected} title="预约详情" onOpenChange={open => { if (!open && !pending) setSelectedId(null) }}>
+                {error && <Alert tone="danger">{error}</Alert>}
+                {selected && <AdminBooking key={selected.id} booking={selected} mock={data?.adapter === 'mock'} pending={pending} mutate={mutate} />}
+            </Modal>
             {rows.total > rows.size && <Pagination {...rows} onChange={(page) => update({ page })} />}
-        </div>
+        </PageLayout>
     )
 }
 

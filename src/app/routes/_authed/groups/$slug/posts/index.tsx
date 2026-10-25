@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { PostLikeButton } from '@/components/coeer/cards/PostLikeButton'
@@ -7,7 +8,7 @@ import { z } from 'zod'
 import { deleteGroupPostFn, listPostsByGroupFn, togglePinPostFn } from '~/functions'
 import { type GroupPostWithAuthor, GroupPostFilterSchema } from '@shared/contracts'
 import { GroupPostType } from '@shared/constants'
-import { Badge, Button, Card, EmptyState, FilterPanel, Icon, Modal, Pagination, SectionHeader, formatDate } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, Icon, Modal, Pagination, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
@@ -78,17 +79,13 @@ function PostsListPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader level="h2"
-                title="帖子"
-                description="查看群组讨论与公告。"
-                action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button><Icon name="send" /> 发布帖子</Button></Link>}
-            />
-            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
-
-            <FilterPanel
-                onClear={() => go({ type: undefined })}
-                groups={[
+        <PageLayout level="h2"
+            title="帖子"
+            description="查看群组讨论与公告。"
+            action={<Link to="/groups/$slug/posts/create" params={{ slug }}><Button><Icon name="send" /> 发布帖子</Button></Link>}
+            filters={{
+                onClear: () => go({ type: undefined }),
+                groups: [
                     {
                         title: '帖子类型',
                         items: [
@@ -97,8 +94,10 @@ function PostsListPage() {
                             { key: 'announcement', label: '公告', active: type === 'announcement', onClick: () => go({ type: 'announcement' }) },
                         ],
                     },
-                ]}
-            />
+                ]
+            }}>
+
+            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             {posts.length ? (
                 <div className="space-y-4">
@@ -156,6 +155,6 @@ function PostsListPage() {
                     <Button variant="danger" loading={actionPending} onClick={() => deletingPost && handleDelete(deletingPost.id)}>删除</Button>
                 </div>
             </Modal>
-        </div>
+        </PageLayout>
     )
 }

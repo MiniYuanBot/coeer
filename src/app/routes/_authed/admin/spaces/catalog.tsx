@@ -1,3 +1,5 @@
+import { DataTable, RowActions, StatusBadge, VisibilityBadge, Modal } from '@/components/coeer'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Alert, Badge, Button, Card, Field, Input, LoadingState, Select, Textarea } from '@/components/coeer'
@@ -9,24 +11,26 @@ export const Route = createFileRoute('/_authed/admin/spaces/catalog')({ componen
 
 function SpaceCatalogPage() {
     const { data, loading, error, pending, mutate } = useSpaceAdmin()
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const editing = data?.spaces.find(space => space.id === editingId)
     if (loading) return <LoadingState />
     return (
-        <div className="space-y-6">
+        <PageLayout>
             {error && <Alert tone="danger">{error}</Alert>}
-            {data?.spaces.map((space) => (
-                <SpaceEditor
-                    key={space.id}
-                    space={space}
-                    official={data.adapter === 'official'}
-                    pending={pending}
-                    scenario={data.scenarios.find((row) => row.space_id === space.id)?.scenario ?? 'success'}
-                    save={(body) => mutate(`/admin/spaces/${space.id}`, body, 'PATCH')}
-                    setScenario={(scenario) =>
-                        void mutate(`/admin/mock/scenario/${space.id}`, { scenario }, 'PATCH')
-                    }
-                />
-            ))}
-        </div>
+            <DataTable label="空间配置表" rows={data?.spaces ?? []} rowKey={space => space.id} emptyTitle="暂无空间" columns={[
+                { key: 'space', header: '空间', render: space => <><p className="font-medium">{space.name}</p><p className="mt-1 text-xs text-muted-foreground">{space.location} · {space.capacity} 人 · {spaceModuleLabels[space.module]}</p></> },
+                { key: 'published', header: '公开性', width: '7rem', render: space => <VisibilityBadge visible={space.published} hiddenLabel="非公开" /> },
+                { key: 'bookable', header: '预约状态', width: '8rem', render: space => <StatusBadge status={space.bookable ? 'active' : 'inactive'} labels={{ active: '接受预约', inactive: '暂停预约' }} /> },
+                { key: 'actions', header: '操作', width: '7rem', align: 'right', render: space => <RowActions><Button size="sm" variant="outline" onClick={() => setEditingId(space.id)}>编辑</Button></RowActions> },
+            ]} />
+            <Modal open={!!editing} title="编辑空间" onOpenChange={open => { if (!open && !pending) setEditingId(null) }}>
+                {error && <Alert tone="danger">{error}</Alert>}
+                {editing && data && <SpaceEditor key={editing.id} space={editing} official={data.adapter === 'official'} pending={pending}
+                    scenario={data.scenarios.find(row => row.space_id === editing.id)?.scenario ?? 'success'}
+                    save={body => mutate(`/admin/spaces/${editing.id}`, body, 'PATCH')}
+                    setScenario={scenario => void mutate(`/admin/mock/scenario/${editing.id}`, { scenario }, 'PATCH')} />}
+            </Modal>
+        </PageLayout>
     )
 }
 

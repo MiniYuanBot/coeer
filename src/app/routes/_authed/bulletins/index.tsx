@@ -1,6 +1,7 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { BulletinCard, EmptyState, FilterPanel, Pagination, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
+import { BulletinCard, EmptyState, Pagination, bulletinTypeLabels } from '@/components/coeer'
 import { getBulletinFeedFn } from '~/functions'
 import { BULLETIN_TYPE_ARRAY, BulletinType } from '@shared/constants'
 
@@ -38,14 +39,15 @@ function BulletinsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader title="公告" description="聚合官方通知、群组公告和活动提醒。" />
-            <FilterPanel
-                searchValue={search}
-                searchPlaceholder="搜索公告标题或内容"
-                onSearch={(value) => go({ search: value || undefined })}
-                onClear={() => go({ search: undefined, type: undefined })}
-                groups={[
+        <PageLayout title="公告"
+            scope={{ title: '公告范围', items: [{ key: 'all', label: '全部公告', active: true, onClick: () => go({ page: 1 }) }] }}
+            description="聚合官方通知、群组公告和活动提醒。"
+            filters={{
+                searchValue: search,
+                searchPlaceholder: "搜索公告标题或内容",
+                onSearch: (value) => go({ search: value || undefined }),
+                onClear: () => go({ search: undefined, type: undefined }),
+                groups: [
                     {
                         title: '类型',
                         items: [
@@ -58,8 +60,9 @@ function BulletinsPage() {
                             })),
                         ],
                     },
-                ]}
-            />
+                ]
+            }}>
+
             {bulletins.length ? (
                 <div className="coeer-bulletin-list">
                     {bulletins.map((bulletin: any) => <BulletinCard key={bulletin.id} bulletin={bulletin} />)}
@@ -68,6 +71,6 @@ function BulletinsPage() {
                 <EmptyState title="暂无公告" description="公告会在这里集中展示。" />
             )}
             <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
-        </div>
+        </PageLayout>
     )
 }

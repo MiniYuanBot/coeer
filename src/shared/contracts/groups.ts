@@ -55,6 +55,8 @@ export const ApproveGroupSchema = z.object({
 })
 
 export const GroupFilterSchema = z.object({
+    reviewScope: z.enum(['reviewed', 'pending']).optional(),
+    isPublic: z.boolean().optional(),
     status: z.enum(GROUP_STATUS_ARRAY).optional(),
     category: z.enum(GROUP_CATEGORY_ARRAY).optional(),
     search: z.string().optional(),

@@ -3,8 +3,11 @@ import { db, type DbExecutor } from '../client'
 import { achievements, NewAchievement, userAchievements } from '../schemas'
 import type { AchievementIdInput, ListAchievementsInput, UpdateAchievementInput } from '@shared/contracts'
 
-function buildAchievementWhere(data: ListAchievementsInput): SQL | undefined {
+function buildAchievementWhere(data: ListAchievementsInput, viewer?: { id?: string }): SQL | undefined {
     const conditions: SQL[] = []
+    if (data.isHidden !== undefined) conditions.push(eq(achievements.isHidden, data.isHidden))
+    if (viewer) conditions.push(or(eq(achievements.isHidden, false), viewer.id ? inArray(achievements.id,
+        db.select({ id: userAchievements.achievementId }).from(userAchievements).where(eq(userAchievements.userId, viewer.id))) : undefined)!)
     if (data.conditionType) conditions.push(eq(achievements.conditionType, data.conditionType))
     if (data.search) {
         const searchCondition = or(
@@ -18,8 +21,11 @@ function buildAchievementWhere(data: ListAchievementsInput): SQL | undefined {
 }
 
 export const achievementQueries = {
-    async count(data: ListAchievementsInput) {
-        const [result] = await db.select({ value: count() }).from(achievements).where(buildAchievementWhere(data))
+    async findById(achievementId: string) {
+        return db.query.achievements.findFirst({ where: eq(achievements.id, achievementId) })
+    },
+    async count(data: ListAchievementsInput, viewer?: { id?: string }) {
+        const [result] = await db.select({ value: count() }).from(achievements).where(buildAchievementWhere(data, viewer))
         return result.value
     },
     async create(data: NewAchievement) {
@@ -28,9 +34,9 @@ export const achievementQueries = {
         return achievement
     },
 
-    async list(data: ListAchievementsInput) {
+    async list(data: ListAchievementsInput, viewer?: { id?: string }) {
         return db.query.achievements.findMany({
-            where: buildAchievementWhere(data),
+            where: buildAchievementWhere(data, viewer),
             orderBy: [asc(achievements.code), asc(achievements.id)],
             limit: data.limit,
             offset: data.offset,

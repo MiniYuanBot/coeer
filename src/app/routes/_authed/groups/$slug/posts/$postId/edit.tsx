@@ -3,7 +3,7 @@ import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { updateGroupPostFn } from '~/functions'
-import { Badge, Button, Card, SectionHeader } from '@/components/coeer'
+import { Badge, Button, Card } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/edit')({
     beforeLoad: ({ context, params }) => {
@@ -43,8 +43,9 @@ function EditPostPage() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader level="h2" title="编辑帖子" description={`更新 ${group.name} 中的帖子内容。`} />
+        <PageLayout level="h2"
+            title="编辑帖子"
+            description={`更新 ${group.name} 中的帖子内容。`}>
 
             <Card className="rounded-lg p-5">
                 {error ? <div className="mb-4 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">{error}</div> : null}

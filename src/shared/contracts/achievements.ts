@@ -9,12 +9,14 @@ export const AchievementIdSchema = z.object({
 })
 
 export const ListAchievementsSchema = z.object({
+    isHidden: z.boolean().optional(),
     conditionType: z.enum(ACHIEVEMENT_CONDITION_TYPE_ARRAY).optional(),
     search: z.string().optional(),
     ...PaginationSchema.shape,
 })
 
 export const CreateAchievementSchema = z.object({
+    isHidden: z.boolean().optional(),
     code: z.string().trim().min(1).max(50),
     name: z.string().trim().min(1).max(100),
     description: z.string().min(1),
@@ -27,6 +29,7 @@ export const CreateAchievementSchema = z.object({
 }, { message: '请选择有效的解锁条件；注册即得的条件数值必须为 1', path: ['conditionType'] })
 
 export const UpdateAchievementSchema = z.object({
+    isHidden: z.boolean().optional(),
     achievementId: z.uuid(),
     code: z.string().min(1).max(50).optional(),
     name: z.string().min(1).max(100).optional(),

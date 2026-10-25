@@ -22,11 +22,22 @@ function buildWhereClause(params: {
     groupId?: string
     slug?: string
     status?: GroupStatus | GroupStatus[]
+    reviewScope?: 'reviewed' | 'pending'
     category?: GroupCategory
     search?: string
+    discovery?: boolean
+    isPublic?: boolean
 }): SQL | undefined {
-    const { groupId, slug, status, category, search } = params
+    const { groupId, slug, status, category, search, discovery } = params
     const conditions: SQL[] = []
+
+    if (params.reviewScope) {
+        conditions.push(inArray(groups.status, params.reviewScope === 'pending'
+            ? [GROUP_STATUS.PENDING]
+            : [GROUP_STATUS.APPROVED, GROUP_STATUS.REJECTED]))
+    }
+
+    if (params.isPublic !== undefined) conditions.push(eq(groups.isPublic, params.isPublic))
 
     if (groupId) {
         conditions.push(eq(groups.id, groupId))
@@ -48,11 +59,17 @@ function buildWhereClause(params: {
         conditions.push(eq(groups.category, category))
     }
 
+    if (discovery) {
+        conditions.push(eq(groups.status, GROUP_STATUS.APPROVED))
+        if (!search) conditions.push(eq(groups.isPublic, true))
+    }
+
     if (search) {
+        const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`
+        const keywordMatch = or(ilike(groups.name, pattern), ilike(groups.description, pattern))
         const searchCondition = or(
-            ilike(groups.name, `%${search}%`),
-            ilike(groups.description, `%${search}%`),
-            ilike(groups.slug, `%${search}%`)
+            discovery ? and(eq(groups.isPublic, true), keywordMatch) : keywordMatch,
+            eq(groups.slug, search)
         )
         if (searchCondition) {
             conditions.push(searchCondition)
@@ -119,11 +136,11 @@ export const groupQueries = {
     },
 
     // Count groups with filters
-    async countGroups(data: GroupFilterInput): Promise<number> {
+    async countGroups(data: GroupFilterInput, scope: 'discovery' | 'admin' = 'discovery'): Promise<number> {
         const [result] = await db
             .select({ value: count() })
             .from(groups)
-            .where(buildWhereClause(data))
+            .where(buildWhereClause({ ...data, discovery: scope === 'discovery' }))
 
         return result?.value ?? 0
     },
@@ -147,11 +164,11 @@ export const groupQueries = {
     },
 
     // List all groups with optional filters
-    async listAll(data: ListAllGroupsInput): Promise<GroupWithStats[]> {
-        const { status, category, search, limit, offset } = data
+    async listAll(data: ListAllGroupsInput, scope: 'discovery' | 'admin' = 'discovery'): Promise<GroupWithStats[]> {
+        const { limit, offset } = data
 
         const items = await db.query.groups.findMany({
-            where: buildWhereClause({ status, category, search }),
+            where: buildWhereClause({ ...data, discovery: scope === 'discovery' }),
             with: {
                 creator: {
                     columns: { id: true, name: true, email: true },

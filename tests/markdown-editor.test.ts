@@ -55,9 +55,55 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
 
     async function open(kind: string) {
         await page.goto(new URL(`/tests/fixtures/markdown-pages.html?kind=${kind}`, origin).href)
-        if (kind === 'bulletins' || kind === 'activities') await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: /^新建/ }).click()
+        if (kind === 'bulletins' || kind === 'activities') await page.getByRole('link', { name: /^新建/ }).click()
         await page.locator('textarea').waitFor()
     }
+
+    it('moves activity registrations into their scope and retains the activity type filter', async () => {
+        await page.goto(new URL('/tests/fixtures/markdown-pages.html?kind=activities', origin).href)
+        expect(await page.getByRole('button', { name: '报名情况', exact: true }).count()).toBe(1)
+        await page.getByRole('button', { name: '报名情况', exact: true }).click()
+        await page.getByRole('region', { name: '活动报名表' }).getByText('已报名', { exact: true }).waitFor()
+        expect(await page.getByRole('cell', { name: '测试用户', exact: true }).count()).toBe(1)
+        await page.getByRole('group', { name: '类型', exact: true }).getByRole('button', { name: '官方活动', exact: true }).click()
+        expect(page.url()).toContain('scope=participants')
+        expect(page.url()).toContain('type=official')
+        await page.getByRole('button', { name: '全部活动', exact: true }).click()
+        expect(await page.getByRole('region', { name: '活动报名表' }).count()).toBe(0)
+    })
+
+    it('persists bulletin pin and type filters and keeps the all-bulletins scope', async () => {
+        await page.goto(new URL('/tests/fixtures/markdown-pages.html?kind=bulletins', origin).href)
+        expect(await page.getByRole('button', { name: '全部公告', exact: true }).count()).toBe(1)
+        await page.getByRole('group', { name: '置顶', exact: true }).getByRole('button', { name: '已置顶', exact: true }).click()
+        await page.getByRole('group', { name: '类型', exact: true }).getByRole('button', { name: '群组公告', exact: true }).click()
+        expect(page.url()).toContain('pinned=pinned')
+        expect(page.url()).toContain('type=group_announcement')
+        await page.reload()
+        expect(await page.getByRole('button', { name: '已置顶', exact: true }).getAttribute('aria-pressed')).toBe('true')
+        expect(await page.getByRole('button', { name: '群组公告', exact: true }).getAttribute('aria-pressed')).toBe('true')
+    })
+
+    it.each(['bulletins', 'activities'])('uses independent $kind create/edit routes and reloads existing Markdown', async kind => {
+        await page.goto(new URL(`/tests/fixtures/markdown-pages.html?kind=${kind}`, origin).href)
+        expect(await page.locator('.coeer-filter-panel > .coeer-tabs.coeer-scope-tabs.coeer-scrollbar').count()).toBe(1)
+        expect(await page.locator('form:not([role=search])').count()).toBe(0)
+        expect(await page.locator('.coeer-filter-toolbar .coeer-filter-group').count()).toBe(0)
+        expect(await page.locator('.coeer-page-actions').getByRole('link', { name: /^新建/ }).getAttribute('href')).toContain(`/admin/${kind}/create`)
+        const edit = page.getByRole('link', { name: '编辑', exact: true }).first()
+        expect(await edit.getAttribute('href')).toMatch(new RegExp(`/admin/${kind}/[^/]+/edit`))
+        await edit.click()
+        await page.locator('textarea').waitFor()
+        const original = await page.locator('textarea').inputValue()
+        await page.locator('textarea').fill('未保存的内容')
+        await page.reload()
+        expect(await page.locator('textarea').inputValue()).toBe(original)
+        expect(await page.locator('h1').textContent()).toMatch(/^编辑/)
+        await page.getByRole('link', { name: '取消', exact: true }).click()
+        await page.getByRole('link', { name: /^新建/ }).click()
+        expect(await page.locator('textarea').inputValue()).toBe('')
+        expect(await page.locator('h1').textContent()).toMatch(/^新建/)
+    })
 
     it.each([
         { kind: 'createPost', label: '内容', action: 'createPost', announcement: false },
@@ -93,8 +139,8 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         expect(data[kind === 'activities' ? 'description' : 'content']).toBe(content)
         if (announcement) expect(data.type).toBe('announcement')
         if (kind === 'bulletins' || kind === 'activities') {
-            await page.waitForFunction(() => document.querySelector('textarea')?.value === '')
-            await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: /^新建/ }).click()
+            await page.waitForFunction(() => !document.querySelector('textarea'))
+            await page.getByRole('link', { name: /^新建/ }).click()
             expect(await preview.locator('.katex').count()).toBe(0)
             expect(await page.getByRole('textbox', { name: '标题', exact: true }).inputValue()).toBe('')
         }
@@ -106,8 +152,8 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
     ])('replaces the draft and preview when editing different $kind, cancelling or saving', async ({ kind, first, second, save, action }) => {
         await open(kind)
         const select = async (title: string) => {
-            await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
-            await page.getByText(title, { exact: true }).locator('../..').getByRole('button', { name: '编辑', exact: true }).click()
+            await page.getByRole('link', { name: '返回列表', exact: true }).click()
+            await page.getByText(title, { exact: true }).locator('../..').getByRole('link', { name: '编辑', exact: true }).click()
         }
         const preview = page.getByRole('region')
         await select(first)
@@ -118,7 +164,8 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         await page.waitForFunction(() => document.querySelector('textarea')?.value.includes('另一条正文'))
         expect(await preview.locator('strong').textContent()).toBe('另一条正文')
         expect(await preview.textContent()).not.toContain('未保存的草稿')
-        await page.getByRole('button', { name: '取消编辑' }).click()
+        await page.getByRole('link', { name: '取消', exact: true }).click()
+        await page.getByRole('link', { name: /^新建/ }).click()
         expect(await page.locator('textarea').inputValue()).toBe('')
         expect(await preview.locator('.katex').count()).toBe(0)
         await select(first)
@@ -129,7 +176,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         const data = JSON.parse((await page.locator('#submitted-data').textContent())!)
         expect(data.id).toBe(kind === 'bulletins' ? 'bulletin-a' : 'activity-a')
         expect(data[kind === 'bulletins' ? 'content' : 'description']).toBe(content)
-        await page.waitForFunction(() => document.querySelector('textarea')?.value === '')
+        await page.waitForFunction(() => !document.querySelector('textarea'))
         expect(await preview.locator('.katex').count()).toBe(0)
     })
 
@@ -138,8 +185,8 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         { kind: 'activities', title: '活动甲', save: '保存活动' },
     ])('preserves the $kind draft and preview when the server rejects a save or the network fails', async ({ kind, title, save }) => {
         await open(kind)
-        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
-        await page.getByText(title, { exact: true }).locator('../..').getByRole('button', { name: '编辑', exact: true }).click()
+        await page.getByRole('link', { name: '返回列表', exact: true }).click()
+        await page.getByText(title, { exact: true }).locator('../..').getByRole('link', { name: '编辑', exact: true }).click()
         await page.locator('textarea').fill(content)
         for (const mode of ['response', 'network']) {
             await page.getByLabel('模拟提交失败').selectOption(mode)
@@ -151,7 +198,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
             expect(await page.getByRole('region').locator('.katex').count()).toBe(2)
         }
         await page.getByRole('button', { name: save }).click()
-        await page.waitForFunction(() => document.querySelector('textarea')?.value === '')
+        await page.waitForFunction(() => !document.querySelector('textarea'))
         expect(await page.getByRole('alert').count()).toBe(0)
     })
 

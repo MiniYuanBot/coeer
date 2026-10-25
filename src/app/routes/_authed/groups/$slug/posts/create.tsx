@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createGroupPostFn } from '~/functions'
 import type { GroupPostType } from '@shared/constants'
-import { Badge, Button, Card, Icon, SectionHeader } from '@/components/coeer'
+import { Badge, Button, Card, Icon } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/create')({
     component: CreatePostPage,
@@ -42,8 +42,9 @@ function CreatePostPage() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader level="h2" title="发布帖子" description={`分享内容到 ${group.name}。`} />
+        <PageLayout level="h2"
+            title="发布帖子"
+            description={`分享内容到 ${group.name}。`}>
 
             <Card className="rounded-lg p-5">
                 {error ? <div className="mb-4 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">{error}</div> : null}

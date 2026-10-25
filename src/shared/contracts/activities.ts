@@ -61,6 +61,12 @@ export const ListActivityParticipantsSchema = z.object({
     ...PaginationSchema.shape,
 })
 
+export const AdminListActivityParticipantsSchema = z.object({
+    type: z.enum(ACTIVITY_TYPE_ARRAY).optional(),
+    search: z.string().optional(),
+    ...PaginationSchema.shape,
+})
+
 export type ActivityIdInput = z.infer<typeof ActivityIdSchema>
 export type CreateActivityInput = z.infer<typeof CreateActivitySchema>
 export type UpdateActivityInput = z.infer<typeof UpdateActivitySchema>
@@ -68,6 +74,11 @@ export type ListActivitiesInput = z.infer<typeof ListActivitiesSchema>
 export type ActivityParticipantIdInput = z.infer<typeof ActivityParticipantIdSchema>
 export type RegisterActivityInput = z.infer<typeof RegisterActivitySchema>
 export type ListActivityParticipantsInput = z.infer<typeof ListActivityParticipantsSchema>
+export type AdminListActivityParticipantsInput = z.infer<typeof AdminListActivityParticipantsSchema>
+export type AdminActivityParticipant = ActivityParticipant & {
+    activity: Activity
+    user: Pick<DbUser, 'id' | 'name'> | null
+}
 
 export type ActivityWithOrganizer = Activity & {
     organizer?: Pick<DbUser, 'id' | 'name'> | Pick<Group, 'id' | 'name' | 'slug'> | null

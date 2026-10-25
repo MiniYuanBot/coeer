@@ -38,6 +38,7 @@ export const navSections: NavSection[] = [
         label: '成长',
         items: [
             { to: '/redeems', label: '商城', icon: 'gift', active: 'prefix' },
+            { to: '/cards', label: '卡片', icon: 'card', active: 'prefix' },
             { to: '/achievements', label: '成就', icon: 'award', active: 'prefix' },
         ],
     },
@@ -80,6 +81,12 @@ export function getBreadcrumbs(pathname: string): Array<{ to: string; label: str
     if (parts[0] === 'admin' && parts[1]) {
         const section = adminNavItems.find(item => item.to === '/admin/' + parts[1])
         crumbs.push({ to: '/admin/' + parts[1], label: section?.label || '管理' })
+        const entityLabels: Record<string, string> = { bulletins: '公告', activities: '活动', redeems: '物品', achievements: '成就', cards: '卡片' }
+        const entity = entityLabels[parts[1]]
+        if (entity && parts[2]) {
+            crumbs.push({ to: pathname, label: `${parts[2] === 'create' ? '新建' : '编辑'}${entity}` })
+            return crumbs
+        }
         start = 2
     }
     for (let i = start; i < parts.length; i++) {

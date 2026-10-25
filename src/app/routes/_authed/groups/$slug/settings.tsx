@@ -2,7 +2,7 @@ import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { updateGroupFn, deleteGroupFn } from '~/functions'
 import { useState } from 'react'
-import { Button, Card, SectionHeader } from '@/components/coeer'
+import { Button, Card } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/settings')({
     beforeLoad: ({ context, params }) => {
@@ -70,8 +70,10 @@ function GroupSettingsPage() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader level="h2" title="群组设置" description="更新群组展示信息和可见性。" />
+        <PageLayout level="h2"
+            title="群组设置"
+            description="更新群组展示信息和可见性。">
+
             <Card className="rounded-lg p-5">
 
                 <form onSubmit={handleUpdate} className="space-y-6">

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listBookmarksFn } from '~/functions/bookmarks'
-import { Button, EmptyState, FilterPanel, PageLayout, Pagination, PostCard, SectionHeader } from '@/components/coeer'
+import { Button, EmptyState, PageLayout, Pagination, PostCard } from '@/components/coeer'
 import { ListBookmarksSchema } from '@shared/contracts/bookmarks'
 import { GROUP_POST_TYPE_ARRAY, type GroupPostType } from '@shared/constants/groupPosts'
 
@@ -27,13 +27,20 @@ function BookmarksPage() {
     const go = (next: { page?: number; search?: string; type?: GroupPostType }) =>
         void navigate({ to: '/bookmarks', search: previous => ({ ...previous, page: 1, ...next }) })
     const filtered = !!search || !!type
-    return <PageLayout>
-        <SectionHeader title="我的收藏" description="按类型整理收藏的公告和讨论，随时搜索回看。" />
-        <FilterPanel searchValue={search} searchPlaceholder="搜索收藏标题、正文或群组" onSearch={value => go({ search: value || undefined })}
-            onClear={() => go({ search: undefined, type: undefined })} groups={[{ title: '类型', items: [
+    return <PageLayout title="我的收藏"
+            scope={{ title: '收藏范围', items: [{ key: 'all', label: '全部收藏', active: true, onClick: () => go({ page: 1 }) }] }}
+            description="按类型整理收藏的公告和讨论，随时搜索回看。"
+            filters={{
+                searchValue: search,
+                searchPlaceholder: "搜索收藏标题、正文或群组",
+                onSearch: value => go({ search: value || undefined }),
+                onClear: () => go({ search: undefined, type: undefined }),
+                groups: [{ title: '类型', items: [
                 { key: 'all', label: '全部', active: !type, onClick: () => go({ type: undefined }) },
                 ...GROUP_POST_TYPE_ARRAY.map(value => ({ key: value, label: typeLabels[value], active: type === value, onClick: () => go({ type: value }) })),
-            ] }]} />
+            ] }]
+            }}>
+
         {items.length ? <section aria-label="收藏列表" className="space-y-3">{items.map(({ post, group, author }) =>
             <PostCard key={post.id} variant="bookmark" post={{ ...post, author, isBookmarked: true }} to={`/groups/${group.slug}/posts/${post.id}`}
                 source={<Link to="/groups/$slug" params={{ slug: group.slug }} className="coeer-focus rounded hover:text-primary">{group.name}</Link>} />

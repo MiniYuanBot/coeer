@@ -47,7 +47,7 @@ export const feedbackStatusLabels: Record<string, string> = {
 
 export const redeemItemTypeLabels: Record<string, string> = {
     physical: '实体物品',
-    virtual: '虚拟权益',
+    virtual: '虚拟物品',
 }
 
 export const redeemItemStatusLabels: Record<string, string> = {

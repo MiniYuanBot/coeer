@@ -1,7 +1,8 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { deleteFeedbackFn, getFeedbackByIdFn } from '~/functions'
-import { Badge, Button, Card, DetailLayout, Icon, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Badge, Button, Card, DetailLayout, Icon, formatDateTime } from '@/components/coeer'
 import { FeedbackStatusBadge, feedbackTargetLabels } from '../-feedback-ui'
 
 export const Route = createFileRoute('/_authed/feedbacks/$feedbackId/')({
@@ -46,11 +47,9 @@ function FeedbackDetailPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader
-                title={feedback.title}
-                description="反馈详情、处理状态与流转记录。"
-                action={
+        <PageLayout title={feedback.title}
+            description="反馈详情、处理状态与流转记录。"
+            action={
                     <div className="flex flex-wrap gap-2">
                         <Link to="/feedbacks/$feedbackId/logs" params={{ feedbackId: feedback.id }}>
                             <Button variant="outline"><Icon name="activity" /> 处理记录</Button>
@@ -61,8 +60,7 @@ function FeedbackDetailPage() {
                             </Button>
                         ) : null}
                     </div>
-                }
-            />
+                }>
 
             <div className="coeer-mobile-status" aria-label="当前反馈状态">
                 <FeedbackStatusBadge status={feedback.status} />
@@ -95,7 +93,7 @@ function FeedbackDetailPage() {
                     <Markdown content={feedback.content} className="max-w-[76ch] text-foreground" />
                 </Card>
             </DetailLayout>
-        </div>
+        </PageLayout>
     )
 }
 import { Markdown } from '@/components/coeer/ui/Markdown'

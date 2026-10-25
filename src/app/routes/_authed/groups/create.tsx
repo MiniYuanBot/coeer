@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createGroupFn } from '~/functions'
 import { GroupCategory, GROUP_CATEGORY } from '@shared/constants'
-import { Alert, Button, Card, Field, Icon, Input, SectionHeader, Select, Textarea } from '@/components/coeer'
+import { Alert, Button, Card, Field, Icon, Input, Select, Textarea } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/create')({
     component: CreateGroupComponent,
@@ -44,8 +44,8 @@ function CreateGroupComponent() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader title="创建群组" description="提交群组名称、分类和简介，创建后将进入审核流程。" />
+        <PageLayout title="创建群组"
+            description="提交群组名称、分类和简介，创建后将进入审核流程。">
 
             <Card className="rounded-lg p-5">
             <form onSubmit={handleSubmit} className="space-y-5">

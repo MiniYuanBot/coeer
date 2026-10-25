@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { isInternalRedirect, safeRedirect } from '../src/app/components/coeer/lib/redirect'
 import { spaceSearchSchema } from '../src/shared/contracts/spaces'
+import { getBreadcrumbs } from '../src/app/components/coeer/layout/navItems'
+
+it.each([['bulletins', '公告'], ['activities', '活动'], ['redeems', '物品'], ['achievements', '成就'], ['cards', '卡片']])('labels %s creation and editing without linking database IDs as parent pages', (kind, noun) => {
+    expect(getBreadcrumbs(`/admin/${kind}/create`).at(-1)?.label).toBe(`新建${noun}`)
+    const crumbs = getBreadcrumbs(`/admin/${kind}/record-id/edit`)
+    expect(crumbs.at(-1)?.label).toBe(`编辑${noun}`)
+    expect(crumbs.some(crumb => crumb.to.endsWith('/record-id'))).toBe(false)
+})
 
 describe('COEER authentication return paths', () => {
     it.each([

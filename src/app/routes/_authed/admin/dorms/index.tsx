@@ -1,7 +1,9 @@
+import { DataTable, RowActions, StatusBadge } from '@/components/coeer'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { confirmDormFn, computeDormFn, updateDormRoomFn } from '~/functions'
-import { Badge, Button, Card, EmptyState, Field, Input, Modal, SectionHeader, dormRoomStatusLabels, formatDateTime, useToast } from '@/components/coeer'
+import { Button, EmptyState, Field, Input, Modal, SectionHeader, dormRoomStatusLabels, formatDateTime, useToast } from '@/components/coeer'
 import type { DormRoom } from '@shared/contracts'
 import { Route as DormRoute } from './route'
 
@@ -51,7 +53,7 @@ function Allocation() {
     if (!active) return <EmptyState title="还没有宿舍届次" description="先添加一份届次问卷，收集学生信息后即可执行分配。"
         action={<Button asChild><Link to="/admin/dorms/new">添加问卷</Link></Button>} />
 
-    return <div className="space-y-6">
+    return <PageLayout>
         <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
                 ['已收问卷', overview?.questionnaireCount ?? 0], ['未分配人数', overview?.unassignedCount ?? 0],
@@ -74,25 +76,12 @@ function Allocation() {
         </section>
         <section aria-label="分配结果" className="space-y-4">
             <SectionHeader level="h2" title="分配结果" description="逐间核对房间与成员，需要时点击调整。" />
-            {rooms.length ? <div className="coeer-grid">
-                {rooms.map(room => <Card key={room.id} className="space-y-4 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                            <h3 className="break-words text-[15px] font-medium">{room.roomCode}</h3>
-                            <p className="mt-1 text-xs leading-6 text-muted-foreground">{room.building || '楼栋待定'} · {room.floor == null ? '楼层待定' : `${room.floor} 层`}</p>
-                        </div>
-                        <Badge>{dormRoomStatusLabels[room.status] || room.status}</Badge>
-                    </div>
-                    <p className="break-words text-xs text-muted-foreground">分配组别：{room.poolTag.split('-').map(tag => ({ male: '男生', female: '女生', other: '其他', normal: '普通', longbed: '加长床', lowfloor: '低楼层', barrierfree: '无障碍', medical: '医疗需求' }[tag] || tag)).join(' · ')}</p>
-                    <ul className="flex flex-wrap gap-2" aria-label="房间成员">
-                        {room.members.map(id => <li key={id} className="max-w-full break-words rounded-md bg-muted px-2 py-1 text-xs">{members.get(id)?.name || members.get(id)?.email || id}</li>)}
-                    </ul>
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-                        <span className="text-xs text-muted-foreground">{room.members.length} / {room.capacity} 人</span>
-                        <Button size="sm" variant="secondary" disabled={!!working} onClick={() => setEditingRoom(room)}>调整</Button>
-                    </div>
-                </Card>)}
-            </div> : <EmptyState title="暂无分配结果" description={submissions.length ? '问卷已收集，执行分配后可在这里核对房间。' : '当前还没有学生提交问卷，收到问卷后可执行分配。'} />}
+            <DataTable label="宿舍分配表" rows={rooms} rowKey={room => room.id} emptyTitle="暂无分配结果" emptyDescription={submissions.length ? '问卷已收集，执行分配后可在这里核对房间。' : '当前还没有学生提交问卷，收到问卷后可执行分配。'} columns={[
+                { key: 'room', header: '房间', render: room => <><p className="font-medium">{room.roomCode}</p><p className="mt-1 text-xs text-muted-foreground">{room.building || '楼栋待定'} · {room.floor == null ? '楼层待定' : `${room.floor} 层`}</p><p className="mt-1 text-xs text-muted-foreground">{room.poolTag.split('-').map(tag => ({ male: '男生', female: '女生', other: '其他', normal: '普通', longbed: '加长床', lowfloor: '低楼层', barrierfree: '无障碍', medical: '医疗需求' }[tag] || tag)).join(' · ')}</p></> },
+                { key: 'members', header: '成员', width: '14rem', render: room => <><ul className="flex flex-wrap gap-2" aria-label="房间成员">{room.members.map(id => <li key={id} className="rounded-md bg-muted px-2 py-1 text-xs">{members.get(id)?.name || members.get(id)?.email || id}</li>)}</ul><p className="mt-1 text-xs text-muted-foreground">{room.members.length} / {room.capacity} 人</p></> },
+                { key: 'status', header: '状态', width: '7rem', render: room => <StatusBadge status={room.status} labels={dormRoomStatusLabels} /> },
+                { key: 'actions', header: '操作', width: '7rem', align: 'right', render: room => <RowActions><Button size="sm" variant="outline" disabled={!!working} onClick={() => setEditingRoom(room)}>调整</Button></RowActions> },
+            ]} />
         </section>
         <Modal open={!!confirmation} title={confirmation === 'compute' ? '执行宿舍分配' : '确认下发结果'} onOpenChange={open => { if (!open && !working) setConfirmation(null) }}>
             <p className="text-sm leading-7 text-muted-foreground">{confirmation === 'compute' ? '将根据当前问卷重新生成房间，已有分配结果及手动调整会被替换。' : '将当前房间分配确认为最终结果，学生可在宿舍服务中查看。请确认房间与成员已核对。'}</p>
@@ -123,5 +112,5 @@ function Allocation() {
                 </div>
             </form>}
         </Modal>
-    </div>
+    </PageLayout>
 }

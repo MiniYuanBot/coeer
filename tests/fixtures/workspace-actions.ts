@@ -25,8 +25,6 @@ export const adminCreateAchievementFn = action,
     createReplyFn = action,
     deleteActivityFn = action,
     deleteBulletinFn = action,
-    deleteFeedbackFn = action,
-    deleteGroupFn = action,
     deleteGroupPostFn = action,
     deleteReplyFn = action,
     drawCardsFn = action,
@@ -44,6 +42,7 @@ export const adminCreateAchievementFn = action,
     getFeedbackStatusLogsFn = action,
     getFeedbacksFn = action,
     getGroupBySlugFn = action,
+    getMyGroupMembershipFn = action,
     getGroupMembersFn = action,
     getGroupPostByIdFn = action,
     getMyCardsFn = action,
@@ -54,12 +53,13 @@ export const adminCreateAchievementFn = action,
     getUserStatsFn = action,
     joinGroupFn = action,
     listActivitiesFn = action,
+    listAdminGroupsFn = action,
     listAllGroupsFn = action,
     listBookmarksFn = action,
     listChildRepliesFn = action,
     listDormCyclesFn = action,
     listMyGroupsFn = action,
-    listNotificationsFn = action,
+    listNotificationsFn = async () => ({ items: [], total: 0, unread: 0 }),
     listPostsByGroupFn = action,
     listRedeemItemsFn = action,
     listRepliesByTargetFn = action,
@@ -77,10 +77,28 @@ export const adminCreateAchievementFn = action,
     updateActivityFn = action,
     updateBulletinFn = action,
     updateDormRoomFn = action,
-    updateFeedbackStatusFn = action,
     updateGroupFn = action,
     updateGroupPostFn = action,
-    updateGroupStatusFn = action,
     updateMemberRoleFn = action,
     updateProfileFn = action,
     updateReplyFn = action
+
+export async function updateFeedbackStatusFn({ data }: any) {
+    if ((window as any).__feedbackFail) throw new Error('保存失败，请重试')
+    const { feedbacks } = await import('./workspace-data')
+    Object.assign(feedbacks.find(item => item.id === data.id)!, { status: data.status, isPublic: data.isPublic })
+}
+export async function deleteFeedbackFn({ data }: any) {
+    const { feedbacks } = await import('./workspace-data')
+    feedbacks.splice(feedbacks.findIndex(item => item.id === data.id), 1)
+}
+
+export async function updateGroupStatusFn({ data }: any) {
+    if ((window as any).__groupFail) throw new Error('保存失败，请重试')
+    const { adminGroups } = await import('./workspace-data')
+    Object.assign(adminGroups.find(item => item.id === data.id)!, data)
+}
+export async function deleteGroupFn({ data }: any) {
+    const { adminGroups } = await import('./workspace-data')
+    adminGroups.splice(adminGroups.findIndex(item => item.id === data.groupId), 1)
+}

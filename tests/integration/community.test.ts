@@ -352,7 +352,9 @@ describe('COEER group administrator capabilities', () => {
         signIn()
         const page = { limit: 10, offset: 0 }
         const publicGroups = (await GroupService.listAllGroups({ ...page, status: 'approved' })).data!.items!
-        expect(publicGroups.find((item) => item.id === group.id)).toMatchObject({ memberCount: 2, postCount: 1 })
+        expect(publicGroups.find((item) => item.id === group.id)).toBeUndefined()
+        expect((await GroupService.listAllGroups({ ...page, search: group.slug })).data?.items)
+            .toMatchObject([{ id: group.id, memberCount: 2, postCount: 1 }])
         expect(publicGroups.find((item) => item.id === empty.id)).toMatchObject({ memberCount: 0, postCount: 0 })
         for (const filter of [{ status: 'approved' as const }, { status: 'approved' as const, role: 'admin' as const }]) {
             const memberships = (await GroupService.listMyGroups({ ...page, ...filter })).data!.items!
@@ -366,7 +368,7 @@ describe('COEER group administrator capabilities', () => {
         signIn(ids.other)
         expect((await GroupService.leaveGroup({ groupId: group.id })).success).toBe(true)
         expect((await GroupService.getBySlug({ slug: group.slug })).data?.memberCount).toBe(2)
-        expect((await GroupService.listAllGroups(page)).data?.items?.find((item) => item.id === group.id)?.memberCount).toBe(2)
+        expect((await GroupService.listAllGroups({ ...page, search: group.slug })).data?.items?.[0]?.memberCount).toBe(2)
     })
 
     it('allows group admins to review members, set roles and moderate posts without platform review powers', async () => {
@@ -771,6 +773,32 @@ describe('COEER accounts and server permissions', () => {
 })
 
 describe('COEER feedback and content visibility', () => {
+    it('partitions reviewed feedback and the pending queue before counting and pagination', async () => {
+        const records = await db.insert(feedbacks).values((['pending', 'processing', 'resolved', 'invalid'] as const).map(status => ({
+            title: `review-${status}`, content: 'review test', targetType: 'general' as const,
+            status, authorId: ids.student, isPublic: false,
+        }))).returning()
+        signIn(ids.admin)
+        const reviewed = await FeedbackService.list({ reviewScope: 'reviewed', limit: 2, offset: 0 })
+        expect(reviewed.data?.total).toBe(3)
+        expect(reviewed.data?.items).toHaveLength(2)
+        expect(reviewed.data?.items?.every(item => item.status !== 'pending')).toBe(true)
+        expect((await FeedbackService.list({ reviewScope: 'reviewed', limit: 2, offset: 2 })).data?.items).toHaveLength(1)
+        expect((await FeedbackService.list({ reviewScope: 'reviewed', status: 'resolved', search: 'review', limit: 10, offset: 0 })).data)
+            .toMatchObject({ total: 1, items: [{ status: 'resolved' }] })
+        expect((await FeedbackService.list({ reviewScope: 'pending', limit: 10, offset: 0 })).data)
+            .toMatchObject({ total: 1, items: [{ status: 'pending' }] })
+        expect((await FeedbackService.list({ reviewScope: 'reviewed', status: 'pending', limit: 10, offset: 0 })).data)
+            .toMatchObject({ total: 0, items: [] })
+        await FeedbackService.updateStatus({ id: records[0].id, status: 'resolved', isPublic: false })
+        expect((await FeedbackService.list({ reviewScope: 'pending', limit: 10, offset: 0 })).data?.total).toBe(0)
+        expect((await FeedbackService.list({ reviewScope: 'reviewed', limit: 10, offset: 0 })).data?.total).toBe(4)
+        signIn(ids.other)
+        for (const reviewScope of ['reviewed', 'pending'] as const) {
+            expect((await FeedbackService.list({ reviewScope, limit: 10, offset: 0 })).data)
+                .toMatchObject({ total: 0, items: [] })
+        }
+    })
     it('audits feedback state changes and hides anonymous authors from ordinary readers', async () => {
         signIn()
         const created = await FeedbackService.create({

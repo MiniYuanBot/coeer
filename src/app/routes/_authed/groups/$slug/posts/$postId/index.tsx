@@ -8,7 +8,7 @@ import { PostBookmarkButton } from '@/components/coeer/cards/PostBookmarkButton'
 import { GroupReplies } from '@/components/coeer/cards/GroupReplies'
 import { listRepliesByTargetFn } from '~/functions/replies'
 import { deleteGroupPostFn, togglePinPostFn } from '~/functions'
-import { Badge, Button, Card, DetailLayout, Icon, Modal, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Badge, Button, Card, DetailLayout, Icon, Modal, formatDateTime } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/posts/$postId/')({
   validateSearch: z.object({ replyPage: z.coerce.number().int().min(1).catch(1).default(1) }),
@@ -53,18 +53,17 @@ function PostIndexComponent() {
   }
 
   return (
-    <PageLayout>
-      <SectionHeader level="h2"
-        title={post.title}
-        actionLayout="stack-on-mobile"
-        action={
+    <PageLayout level="h2"
+            title={post.title}
+            actionLayout="stack-on-mobile"
+            action={
           <div className="flex flex-wrap gap-2">
             {isAdmin ? <Button variant="outline" loading={actionPending} onClick={handleTogglePin}>{post.isPinned ? '取消置顶' : '置顶'}</Button> : null}
             {canModify ? <><Button asChild variant="outline"><Link to="/groups/$slug/posts/$postId/edit" params={{ slug, postId }}>编辑</Link></Button>
             <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>删除</Button></> : null}
           </div>
-        }
-      />
+        }>
+
       {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
       <DetailLayout asideLabel="帖子信息" aside={

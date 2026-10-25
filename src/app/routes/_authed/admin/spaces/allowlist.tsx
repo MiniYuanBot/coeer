@@ -1,20 +1,8 @@
+import { DataTable, RowActions, StatusBadge } from '@/components/coeer'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
-import {
-    Alert,
-    Badge,
-    Button,
-    Card,
-    EmptyState,
-    Field,
-    Input,
-    LoadingState,
-    Modal,
-    Pagination,
-    FilterPanel,
-    Select,
-    paginate,
-} from '@/components/coeer'
+import { Alert, Button, Card, EmptyState, Field, Input, LoadingState, Modal, Pagination, Select, paginate } from '@/components/coeer'
 import { useSpaceAdmin } from '@/hooks/useSpaceAdmin'
 import type { BookingPermission } from '@shared/open-space/domain'
 
@@ -51,7 +39,14 @@ function SpaceAllowlistPage() {
             setConfirm(null)
     }
     return (
-        <div className="space-y-6">
+        <PageLayout filters={{
+                searchValue: query,
+                searchPlaceholder: "搜索昵称或学号",
+                groups: [],
+                onSearch: value => { setQuery(value); setPage(1) },
+                onSearchChange: value => { setQuery(value); setPage(1) },
+                onClear: () => { setQuery(''); setPage(1) }
+            }}>
             <Alert>
                 输入 10 位学号即可设置预约权限，系统从 COEER 学生邮箱自动识别学号。移除后立即停止新的预约提交，已有记录会保留。
             </Alert>
@@ -89,41 +84,15 @@ function SpaceAllowlistPage() {
                     </Button>
                 </form>
             </Card>
-            <FilterPanel searchValue={query} searchPlaceholder="搜索昵称或学号" groups={[]}
-                onSearch={value => { setQuery(value); setPage(1) }}
-                onSearchChange={value => { setQuery(value); setPage(1) }}
-                onClear={() => { setQuery(''); setPage(1) }} />
+
             {loading ? (
                 <LoadingState />
             ) : rows.total ? (
-                <div className="divide-y divide-border border-y border-border">
-                    {rows.items.map((row) => (
-                        <div
-                            key={row.studentId}
-                            className="flex flex-wrap items-center justify-between gap-4 py-4"
-                        >
-                            <div>
-                                <p className="text-sm font-medium">
-                                    {row.name}
-                                    <span className="ml-3 text-xs font-normal text-muted-foreground">
-                                        {row.studentId}
-                                    </span>
-                                </p>
-                                <div className="mt-2">
-                                    <Badge
-                                        tone={
-                                            row.bookingPermission === 'blocked'
-                                                ? 'danger'
-                                                : row.bookingPermission === 'review'
-                                                  ? 'warning'
-                                                  : 'success'
-                                        }
-                                    >
-                                        {labels[row.bookingPermission]}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
+                <DataTable label="预约白名单表" rows={rows.items} rowKey={row => row.studentId} columns={[
+                    { key: 'name', header: '用户', render: row => <span className="font-medium">{row.name}</span> },
+                    { key: 'id', header: '学号', width: '10rem', render: row => row.studentId },
+                    { key: 'permission', header: '预约权限', width: '9rem', render: row => <StatusBadge status={row.bookingPermission} labels={labels} /> },
+                    { key: 'actions', header: '操作', width: '10rem', align: 'right', render: row =>                             <RowActions>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -144,10 +113,8 @@ function SpaceAllowlistPage() {
                                 >
                                     移除
                                 </Button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            </RowActions> },
+                ]} />
             ) : (
                 <EmptyState title="暂无匹配用户" description="添加白名单用户，或调整搜索条件。" />
             )}
@@ -172,6 +139,6 @@ function SpaceAllowlistPage() {
                     </Button>
                 </div>
             </Modal>
-        </div>
+        </PageLayout>
     )
 }

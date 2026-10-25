@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gt, gte, ilike, or, sql, SQL } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, gte, ilike, inArray, or, sql, SQL } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
 import { NewRedeemItem, NewRedeemOrder, redeemItems, redeemOrders } from '../schemas'
 import type { ListRedeemItemsInput, ListRedeemOrdersInput, ProcessRedeemOrderInput, UpdateRedeemItemInput } from '@shared/contracts'
@@ -17,17 +17,23 @@ function buildItemWhere(data: ListRedeemItemsInput): SQL | undefined {
     return conditions.length ? and(...conditions) : undefined
 }
 
+function buildOrderWhere(data: ListRedeemOrdersInput, userId?: string) {
+    return and(
+        data.itemId ? eq(redeemOrders.itemId, data.itemId) : undefined,
+        data.status ? eq(redeemOrders.status, data.status) : undefined,
+        userId ? eq(redeemOrders.userId, userId) : undefined,
+        data.type || data.search ? inArray(redeemOrders.itemId, db.select({ id: redeemItems.id }).from(redeemItems)
+            .where(buildItemWhere({ type: data.type, search: data.search, limit: data.limit, offset: data.offset }))) : undefined,
+    )
+}
+
 export const redeemQueries = {
     async countItems(data: ListRedeemItemsInput) {
         const [result] = await db.select({ value: count() }).from(redeemItems).where(buildItemWhere(data))
         return result.value
     },
     async countOrders(data: ListRedeemOrdersInput, userId?: string) {
-        const [result] = await db.select({ value: count() }).from(redeemOrders).where(and(
-            data.itemId ? eq(redeemOrders.itemId, data.itemId) : undefined,
-            data.status ? eq(redeemOrders.status, data.status) : undefined,
-            userId ? eq(redeemOrders.userId, userId) : undefined,
-        ))
+        const [result] = await db.select({ value: count() }).from(redeemOrders).where(buildOrderWhere(data, userId))
         return result.value
     },
     async countAvailable(data: ListRedeemItemsInput) {
@@ -101,11 +107,8 @@ export const redeemQueries = {
     },
 
     async listOrdersByUser(userId: string, data: ListRedeemOrdersInput) {
-        const conditions = [eq(redeemOrders.userId, userId)]
-        if (data.itemId) conditions.push(eq(redeemOrders.itemId, data.itemId))
-        if (data.status) conditions.push(eq(redeemOrders.status, data.status))
         return db.query.redeemOrders.findMany({
-            where: and(...conditions),
+            where: buildOrderWhere(data, userId),
             with: { item: true },
             orderBy: [desc(redeemOrders.createdAt), desc(redeemOrders.id)],
             limit: data.limit,
@@ -114,11 +117,8 @@ export const redeemQueries = {
     },
 
     async listOrders(data: ListRedeemOrdersInput) {
-        const conditions: SQL[] = []
-        if (data.itemId) conditions.push(eq(redeemOrders.itemId, data.itemId))
-        if (data.status) conditions.push(eq(redeemOrders.status, data.status))
         return db.query.redeemOrders.findMany({
-            where: conditions.length ? and(...conditions) : undefined,
+            where: buildOrderWhere(data),
             with: { item: true, user: { columns: { id: true, name: true } } },
             orderBy: [desc(redeemOrders.createdAt), desc(redeemOrders.id)],
             limit: data.limit,

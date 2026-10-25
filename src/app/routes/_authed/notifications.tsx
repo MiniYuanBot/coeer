@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { ViewTabs } from '@/components/coeer/ui/NavTabs'
+
 import { listNotificationsFn, markNotificationReadFn } from '~/functions/notifications'
-import { Alert, Badge, Button, Card, EmptyState, PageLayout, Pagination, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Alert, Badge, Button, Card, EmptyState, PageLayout, Pagination, formatDateTime } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/notifications')({ component: NotificationsPage })
 
@@ -14,12 +14,14 @@ function NotificationsPage() {
     const client = useQueryClient()
     const result = useQuery({ queryKey: ['notifications', user!.id, unreadOnly, page], queryFn: () => listNotificationsFn({ data: { limit: 20, offset: (page - 1) * 20, unreadOnly } }), refetchInterval: 30000 })
     const read = useMutation({ mutationFn: (id?: string) => markNotificationReadFn({ data: { id } }), onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }) })
-    return <PageLayout>
-        <SectionHeader title="站内通知" description="反馈处理、审核结果和活动报名的最新消息。" action={<Button variant="outline" loading={read.isPending} disabled={!result.data?.unread} onClick={() => read.mutate(undefined)}>全部标为已读</Button>} />
-        <ViewTabs label="通知范围" items={[
+    return <PageLayout title="站内通知"
+            description="反馈处理、审核结果和活动报名的最新消息。"
+            action={<Button variant="outline" loading={read.isPending} disabled={!result.data?.unread} onClick={() => read.mutate(undefined)}>全部标为已读</Button>}
+            scope={{ title: "通知范围", items: [
             { key: 'all', label: '全部', active: !unreadOnly, onClick: () => { setUnreadOnly(false); setPage(1) } },
             { key: 'unread', label: '未读', active: unreadOnly, onClick: () => { setUnreadOnly(true); setPage(1) } },
-        ]} />
+        ] }}>
+
         {result.error || read.error ? <Alert tone="danger">{(result.error || read.error)?.message}</Alert> : null}
         {result.isPending ? <p role="status">正在加载通知…</p> : result.data?.items.length ? <div className="space-y-3">{result.data.items.map((item) => <Card key={item.id} className="p-5">
             <div className="flex items-start justify-between gap-3"><h2 className="text-sm font-medium">{item.title} {!item.readAt ? <Badge tone="primary">未读</Badge> : null}</h2><time className="text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</time></div>

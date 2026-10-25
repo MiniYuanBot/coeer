@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import {
     ActivityIdSchema,
+    AdminListActivityParticipantsSchema,
     ActivityParticipantIdSchema,
     CreateActivitySchema,
     ListActivitiesSchema,
@@ -9,6 +10,10 @@ import {
     UpdateActivitySchema,
 } from '@shared/contracts'
 import { ActivityService } from '../services'
+
+export const adminListActivityParticipantsFn = createServerFn({ method: 'GET' })
+    .inputValidator(AdminListActivityParticipantsSchema)
+    .handler(async ({ data }) => ActivityService.adminListParticipants(data))
 
 export const createActivityFn = createServerFn({ method: 'POST' })
     .inputValidator(CreateActivitySchema)

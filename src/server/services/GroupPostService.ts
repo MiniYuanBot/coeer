@@ -318,15 +318,15 @@ export class GroupPostService {
         }
     }
 
-    // List posts by author across all groups
+    // Author feeds expose only approved public groups, including for members/admins.
     static async listByAuthor(data: ListPostsByAuthorInput): Promise<PaginatedGroupPostResponse<GroupPostWithGroup>> {
         try {
-            const { authorId, limit, offset } = data
+            const { limit, offset, ...filters } = data
 
             const posts = await groupPostQueries.findByAuthor(data)
 
             // Count total posts by author
-            const allPostsCount = await groupPostQueries.countByAuthor({ authorId })
+            const allPostsCount = await groupPostQueries.countByAuthor(filters)
 
             return {
                 success: true,

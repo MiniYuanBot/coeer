@@ -46,6 +46,8 @@ export const RedeemItemSchema = z.object({
 })
 
 export const ListRedeemOrdersSchema = z.object({
+    type: z.enum(REDEEM_ITEM_TYPE_ARRAY).optional(),
+    search: z.string().optional(),
     itemId: z.uuid().optional(),
     status: z.enum(REDEEM_ORDER_STATUS_ARRAY).optional(),
     ...PaginationSchema.shape,

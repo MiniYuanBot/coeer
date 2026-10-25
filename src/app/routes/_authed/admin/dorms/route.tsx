@@ -1,7 +1,8 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { z } from 'zod'
 import { getDormAdminOverviewFn } from '~/functions'
-import { Badge, SectionHeader, Select, dormCycleStatusLabels } from '@/components/coeer'
+import { Badge, Select, dormCycleStatusLabels } from '@/components/coeer'
 import { NavTabs, navTabClass } from '@/components/coeer/ui/NavTabs'
 
 export const Route = createFileRoute('/_authed/admin/dorms')({
@@ -18,8 +19,9 @@ function DormAdminLayout() {
     const path = useLocation({ select: location => location.pathname })
     const active = overview?.activeCycle
     const search = { cycleId: cycleId || active?.id }
-    return <div className="space-y-6">
-        <SectionHeader title="宿舍管理" description="按届次收集问卷、核对分配结果，再确认下发。" />
+    return <PageLayout title="宿舍管理"
+            description="按届次收集问卷、核对分配结果，再确认下发。">
+
         <NavTabs label="宿舍管理">
             <Link to="/admin/dorms" search={search} activeOptions={{ exact: true, includeSearch: false }} className={navTabClass}>执行分配</Link>
             <Link to="/admin/dorms/questionnaires" search={search} activeOptions={{ includeSearch: false }} className={navTabClass}>问卷记录</Link>
@@ -37,5 +39,5 @@ function DormAdminLayout() {
             {active && <Badge tone={active.status === 'confirmed' ? 'success' : 'default'}>{dormCycleStatusLabels[active.status]}</Badge>}
         </div>}
         <Outlet />
-    </div>
+    </PageLayout>
 }

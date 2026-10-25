@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { BrandMark } from '@/components/coeer/layout/BrandMark'
 import { useActivityClock } from '@/hooks/useActivityClock'
 import { activityStatusAt } from '@shared/activities'
@@ -93,8 +94,7 @@ function Home() {
 function HomeContent({ data }: { data: HomeData }) {
   const { myGroups, activities, balance, user } = data
   return (
-    <div className="coeer-page">
-      <div className="coeer-home-welcome">
+    <PageLayout header={<div className="coeer-home-welcome">
       <div>
       <SectionHeader title="动态" description="欢迎回来。看看社区的新消息，跟进你的反馈。" />
       <div className="coeer-home-shortcuts text-muted-foreground">
@@ -105,7 +105,8 @@ function HomeContent({ data }: { data: HomeData }) {
       </div>
       </div>
       <Minigong />
-      </div>
+      </div>}>
+
       <div className="coeer-home-columns">
         <HomeFeed data={data} />
         <div className="coeer-home-rail min-w-0 space-y-7">
@@ -126,7 +127,7 @@ function HomeContent({ data }: { data: HomeData }) {
           <RightRail activities={activities} user={user} />
         </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

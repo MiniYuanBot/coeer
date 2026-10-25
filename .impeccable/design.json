@@ -1760,8 +1760,7 @@
           "activeBorderColor": "{colors.primary}",
           "sharedBy": [
             "NavTabs",
-            "ViewTabs",
-            "EditorSection"
+            "ViewTabs"
           ]
         },
         "filter-label": {

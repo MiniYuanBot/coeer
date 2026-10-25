@@ -12,6 +12,8 @@ import { studentIdForUser } from '@shared/contracts/auth'
 import type { Activity } from '../database/schemas'
 import type {
     ActivityIdInput,
+    AdminActivityParticipant,
+    AdminListActivityParticipantsInput,
     ActivityParticipantIdInput,
     ActivityParticipantWithUser,
     ActivityResponse,
@@ -27,6 +29,14 @@ import type {
 type SessionUser = NonNullable<Awaited<ReturnType<typeof AuthService.getCurrentUser>>['data']>
 
 export class ActivityService {
+    static async adminListParticipants(data: AdminListActivityParticipantsInput): Promise<PaginatedActivityResponse<AdminActivityParticipant>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: ACTIVITY.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: ACTIVITY.FORBIDDEN }
+        const [items, total] = await Promise.all([activityQueries.listAllParticipants(data), activityQueries.countAllParticipants(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: ACTIVITY.GET_SUCCESS }
+    }
+
     private static async withParticipation(items: ActivityWithOrganizer[], userId?: string): Promise<ActivityWithOrganizer[]> {
         const participations = userId ? await activityQueries.findParticipationsForUser(items.map((item) => item.id), userId) : []
         const byActivity = new Map(participations.map(({ activityId, id, status }) => [activityId, { id, status }]))

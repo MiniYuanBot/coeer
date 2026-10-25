@@ -3,13 +3,22 @@ import { db, type DbExecutor } from '../client'
 import { cards, NewCard, type Card, userCards } from '../schemas'
 import type { ListCardsInput, UpdateCardInput } from '@shared/contracts'
 
-function cardFilter(data: ListCardsInput) {
-    return and(data.rarity ? eq(cards.rarity, data.rarity) : undefined,
+function cardFilter(data: ListCardsInput, viewer?: { id?: string }) {
+    return and(data.isHidden !== undefined ? eq(cards.isHidden, data.isHidden) : undefined,
+        viewer ? or(eq(cards.isHidden, false), viewer.id ? inArray(cards.id,
+            db.select({ id: userCards.cardId }).from(userCards).where(and(eq(userCards.userId, viewer.id), gt(userCards.count, 0)))) : undefined) : undefined,
+        data.rarity ? eq(cards.rarity, data.rarity) : undefined,
         data.series ? eq(cards.series, data.series) : undefined,
         data.search ? or(ilike(cards.name, `%${data.search}%`), ilike(cards.description, `%${data.search}%`), ilike(cards.series, `%${data.search}%`)) : undefined)
 }
 
 export const cardQueries = {
+    async ownershipCounts(ids: string[], userId?: string) {
+        if (!userId || !ids.length) return new Map<string, number>()
+        const rows = await db.select({ cardId: userCards.cardId, count: userCards.count }).from(userCards)
+            .where(and(eq(userCards.userId, userId), inArray(userCards.cardId, ids), gt(userCards.count, 0)))
+        return new Map(rows.map(row => [row.cardId, row.count]))
+    },
     async deleteUnowned(cardId: string): Promise<'deleted' | 'owned' | 'missing'> {
         return db.transaction(async tx => {
             // Serialize with draws and foreign-key inserts before checking ownership.
@@ -33,9 +42,9 @@ export const cardQueries = {
         return card
     },
 
-    async list(data: ListCardsInput) {
+    async list(data: ListCardsInput, viewer?: { id?: string }) {
         return db.query.cards.findMany({
-            where: cardFilter(data),
+            where: cardFilter(data, viewer),
             orderBy: [asc(cards.name), asc(cards.id)],
             limit: data.limit,
             offset: data.offset,
@@ -77,11 +86,11 @@ export const cardQueries = {
         })
     },
 
-    async count(data: ListCardsInput, userId?: string) {
+    async count(data: ListCardsInput, userId?: string, viewer?: { id?: string }) {
         const [result] = userId
             ? await db.select({ value: count() }).from(userCards).innerJoin(cards, eq(cards.id, userCards.cardId))
                 .where(and(eq(userCards.userId, userId), gt(userCards.count, 0), cardFilter(data)))
-            : await db.select({ value: count() }).from(cards).where(cardFilter(data))
+            : await db.select({ value: count() }).from(cards).where(cardFilter(data, viewer))
         return result.value
     },
 }

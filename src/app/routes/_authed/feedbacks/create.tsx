@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { createFeedbackFn } from '~/functions'
 import { FeedbackTargetType } from '@shared/constants'
 import { useState } from 'react'
-import { Alert, Button, Card, DetailLayout, Field, Icon, Input, SectionHeader, Select, useToast } from '@/components/coeer'
+import { Alert, Button, Card, DetailLayout, Field, Icon, Input, Select, useToast } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/feedbacks/create')({
     component: CreateFeedbackPage,
@@ -46,8 +46,9 @@ function CreateFeedbackPage() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader title="提交反馈" description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。" />
+        <PageLayout title="提交反馈"
+            description="清晰描述目标、现象和期待结果，可以帮助处理者更快推进。">
+
             <DetailLayout asideLabel="反馈填写提示" aside={
                 <section className="space-y-5 rounded-lg border border-border bg-muted p-5">
                     <h2 className="flex items-center gap-2 text-xs font-semibold"><Icon name="feedback" className="h-3.5 w-3.5 text-muted-foreground" />让问题更容易被处理</h2>

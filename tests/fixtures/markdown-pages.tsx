@@ -3,8 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { Route as CreatePostRoute } from '../../src/app/routes/_authed/groups/$slug/posts/create'
 import { Route as EditPostRoute } from '../../src/app/routes/_authed/groups/$slug/posts/$postId/edit'
 import { Route as FeedbackRoute } from '../../src/app/routes/_authed/feedbacks/create'
-import { Route as BulletinsRoute } from '../../src/app/routes/_authed/admin/bulletins'
-import { Route as ActivitiesRoute } from '../../src/app/routes/_authed/admin/activities'
+import { Route as BulletinsRoute } from '../../src/app/routes/_authed/admin/bulletins/index'
+import { Route as ActivitiesRoute } from '../../src/app/routes/_authed/admin/activities/index'
+import { Route as CreateBulletinRoute } from '../../src/app/routes/_authed/admin/bulletins/create'
+import { Route as EditBulletinRoute } from '../../src/app/routes/_authed/admin/bulletins/$bulletinId.edit'
+import { Route as CreateActivityRoute } from '../../src/app/routes/_authed/admin/activities/create'
+import { Route as EditActivityRoute } from '../../src/app/routes/_authed/admin/activities/$activityId.edit'
+import { useFixturePath } from './admin-navigation'
 import { BulletinCard } from '../../src/app/components/coeer/cards/BulletinCard'
 import { ActivityCard } from '../../src/app/components/coeer/cards/ActivityCard'
 import { FeedbackCard } from '../../src/app/components/coeer/cards/FeedbackCard'
@@ -27,6 +32,7 @@ function SummaryCards() {
 }
 
 function PageFixture() {
+    const path = useFixturePath()
     const kind = new URLSearchParams(window.location.search).get('kind') || 'createPost'
     const [, refresh] = useState(0)
     useEffect(() => {
@@ -34,10 +40,12 @@ function PageFixture() {
         window.addEventListener('markdown-submitted', update)
         return () => window.removeEventListener('markdown-submitted', update)
     }, [])
-    const Page = (pages[kind as keyof typeof pages]?.options.component ?? SummaryCards) as ComponentType
+    const adminRoutes = kind === 'bulletins' ? [BulletinsRoute, CreateBulletinRoute, EditBulletinRoute] : [ActivitiesRoute, CreateActivityRoute, EditActivityRoute]
+    const route = kind === 'bulletins' || kind === 'activities' ? adminRoutes[path.includes('/create') ? 1 : path.includes('/edit') ? 2 : 0] : pages[kind as keyof typeof pages]
+    const Page = (route?.options.component ?? SummaryCards) as ComponentType
     return <main className="coeer-workspace max-w-5xl p-4">
         {kind === 'reset' ? <form><MarkdownEditor label="正文" name="content" defaultValue={initialContent} />
-            <button type="reset">重置正文</button></form> : <Page />}
+            <button type="reset">重置正文</button></form> : <Page key={path} />}
         <output id="submitted-action">{submitted.action}</output>
         <output id="submitted-data">{JSON.stringify(submitted.data)}</output>
         <select aria-label="模拟提交失败" onChange={(event) => { failure.mode = event.target.value }}>

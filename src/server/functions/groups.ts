@@ -80,6 +80,15 @@ export const listAllGroupsFn = createServerFn({ method: 'GET' })
         return result.data
     })
 
+// Platform moderation is separate from public discovery.
+export const listAdminGroupsFn = createServerFn({ method: 'GET' })
+    .inputValidator(ListAllGroupsSchema)
+    .handler(async ({ data }) => {
+        const result = await GroupService.listAdminGroups(data)
+        if (!result.success) throw new Error(result.state.message)
+        return result.data
+    })
+
 // List my groups
 export const listMyGroupsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListMyGroupsSchema)
@@ -116,6 +125,15 @@ export const updateGroupStatusFn = createServerFn({ method: 'POST' })
         }
 
         return result.data
+    })
+
+// Join group
+export const getMyGroupMembershipFn = createServerFn({ method: 'GET' })
+    .inputValidator(GroupIdSchema)
+    .handler(async ({ data }) => {
+        const result = await GroupService.getMyMembership(data)
+        if (!result.success) throw new Error(result.state.message)
+        return result.data ?? null
     })
 
 // Join group

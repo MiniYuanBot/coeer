@@ -16,6 +16,14 @@ export const getCardPoolFn = createServerFn({ method: 'GET' })
     .inputValidator(ListCardsSchema)
     .handler(async ({ data }) => CardService.listCards(data))
 
+export const adminListCardsFn = createServerFn({ method: 'GET' })
+    .inputValidator(ListCardsSchema)
+    .handler(async ({ data }) => CardService.adminList(data))
+
+export const adminGetCardFn = createServerFn({ method: 'GET' })
+    .inputValidator(CardIdSchema)
+    .handler(async ({ data }) => CardService.adminGet(data))
+
 export const getMyCardsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListCardsSchema)
     .handler(async ({ data }) => CardService.listMine(data))

@@ -7,6 +7,7 @@ import { PointService } from './PointService'
 import { AchievementService } from './AchievementService'
 import type {
     CardResponse,
+    CardWithOwnership,
     CardIdInput,
     CreateCardInput,
     DrawCardsInput,
@@ -38,6 +39,15 @@ function pickFromPool(pool: Card[]): Card | null {
 }
 
 export class CardService {
+    static async adminGet(data: CardIdInput): Promise<CardResponse<Card>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: CARD.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: CARD.FORBIDDEN }
+        const card = await cardQueries.findById(data.cardId)
+        if (!card) return { success: false, state: CARD.NOT_FOUND }
+        return { success: true, data: card, state: CARD.GET_SUCCESS }
+    }
+
     static async adminDelete(data: CardIdInput): Promise<CardResponse<null>> {
         const current = await AuthService.getCurrentUser()
         if (!current.success || !current.data) return { success: false, state: CARD.UNAUTHORIZED }
@@ -106,7 +116,18 @@ export class CardService {
         }
     }
 
-    static async listCards(data: ListCardsInput): Promise<PaginatedCardResponse<Card>> {
+    static async listCards(data: ListCardsInput): Promise<PaginatedCardResponse<CardWithOwnership>> {
+        const current = await AuthService.getCurrentUser()
+        const viewer = { id: current.success ? current.data?.id : undefined }
+        const [items, total] = await Promise.all([cardQueries.list(data, viewer), cardQueries.count(data, undefined, viewer)])
+        const owned = await cardQueries.ownershipCounts(items.map(item => item.id), viewer.id)
+        return { success: true, data: { items: items.map(item => ({ ...item, ownedCount: owned.get(item.id) ?? 0 })), total, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
+    }
+
+    static async adminList(data: ListCardsInput): Promise<PaginatedCardResponse<Card>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: CARD.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: CARD.FORBIDDEN }
         const [items, total] = await Promise.all([cardQueries.list(data), cardQueries.count(data)])
         return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: CARD.GET_SUCCESS }
     }

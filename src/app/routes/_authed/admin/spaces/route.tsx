@@ -1,14 +1,6 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import {
-    Alert,
-    Button,
-    EmptyState,
-    LoadingState,
-    NavTabs,
-    SectionHeader,
-    navTabClass,
-    activeNavTabClass,
-} from '@/components/coeer'
+import { Alert, Button, EmptyState, LoadingState, NavTabs, navTabClass, activeNavTabClass } from '@/components/coeer'
 import { SpacesProvider, useSpaces } from '@/hooks/useSpaces'
 
 export const Route = createFileRoute('/_authed/admin/spaces')({
@@ -24,16 +16,14 @@ export const Route = createFileRoute('/_authed/admin/spaces')({
 function SpaceAdminLayout() {
     const { config, user, loading, error, reload } = useSpaces()
     return (
-        <div className="space-y-6">
-            <SectionHeader
-                title="空间与预约管理"
-                description="管理预约权限、空间配置和处理进度，官方结果不明确时由管理员核对。"
-                action={
+        <PageLayout title="空间与预约管理"
+            description="管理预约权限、空间配置和处理进度，官方结果不明确时由管理员核对。"
+            action={
                     <Button asChild variant="outline">
                         <Link to="/spaces">查看空间目录</Link>
                     </Button>
-                }
-            />
+                }>
+
             <NavTabs label="空间管理">
                 <Link
                     to="/admin/spaces"
@@ -91,6 +81,6 @@ function SpaceAdminLayout() {
             ) : (
                 <Outlet />
             )}
-        </div>
+        </PageLayout>
     )
 }

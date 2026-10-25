@@ -1,7 +1,7 @@
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { Markdown } from '@/components/coeer/ui/Markdown'
 import { createFileRoute } from '@tanstack/react-router'
-import { Badge, Card, DetailLayout, EmptyState, Icon, SectionHeader, activityStatusLabels, activityTypeLabels, formatDateTime } from '@/components/coeer'
+import { Badge, Card, DetailLayout, EmptyState, Icon, activityStatusLabels, activityTypeLabels, formatDateTime } from '@/components/coeer'
 import { ActivityRegistrationButton } from '@/components/coeer/cards/ActivityRegistrationButton'
 import { getActivityByIdFn } from '~/functions'
 import { useActivityClock } from '@/hooks/useActivityClock'
@@ -22,9 +22,10 @@ function ActivityDetailPage() {
     if (!activity) return <EmptyState title="活动不存在" />
 
     return (
-        <PageLayout>
-            <SectionHeader title={activity.title} description={activityTypeLabels[activity.type] || '学院活动'}
-                action={<Badge tone={activity.status === 'ongoing' ? 'success' : activity.status === 'upcoming' ? 'primary' : 'default'}>{activityStatusLabels[activity.status] || activity.status}</Badge>} />
+        <PageLayout title={activity.title}
+            description={activityTypeLabels[activity.type] || '学院活动'}
+            action={<Badge tone={activity.status === 'ongoing' ? 'success' : activity.status === 'upcoming' ? 'primary' : 'default'}>{activityStatusLabels[activity.status] || activity.status}</Badge>}>
+
             <DetailLayout asideFirstOnMobile asideLabel="活动信息与报名" aside={
                 <Card className="space-y-5 p-5">
                     <h2 className="text-sm font-semibold">活动信息</h2>

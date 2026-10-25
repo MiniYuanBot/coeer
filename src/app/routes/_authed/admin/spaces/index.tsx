@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Alert, Badge, Button, Card, LoadingState } from '@/components/coeer'
 import { useSpaceAdmin } from '@/hooks/useSpaceAdmin'
@@ -10,7 +11,7 @@ function SpaceOverviewPage() {
     if (loading) return <LoadingState />
     if (!data) return <Alert tone="danger">{error || '无法加载管理数据'}</Alert>
     return (
-        <div className="space-y-6">
+        <PageLayout>
             {error && <Alert tone="danger">{error}</Alert>}
             <div className="flex flex-wrap gap-2">
                 <Button
@@ -138,6 +139,6 @@ function SpaceOverviewPage() {
                     )}
                 </div>
             </Card>
-        </div>
+        </PageLayout>
     )
 }

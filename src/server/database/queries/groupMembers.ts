@@ -52,7 +52,7 @@ function buildWhereClause(params: {
     if (params.category || params.search) {
         conditions.push(inArray(groupMembers.groupId, db.select({ id: groups.id }).from(groups).where(and(
             params.category ? eq(groups.category, params.category) : undefined,
-            params.search ? or(ilike(groups.name, `%${params.search}%`), ilike(groups.slug, `%${params.search}%`), ilike(groups.description, `%${params.search}%`)) : undefined,
+            params.search ? or(ilike(groups.name, `%${params.search}%`), eq(groups.slug, params.search), ilike(groups.description, `%${params.search}%`)) : undefined,
         ))))
     }
 

@@ -6,6 +6,7 @@ import type {
     ActivityParticipantIdInput,
     ListActivitiesInput,
     ListActivityParticipantsInput,
+    AdminListActivityParticipantsInput,
     RegisterActivityInput,
     UpdateActivityInput,
 } from '@shared/contracts'
@@ -32,7 +33,26 @@ function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
     return conditions.length ? and(...conditions) : undefined
 }
 
+function buildAdminParticipantWhere(data: AdminListActivityParticipantsInput) {
+    return inArray(activityParticipants.activityId, db.select({ id: activities.id }).from(activities).where(and(
+        data.type ? eq(activities.type, data.type) : undefined,
+        data.search ? ilike(activities.title, `%${data.search.replace(/[\\%_]/g, '\\$&')}%`) : undefined,
+    )))
+}
+
 export const activityQueries = {
+    async listAllParticipants(data: AdminListActivityParticipantsInput) {
+        return db.query.activityParticipants.findMany({
+            where: buildAdminParticipantWhere(data),
+            with: { activity: true, user: { columns: { id: true, name: true } } },
+            orderBy: [desc(activityParticipants.registeredAt), desc(activityParticipants.id)],
+            limit: data.limit, offset: data.offset,
+        })
+    },
+    async countAllParticipants(data: AdminListActivityParticipantsInput) {
+        const [result] = await db.select({ value: count() }).from(activityParticipants).where(buildAdminParticipantWhere(data))
+        return result.value
+    },
     async findParticipationsForUser(activityIds: string[], userId: string) {
         if (!activityIds.length) return []
         return db.select({ id: activityParticipants.id, activityId: activityParticipants.activityId, status: activityParticipants.status })

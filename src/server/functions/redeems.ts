@@ -19,6 +19,10 @@ export const adminListRedeemItemsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListRedeemItemsSchema)
     .handler(async ({ data }) => RedeemService.adminListItems(data))
 
+export const adminGetRedeemItemFn = createServerFn({ method: 'GET' })
+    .inputValidator(RedeemItemIdSchema)
+    .handler(async ({ data }) => RedeemService.adminGetItem(data))
+
 export const redeemItemFn = createServerFn({ method: 'POST' })
     .inputValidator(RedeemItemSchema)
     .handler(async ({ data }) => {

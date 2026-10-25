@@ -1,5 +1,6 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
-import { getGroupBySlugFn, checkRoleFn } from '~/functions'
+import { getGroupBySlugFn, getMyGroupMembershipFn } from '~/functions'
 import { Badge, NavTabs, navTabClass, activeNavTabClass, groupCategoryLabels } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug')({
@@ -9,11 +10,9 @@ export const Route = createFileRoute('/_authed/groups/$slug')({
             throw new Error('Group not found')
         }
 
-        const user = context.user!
-        const isAdmin = await checkRoleFn({ data: { groupId: group.id, userId: user.id, role: 'admin' } })
-        const isMember = await checkRoleFn({ data: { groupId: group.id, userId: user.id, role: 'member' } })
-
-        return { group, isAdmin, isMember }
+        const membership = await getMyGroupMembershipFn({ data: { groupId: group.id } })
+        const approved = membership?.status === 'approved'
+        return { group, isAdmin: approved && membership.role === 'admin', isMember: approved, isPending: membership?.status === 'pending' }
     },
     errorComponent: ({ error }) => {
         if (error.message === 'Group not found') {
@@ -30,7 +29,7 @@ function GroupLayout() {
     const { slug } = Route.useParams()
 
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <section aria-label="群组信息" className="space-y-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex min-w-0 items-start gap-3">
@@ -98,6 +97,6 @@ function GroupLayout() {
             </section>
 
             <Outlet />
-        </div>
+        </PageLayout>
     )
 }

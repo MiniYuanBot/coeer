@@ -1,9 +1,10 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import * as React from 'react'
 import { z } from 'zod'
 import { getDormQuestionnaireConfigFn, getDormStudentViewFn, listDormCyclesFn, submitDormQuestionnaireFn } from '~/functions'
-import { Badge, Button, Card, EmptyState, FilterPanel, Icon, SectionHeader, dormCycleStatusLabels, formatDateTime, useToast } from '@/components/coeer'
-import type { DormCycle, DormQuestionnaire, DormRoom, DormStudentView } from '@shared/contracts'
+import { Badge, Button, Card, EmptyState, Icon, dormCycleStatusLabels, formatDateTime, useToast } from '@/components/coeer'
+import type { DormCycle, DormRoom, DormStudentView } from '@shared/contracts'
 
 type DormQuestionConfig = {
     qid: string
@@ -115,18 +116,9 @@ function DormHomePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader
-                title="宿舍"
-                description="填写新生宿舍问卷，管理员最终确认后再查看分配结果。"
-            />
-
-            <FilterPanel
-                searchValue={search.search}
-                searchPlaceholder="搜索宿舍届次"
-                onSearch={(value) => navigate({ to: '/dorms', search: { ...search, search: value || undefined } })}
-                onClear={() => navigate({ to: '/dorms', search: { ...search, search: undefined } })}
-                scope={{
+        <PageLayout title="宿舍"
+            description="填写新生宿舍问卷，管理员最终确认后再查看分配结果。"
+            scope={{
                         title: '宿舍服务视图',
                         items: [
                             {
@@ -143,8 +135,13 @@ function DormHomePage() {
                             },
                         ],
                     }}
-                groups={[]}
-            />
+            filters={{
+                searchValue: search.search,
+                searchPlaceholder: "搜索宿舍届次",
+                onSearch: (value) => navigate({ to: '/dorms', search: { ...search, search: value || undefined } }),
+                onClear: () => navigate({ to: '/dorms', search: { ...search, search: undefined } }),
+                groups: []
+            }}>
 
             {!current ? (
                 <EmptyState title="暂无宿舍届次" description="管理员创建届次后，学生才可以填写问卷。" />
@@ -241,7 +238,7 @@ function DormHomePage() {
                     </Card>
                 </div>
             )}
-        </div>
+        </PageLayout>
     )
 }
 

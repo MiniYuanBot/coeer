@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { Card, Icon } from '@/components/coeer'
 
@@ -26,7 +27,7 @@ function GroupAdminPage() {
     ]
 
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <Card className="rounded-lg p-5">
                 <h2 className="mb-4 text-[15px] font-medium">群组统计</h2>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -69,6 +70,6 @@ function GroupAdminPage() {
                     </Link>
                 </div>
             </Card>
-        </div>
+        </PageLayout>
     )
 }

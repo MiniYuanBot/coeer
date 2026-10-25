@@ -13,6 +13,7 @@ import { FeedbackStatus, FeedbackTargetType } from '@shared/constants'
 
 // Private query condition builder
 function buildWhereClause(params: {
+    reviewScope?: 'reviewed' | 'pending'
     authorId?: string
     status?: FeedbackStatus | FeedbackStatus[]
     search?: string
@@ -21,6 +22,10 @@ function buildWhereClause(params: {
 }): SQL | undefined {
     const { status, search, authorId, targetType, isPublic } = params
     const conditions: SQL[] = []
+
+    if (params.reviewScope) {
+        conditions.push(inArray(feedbacks.status, params.reviewScope === 'pending' ? ['pending'] : ['processing', 'resolved', 'invalid']))
+    }
 
     if (authorId) {
         conditions.push(eq(feedbacks.authorId, authorId))

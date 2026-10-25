@@ -1,7 +1,8 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import z from 'zod'
 import { getFeedbackStatusLogsFn } from '~/functions'
-import { Button, Card, EmptyState, Icon, SectionHeader, formatDateTime } from '@/components/coeer'
+import { Button, Card, EmptyState, Icon, formatDateTime } from '@/components/coeer'
 import { FeedbackStatusBadge } from '../-feedback-ui'
 
 const searchSchema = z.object({
@@ -38,16 +39,13 @@ function FeedbackLogsPage() {
     const totalPages = Math.ceil(total / pageSize)
 
     return (
-        <div className="space-y-6">
-            <SectionHeader
-                title="处理记录"
-                description="查看这条反馈的审核和处理状态流转。"
-                action={
+        <PageLayout title="处理记录"
+            description="查看这条反馈的审核和处理状态流转。"
+            action={
                     <Link to="/feedbacks/$feedbackId" params={{ feedbackId }}>
                         <Button variant="outline"><Icon name="chevron" className="h-4 w-4 rotate-180" /> 返回详情</Button>
                     </Link>
-                }
-            />
+                }>
 
             <Card className="p-5">
                 {logs.length ? (
@@ -89,6 +87,6 @@ function FeedbackLogsPage() {
                     </Button>
                 </div>
             ) : null}
-        </div>
+        </PageLayout>
     )
 }

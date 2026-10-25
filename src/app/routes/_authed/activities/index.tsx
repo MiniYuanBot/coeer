@@ -1,7 +1,8 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { z } from 'zod'
-import { ActivityCard, EmptyState, FilterPanel, Pagination, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
+import { ActivityCard, EmptyState, Pagination, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
 import { ActivityRegistrationButton } from '@/components/coeer/cards/ActivityRegistrationButton'
 import { listActivitiesFn } from '~/functions'
 import { ACTIVITY_STATUS_ARRAY, ACTIVITY_TYPE_ARRAY, ActivityStatus, ActivityType } from '@shared/constants'
@@ -49,14 +50,15 @@ function ActivitiesPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader title="活动" description="参与学院活动、共创圆桌和学习小组，获得成长积分。" />
-            <FilterPanel
-                searchValue={search}
-                searchPlaceholder="搜索活动标题、内容或地点"
-                onSearch={(value) => go({ search: value || undefined })}
-                onClear={() => go({ search: undefined, type: undefined, status: undefined })}
-                groups={[
+        <PageLayout title="活动"
+            scope={{ title: '活动范围', items: [{ key: 'all', label: '全部活动', active: true, onClick: () => go({ page: 1 }) }] }}
+            description="参与学院活动、共创圆桌和学习小组，获得成长积分。"
+            filters={{
+                searchValue: search,
+                searchPlaceholder: "搜索活动标题、内容或地点",
+                onSearch: (value) => go({ search: value || undefined }),
+                onClear: () => go({ search: undefined, type: undefined, status: undefined }),
+                groups: [
                     {
                         title: '类型',
                         items: [
@@ -81,8 +83,9 @@ function ActivitiesPage() {
                             })),
                         ],
                     },
-                ]}
-            />
+                ]
+            }}>
+
             {activities.length ? (
                 <div className="coeer-grid">
                     {activities.map((activity: any) => (
@@ -97,6 +100,6 @@ function ActivitiesPage() {
                 <EmptyState title="暂无活动" description="活动发布后会出现在这里。" />
             )}
             <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
-        </div>
+        </PageLayout>
     )
 }

@@ -33,6 +33,182 @@ describe.skipIf(!executablePath)('workspace surfaces and interaction in Chromium
         await page.locator('h1').waitFor()
         await page.waitForFunction(() => getComputedStyle(document.body).fontSize === '14px')
     }
+
+    it.each(['groups', 'feedbacks', 'bulletins', 'activities', 'bookmarks', 'redeems', 'admin', 'adminGroups'])('composes %s as header, scope, toolbar, filter groups and content at both widths', async screen => {
+        await open(screen)
+        for (const width of [1440, 390]) {
+            await page.setViewportSize({ width, height: 960 })
+            const structure = await page.locator('h1').evaluate(heading => {
+                const header = heading.closest('.coeer-page-header')!
+                const container = header.parentElement!
+                const panel = header.nextElementSibling!
+                const scope = panel.querySelector(':scope > .coeer-scope-tabs')!
+                const toolbar = panel.querySelector(':scope > .coeer-filter-toolbar')!
+                const groups = panel.querySelector(':scope > .coeer-filter-groups')!
+                return {
+                    page: container.classList.contains('coeer-page'),
+                    first: container.firstElementChild === header,
+                    panel: panel.classList.contains('coeer-filter-panel'),
+                    ordered: scope.nextElementSibling === toolbar && toolbar.nextElementSibling === groups,
+                    nestedOptions: toolbar.querySelector('.coeer-filter-options') !== null,
+                    content: !!panel.nextElementSibling,
+                    overflow: document.documentElement.scrollWidth > innerWidth,
+                }
+            })
+            expect(structure).toEqual({ page: true, first: true, panel: true, ordered: true, nestedOptions: false, content: true, overflow: false })
+        }
+    })
+    it('omits unused layout regions and keeps the space header before its filters', async () => {
+        await open('profile')
+        expect(await page.locator('.coeer-filter-panel').count()).toBe(0)
+        expect(await page.locator('.coeer-page-header > .coeer-page-actions').count()).toBe(1)
+        await open('notifications')
+        await page.getByRole('button', { name: '未读', exact: true }).click()
+        expect(await page.getByRole('button', { name: '未读', exact: true }).getAttribute('aria-pressed')).toBe('true')
+        expect(await page.locator('.coeer-filter-panel .coeer-filter-toolbar, .coeer-filter-panel .coeer-filter-groups').count()).toBe(0)
+        await open('spaces')
+        const header = await page.locator('.coeer-page-header').boundingBox()
+        const filters = await page.locator('.coeer-filter-panel').boundingBox()
+        expect(header!.y + header!.height).toBeLessThan(filters!.y)
+    })
+
+    it('opens reviews in StrictMode, preserves saved fields, and separates reviewed feedback from the queue', async () => {
+        await open('admin')
+        const rows = page.locator('table.table-fixed > tbody > tr')
+        expect(await rows.count()).toBe(3)
+        expect(await rows.getByRole('button', { name: '审核', exact: true }).count()).toBe(0)
+        for (const [index, status] of ['processing', 'resolved', 'invalid'].entries()) {
+            const row = rows.nth(index)
+            expect(await row.getByText(index % 2 ? '公开' : '非公开', { exact: true }).count()).toBe(1)
+            await row.getByRole('button', { name: '编辑', exact: true }).click()
+            const dialog = page.getByRole('dialog', { name: '编辑反馈' })
+            await dialog.waitFor()
+            expect(await dialog.locator('[name=status]').inputValue()).toBe(status)
+            expect(await dialog.locator('[name=isPublic]').inputValue()).toBe(String(index % 2 === 1))
+            await dialog.getByRole('button', { name: '取消', exact: true }).click()
+        }
+        await page.getByRole('button', { name: '审核队列', exact: true }).click()
+        expect(await rows.count()).toBe(1)
+        expect(await rows.getByRole('button', { name: '编辑', exact: true }).count()).toBe(0)
+        await rows.getByRole('button', { name: '审核', exact: true }).click()
+        const dialog = page.getByRole('dialog', { name: '审核反馈' })
+        await dialog.waitFor()
+        expect(await dialog.locator('[name=status]').inputValue()).toBe('pending')
+        await dialog.locator('[name=status]').selectOption('resolved')
+        await dialog.locator('[name=isPublic]').selectOption('false')
+        await dialog.locator('[name=note]').fill('审核备注保留')
+        await page.evaluate(() => { (window as any).__feedbackFail = true })
+        await dialog.getByRole('button', { name: '保存', exact: true }).click()
+        await dialog.getByRole('alert').waitFor()
+        expect(await dialog.locator('[name=note]').inputValue()).toBe('审核备注保留')
+        expect(await dialog.locator('[name=status]').inputValue()).toBe('resolved')
+        await page.evaluate(() => { (window as any).__feedbackFail = false })
+        await dialog.getByRole('button', { name: '保存', exact: true }).click()
+        await dialog.waitFor({ state: 'hidden' })
+        expect(await rows.count()).toBe(0)
+        await page.getByRole('button', { name: '已审核反馈', exact: true }).click()
+        expect(await rows.count()).toBe(4)
+        const reviewed = rows.first()
+        expect(await reviewed.getByText('已解决', { exact: true }).count()).toBe(1)
+        expect(await reviewed.getByText('非公开', { exact: true }).count()).toBe(1)
+        await reviewed.getByRole('button', { name: '编辑', exact: true }).click()
+        await page.getByRole('dialog').locator('[name=status]').selectOption('pending')
+        await page.getByRole('dialog').getByRole('button', { name: '保存', exact: true }).click()
+        await page.getByRole('dialog').waitFor({ state: 'hidden' })
+        expect(await rows.count()).toBe(3)
+        await page.getByRole('button', { name: '审核队列', exact: true }).click()
+        page.once('dialog', dialog => void dialog.accept())
+        await rows.getByRole('button', { name: '删除', exact: true }).click()
+        await rows.waitFor({ state: 'hidden' })
+    })
+
+    it('separates group moderation scopes and preserves edits through failures and status changes', async () => {
+        await open('adminGroups')
+        const rows = page.locator('table.coeer-data-table > tbody > tr')
+        expect(await rows.count()).toBe(1)
+        expect(await rows.getByRole('button', { name: '审核', exact: true }).count()).toBe(0)
+        await rows.getByRole('button', { name: '编辑', exact: true }).click()
+        await page.getByRole('dialog', { name: '编辑群组' }).waitFor()
+        expect(await page.getByRole('dialog').locator('[name=status]').inputValue()).toBe('approved')
+        await page.getByRole('dialog').getByRole('button', { name: '取消', exact: true }).click()
+        await page.getByRole('button', { name: '审核队列', exact: true }).click()
+        expect(await rows.count()).toBe(1)
+        expect(await rows.getByRole('button', { name: '编辑', exact: true }).count()).toBe(0)
+        await rows.getByRole('button', { name: '审核', exact: true }).click()
+        const dialog = page.getByRole('dialog', { name: '审核群组' })
+        await dialog.waitFor()
+        expect(await dialog.locator('[name=status]').inputValue()).toBe('pending')
+        expect(await dialog.locator('[name=reviewNote]').inputValue()).toBe('原有备注')
+        await dialog.locator('[name=status]').selectOption('rejected')
+        await dialog.locator('[name=reviewNote]').fill('补充信息后重审')
+        await page.evaluate(() => { (window as any).__groupFail = true })
+        await dialog.getByRole('button', { name: '保存', exact: true }).click()
+        await dialog.getByRole('alert').waitFor()
+        expect(await dialog.locator('[name=reviewNote]').inputValue()).toBe('补充信息后重审')
+        await page.evaluate(() => { (window as any).__groupFail = false })
+        await dialog.getByRole('button', { name: '保存', exact: true }).click()
+        await dialog.waitFor({ state: 'hidden' })
+        expect(await rows.count()).toBe(0)
+        await page.getByRole('button', { name: '已审核群组', exact: true }).click()
+        expect(await rows.count()).toBe(2)
+        await rows.last().getByRole('button', { name: '编辑', exact: true }).click()
+        const editor = page.getByRole('dialog', { name: '编辑群组' })
+        expect(await editor.locator('[name=status]').inputValue()).toBe('rejected')
+        expect(await editor.locator('[name=reviewNote]').inputValue()).toBe('补充信息后重审')
+        await editor.locator('[name=status]').selectOption('pending')
+        await editor.getByRole('button', { name: '保存', exact: true }).click()
+        await editor.waitFor({ state: 'hidden' })
+        expect(await rows.count()).toBe(1)
+        await page.getByRole('button', { name: '审核队列', exact: true }).click()
+        page.once('dialog', dialog => void dialog.accept())
+        await rows.getByRole('button', { name: '删除', exact: true }).click()
+        await rows.waitFor({ state: 'hidden' })
+    })
+
+    it('keeps an initially open modal visible across StrictMode effect replay', async () => {
+        await open('components', 'light', 'initialOpen')
+        const dialog = page.getByRole('dialog', { name: '测试弹窗' })
+        await dialog.waitFor()
+        await page.waitForTimeout(100)
+        expect(await dialog.isVisible()).toBe(true)
+        await page.keyboard.press('Escape')
+        await dialog.waitFor({ state: 'hidden' })
+        expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
+    })
+    it.each(['adminGroups', 'adminBookings', 'adminAllowlist', 'adminCatalog'])('keeps the %s status table contained and its management action usable on mobile', async screen => {
+        await page.setViewportSize({ width: 390, height: 960 })
+        await open(screen)
+        const table = page.locator('table.coeer-data-table')
+        await table.waitFor()
+        expect((await layout()).overflow).toBeLessThanOrEqual(1)
+        expect(await page.locator('.coeer-table-scroll').getAttribute('tabindex')).toBe('0')
+        const action = screen === 'adminBookings' ? '查看处理' : '编辑'
+        await table.getByRole('button', { name: action, exact: true }).click()
+        if (screen === 'adminAllowlist') {
+            expect(await page.getByLabel('学号', { exact: true }).inputValue()).toBe('2026201234')
+            expect(await page.locator('form select').inputValue()).toBe('review')
+        } else {
+            const dialog = page.getByRole('dialog').last()
+            await dialog.waitFor()
+            if (screen === 'adminBookings') {
+                await dialog.getByRole('button', { name: '审核通过', exact: true }).click()
+                await dialog.getByRole('alert').filter({ hasText: 'writes are disabled' }).waitFor()
+            }
+            await dialog.getByRole('button', { name: '关闭弹窗', exact: true }).click()
+            await dialog.waitFor({ state: 'hidden' })
+        }
+    })
+
+    it('shows a disabled applied state when entering a group with a pending application', async () => {
+        await page.goto(new URL('tests/fixtures/workspace.html?screen=groupPending', origin).href)
+        await page.getByRole('button', { name: '已申请', exact: true }).waitFor()
+        expect(await page.getByRole('button', { name: '已申请', exact: true }).isDisabled()).toBe(true)
+        expect(await page.getByRole('button', { name: '申请加入', exact: true }).count()).toBe(0)
+        await page.reload()
+        expect(await page.getByRole('button', { name: '已申请', exact: true }).isDisabled()).toBe(true)
+        await page.goto(new URL('tests/fixtures/workspace.html?screen=groupMember', origin).href)
+        expect(await page.getByRole('button', { name: '申请加入', exact: true }).count()).toBe(0)
+    })
     async function layout() {
         return page.evaluate(() => {
             const workspace = document.querySelector('.coeer-workspace')?.getBoundingClientRect()

@@ -1,4 +1,4 @@
-import { ownedCard } from './admin-gamification-router'
+import { achievement, card, item, ownedCard } from './admin-gamification-router'
 
 export const submitted = { action: '', data: {} as unknown }
 export const failure = { mode: '' }
@@ -19,8 +19,14 @@ export const adminDeleteRedeemItemFn = save('deleteItem')
 export const adminCreateCardFn = save('createCard')
 export const adminUpdateCardFn = save('updateCard')
 export const adminDeleteCardFn = save('deleteCard')
+export const adminGetCardFn = async () => ({ success: true, data: card })
+export const adminGetAchievementFn = async () => ({ success: true, data: achievement })
+export const adminGetRedeemItemFn = async () => ({ success: true, data: item })
 export const getCardPoolFn = async () => ({ data: { items: [], total: 0 } })
 export const getAllAchievementsFn = async () => ({ data: { items: [], total: 0 } })
+export const getMyAchievementsFn = async () => ({ data: { items: [], total: 0 } })
+export const adminListAchievementsFn = getAllAchievementsFn
+export const adminListCardsFn = getCardPoolFn
 export const adminListRedeemItemsFn = async () => ({ data: { items: [], total: 0 } })
 export const adminListRedeemOrdersFn = async () => ({ data: { items: [], total: 0 } })
 export const getMyCardsFn = async () => ({ data: { items: [ownedCard], total: 1 } })

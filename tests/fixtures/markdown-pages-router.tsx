@@ -1,4 +1,5 @@
-import { createElement, type AnchorHTMLAttributes } from 'react'
+export { Link, useNavigate, useRouter } from './admin-navigation'
+import { fixtureSearch } from './admin-navigation'
 
 export const initialContent = '**已有正文**，行内公式 $u=x^2$。\n\n$$\n\\frac{1}{2}\n$$'
 export const anotherContent = '**另一条正文** $v=y^3$'
@@ -12,18 +13,17 @@ export const activityItems = [
 ]
 
 export function createFileRoute(path: string) {
-    return (options: unknown) => ({
+    return (options: { validateSearch?: { parse: (value: unknown) => unknown } }) => ({
         options,
         useRouteContext: () => ({ group: { id: 'group', name: '测试群组' }, isAdmin: true,
             post: { id: 'post', title: '已有帖子', content: initialContent, type: 'discussion' } }),
         useParams: () => ({ slug: 'test-group', postId: 'post' }),
-        useSearch: () => ({ page: 1 }),
-        useLoaderData: () => path.endsWith('bulletins') ? { bulletins: bulletinItems } : { activities: activityItems },
+        useSearch: () => options.validateSearch?.parse(fixtureSearch()) ?? { page: 1 },
+        useLoaderData: () => path.endsWith('/edit')
+            ? (path.includes('/bulletins/') ? bulletinItems : activityItems).find(item => window.location.hash.includes(item.id))!
+            : path.includes('/bulletins/') ? { bulletins: bulletinItems, total: 2 }
+            : { activities: activityItems, participants: [{ id: 'participant-a', activity: activityItems[0], user: { name: '测试用户' }, status: 'registered', registeredAt: new Date() }], total: 1 },
     })
 }
 
-export function useNavigate() { return async () => {} }
 export function redirect() { return new Error('redirect') }
-export function Link({ to, params, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { to?: string; params?: unknown }) {
-    return createElement('a', { ...props, href: to || '#' })
-}

@@ -6,6 +6,14 @@ export const getAllAchievementsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListAchievementsSchema)
     .handler(async ({ data }) => AchievementService.list(data))
 
+export const adminListAchievementsFn = createServerFn({ method: 'GET' })
+    .inputValidator(ListAchievementsSchema)
+    .handler(async ({ data }) => AchievementService.adminList(data))
+
+export const adminGetAchievementFn = createServerFn({ method: 'GET' })
+    .inputValidator(AchievementIdSchema)
+    .handler(async ({ data }) => AchievementService.adminGet(data))
+
 export const getMyAchievementsFn = createServerFn({ method: 'GET' })
     .inputValidator(ListAchievementsSchema)
     .handler(async ({ data }) => AchievementService.listMine(data))

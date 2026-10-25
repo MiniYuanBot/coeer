@@ -1,3 +1,4 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
@@ -14,7 +15,7 @@ import {
     cn,
 } from '@/components/coeer'
 import { spaceApi, SpaceApiError, useSpaces, useSpaceResource } from '@/hooks/useSpaces'
-import { bookingStatusTone, spaceModuleLabels, syncLabel } from '@/components/coeer/lib/spaces'
+import { spaceModuleLabels, syncLabel } from '@/components/coeer/lib/spaces'
 import {
     addDays,
     coversRange,
@@ -113,11 +114,11 @@ function SpaceDetailPage() {
             setBusy(false)
         }
     }
-    if (room.loading) return <div className="space-y-6"><SpacesPageHeader title="空间详情" description="正在读取空间与时段信息…" /><LoadingState /></div>
+    if (room.loading) return <PageLayout header={<SpacesPageHeader title="空间详情" description="正在读取空间与时段信息…" />}><LoadingState /></PageLayout>
     const space = room.data
     if (!space)
         return (
-            <div className="space-y-6"><SpacesPageHeader title="空间详情" />
+            <PageLayout header={<SpacesPageHeader title="空间详情" />}>
             <EmptyState
                 title="空间暂不可用"
                 description={room.error || '该空间不存在或尚未公开。'}
@@ -126,21 +127,21 @@ function SpaceDetailPage() {
                         <Link to="/spaces">返回目录</Link>
                     </Button>
                 }
-            /></div>
+            /></PageLayout>
         )
     return (
-        <div className="space-y-6">
+        <PageLayout header={<SpacesPageHeader
+                title={space.name}
+                description={`${space.location} · ${space.capacity > 0 ? `最多 ${space.capacity} 人` : '人数待确认'}`}
+                action={<Badge>{spaceModuleLabels[space.module]}</Badge>}
+            />}>
             <Link
                 to="/spaces"
                 className="coeer-focus inline-flex rounded text-xs text-muted-foreground hover:text-foreground"
             >
                 返回空间目录
             </Link>
-            <SpacesPageHeader
-                title={space.name}
-                description={`${space.location} · ${space.capacity > 0 ? `最多 ${space.capacity} 人` : '人数待确认'}`}
-                action={<Badge>{spaceModuleLabels[space.module]}</Badge>}
-            />
+
             <div className="flex flex-wrap gap-2">
                 {space.amenities.map((item) => (
                     <Badge key={item}>{item}</Badge>
@@ -345,6 +346,6 @@ function SpaceDetailPage() {
                     </p>
                 </Card>
             </div>
-        </div>
+        </PageLayout>
     )
 }

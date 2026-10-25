@@ -1,3 +1,14 @@
+import { Route as AdminGroups } from '../../src/app/routes/_authed/admin/groups/index'
+import { Route as AdminBookings } from '../../src/app/routes/_authed/admin/spaces/bookings'
+import { Route as AdminAllowlist } from '../../src/app/routes/_authed/admin/spaces/allowlist'
+import { Route as AdminCatalog } from '../../src/app/routes/_authed/admin/spaces/catalog'
+import { PageLayout } from '../../src/app/components/coeer/ui/PageLayout'
+import { Route as Bulletins } from '../../src/app/routes/_authed/bulletins/index'
+import { Route as Activities } from '../../src/app/routes/_authed/activities/index'
+import { Route as Bookmarks } from '../../src/app/routes/_authed/bookmarks'
+import { Route as Redeems } from '../../src/app/routes/_authed/redeems/index'
+import { Route as Notifications } from '../../src/app/routes/_authed/notifications'
+import { StrictMode } from 'react'
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -11,6 +22,7 @@ import { Route as Bookings } from '../../src/app/routes/_authed/spaces/bookings/
 import { Route as Booking } from '../../src/app/routes/_authed/spaces/bookings/$bookingId'
 import { Route as Admin } from '../../src/app/routes/_authed/admin/feedbacks/index'
 import { Route as Groups } from '../../src/app/routes/_authed/groups/route'
+import { Route as GroupHome } from '../../src/app/routes/_authed/groups/$slug/index'
 import { AuthForm } from '../../src/app/components/ui/AuthForm'
 import { AppShell, Alert, Badge, Button, Card, DetailLayout, EmptyState, Field, Input, LoadingState, Modal, SectionHeader, TableScroll, ToastProvider, useToast } from '../../src/app/components/coeer'
 import { Markdown } from '../../src/app/components/coeer/ui/Markdown'
@@ -20,7 +32,7 @@ import { content, screen, state, user } from './workspace-data'
 import '../../src/app/styles/app.css'
 
 function Components() {
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(state === 'initialOpen')
     const [locked, setLocked] = useState(false)
     const { toast } = useToast()
     return <div className="coeer-page">
@@ -44,13 +56,13 @@ function Components() {
         </Modal>
     </div>
 }
-const pages: Record<string, any> = { feedbacks: Feedbacks, detail: Detail, profile: Profile, spaces: Spaces, slots: Slots, bookings: Bookings, booking: Booking, admin: Admin, groups: Groups }
+const pages: Record<string, any> = { bulletins: Bulletins, activities: Activities, bookmarks: Bookmarks, redeems: Redeems, notifications: Notifications, adminGroups: AdminGroups, adminBookings: AdminBookings, adminAllowlist: AdminAllowlist, adminCatalog: AdminCatalog, feedbacks: Feedbacks, detail: Detail, profile: Profile, spaces: Spaces, slots: Slots, bookings: Bookings, booking: Booking, admin: Admin, groups: Groups, groupPending: GroupHome, groupMember: GroupHome, groupJoin: GroupHome }
 const HomeComponent = Home.options.component!
 function Fixture() {
     const Component = pages[screen]?.options.component
     if (screen === 'home' || screen === 'guest') return <HomeComponent />
     if (screen === 'auth') return <AuthForm actionText="login" status={state === 'pending' ? 'pending' : 'idle'} onSubmit={() => {}} afterSubmit={state === 'error' ? '邮箱或密码有误，请重新输入。' : undefined} />
-    return <AppShell user={user}>{screen === 'components' ? <Components /> : Component ? <Component /> : null}</AppShell>
+    return <AppShell user={user}>{screen === 'components' ? <Components /> : Component ? (['adminBookings', 'adminAllowlist', 'adminCatalog'].includes(screen) ? <PageLayout title="管理页面"><Component /></PageLayout> : <Component />) : null}</AppShell>
 }
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><ToastProvider><Fixture /></ToastProvider></QueryClientProvider>)
+createRoot(document.getElementById('root')!).render(<StrictMode><QueryClientProvider client={client}><ToastProvider><Fixture /></ToastProvider></QueryClientProvider></StrictMode>)

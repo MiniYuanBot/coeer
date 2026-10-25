@@ -1,8 +1,9 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import z from 'zod'
 import { listPostsByGroupFn } from '~/functions'
 import { GroupPostFilterSchema } from '@shared/contracts'
-import { Badge, Button, Card, EmptyState, Icon, Pagination, SectionHeader, formatDate } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, Icon, Pagination, formatDate } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupPostFilterSchema.shape,
@@ -38,12 +39,10 @@ function AnnouncementsPage() {
     const navigate = useNavigate()
 
     return (
-        <div className="space-y-6">
-            <SectionHeader level="h2"
-                title="群组公告"
-                description={`${group.name} 的正式通知。`}
-                action={<Link to="/groups/$slug/posts" params={{ slug }}><Button variant="outline"><Icon name="chevron" className="h-4 w-4 rotate-180" /> 全部帖子</Button></Link>}
-            />
+        <PageLayout level="h2"
+            title="群组公告"
+            description={`${group.name} 的正式通知。`}
+            action={<Link to="/groups/$slug/posts" params={{ slug }}><Button variant="outline"><Icon name="chevron" className="h-4 w-4 rotate-180" /> 全部帖子</Button></Link>}>
 
             {announcements.length ? (
                 <div className="space-y-4">
@@ -72,7 +71,7 @@ function AnnouncementsPage() {
                 <EmptyState title="暂无公告" description="群组公告发布后会显示在这里。" />
             )}
             <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/groups/$slug/posts/announcements', params: { slug }, search: { page } })} />
-        </div>
+        </PageLayout>
     )
 }
 import { PostContent } from '@/components/coeer/cards/PostContent'

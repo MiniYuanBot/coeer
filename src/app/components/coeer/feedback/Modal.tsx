@@ -13,7 +13,9 @@ export function Modal({ open, title, children, onOpenChange }: {
     const titleId = React.useId()
     return (
         <dialog ref={ref} aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); onOpenChange(false) }}
-            onClose={() => { if (open) onOpenChange(false) }}
+            // StrictMode replays the dialog effect (close, then showModal). Ignore
+            // a queued close event from that cleanup if the dialog is open again.
+            onClose={(event) => { if (open && !event.currentTarget.open) onOpenChange(false) }}
             onClick={(event) => {
                 if (event.target !== event.currentTarget) return
                 const bounds = event.currentTarget.getBoundingClientRect()

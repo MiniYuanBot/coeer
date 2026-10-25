@@ -140,12 +140,14 @@ export class FeedbackService {
                 } else if (view === 'mine_pending') {
                     scopedData.authorId = user.id
                     scopedData.status = 'pending'
-                } else if (view === 'public') {
+                } else {
+                    // Discovery is public even for the author; private submissions
+                    // are available only in the explicit personal/moderation views.
                     scopedData.authorId = undefined
                     scopedData.isPublic = true
                 }
 
-                // Regular user sees own submissions plus feedback approved for public visibility.
+                // Personal views include private submissions; discovery is public only.
                 items = view === 'mine' || view?.startsWith('mine_')
                     ? await feedbackQueries.findByAuthorId(scopedData as any)
                     : await feedbackQueries.findVisibleToUser({ ...scopedData, viewerId: user.id } as any)

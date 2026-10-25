@@ -1,18 +1,7 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import {
-    Badge,
-    Button,
-    EmptyState,
-    Field,
-    FilterPanel,
-    Icon,
-    Input,
-    LoadingState,
-    Pagination,
-    Alert,
-    paginate,
-} from '@/components/coeer'
+import { Badge, Button, EmptyState, Field, Icon, Input, LoadingState, Pagination, Alert, paginate } from '@/components/coeer'
 import { useSpaces, useSpaceResource } from '@/hooks/useSpaces'
 import { addDays, today, validDate, type Space, type Availability } from '@shared/open-space/domain'
 import { spaceModuleLabels, syncLabel } from '@/components/coeer/lib/spaces'
@@ -38,28 +27,12 @@ function SpacesPage() {
     )
     const page = paginate(spaces, filters.page)
     return (
-        <div className="space-y-6">
-            <SpacesPageHeader
-                title="空间预约"
-                description="查询空间空闲情况，选择连续时段提交预约。时间均采用北京时间。"
-                action={
-                    <Field label="预约日期" className="coeer-space-date">
-                        <Input
-                            type="date"
-                            value={date}
-                            min={today()}
-                            max={addDays(today(), config!.horizon)}
-                            onChange={(event) => event.target.value && update({ date: event.target.value })}
-                        />
-                    </Field>
-                }
-            />
-            <FilterPanel
-                searchValue={filters.q}
-                searchPlaceholder="搜索名称或位置"
-                onSearch={(q) => update({ q })}
-                onClear={() => update({ q: '', module: 'all', capacity: 0 })}
-                groups={[
+        <PageLayout filters={{
+                searchValue: filters.q,
+                searchPlaceholder: "搜索名称或位置",
+                onSearch: (q) => update({ q }),
+                onClear: () => update({ q: '', module: 'all', capacity: 0 }),
+                groups: [
                     {
                         title: '空间',
                         items: [
@@ -82,8 +55,23 @@ function SpacesPage() {
                             onClick: () => update({ capacity }),
                         })),
                     },
-                ]}
-            />
+                ]
+            }} header={<SpacesPageHeader
+                title="空间预约"
+                description="查询空间空闲情况，选择连续时段提交预约。时间均采用北京时间。"
+                action={
+                    <Field label="预约日期" className="coeer-space-date">
+                        <Input
+                            type="date"
+                            value={date}
+                            min={today()}
+                            max={addDays(today(), config!.horizon)}
+                            onChange={(event) => event.target.value && update({ date: event.target.value })}
+                        />
+                    </Field>
+                }
+            />}>
+
             {resource.error && (
                 <Alert tone="danger">
                     {resource.error}
@@ -107,7 +95,7 @@ function SpacesPage() {
                     {page.total > page.size && <Pagination {...page} onChange={(page) => update({ page })} />}
                 </>
             )}
-        </div>
+        </PageLayout>
     )
 }
 

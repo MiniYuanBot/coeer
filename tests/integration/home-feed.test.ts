@@ -42,8 +42,8 @@ describe('homepage public updates', () => {
         const privateGroup = await group('private', { isPublic: false })
         const pendingGroup = await group('pending', { status: 'pending' })
         await db.insert(groupPosts).values([
-            ...publicGroups.map((item, index) => ({ groupId: item.id, title: `public-${index}`, content: '公开正文', createdAt: new Date(2026, 0, index + 1), isPinned: index === 0 })),
-            ...[privateGroup, pendingGroup].map((item) => ({ groupId: item.id, title: 'hidden', content: '不能公开的内容', createdAt: new Date(2027, 0, 1) })),
+            ...publicGroups.map((item, index) => ({ groupId: item.id, title: `public-${index}`, content: '公开正文', type: index % 2 ? 'announcement' as const : 'discussion' as const, createdAt: new Date(2026, 0, index + 1), isPinned: index === 0 })),
+            ...[privateGroup, pendingGroup].flatMap((item) => (['announcement', 'discussion'] as const).map((type) => ({ groupId: item.id, title: 'hidden', content: '不能公开的内容', type, createdAt: new Date(2027, 0, 1) }))),
         ])
         for (const viewer of [null, student, admin]) {
             if (viewer) signIn(viewer)

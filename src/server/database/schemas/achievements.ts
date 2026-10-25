@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { ACHIEVEMENT_CONDITION_TYPE_ARRAY, AchievementConditionType } from '@shared/constants'
 
@@ -10,6 +10,7 @@ export const achievements = pgTable('achievements', {
     name: varchar('name', { length: 100 }).notNull(),
     description: text('description').notNull(),
     iconUrl: text('icon_url'),
+    isHidden: boolean('is_hidden').notNull().default(false),
     conditionType: achievementConditionTypeEnum('condition_type').notNull(),
     conditionValue: integer('condition_value').notNull(),
 })

@@ -40,33 +40,33 @@ function BookingDetailPage() {
     }
     if (!user)
         return (
-            <PageLayout><SpacesPageHeader title="预约进度" />
+            <PageLayout header={<SpacesPageHeader title="预约进度" />}>
             <EmptyState
                 title="当前账号暂不能预约"
                 description="请使用学生或管理员账号，或联系管理员检查预约身份。"
             /></PageLayout>
         )
-    if (resource.loading) return <PageLayout><SpacesPageHeader title="预约进度" description="正在读取预约信息…" /><LoadingState /></PageLayout>
+    if (resource.loading) return <PageLayout header={<SpacesPageHeader title="预约进度" description="正在读取预约信息…" />}><LoadingState /></PageLayout>
     const booking = resource.data
     if (!booking)
         return (
-            <PageLayout><SpacesPageHeader title="预约进度" /><EmptyState title="无法读取预约" description={resource.error || '预约不存在或你没有查看权限。'} /></PageLayout>
+            <PageLayout header={<SpacesPageHeader title="预约进度" />}><EmptyState title="无法读取预约" description={resource.error || '预约不存在或你没有查看权限。'} /></PageLayout>
         )
     return (
-        <PageLayout>
+        <PageLayout header={<SpacesPageHeader
+                title="预约进度"
+                description="申请已保存，处理进度和预约结果会在这里自动更新。"
+                action={
+                    <span role="status"><Badge tone={bookingStatusTone(booking.status)}>{statusLabels[booking.status]}</Badge></span>
+                }
+            />}>
             <Link
                 to="/spaces/bookings"
                 className="coeer-focus rounded text-xs text-muted-foreground hover:text-foreground"
             >
                 返回我的预约
             </Link>
-            <SpacesPageHeader
-                title="预约进度"
-                description="申请已保存，处理进度和预约结果会在这里自动更新。"
-                action={
-                    <span role="status"><Badge tone={bookingStatusTone(booking.status)}>{statusLabels[booking.status]}</Badge></span>
-                }
-            />
+
             {(error || resource.error) && <Alert tone="danger">{error || resource.error}</Alert>}
             <DetailLayout asideLabel="预约处理进度" aside={
                 <section className="coeer-content-panel space-y-5">

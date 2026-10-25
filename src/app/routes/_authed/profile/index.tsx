@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
-import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, Pagination, PointsSummaryCard, SectionHeader } from '@/components/coeer'
+import { Alert, Badge, Button, Card, Field, Icon, Input, PageLayout, Pagination, PointsSummaryCard } from '@/components/coeer'
 import { z } from 'zod'
 import { ENGAGEMENT_REWARDS } from '@shared/constants/engagement'
 import { changePasswordFn, getMyPointBalanceFn, getMyPointHistoryFn, updateProfileFn } from '~/functions'
@@ -78,13 +78,11 @@ function ProfileIndexComponent() {
     }
 
     return (
-        <PageLayout>
-            <SectionHeader
-                title="个人中心"
-                description="管理账户资料、密码和积分记录。"
-                actionLayout="stack-on-mobile"
-                action={<Button asChild variant="outline"><Link to="/logout"><Icon name="logout" />退出登录</Link></Button>}
-            />
+        <PageLayout title="个人中心"
+            description="管理账户资料、密码和积分记录。"
+            actionLayout="stack-on-mobile"
+            action={<Button asChild variant="outline"><Link to="/logout"><Icon name="logout" />退出登录</Link></Button>}>
+
             <div className="coeer-profile-summary grid gap-4">
                 <Card className="flex min-w-0 items-center gap-4 p-4">
                     <div aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-primary-soft text-xl font-medium text-primary">

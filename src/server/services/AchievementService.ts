@@ -19,6 +19,23 @@ import { pointQueries } from '../database/queries/points'
 import { and, count, countDistinct, eq, gt, ne, or, sql, sum } from 'drizzle-orm'
 
 export class AchievementService {
+    static async adminList(data: ListAchievementsInput): Promise<PaginatedAchievementResponse<Achievement>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: ACHIEVEMENT.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: ACHIEVEMENT.FORBIDDEN }
+        const [items, total] = await Promise.all([achievementQueries.list(data), achievementQueries.count(data)])
+        return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: ACHIEVEMENT.GET_SUCCESS }
+    }
+
+    static async adminGet(data: AchievementIdInput): Promise<AchievementResponse<Achievement>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: ACHIEVEMENT.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: ACHIEVEMENT.FORBIDDEN }
+        const achievement = await achievementQueries.findById(data.achievementId)
+        if (!achievement) return { success: false, state: ACHIEVEMENT.NOT_FOUND }
+        return { success: true, data: achievement, state: ACHIEVEMENT.GET_SUCCESS }
+    }
+
     /** Reconcile real persisted conditions, including users who qualified before this feature existed. */
     static async syncForUser(userId: string, executor?: DbTransaction): Promise<Record<string, number>> {
         if (!executor) return db.transaction((tx) => this.syncForUser(userId, tx))
@@ -53,7 +70,8 @@ export class AchievementService {
     static async list(data: ListAchievementsInput): Promise<PaginatedAchievementResponse<AchievementWithProgress>> {
         const current = await AuthService.getCurrentUser()
         const values = current.data ? await this.syncForUser(current.data.id) : {}
-        const [items, total] = await Promise.all([achievementQueries.list(data), achievementQueries.count(data)])
+        const viewer = { id: current.success ? current.data?.id : undefined }
+        const [items, total] = await Promise.all([achievementQueries.list(data, viewer), achievementQueries.count(data, viewer)])
         const unlocked = current.data ? await db.query.userAchievements.findMany({
             where: (table, { and, eq, inArray }) => and(eq(table.userId, current.data!.id), inArray(table.achievementId, items.map((item) => item.id))),
         }) : []

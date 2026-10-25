@@ -1,4 +1,4 @@
-import { decimal, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, decimal, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from './users'
 import { CARD_RARITY_ARRAY, CardRarity } from '@shared/constants'
 
@@ -12,6 +12,7 @@ export const cards = pgTable('cards', {
     rarity: cardRarityEnum('rarity').notNull(),
     series: varchar('series', { length: 100 }),
     dropRate: decimal('drop_rate', { precision: 5, scale: 4 }).notNull(),
+    isHidden: boolean('is_hidden').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

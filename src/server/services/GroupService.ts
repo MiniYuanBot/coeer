@@ -38,6 +38,13 @@ import { groupQueries } from '../database/queries/groups'
 import { groupMemberQueries } from '../database/queries'
 
 export class GroupService {
+    static async getMyMembership(data: GroupIdInput): Promise<GroupMemberResponse<GroupMember | null>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: GROUP_MEMBER.UNAUTHORIZED }
+        const membership = await groupMemberQueries.findByGroupAndUser({ groupId: data.groupId, userId: current.data.id })
+        return { success: true, data: membership ?? null, state: GROUP_MEMBER.GET_SUCCESS }
+    }
+
     /** Serialize roster changes per group, then recheck the actor and last admin. */
     private static async changeMembership(memberId: string, actorId: string,
         change: { remove: true; selfLeave?: boolean } | { update: UpdateGroupMemberInput },
@@ -272,16 +279,24 @@ export class GroupService {
 
     // List public approved groups
     static async listAllGroups(data: ListAllGroupsInput): Promise<PaginatedGroupResponse<GroupWithStats>> {
+        return this.listGroups(data, 'discovery')
+    }
+
+    // Moderation uses a separate endpoint with a server-side platform role check.
+    static async listAdminGroups(data: ListAllGroupsInput): Promise<PaginatedGroupResponse<GroupWithStats>> {
+        const payload = await AuthService.getCurrentUser()
+        if (!payload.success || !payload.data) return { success: false, state: GROUP.UNAUTHORIZED }
+        if (payload.data.role !== 'admin') return { success: false, state: GROUP.FORBIDDEN }
+        return this.listGroups(data, 'admin')
+    }
+
+    private static async listGroups(data: ListAllGroupsInput, scope: 'discovery' | 'admin'): Promise<PaginatedGroupResponse<GroupWithStats>> {
         try {
-            const { status, category, search, limit, offset } = data
+            const { limit, offset } = data
 
-            const groups = await groupQueries.listAll(data)
+            const groups = await groupQueries.listAll(data, scope)
 
-            const total = await groupQueries.countGroups({
-                status,
-                category,
-                search
-            })
+            const total = await groupQueries.countGroups(data, scope)
 
             return {
                 success: true,

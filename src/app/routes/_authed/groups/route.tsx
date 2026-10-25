@@ -1,9 +1,10 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listAllGroupsFn, listMyGroupsFn } from '~/functions'
 import { GroupFilterSchema } from '@shared/contracts'
 import { GROUP_CATEGORY_ARRAY, GROUP_MEMBER_ROLE, GROUP_MEMBER_STATUS, GroupCategory } from '@shared/constants'
-import { Button, EmptyState, FilterPanel, GroupCard, Icon, Pagination, SectionHeader, groupCategoryLabels } from '@/components/coeer'
+import { Button, EmptyState, GroupCard, Icon, Pagination, groupCategoryLabels } from '@/components/coeer'
 
 const groupViewSchema = z.enum(['joined', 'managed', 'public', 'pending']).default('joined')
 
@@ -78,19 +79,10 @@ function GroupsHomePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader
-                title="群组"
-                description="发现组织、兴趣、项目和课程群组，也可以快速查看自己的群组申请。"
-                action={<Button asChild><Link to="/groups/create"><Icon name="group" /> 创建群组</Link></Button>}
-            />
-
-            <FilterPanel
-                searchValue={search}
-                searchPlaceholder="搜索群组名称或介绍"
-                onSearch={(value) => go({ search: value || undefined })}
-                onClear={() => go({ search: undefined, category: undefined })}
-                scope={{
+        <PageLayout title="群组"
+            description="发现组织、兴趣、项目和课程群组，也可以快速查看自己的群组申请。"
+            action={<Button asChild><Link to="/groups/create"><Icon name="group" /> 创建群组</Link></Button>}
+            scope={{
                         title: '群组范围',
                         items: [
                             { key: 'joined', label: '我加入的', active: view === 'joined', onClick: () => go({ view: 'joined' }) },
@@ -99,7 +91,12 @@ function GroupsHomePage() {
                             { key: 'pending', label: '申请中', active: view === 'pending', onClick: () => go({ view: 'pending' }) },
                         ],
                     }}
-                groups={[
+            filters={{
+                searchValue: search,
+                searchPlaceholder: "搜索群组名称、介绍或完整 slug",
+                onSearch: (value) => go({ search: value || undefined }),
+                onClear: () => go({ search: undefined, category: undefined }),
+                groups: [
                     {
                         title: '类型',
                         items: [
@@ -112,8 +109,8 @@ function GroupsHomePage() {
                             })),
                         ],
                     },
-                ]}
-            />
+                ]
+            }}>
 
             {groups.length ? (
                 <div className="coeer-grid">
@@ -124,6 +121,6 @@ function GroupsHomePage() {
             )}
 
             <Pagination total={total} page={page} size={pageSize} onChange={(page) => go({ page })} />
-        </div>
+        </PageLayout>
     )
 }

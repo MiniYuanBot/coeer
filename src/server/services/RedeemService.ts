@@ -20,6 +20,15 @@ import type {
 import type { RedeemItem, RedeemOrder } from '../database/schemas'
 
 export class RedeemService {
+    static async adminGetItem(data: RedeemItemIdInput): Promise<RedeemResponse<RedeemItem>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: REDEEM.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: REDEEM.FORBIDDEN }
+        const item = await redeemQueries.findItemById(data.itemId)
+        if (!item) return { success: false, state: REDEEM.ITEM_NOT_FOUND }
+        return { success: true, data: item, state: REDEEM.GET_SUCCESS }
+    }
+
     static async adminListItems(data: ListRedeemItemsInput): Promise<PaginatedRedeemResponse<RedeemItem>> {
         const payload = await AuthService.getCurrentUser()
         if (!payload.success || !payload.data) return { success: false, state: REDEEM.UNAUTHORIZED }

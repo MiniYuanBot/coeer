@@ -211,18 +211,14 @@
     .coeer-home-rail { position: sticky; top: 76px; padding-left: 24px; }
   }
   .coeer-filter-panel { container: filters / inline-size; min-width: 0; }
-  .coeer-filter-panel > .coeer-scope-tabs + .coeer-filter-toolbar { margin-top: var(--section-gap); }
+  .coeer-filter-panel > .coeer-scope-tabs + .coeer-filter-toolbar,
+  .coeer-filter-panel > .coeer-scope-tabs + .coeer-filter-groups { margin-top: var(--section-gap); }
   .coeer-filter-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 12px; }
   .coeer-filter-search { flex: 0 1 288px; }
-  .coeer-filter-groups { display: flex; min-width: 0; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
-  .coeer-filter-group { min-width: 0; max-width: 100%; }
+  .coeer-filter-groups { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-bottom: 12px; }
   .coeer-filter-options { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   .coeer-filter-label { flex-shrink: 0; font-size: 12px; font-weight: 600; color: hsl(var(--foreground)); }
   .coeer-filter-options > .coeer-filter-label { margin-right: 8px; padding-right: 12px; border-right: 1px solid hsl(var(--border)); }
-  .coeer-filter-select { display: none; }
-  .coeer-filter-group[data-long] .coeer-filter-options { display: none; }
-  .coeer-filter-group[data-long] .coeer-filter-select { display: grid; gap: 6px; }
-  .coeer-filter-select select { max-width: 260px; }
   .coeer-filter-clear { min-height: 32px; }
   .coeer-scope-tabs { display: flex; min-width: 0; gap: 24px; overflow-x: auto; border-bottom: 1px solid hsl(var(--border)); }
   .coeer-scope-tabs .coeer-tab { min-height: 44px; padding-block: 12px; }
@@ -231,12 +227,8 @@
     .coeer-filter-toolbar:has(.coeer-filter-search) > .coeer-filter-search { grid-column: 1; grid-row: 1; }
     .coeer-filter-toolbar:has(.coeer-filter-search):not(:has(.coeer-filter-clear)) > .coeer-filter-search { grid-column: 1 / -1; }
     .coeer-filter-toolbar:has(.coeer-filter-search) > .coeer-filter-clear { grid-column: 2; grid-row: 1; }
-    .coeer-filter-toolbar:has(.coeer-filter-search) > .coeer-filter-groups { grid-column: 1 / -1; }
     .coeer-filter-search { flex-basis: 100%; }
-    .coeer-filter-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr)); gap: 12px; width: 100%; }
-    .coeer-filter-options { display: none; }
-    .coeer-filter-select { display: grid; gap: 6px; }
-    .coeer-filter-select select { max-width: none; }
+    .coeer-filter-groups { flex-direction: column; align-items: stretch; gap: 12px; width: 100%; }
   }
   .coeer-tabs { scroll-padding-inline: 4px; }
   .coeer-tab { border-bottom-color: transparent; color: hsl(var(--muted-foreground)); }
@@ -244,10 +236,6 @@
   .coeer-tab:focus-visible { outline-offset: -3px; }
   .coeer-tab[data-status='active'] { border-bottom-color: hsl(var(--primary)); color: hsl(var(--foreground)); font-weight: 550; }
   .coeer-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; padding-top: 8px; }
-  .coeer-editor-section { min-width: 0; scroll-margin-top: 76px; }
-  .coeer-editor-body { margin-top: var(--section-gap); padding: 20px; border-radius: var(--radius-card); background: hsl(var(--card)); }
-  .coeer-editor-records { margin-top: var(--section-gap); }
-  .coeer-editor-records > * + * { margin-top: var(--section-gap); }
   .coeer-linked-card { position: relative; isolation: isolate; transition: background-color 120ms ease-out; }
   .coeer-linked-card:hover { background: hsl(var(--muted)); }
   .coeer-card-link::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
@@ -398,7 +386,7 @@ html:has(dialog[open]) .coeer-toast-viewport { display: none; }
 @media (prefers-contrast: more) {
   :root { --border: var(--control-border); }
   .coeer-button-quiet { border-color: hsl(var(--control-border)); }
-  .coeer-card, .coeer-content-panel, .coeer-list-panel, .coeer-home-section, .coeer-profile-settings, .coeer-auth-panel, .coeer-editor-section, .coeer-bulletin-list, .coeer-stats { border-color: hsl(var(--control-border)); }
+  .coeer-card, .coeer-content-panel, .coeer-list-panel, .coeer-home-section, .coeer-profile-settings, .coeer-auth-panel, .coeer-bulletin-list, .coeer-stats { border-color: hsl(var(--control-border)); }
 }
 @media (forced-colors: active) {
   body::before { display: none; }

@@ -10,6 +10,7 @@ export function workspacePreviewConfig(port = 0): InlineConfig {
         resolve: { alias: [
             { find: /^~\/functions(?:\/.*)?$/, replacement: fixture('workspace-actions.ts') },
             { find: /^@\/hooks\/useSpaces$/, replacement: fixture('workspace-spaces.tsx') },
+            { find: /^\.\/useSpaces$/, replacement: fixture('workspace-spaces.tsx') },
             { find: '@tanstack/react-router', replacement: fixture('workspace-router.tsx') },
             { find: '@', replacement: fileURLToPath(new URL('../../src/app', import.meta.url)) },
             { find: '@shared', replacement: fileURLToPath(new URL('../../src/shared', import.meta.url)) },

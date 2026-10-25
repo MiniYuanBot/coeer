@@ -1,10 +1,11 @@
-import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { z } from 'zod'
 import { getGroupMembersFn, removeMemberFn, updateMemberRoleFn } from '~/functions'
 import { useState } from 'react'
 import { GROUP_MEMBER_STATUS, GroupMemberRole } from '@shared/constants'
 import { GroupMemberFilterSchema } from '@shared/contracts'
-import { Badge, Button, Card, EmptyState, FilterPanel, Pagination, SectionHeader } from '@/components/coeer'
+import { Badge, Button, Card, EmptyState, Pagination } from '@/components/coeer'
 
 const searchSchema = z.object({
     ...GroupMemberFilterSchema.shape,
@@ -45,7 +46,6 @@ function GroupMembersPage() {
     const { slug } = Route.useParams()
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [actionError, setActionError] = useState('')
-
 
     const handleApprove = async (memberId: string, approved = true) => {
         setProcessingId(memberId)
@@ -91,13 +91,12 @@ function GroupMembersPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <SectionHeader level="h2" title="群组成员" description="查看群组成员与入群申请。" />
-            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
-
-            <FilterPanel
-                onClear={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } })}
-                groups={[
+        <PageLayout level="h2"
+            title="群组成员"
+            description="查看群组成员与入群申请。"
+            filters={{
+                onClear: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } }),
+                groups: [
                     {
                         title: '成员状态',
                         items: [
@@ -106,8 +105,10 @@ function GroupMembersPage() {
                             ...(isAdmin ? [{ key: 'pending', label: '待审核', active: status === GROUP_MEMBER_STATUS.PENDING, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.PENDING, page: 1 } }) }] : []),
                         ],
                     },
-                ]}
-            />
+                ]
+            }}>
+
+            {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             {members.length === 0 ? (
                 <EmptyState title="暂无成员" description="成员加入或申请后会显示在这里。" />
@@ -169,6 +170,6 @@ function GroupMembersPage() {
             )}
 
             <Pagination total={total} page={page} size={pageSize} onChange={(page) => void navigate({ to: '/groups/$slug/members', params: { slug }, search: { status, page } })} />
-        </div>
+        </PageLayout>
     )
 }

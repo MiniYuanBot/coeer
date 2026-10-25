@@ -1,12 +1,13 @@
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Card, Icon, SectionHeader, StatsBar, type BadgeTone, type IconName } from '@/components/coeer'
-import { getFeedbacksFn, listActivitiesFn, listAllGroupsFn, listRedeemItemsFn } from '~/functions'
+import { Card, Icon, StatsBar, type BadgeTone, type IconName } from '@/components/coeer'
+import { getFeedbacksFn, listActivitiesFn, listAdminGroupsFn, listRedeemItemsFn } from '~/functions'
 
 export const Route = createFileRoute('/_authed/admin/')({
     loader: async () => {
         const [feedbacksResult, groupsResult, activitiesResult, redeemsResult] = await Promise.allSettled([
             getFeedbacksFn({ data: { status: 'pending', limit: 1, offset: 0 } }),
-            listAllGroupsFn({ data: { status: 'pending', limit: 1, offset: 0 } }),
+            listAdminGroupsFn({ data: { status: 'pending', limit: 1, offset: 0 } }),
             listActivitiesFn({ data: { limit: 1, offset: 0 } }),
             listRedeemItemsFn({ data: { limit: 1, offset: 0 } }),
         ])
@@ -70,11 +71,9 @@ function AdminDashboardPage() {
     ]
 
     return (
-        <div className="space-y-8">
-            <SectionHeader
-                title="管理工作台"
-                description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就、卡片与宿舍。"
-            />
+        <PageLayout title="管理工作台"
+            description="审核反馈与群组，跟进处理状态，并管理活动、商城、成就、卡片与宿舍。">
+
             <StatsBar label="管理概览" items={metricCards} />
 
             {adminGroups.map((group, index) => (
@@ -99,6 +98,6 @@ function AdminDashboardPage() {
                     </div>
                 </section>
             ))}
-        </div>
+        </PageLayout>
     )
 }

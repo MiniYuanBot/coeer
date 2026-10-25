@@ -14,3 +14,8 @@ export * from '../../src/app/components/coeer/cards/AchievementCard'
 export * from '../../src/app/components/coeer/feedback/Modal'
 export * from '../../src/app/components/coeer/hooks/useAsyncAction'
 export * from '../../src/app/components/coeer/lib/labels'
+export * from '../../src/app/components/coeer/lib/date'
+
+export * from '../../src/app/components/coeer/ui/PageLayout'
+export * from '../../src/app/components/coeer/ui/DataTable'
+export * from '../../src/app/components/coeer/ui/StatusBadge'

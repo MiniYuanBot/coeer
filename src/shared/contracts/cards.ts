@@ -13,6 +13,7 @@ export const DrawCardsSchema = z.object({
 })
 
 export const ListCardsSchema = z.object({
+    isHidden: z.boolean().optional(),
     rarity: z.enum(CARD_RARITY_ARRAY).optional(),
     series: z.string().optional(),
     search: z.string().optional(),
@@ -20,6 +21,7 @@ export const ListCardsSchema = z.object({
 })
 
 export const CreateCardSchema = z.object({
+    isHidden: z.boolean().optional(),
     name: z.string().trim().min(1).max(100),
     description: z.string().trim().max(5000).optional(),
     imageUrl: ImageUrlSchema,
@@ -39,6 +41,8 @@ export type UpdateCardInput = z.infer<typeof UpdateCardSchema>
 export type UserCardWithCard = UserCard & {
     card: Card
 }
+
+export type CardWithOwnership = Card & { ownedCount: number }
 
 export type DrawResult = {
     cards: UserCardWithCard[]

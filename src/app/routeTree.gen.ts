@@ -35,6 +35,7 @@ import { Route as AuthedRedeemsIndexRouteImport } from './routes/_authed/redeems
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
 import { Route as AuthedFeedbacksIndexRouteImport } from './routes/_authed/feedbacks/index'
 import { Route as AuthedDormsIndexRouteImport } from './routes/_authed/dorms/index'
+import { Route as AuthedCardsIndexRouteImport } from './routes/_authed/cards/index'
 import { Route as AuthedBulletinsIndexRouteImport } from './routes/_authed/bulletins/index'
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index'
 import { Route as AuthedActivitiesIndexRouteImport } from './routes/_authed/activities/index'
@@ -49,11 +50,6 @@ import { Route as AuthedSpacesSpaceIdRouteImport } from './routes/_authed/spaces
 import { Route as AuthedGroupsCreateRouteImport } from './routes/_authed/groups/create'
 import { Route as AuthedFeedbacksCreateRouteImport } from './routes/_authed/feedbacks/create'
 import { Route as AuthedAdminStatsRouteImport } from './routes/_authed/admin/stats'
-import { Route as AuthedAdminRedeemsRouteImport } from './routes/_authed/admin/redeems'
-import { Route as AuthedAdminCardsRouteImport } from './routes/_authed/admin/cards'
-import { Route as AuthedAdminBulletinsRouteImport } from './routes/_authed/admin/bulletins'
-import { Route as AuthedAdminActivitiesRouteImport } from './routes/_authed/admin/activities'
-import { Route as AuthedAdminAchievementsRouteImport } from './routes/_authed/admin/achievements'
 import { Route as AuthedSpacesBookingsRouteRouteImport } from './routes/_authed/spaces/bookings/route'
 import { Route as AuthedGroupsSlugRouteRouteImport } from './routes/_authed/groups/$slug/route'
 import { Route as AuthedFeedbacksFeedbackIdRouteRouteImport } from './routes/_authed/feedbacks/$feedbackId/route'
@@ -66,9 +62,14 @@ import { Route as AuthedGroupsSlugIndexRouteImport } from './routes/_authed/grou
 import { Route as AuthedFeedbacksFeedbackIdIndexRouteImport } from './routes/_authed/feedbacks/$feedbackId/index'
 import { Route as AuthedBulletinsBulletinIdIndexRouteImport } from './routes/_authed/bulletins/$bulletinId/index'
 import { Route as AuthedAdminSpacesIndexRouteImport } from './routes/_authed/admin/spaces/index'
+import { Route as AuthedAdminRedeemsIndexRouteImport } from './routes/_authed/admin/redeems/index'
 import { Route as AuthedAdminGroupsIndexRouteImport } from './routes/_authed/admin/groups/index'
 import { Route as AuthedAdminFeedbacksIndexRouteImport } from './routes/_authed/admin/feedbacks/index'
 import { Route as AuthedAdminDormsIndexRouteImport } from './routes/_authed/admin/dorms/index'
+import { Route as AuthedAdminCardsIndexRouteImport } from './routes/_authed/admin/cards/index'
+import { Route as AuthedAdminBulletinsIndexRouteImport } from './routes/_authed/admin/bulletins/index'
+import { Route as AuthedAdminActivitiesIndexRouteImport } from './routes/_authed/admin/activities/index'
+import { Route as AuthedAdminAchievementsIndexRouteImport } from './routes/_authed/admin/achievements/index'
 import { Route as AuthedActivitiesActivityIdIndexRouteImport } from './routes/_authed/activities/$activityId/index'
 import { Route as AuthedSpacesBookingsBookingIdRouteImport } from './routes/_authed/spaces/bookings/$bookingId'
 import { Route as AuthedGroupsSlugSettingsRouteImport } from './routes/_authed/groups/$slug/settings'
@@ -79,14 +80,24 @@ import { Route as AuthedAdminSpacesHistoryRouteImport } from './routes/_authed/a
 import { Route as AuthedAdminSpacesCatalogRouteImport } from './routes/_authed/admin/spaces/catalog'
 import { Route as AuthedAdminSpacesBookingsRouteImport } from './routes/_authed/admin/spaces/bookings'
 import { Route as AuthedAdminSpacesAllowlistRouteImport } from './routes/_authed/admin/spaces/allowlist'
+import { Route as AuthedAdminRedeemsCreateRouteImport } from './routes/_authed/admin/redeems/create'
 import { Route as AuthedAdminGroupsPendingRouteImport } from './routes/_authed/admin/groups/pending'
 import { Route as AuthedAdminFeedbacksPendingRouteImport } from './routes/_authed/admin/feedbacks/pending'
 import { Route as AuthedAdminDormsQuestionnairesRouteImport } from './routes/_authed/admin/dorms/questionnaires'
 import { Route as AuthedAdminDormsNewRouteImport } from './routes/_authed/admin/dorms/new'
+import { Route as AuthedAdminCardsCreateRouteImport } from './routes/_authed/admin/cards/create'
+import { Route as AuthedAdminBulletinsCreateRouteImport } from './routes/_authed/admin/bulletins/create'
+import { Route as AuthedAdminActivitiesCreateRouteImport } from './routes/_authed/admin/activities/create'
+import { Route as AuthedAdminAchievementsCreateRouteImport } from './routes/_authed/admin/achievements/create'
 import { Route as AuthedGroupsSlugPostsRouteRouteImport } from './routes/_authed/groups/$slug/posts/route'
 import { Route as AuthedGroupsSlugPostsIndexRouteImport } from './routes/_authed/groups/$slug/posts/index'
 import { Route as AuthedGroupsSlugPostsCreateRouteImport } from './routes/_authed/groups/$slug/posts/create'
 import { Route as AuthedGroupsSlugPostsAnnouncementsRouteImport } from './routes/_authed/groups/$slug/posts/announcements'
+import { Route as AuthedAdminRedeemsItemIdEditRouteImport } from './routes/_authed/admin/redeems/$itemId.edit'
+import { Route as AuthedAdminCardsCardIdEditRouteImport } from './routes/_authed/admin/cards/$cardId.edit'
+import { Route as AuthedAdminBulletinsBulletinIdEditRouteImport } from './routes/_authed/admin/bulletins/$bulletinId.edit'
+import { Route as AuthedAdminActivitiesActivityIdEditRouteImport } from './routes/_authed/admin/activities/$activityId.edit'
+import { Route as AuthedAdminAchievementsAchievementIdEditRouteImport } from './routes/_authed/admin/achievements/$achievementId.edit'
 import { Route as AuthedGroupsSlugPostsPostIdRouteRouteImport } from './routes/_authed/groups/$slug/posts/$postId/route'
 import { Route as AuthedGroupsSlugPostsPostIdIndexRouteImport } from './routes/_authed/groups/$slug/posts/$postId/index'
 import { Route as AuthedGroupsSlugPostsPostIdEditRouteImport } from './routes/_authed/groups/$slug/posts/$postId/edit'
@@ -220,6 +231,11 @@ const AuthedDormsIndexRoute = AuthedDormsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedDormsRouteRoute,
 } as any)
+const AuthedCardsIndexRoute = AuthedCardsIndexRouteImport.update({
+  id: '/cards/',
+  path: '/cards/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedBulletinsIndexRoute = AuthedBulletinsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -290,31 +306,6 @@ const AuthedAdminStatsRoute = AuthedAdminStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AuthedAdminRouteRoute,
 } as any)
-const AuthedAdminRedeemsRoute = AuthedAdminRedeemsRouteImport.update({
-  id: '/redeems',
-  path: '/redeems',
-  getParentRoute: () => AuthedAdminRouteRoute,
-} as any)
-const AuthedAdminCardsRoute = AuthedAdminCardsRouteImport.update({
-  id: '/cards',
-  path: '/cards',
-  getParentRoute: () => AuthedAdminRouteRoute,
-} as any)
-const AuthedAdminBulletinsRoute = AuthedAdminBulletinsRouteImport.update({
-  id: '/bulletins',
-  path: '/bulletins',
-  getParentRoute: () => AuthedAdminRouteRoute,
-} as any)
-const AuthedAdminActivitiesRoute = AuthedAdminActivitiesRouteImport.update({
-  id: '/activities',
-  path: '/activities',
-  getParentRoute: () => AuthedAdminRouteRoute,
-} as any)
-const AuthedAdminAchievementsRoute = AuthedAdminAchievementsRouteImport.update({
-  id: '/achievements',
-  path: '/achievements',
-  getParentRoute: () => AuthedAdminRouteRoute,
-} as any)
 const AuthedSpacesBookingsRouteRoute =
   AuthedSpacesBookingsRouteRouteImport.update({
     id: '/bookings',
@@ -381,6 +372,11 @@ const AuthedAdminSpacesIndexRoute = AuthedAdminSpacesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedAdminSpacesRouteRoute,
 } as any)
+const AuthedAdminRedeemsIndexRoute = AuthedAdminRedeemsIndexRouteImport.update({
+  id: '/redeems/',
+  path: '/redeems/',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
 const AuthedAdminGroupsIndexRoute = AuthedAdminGroupsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -397,6 +393,29 @@ const AuthedAdminDormsIndexRoute = AuthedAdminDormsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedAdminDormsRouteRoute,
 } as any)
+const AuthedAdminCardsIndexRoute = AuthedAdminCardsIndexRouteImport.update({
+  id: '/cards/',
+  path: '/cards/',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
+const AuthedAdminBulletinsIndexRoute =
+  AuthedAdminBulletinsIndexRouteImport.update({
+    id: '/bulletins/',
+    path: '/bulletins/',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminActivitiesIndexRoute =
+  AuthedAdminActivitiesIndexRouteImport.update({
+    id: '/activities/',
+    path: '/activities/',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminAchievementsIndexRoute =
+  AuthedAdminAchievementsIndexRouteImport.update({
+    id: '/achievements/',
+    path: '/achievements/',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
 const AuthedActivitiesActivityIdIndexRoute =
   AuthedActivitiesActivityIdIndexRouteImport.update({
     id: '/$activityId/',
@@ -455,6 +474,12 @@ const AuthedAdminSpacesAllowlistRoute =
     path: '/allowlist',
     getParentRoute: () => AuthedAdminSpacesRouteRoute,
   } as any)
+const AuthedAdminRedeemsCreateRoute =
+  AuthedAdminRedeemsCreateRouteImport.update({
+    id: '/redeems/create',
+    path: '/redeems/create',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
 const AuthedAdminGroupsPendingRoute =
   AuthedAdminGroupsPendingRouteImport.update({
     id: '/pending',
@@ -478,6 +503,29 @@ const AuthedAdminDormsNewRoute = AuthedAdminDormsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthedAdminDormsRouteRoute,
 } as any)
+const AuthedAdminCardsCreateRoute = AuthedAdminCardsCreateRouteImport.update({
+  id: '/cards/create',
+  path: '/cards/create',
+  getParentRoute: () => AuthedAdminRouteRoute,
+} as any)
+const AuthedAdminBulletinsCreateRoute =
+  AuthedAdminBulletinsCreateRouteImport.update({
+    id: '/bulletins/create',
+    path: '/bulletins/create',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminActivitiesCreateRoute =
+  AuthedAdminActivitiesCreateRouteImport.update({
+    id: '/activities/create',
+    path: '/activities/create',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminAchievementsCreateRoute =
+  AuthedAdminAchievementsCreateRouteImport.update({
+    id: '/achievements/create',
+    path: '/achievements/create',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
 const AuthedGroupsSlugPostsRouteRoute =
   AuthedGroupsSlugPostsRouteRouteImport.update({
     id: '/posts',
@@ -501,6 +549,36 @@ const AuthedGroupsSlugPostsAnnouncementsRoute =
     id: '/announcements',
     path: '/announcements',
     getParentRoute: () => AuthedGroupsSlugPostsRouteRoute,
+  } as any)
+const AuthedAdminRedeemsItemIdEditRoute =
+  AuthedAdminRedeemsItemIdEditRouteImport.update({
+    id: '/redeems/$itemId/edit',
+    path: '/redeems/$itemId/edit',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminCardsCardIdEditRoute =
+  AuthedAdminCardsCardIdEditRouteImport.update({
+    id: '/cards/$cardId/edit',
+    path: '/cards/$cardId/edit',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminBulletinsBulletinIdEditRoute =
+  AuthedAdminBulletinsBulletinIdEditRouteImport.update({
+    id: '/bulletins/$bulletinId/edit',
+    path: '/bulletins/$bulletinId/edit',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminActivitiesActivityIdEditRoute =
+  AuthedAdminActivitiesActivityIdEditRouteImport.update({
+    id: '/activities/$activityId/edit',
+    path: '/activities/$activityId/edit',
+    getParentRoute: () => AuthedAdminRouteRoute,
+  } as any)
+const AuthedAdminAchievementsAchievementIdEditRoute =
+  AuthedAdminAchievementsAchievementIdEditRouteImport.update({
+    id: '/achievements/$achievementId/edit',
+    path: '/achievements/$achievementId/edit',
+    getParentRoute: () => AuthedAdminRouteRoute,
   } as any)
 const AuthedGroupsSlugPostsPostIdRouteRoute =
   AuthedGroupsSlugPostsPostIdRouteRouteImport.update({
@@ -548,11 +626,6 @@ export interface FileRoutesByFullPath {
   '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
   '/spaces/bookings': typeof AuthedSpacesBookingsRouteRouteWithChildren
-  '/admin/achievements': typeof AuthedAdminAchievementsRoute
-  '/admin/activities': typeof AuthedAdminActivitiesRoute
-  '/admin/bulletins': typeof AuthedAdminBulletinsRoute
-  '/admin/cards': typeof AuthedAdminCardsRoute
-  '/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
@@ -567,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/activities/': typeof AuthedActivitiesIndexRoute
   '/admin/': typeof AuthedAdminIndexRoute
   '/bulletins/': typeof AuthedBulletinsIndexRoute
+  '/cards/': typeof AuthedCardsIndexRoute
   '/dorms/': typeof AuthedDormsIndexRoute
   '/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
@@ -574,10 +648,15 @@ export interface FileRoutesByFullPath {
   '/spaces/': typeof AuthedSpacesIndexRoute
   '/api/images/': typeof ApiImagesIndexRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/admin/achievements/create': typeof AuthedAdminAchievementsCreateRoute
+  '/admin/activities/create': typeof AuthedAdminActivitiesCreateRoute
+  '/admin/bulletins/create': typeof AuthedAdminBulletinsCreateRoute
+  '/admin/cards/create': typeof AuthedAdminCardsCreateRoute
   '/admin/dorms/new': typeof AuthedAdminDormsNewRoute
   '/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/admin/redeems/create': typeof AuthedAdminRedeemsCreateRoute
   '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
   '/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
   '/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
@@ -588,15 +667,25 @@ export interface FileRoutesByFullPath {
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
   '/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/activities/$activityId/': typeof AuthedActivitiesActivityIdIndexRoute
+  '/admin/achievements/': typeof AuthedAdminAchievementsIndexRoute
+  '/admin/activities/': typeof AuthedAdminActivitiesIndexRoute
+  '/admin/bulletins/': typeof AuthedAdminBulletinsIndexRoute
+  '/admin/cards/': typeof AuthedAdminCardsIndexRoute
   '/admin/dorms/': typeof AuthedAdminDormsIndexRoute
   '/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/admin/redeems/': typeof AuthedAdminRedeemsIndexRoute
   '/admin/spaces/': typeof AuthedAdminSpacesIndexRoute
   '/bulletins/$bulletinId/': typeof AuthedBulletinsBulletinIdIndexRoute
   '/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
   '/spaces/bookings/': typeof AuthedSpacesBookingsIndexRoute
   '/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
+  '/admin/achievements/$achievementId/edit': typeof AuthedAdminAchievementsAchievementIdEditRoute
+  '/admin/activities/$activityId/edit': typeof AuthedAdminActivitiesActivityIdEditRoute
+  '/admin/bulletins/$bulletinId/edit': typeof AuthedAdminBulletinsBulletinIdEditRoute
+  '/admin/cards/$cardId/edit': typeof AuthedAdminCardsCardIdEditRoute
+  '/admin/redeems/$itemId/edit': typeof AuthedAdminRedeemsItemIdEditRoute
   '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
   '/groups/$slug/posts/': typeof AuthedGroupsSlugPostsIndexRoute
@@ -614,11 +703,6 @@ export interface FileRoutesByTo {
   '/groups': typeof AuthedGroupsRouteRouteWithChildren
   '/bookmarks': typeof AuthedBookmarksRoute
   '/notifications': typeof AuthedNotificationsRoute
-  '/admin/achievements': typeof AuthedAdminAchievementsRoute
-  '/admin/activities': typeof AuthedAdminActivitiesRoute
-  '/admin/bulletins': typeof AuthedAdminBulletinsRoute
-  '/admin/cards': typeof AuthedAdminCardsRoute
-  '/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/admin/stats': typeof AuthedAdminStatsRoute
   '/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/groups/create': typeof AuthedGroupsCreateRoute
@@ -633,16 +717,22 @@ export interface FileRoutesByTo {
   '/activities': typeof AuthedActivitiesIndexRoute
   '/admin': typeof AuthedAdminIndexRoute
   '/bulletins': typeof AuthedBulletinsIndexRoute
+  '/cards': typeof AuthedCardsIndexRoute
   '/dorms': typeof AuthedDormsIndexRoute
   '/feedbacks': typeof AuthedFeedbacksIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
   '/redeems': typeof AuthedRedeemsIndexRoute
   '/spaces': typeof AuthedSpacesIndexRoute
   '/api/images': typeof ApiImagesIndexRoute
+  '/admin/achievements/create': typeof AuthedAdminAchievementsCreateRoute
+  '/admin/activities/create': typeof AuthedAdminActivitiesCreateRoute
+  '/admin/bulletins/create': typeof AuthedAdminBulletinsCreateRoute
+  '/admin/cards/create': typeof AuthedAdminCardsCreateRoute
   '/admin/dorms/new': typeof AuthedAdminDormsNewRoute
   '/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/admin/redeems/create': typeof AuthedAdminRedeemsCreateRoute
   '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
   '/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
   '/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
@@ -653,14 +743,24 @@ export interface FileRoutesByTo {
   '/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
   '/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/activities/$activityId': typeof AuthedActivitiesActivityIdIndexRoute
+  '/admin/achievements': typeof AuthedAdminAchievementsIndexRoute
+  '/admin/activities': typeof AuthedAdminActivitiesIndexRoute
+  '/admin/bulletins': typeof AuthedAdminBulletinsIndexRoute
+  '/admin/cards': typeof AuthedAdminCardsIndexRoute
   '/admin/dorms': typeof AuthedAdminDormsIndexRoute
   '/admin/feedbacks': typeof AuthedAdminFeedbacksIndexRoute
   '/admin/groups': typeof AuthedAdminGroupsIndexRoute
+  '/admin/redeems': typeof AuthedAdminRedeemsIndexRoute
   '/admin/spaces': typeof AuthedAdminSpacesIndexRoute
   '/bulletins/$bulletinId': typeof AuthedBulletinsBulletinIdIndexRoute
   '/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/groups/$slug': typeof AuthedGroupsSlugIndexRoute
   '/spaces/bookings': typeof AuthedSpacesBookingsIndexRoute
+  '/admin/achievements/$achievementId/edit': typeof AuthedAdminAchievementsAchievementIdEditRoute
+  '/admin/activities/$activityId/edit': typeof AuthedAdminActivitiesActivityIdEditRoute
+  '/admin/bulletins/$bulletinId/edit': typeof AuthedAdminBulletinsBulletinIdEditRoute
+  '/admin/cards/$cardId/edit': typeof AuthedAdminCardsCardIdEditRoute
+  '/admin/redeems/$itemId/edit': typeof AuthedAdminRedeemsItemIdEditRoute
   '/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsIndexRoute
@@ -696,11 +796,6 @@ export interface FileRoutesById {
   '/_authed/feedbacks/$feedbackId': typeof AuthedFeedbacksFeedbackIdRouteRouteWithChildren
   '/_authed/groups/$slug': typeof AuthedGroupsSlugRouteRouteWithChildren
   '/_authed/spaces/bookings': typeof AuthedSpacesBookingsRouteRouteWithChildren
-  '/_authed/admin/achievements': typeof AuthedAdminAchievementsRoute
-  '/_authed/admin/activities': typeof AuthedAdminActivitiesRoute
-  '/_authed/admin/bulletins': typeof AuthedAdminBulletinsRoute
-  '/_authed/admin/cards': typeof AuthedAdminCardsRoute
-  '/_authed/admin/redeems': typeof AuthedAdminRedeemsRoute
   '/_authed/admin/stats': typeof AuthedAdminStatsRoute
   '/_authed/feedbacks/create': typeof AuthedFeedbacksCreateRoute
   '/_authed/groups/create': typeof AuthedGroupsCreateRoute
@@ -715,6 +810,7 @@ export interface FileRoutesById {
   '/_authed/activities/': typeof AuthedActivitiesIndexRoute
   '/_authed/admin/': typeof AuthedAdminIndexRoute
   '/_authed/bulletins/': typeof AuthedBulletinsIndexRoute
+  '/_authed/cards/': typeof AuthedCardsIndexRoute
   '/_authed/dorms/': typeof AuthedDormsIndexRoute
   '/_authed/feedbacks/': typeof AuthedFeedbacksIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
@@ -722,10 +818,15 @@ export interface FileRoutesById {
   '/_authed/spaces/': typeof AuthedSpacesIndexRoute
   '/api/images/': typeof ApiImagesIndexRoute
   '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/_authed/admin/achievements/create': typeof AuthedAdminAchievementsCreateRoute
+  '/_authed/admin/activities/create': typeof AuthedAdminActivitiesCreateRoute
+  '/_authed/admin/bulletins/create': typeof AuthedAdminBulletinsCreateRoute
+  '/_authed/admin/cards/create': typeof AuthedAdminCardsCreateRoute
   '/_authed/admin/dorms/new': typeof AuthedAdminDormsNewRoute
   '/_authed/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/_authed/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
+  '/_authed/admin/redeems/create': typeof AuthedAdminRedeemsCreateRoute
   '/_authed/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
   '/_authed/admin/spaces/bookings': typeof AuthedAdminSpacesBookingsRoute
   '/_authed/admin/spaces/catalog': typeof AuthedAdminSpacesCatalogRoute
@@ -736,15 +837,25 @@ export interface FileRoutesById {
   '/_authed/groups/$slug/settings': typeof AuthedGroupsSlugSettingsRoute
   '/_authed/spaces/bookings/$bookingId': typeof AuthedSpacesBookingsBookingIdRoute
   '/_authed/activities/$activityId/': typeof AuthedActivitiesActivityIdIndexRoute
+  '/_authed/admin/achievements/': typeof AuthedAdminAchievementsIndexRoute
+  '/_authed/admin/activities/': typeof AuthedAdminActivitiesIndexRoute
+  '/_authed/admin/bulletins/': typeof AuthedAdminBulletinsIndexRoute
+  '/_authed/admin/cards/': typeof AuthedAdminCardsIndexRoute
   '/_authed/admin/dorms/': typeof AuthedAdminDormsIndexRoute
   '/_authed/admin/feedbacks/': typeof AuthedAdminFeedbacksIndexRoute
   '/_authed/admin/groups/': typeof AuthedAdminGroupsIndexRoute
+  '/_authed/admin/redeems/': typeof AuthedAdminRedeemsIndexRoute
   '/_authed/admin/spaces/': typeof AuthedAdminSpacesIndexRoute
   '/_authed/bulletins/$bulletinId/': typeof AuthedBulletinsBulletinIdIndexRoute
   '/_authed/feedbacks/$feedbackId/': typeof AuthedFeedbacksFeedbackIdIndexRoute
   '/_authed/groups/$slug/': typeof AuthedGroupsSlugIndexRoute
   '/_authed/spaces/bookings/': typeof AuthedSpacesBookingsIndexRoute
   '/_authed/groups/$slug/posts/$postId': typeof AuthedGroupsSlugPostsPostIdRouteRouteWithChildren
+  '/_authed/admin/achievements/$achievementId/edit': typeof AuthedAdminAchievementsAchievementIdEditRoute
+  '/_authed/admin/activities/$activityId/edit': typeof AuthedAdminActivitiesActivityIdEditRoute
+  '/_authed/admin/bulletins/$bulletinId/edit': typeof AuthedAdminBulletinsBulletinIdEditRoute
+  '/_authed/admin/cards/$cardId/edit': typeof AuthedAdminCardsCardIdEditRoute
+  '/_authed/admin/redeems/$itemId/edit': typeof AuthedAdminRedeemsItemIdEditRoute
   '/_authed/groups/$slug/posts/announcements': typeof AuthedGroupsSlugPostsAnnouncementsRoute
   '/_authed/groups/$slug/posts/create': typeof AuthedGroupsSlugPostsCreateRoute
   '/_authed/groups/$slug/posts/': typeof AuthedGroupsSlugPostsIndexRoute
@@ -780,11 +891,6 @@ export interface FileRouteTypes {
     | '/feedbacks/$feedbackId'
     | '/groups/$slug'
     | '/spaces/bookings'
-    | '/admin/achievements'
-    | '/admin/activities'
-    | '/admin/bulletins'
-    | '/admin/cards'
-    | '/admin/redeems'
     | '/admin/stats'
     | '/feedbacks/create'
     | '/groups/create'
@@ -799,6 +905,7 @@ export interface FileRouteTypes {
     | '/activities/'
     | '/admin/'
     | '/bulletins/'
+    | '/cards/'
     | '/dorms/'
     | '/feedbacks/'
     | '/profile/'
@@ -806,10 +913,15 @@ export interface FileRouteTypes {
     | '/spaces/'
     | '/api/images/'
     | '/groups/$slug/posts'
+    | '/admin/achievements/create'
+    | '/admin/activities/create'
+    | '/admin/bulletins/create'
+    | '/admin/cards/create'
     | '/admin/dorms/new'
     | '/admin/dorms/questionnaires'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/admin/redeems/create'
     | '/admin/spaces/allowlist'
     | '/admin/spaces/bookings'
     | '/admin/spaces/catalog'
@@ -820,15 +932,25 @@ export interface FileRouteTypes {
     | '/groups/$slug/settings'
     | '/spaces/bookings/$bookingId'
     | '/activities/$activityId/'
+    | '/admin/achievements/'
+    | '/admin/activities/'
+    | '/admin/bulletins/'
+    | '/admin/cards/'
     | '/admin/dorms/'
     | '/admin/feedbacks/'
     | '/admin/groups/'
+    | '/admin/redeems/'
     | '/admin/spaces/'
     | '/bulletins/$bulletinId/'
     | '/feedbacks/$feedbackId/'
     | '/groups/$slug/'
     | '/spaces/bookings/'
     | '/groups/$slug/posts/$postId'
+    | '/admin/achievements/$achievementId/edit'
+    | '/admin/activities/$activityId/edit'
+    | '/admin/bulletins/$bulletinId/edit'
+    | '/admin/cards/$cardId/edit'
+    | '/admin/redeems/$itemId/edit'
     | '/groups/$slug/posts/announcements'
     | '/groups/$slug/posts/create'
     | '/groups/$slug/posts/'
@@ -846,11 +968,6 @@ export interface FileRouteTypes {
     | '/groups'
     | '/bookmarks'
     | '/notifications'
-    | '/admin/achievements'
-    | '/admin/activities'
-    | '/admin/bulletins'
-    | '/admin/cards'
-    | '/admin/redeems'
     | '/admin/stats'
     | '/feedbacks/create'
     | '/groups/create'
@@ -865,16 +982,22 @@ export interface FileRouteTypes {
     | '/activities'
     | '/admin'
     | '/bulletins'
+    | '/cards'
     | '/dorms'
     | '/feedbacks'
     | '/profile'
     | '/redeems'
     | '/spaces'
     | '/api/images'
+    | '/admin/achievements/create'
+    | '/admin/activities/create'
+    | '/admin/bulletins/create'
+    | '/admin/cards/create'
     | '/admin/dorms/new'
     | '/admin/dorms/questionnaires'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
+    | '/admin/redeems/create'
     | '/admin/spaces/allowlist'
     | '/admin/spaces/bookings'
     | '/admin/spaces/catalog'
@@ -885,14 +1008,24 @@ export interface FileRouteTypes {
     | '/groups/$slug/settings'
     | '/spaces/bookings/$bookingId'
     | '/activities/$activityId'
+    | '/admin/achievements'
+    | '/admin/activities'
+    | '/admin/bulletins'
+    | '/admin/cards'
     | '/admin/dorms'
     | '/admin/feedbacks'
     | '/admin/groups'
+    | '/admin/redeems'
     | '/admin/spaces'
     | '/bulletins/$bulletinId'
     | '/feedbacks/$feedbackId'
     | '/groups/$slug'
     | '/spaces/bookings'
+    | '/admin/achievements/$achievementId/edit'
+    | '/admin/activities/$activityId/edit'
+    | '/admin/bulletins/$bulletinId/edit'
+    | '/admin/cards/$cardId/edit'
+    | '/admin/redeems/$itemId/edit'
     | '/groups/$slug/posts/announcements'
     | '/groups/$slug/posts/create'
     | '/groups/$slug/posts'
@@ -927,11 +1060,6 @@ export interface FileRouteTypes {
     | '/_authed/feedbacks/$feedbackId'
     | '/_authed/groups/$slug'
     | '/_authed/spaces/bookings'
-    | '/_authed/admin/achievements'
-    | '/_authed/admin/activities'
-    | '/_authed/admin/bulletins'
-    | '/_authed/admin/cards'
-    | '/_authed/admin/redeems'
     | '/_authed/admin/stats'
     | '/_authed/feedbacks/create'
     | '/_authed/groups/create'
@@ -946,6 +1074,7 @@ export interface FileRouteTypes {
     | '/_authed/activities/'
     | '/_authed/admin/'
     | '/_authed/bulletins/'
+    | '/_authed/cards/'
     | '/_authed/dorms/'
     | '/_authed/feedbacks/'
     | '/_authed/profile/'
@@ -953,10 +1082,15 @@ export interface FileRouteTypes {
     | '/_authed/spaces/'
     | '/api/images/'
     | '/_authed/groups/$slug/posts'
+    | '/_authed/admin/achievements/create'
+    | '/_authed/admin/activities/create'
+    | '/_authed/admin/bulletins/create'
+    | '/_authed/admin/cards/create'
     | '/_authed/admin/dorms/new'
     | '/_authed/admin/dorms/questionnaires'
     | '/_authed/admin/feedbacks/pending'
     | '/_authed/admin/groups/pending'
+    | '/_authed/admin/redeems/create'
     | '/_authed/admin/spaces/allowlist'
     | '/_authed/admin/spaces/bookings'
     | '/_authed/admin/spaces/catalog'
@@ -967,15 +1101,25 @@ export interface FileRouteTypes {
     | '/_authed/groups/$slug/settings'
     | '/_authed/spaces/bookings/$bookingId'
     | '/_authed/activities/$activityId/'
+    | '/_authed/admin/achievements/'
+    | '/_authed/admin/activities/'
+    | '/_authed/admin/bulletins/'
+    | '/_authed/admin/cards/'
     | '/_authed/admin/dorms/'
     | '/_authed/admin/feedbacks/'
     | '/_authed/admin/groups/'
+    | '/_authed/admin/redeems/'
     | '/_authed/admin/spaces/'
     | '/_authed/bulletins/$bulletinId/'
     | '/_authed/feedbacks/$feedbackId/'
     | '/_authed/groups/$slug/'
     | '/_authed/spaces/bookings/'
     | '/_authed/groups/$slug/posts/$postId'
+    | '/_authed/admin/achievements/$achievementId/edit'
+    | '/_authed/admin/activities/$activityId/edit'
+    | '/_authed/admin/bulletins/$bulletinId/edit'
+    | '/_authed/admin/cards/$cardId/edit'
+    | '/_authed/admin/redeems/$itemId/edit'
     | '/_authed/groups/$slug/posts/announcements'
     | '/_authed/groups/$slug/posts/create'
     | '/_authed/groups/$slug/posts/'
@@ -1181,6 +1325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDormsIndexRouteImport
       parentRoute: typeof AuthedDormsRouteRoute
     }
+    '/_authed/cards/': {
+      id: '/_authed/cards/'
+      path: '/cards'
+      fullPath: '/cards/'
+      preLoaderRoute: typeof AuthedCardsIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/bulletins/': {
       id: '/_authed/bulletins/'
       path: '/'
@@ -1279,41 +1430,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminStatsRouteImport
       parentRoute: typeof AuthedAdminRouteRoute
     }
-    '/_authed/admin/redeems': {
-      id: '/_authed/admin/redeems'
-      path: '/redeems'
-      fullPath: '/admin/redeems'
-      preLoaderRoute: typeof AuthedAdminRedeemsRouteImport
-      parentRoute: typeof AuthedAdminRouteRoute
-    }
-    '/_authed/admin/cards': {
-      id: '/_authed/admin/cards'
-      path: '/cards'
-      fullPath: '/admin/cards'
-      preLoaderRoute: typeof AuthedAdminCardsRouteImport
-      parentRoute: typeof AuthedAdminRouteRoute
-    }
-    '/_authed/admin/bulletins': {
-      id: '/_authed/admin/bulletins'
-      path: '/bulletins'
-      fullPath: '/admin/bulletins'
-      preLoaderRoute: typeof AuthedAdminBulletinsRouteImport
-      parentRoute: typeof AuthedAdminRouteRoute
-    }
-    '/_authed/admin/activities': {
-      id: '/_authed/admin/activities'
-      path: '/activities'
-      fullPath: '/admin/activities'
-      preLoaderRoute: typeof AuthedAdminActivitiesRouteImport
-      parentRoute: typeof AuthedAdminRouteRoute
-    }
-    '/_authed/admin/achievements': {
-      id: '/_authed/admin/achievements'
-      path: '/achievements'
-      fullPath: '/admin/achievements'
-      preLoaderRoute: typeof AuthedAdminAchievementsRouteImport
-      parentRoute: typeof AuthedAdminRouteRoute
-    }
     '/_authed/spaces/bookings': {
       id: '/_authed/spaces/bookings'
       path: '/bookings'
@@ -1398,6 +1514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminSpacesIndexRouteImport
       parentRoute: typeof AuthedAdminSpacesRouteRoute
     }
+    '/_authed/admin/redeems/': {
+      id: '/_authed/admin/redeems/'
+      path: '/redeems'
+      fullPath: '/admin/redeems/'
+      preLoaderRoute: typeof AuthedAdminRedeemsIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
     '/_authed/admin/groups/': {
       id: '/_authed/admin/groups/'
       path: '/'
@@ -1418,6 +1541,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/dorms/'
       preLoaderRoute: typeof AuthedAdminDormsIndexRouteImport
       parentRoute: typeof AuthedAdminDormsRouteRoute
+    }
+    '/_authed/admin/cards/': {
+      id: '/_authed/admin/cards/'
+      path: '/cards'
+      fullPath: '/admin/cards/'
+      preLoaderRoute: typeof AuthedAdminCardsIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/bulletins/': {
+      id: '/_authed/admin/bulletins/'
+      path: '/bulletins'
+      fullPath: '/admin/bulletins/'
+      preLoaderRoute: typeof AuthedAdminBulletinsIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/activities/': {
+      id: '/_authed/admin/activities/'
+      path: '/activities'
+      fullPath: '/admin/activities/'
+      preLoaderRoute: typeof AuthedAdminActivitiesIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/achievements/': {
+      id: '/_authed/admin/achievements/'
+      path: '/achievements'
+      fullPath: '/admin/achievements/'
+      preLoaderRoute: typeof AuthedAdminAchievementsIndexRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/activities/$activityId/': {
       id: '/_authed/activities/$activityId/'
@@ -1489,6 +1640,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminSpacesAllowlistRouteImport
       parentRoute: typeof AuthedAdminSpacesRouteRoute
     }
+    '/_authed/admin/redeems/create': {
+      id: '/_authed/admin/redeems/create'
+      path: '/redeems/create'
+      fullPath: '/admin/redeems/create'
+      preLoaderRoute: typeof AuthedAdminRedeemsCreateRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
     '/_authed/admin/groups/pending': {
       id: '/_authed/admin/groups/pending'
       path: '/pending'
@@ -1517,6 +1675,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminDormsNewRouteImport
       parentRoute: typeof AuthedAdminDormsRouteRoute
     }
+    '/_authed/admin/cards/create': {
+      id: '/_authed/admin/cards/create'
+      path: '/cards/create'
+      fullPath: '/admin/cards/create'
+      preLoaderRoute: typeof AuthedAdminCardsCreateRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/bulletins/create': {
+      id: '/_authed/admin/bulletins/create'
+      path: '/bulletins/create'
+      fullPath: '/admin/bulletins/create'
+      preLoaderRoute: typeof AuthedAdminBulletinsCreateRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/activities/create': {
+      id: '/_authed/admin/activities/create'
+      path: '/activities/create'
+      fullPath: '/admin/activities/create'
+      preLoaderRoute: typeof AuthedAdminActivitiesCreateRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/achievements/create': {
+      id: '/_authed/admin/achievements/create'
+      path: '/achievements/create'
+      fullPath: '/admin/achievements/create'
+      preLoaderRoute: typeof AuthedAdminAchievementsCreateRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
     '/_authed/groups/$slug/posts': {
       id: '/_authed/groups/$slug/posts'
       path: '/posts'
@@ -1544,6 +1730,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/groups/$slug/posts/announcements'
       preLoaderRoute: typeof AuthedGroupsSlugPostsAnnouncementsRouteImport
       parentRoute: typeof AuthedGroupsSlugPostsRouteRoute
+    }
+    '/_authed/admin/redeems/$itemId/edit': {
+      id: '/_authed/admin/redeems/$itemId/edit'
+      path: '/redeems/$itemId/edit'
+      fullPath: '/admin/redeems/$itemId/edit'
+      preLoaderRoute: typeof AuthedAdminRedeemsItemIdEditRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/cards/$cardId/edit': {
+      id: '/_authed/admin/cards/$cardId/edit'
+      path: '/cards/$cardId/edit'
+      fullPath: '/admin/cards/$cardId/edit'
+      preLoaderRoute: typeof AuthedAdminCardsCardIdEditRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/bulletins/$bulletinId/edit': {
+      id: '/_authed/admin/bulletins/$bulletinId/edit'
+      path: '/bulletins/$bulletinId/edit'
+      fullPath: '/admin/bulletins/$bulletinId/edit'
+      preLoaderRoute: typeof AuthedAdminBulletinsBulletinIdEditRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/activities/$activityId/edit': {
+      id: '/_authed/admin/activities/$activityId/edit'
+      path: '/activities/$activityId/edit'
+      fullPath: '/admin/activities/$activityId/edit'
+      preLoaderRoute: typeof AuthedAdminActivitiesActivityIdEditRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
+    }
+    '/_authed/admin/achievements/$achievementId/edit': {
+      id: '/_authed/admin/achievements/$achievementId/edit'
+      path: '/achievements/$achievementId/edit'
+      fullPath: '/admin/achievements/$achievementId/edit'
+      preLoaderRoute: typeof AuthedAdminAchievementsAchievementIdEditRouteImport
+      parentRoute: typeof AuthedAdminRouteRoute
     }
     '/_authed/groups/$slug/posts/$postId': {
       id: '/_authed/groups/$slug/posts/$postId'
@@ -1674,13 +1895,23 @@ interface AuthedAdminRouteRouteChildren {
   AuthedAdminFeedbacksRouteRoute: typeof AuthedAdminFeedbacksRouteRouteWithChildren
   AuthedAdminGroupsRouteRoute: typeof AuthedAdminGroupsRouteRouteWithChildren
   AuthedAdminSpacesRouteRoute: typeof AuthedAdminSpacesRouteRouteWithChildren
-  AuthedAdminAchievementsRoute: typeof AuthedAdminAchievementsRoute
-  AuthedAdminActivitiesRoute: typeof AuthedAdminActivitiesRoute
-  AuthedAdminBulletinsRoute: typeof AuthedAdminBulletinsRoute
-  AuthedAdminCardsRoute: typeof AuthedAdminCardsRoute
-  AuthedAdminRedeemsRoute: typeof AuthedAdminRedeemsRoute
   AuthedAdminStatsRoute: typeof AuthedAdminStatsRoute
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute
+  AuthedAdminAchievementsCreateRoute: typeof AuthedAdminAchievementsCreateRoute
+  AuthedAdminActivitiesCreateRoute: typeof AuthedAdminActivitiesCreateRoute
+  AuthedAdminBulletinsCreateRoute: typeof AuthedAdminBulletinsCreateRoute
+  AuthedAdminCardsCreateRoute: typeof AuthedAdminCardsCreateRoute
+  AuthedAdminRedeemsCreateRoute: typeof AuthedAdminRedeemsCreateRoute
+  AuthedAdminAchievementsIndexRoute: typeof AuthedAdminAchievementsIndexRoute
+  AuthedAdminActivitiesIndexRoute: typeof AuthedAdminActivitiesIndexRoute
+  AuthedAdminBulletinsIndexRoute: typeof AuthedAdminBulletinsIndexRoute
+  AuthedAdminCardsIndexRoute: typeof AuthedAdminCardsIndexRoute
+  AuthedAdminRedeemsIndexRoute: typeof AuthedAdminRedeemsIndexRoute
+  AuthedAdminAchievementsAchievementIdEditRoute: typeof AuthedAdminAchievementsAchievementIdEditRoute
+  AuthedAdminActivitiesActivityIdEditRoute: typeof AuthedAdminActivitiesActivityIdEditRoute
+  AuthedAdminBulletinsBulletinIdEditRoute: typeof AuthedAdminBulletinsBulletinIdEditRoute
+  AuthedAdminCardsCardIdEditRoute: typeof AuthedAdminCardsCardIdEditRoute
+  AuthedAdminRedeemsItemIdEditRoute: typeof AuthedAdminRedeemsItemIdEditRoute
 }
 
 const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
@@ -1688,13 +1919,26 @@ const AuthedAdminRouteRouteChildren: AuthedAdminRouteRouteChildren = {
   AuthedAdminFeedbacksRouteRoute: AuthedAdminFeedbacksRouteRouteWithChildren,
   AuthedAdminGroupsRouteRoute: AuthedAdminGroupsRouteRouteWithChildren,
   AuthedAdminSpacesRouteRoute: AuthedAdminSpacesRouteRouteWithChildren,
-  AuthedAdminAchievementsRoute: AuthedAdminAchievementsRoute,
-  AuthedAdminActivitiesRoute: AuthedAdminActivitiesRoute,
-  AuthedAdminBulletinsRoute: AuthedAdminBulletinsRoute,
-  AuthedAdminCardsRoute: AuthedAdminCardsRoute,
-  AuthedAdminRedeemsRoute: AuthedAdminRedeemsRoute,
   AuthedAdminStatsRoute: AuthedAdminStatsRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+  AuthedAdminAchievementsCreateRoute: AuthedAdminAchievementsCreateRoute,
+  AuthedAdminActivitiesCreateRoute: AuthedAdminActivitiesCreateRoute,
+  AuthedAdminBulletinsCreateRoute: AuthedAdminBulletinsCreateRoute,
+  AuthedAdminCardsCreateRoute: AuthedAdminCardsCreateRoute,
+  AuthedAdminRedeemsCreateRoute: AuthedAdminRedeemsCreateRoute,
+  AuthedAdminAchievementsIndexRoute: AuthedAdminAchievementsIndexRoute,
+  AuthedAdminActivitiesIndexRoute: AuthedAdminActivitiesIndexRoute,
+  AuthedAdminBulletinsIndexRoute: AuthedAdminBulletinsIndexRoute,
+  AuthedAdminCardsIndexRoute: AuthedAdminCardsIndexRoute,
+  AuthedAdminRedeemsIndexRoute: AuthedAdminRedeemsIndexRoute,
+  AuthedAdminAchievementsAchievementIdEditRoute:
+    AuthedAdminAchievementsAchievementIdEditRoute,
+  AuthedAdminActivitiesActivityIdEditRoute:
+    AuthedAdminActivitiesActivityIdEditRoute,
+  AuthedAdminBulletinsBulletinIdEditRoute:
+    AuthedAdminBulletinsBulletinIdEditRoute,
+  AuthedAdminCardsCardIdEditRoute: AuthedAdminCardsCardIdEditRoute,
+  AuthedAdminRedeemsItemIdEditRoute: AuthedAdminRedeemsItemIdEditRoute,
 }
 
 const AuthedAdminRouteRouteWithChildren =
@@ -1903,6 +2147,7 @@ interface AuthedRouteRouteChildren {
   AuthedSpacesRouteRoute: typeof AuthedSpacesRouteRouteWithChildren
   AuthedBookmarksRoute: typeof AuthedBookmarksRoute
   AuthedNotificationsRoute: typeof AuthedNotificationsRoute
+  AuthedCardsIndexRoute: typeof AuthedCardsIndexRoute
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
@@ -1918,6 +2163,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedSpacesRouteRoute: AuthedSpacesRouteRouteWithChildren,
   AuthedBookmarksRoute: AuthedBookmarksRoute,
   AuthedNotificationsRoute: AuthedNotificationsRoute,
+  AuthedCardsIndexRoute: AuthedCardsIndexRoute,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(

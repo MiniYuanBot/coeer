@@ -27,9 +27,15 @@ function buildWhereClause(params: {
     type?: GroupPostType
     isPinned?: boolean
     id?: string
+    publicOnly?: boolean
 }): SQL | undefined {
     const { groupId, authorId, type, isPinned, id } = params
     const conditions: SQL[] = []
+
+    if (params.publicOnly) {
+        conditions.push(inArray(groupPosts.groupId, db.select({ id: groups.id }).from(groups)
+            .where(and(eq(groups.isPublic, true), eq(groups.status, 'approved')))))
+    }
 
     if (id) {
         conditions.push(eq(groupPosts.id, id))
@@ -108,8 +114,7 @@ export const groupPostQueries = {
     // Filter all groups before limiting; membership and group pins do not affect this feed.
     async findRecentPublic(): Promise<PublicGroupPost[]> {
         return db.query.groupPosts.findMany({
-            where: inArray(groupPosts.groupId, db.select({ id: groups.id }).from(groups)
-                .where(and(eq(groups.isPublic, true), eq(groups.status, 'approved')))),
+            where: buildWhereClause({ publicOnly: true }),
             with: {
                 author: { columns: { id: true, name: true } },
                 group: { columns: { id: true, name: true, slug: true } },
@@ -142,16 +147,16 @@ export const groupPostQueries = {
 
     // Find all posts by author id with optional filters
     async findByAuthor(data: ListPostsByAuthorInput): Promise<GroupPostWithGroup[]> {
-        const { authorId, limit, offset } = data
+        const { limit, offset } = data
 
         return db.query.groupPosts.findMany({
-            where: eq(groupPosts.authorId, authorId),
+            where: buildWhereClause({ ...data, publicOnly: true }),
             with: {
                 group: {
                     columns: { id: true, name: true, slug: true },
                 },
             },
-            orderBy: [desc(groupPosts.createdAt)],
+            orderBy: [desc(groupPosts.createdAt), desc(groupPosts.id)],
             limit,
             offset,
         })
@@ -188,7 +193,7 @@ export const groupPostQueries = {
         const [result] = await db
             .select({ value: count() })
             .from(groupPosts)
-            .where(buildWhereClause(data))
+            .where(buildWhereClause({ ...data, publicOnly: true }))
         return result?.value ?? 0
     },
 

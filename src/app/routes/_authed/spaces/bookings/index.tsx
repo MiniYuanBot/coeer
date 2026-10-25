@@ -23,8 +23,7 @@ function MyBookingsPage() {
     const [requested, setPage] = useState(1)
     const page = paginate(resource.data ?? [], requested)
     return (
-        <PageLayout>
-            <SpacesPageHeader
+        <PageLayout header={<SpacesPageHeader
                 title="我的预约"
                 description="查看申请、审批与取消结果，预约进度会自动更新。"
                 actionLayout="stack-on-mobile"
@@ -33,7 +32,8 @@ function MyBookingsPage() {
                         <Link to="/spaces">预约空间</Link>
                     </Button>
                 }
-            />
+            />}>
+
             {!user ? (
                 <EmptyState
                     title="当前账号暂不能预约"

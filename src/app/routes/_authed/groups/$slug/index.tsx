@@ -1,34 +1,35 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { PageLayout } from '@/components/coeer/ui/PageLayout'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { joinGroupFn } from '~/functions'
 import { useState } from 'react'
-import { Button, Card, Icon, SectionHeader } from '@/components/coeer'
-
+import { Button, Card, Icon } from '@/components/coeer'
 
 export const Route = createFileRoute('/_authed/groups/$slug/')({
     component: GroupHomePage,
 })
 
 function GroupHomePage() {
-    const { group, isMember, isAdmin } = Route.useRouteContext()
-    const navigate = useNavigate()
+    const { group, isMember, isAdmin, isPending } = Route.useRouteContext()
+    const router = useRouter()
     const [isJoining, setIsJoining] = useState(false)
+    const [error, setError] = useState('')
 
     const handleJoin = async () => {
+        if (isJoining || isPending) return
         setIsJoining(true)
+        setError('')
         try {
             await joinGroupFn({ data: { groupId: group.id } })
-            // refresh
-            navigate({
-                to: '/groups/$slug',
-                params: { slug: group.slug },
-            })
+            await router.invalidate()
+        } catch (error) {
+            setError(error instanceof Error ? error.message : '申请失败，请重试')
         } finally {
             setIsJoining(false)
         }
     }
 
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <Card className="rounded-lg p-5">
                 <h2 className="text-[15px] font-medium">关于群组</h2>
                 <p className="mt-3 whitespace-pre-wrap text-[13px] leading-relaxed text-[hsl(var(--muted-foreground))]">
@@ -57,16 +58,17 @@ function GroupHomePage() {
 
             {!(isMember || isAdmin) && (
                 <Card className="rounded-lg p-5 text-center">
-                    <p className="mb-4 text-[13px] text-[hsl(var(--muted-foreground))]">加入这个群组，参与讨论</p>
+                    <p className="mb-4 text-[13px] text-[hsl(var(--muted-foreground))]">{isPending ? '入群申请已提交，等待管理员审核。' : '加入这个群组，参与讨论'}</p>
+                    {error ? <p role="alert" className="mb-3 text-sm text-danger">{error}</p> : null}
                     <Button
                         onClick={handleJoin}
-                        disabled={isJoining}
+                        disabled={isJoining || isPending}
                         loading={isJoining}
                     >
-                        <Icon name="group" /> 申请加入
+                        <Icon name="group" /> {isPending ? '已申请' : '申请加入'}
                     </Button>
                 </Card>
             )}
-        </div>
+        </PageLayout>
     )
 }

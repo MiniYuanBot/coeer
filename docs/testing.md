@@ -40,8 +40,8 @@ pnpm exec vitest run tests/workspace-ui.test.ts
 ```
 
 `workspace-ui.test.ts` 使用真实前端组件与隔离 UI 数据检查工作区、主题、移动布局、浮层焦点和效果降级，
-不连接业务数据库或预约官网。代表页面截图写入 `tmp/glass-review`；完整实施与验收范围见
-[毛玻璃实施记录](../.impeccable/implementation-review.md)。
+不连接业务数据库或预约官网。代表页面截图写入 `tmp/glass-review`；验收要求见
+[UI/UX 规范](../.impeccable/ui-layout.md)。测试结果以本次运行日志为准，历史截图不替代回归。
 
 ## Linux 部署控制器
 
