@@ -328,13 +328,12 @@ export class GroupService {
 
             const { status, role, limit, offset } = data
 
-            const memberships = await groupMemberQueries.listByUser({
+            const [memberships, total] = await Promise.all([groupMemberQueries.listByUser({
                 userId: user.id,
                 ...data
-            })
+            }), groupMemberQueries.countByUser({ ...data, userId: user.id })])
             const groupsWithStats = await groupQueries.withStats(memberships.map((member) => member.group))
 
-            const total = await groupMemberQueries.countByUser({ ...data, userId: user.id })
 
             return {
                 success: true,

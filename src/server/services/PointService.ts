@@ -1,7 +1,7 @@
 import { pointQueries } from '../database/queries'
 import { POINT, type PointSource } from '@shared/constants'
 import { AuthService } from './AuthService'
-import { db, type DbExecutor } from '../database/client'
+import { db, type DbTransaction } from '../database/client'
 import type { PaginatedPointResponse, PointChangeInput, PointHistoryInput, PointResponse } from '@shared/contracts'
 import type { PointTransaction } from '../database/schemas'
 import { AchievementService } from './AchievementService'
@@ -22,7 +22,7 @@ export class PointService {
      * concurrent spends/draws can not double-spend, and the balance is
      * re-read after the lock.
      */
-    static async spendInTx(data: PointChangeInternal, executor: DbExecutor): Promise<SpendOutcome> {
+    static async spendInTx(data: PointChangeInternal, executor: DbTransaction): Promise<SpendOutcome> {
         try {
             await pointQueries.lockUser(data.userId, executor)
             const balance = await pointQueries.getBalance(data.userId, executor)
@@ -78,12 +78,10 @@ export class PointService {
                 return { success: false, state: POINT.FORBIDDEN }
             }
 
-            // Best-effort non-transactional path (the redeem/draw services
-            // always use `spendInTx` inside a real transaction).
-            const outcome = await PointService.spendInTx(
+            const outcome = await db.transaction((tx) => PointService.spendInTx(
                 { ...data, source: data.source ?? 'adjustment' },
-                db,
-            )
+                tx,
+            ))
             if (!outcome.ok) {
                 return { success: false, state: outcome.code === 'INSUFFICIENT_POINTS' ? POINT.INSUFFICIENT : POINT.SERVER_ERROR }
             }

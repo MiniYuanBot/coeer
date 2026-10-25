@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { routeGeneratorWatchGuard } from './scripts/vite-route-generator'
 import { spacesStartupPlugin } from './scripts/vite-spaces-startup'
+import { buildReport } from './scripts/vite-build-report'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -15,6 +16,21 @@ export default defineConfig(({ mode }) => {
   }
   
   return {
+    environments: {
+      client: {
+        build: {
+          rollupOptions: {
+            output: {
+              manualChunks(id) {
+                if (!id.includes('/node_modules/')) return
+                if (/\/(react|react-dom|scheduler)\//.test(id)) return 'vendor-react'
+                if (id.includes('/zod/')) return 'vendor-validation'
+              },
+            },
+          },
+        },
+      },
+    },
     server: {
       port: parseInt(env.PORT) || 3000,
       strictPort: true,
@@ -29,6 +45,7 @@ export default defineConfig(({ mode }) => {
       exclude: ['playwright-core'],
     },
     plugins: [
+      ...(process.env.COEER_BUILD_REPORT === '1' ? [buildReport()] : []),
       routeGeneratorWatchGuard(path.resolve(__dirname, 'src/app/routeTree.gen.ts')),
       spacesStartupPlugin(),
       tailwindcss(),

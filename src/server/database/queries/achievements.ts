@@ -78,4 +78,10 @@ export const achievementQueries = {
             .onConflictDoNothing({ target: [userAchievements.userId, userAchievements.achievementId] }).returning()
         return record
     },
+
+    async unlockMany(userId: string, achievementIds: string[], executor: DbExecutor) {
+        if (!achievementIds.length) return
+        await executor.insert(userAchievements).values(achievementIds.map((achievementId) => ({ userId, achievementId })))
+            .onConflictDoNothing({ target: [userAchievements.userId, userAchievements.achievementId] })
+    },
 }

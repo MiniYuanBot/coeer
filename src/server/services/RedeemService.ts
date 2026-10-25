@@ -83,10 +83,9 @@ export class RedeemService {
                 // Unlimited items (`stock = -1`) are never decremented.
                 if (item.stock !== -1) {
                     const updated = await redeemQueries.decrementStock(item.id, quantity, tx)
-                    if (!updated) {
-                        result = { success: false, state: REDEEM.OUT_OF_STOCK }
-                        return
-                    }
+                    // Another buyer can take the final item after our initial read.
+                    // Throw to roll back the debit as well as the stock/order writes.
+                    if (!updated) throw new OutOfStockError()
                 }
 
                 const order = await redeemQueries.createOrder(
@@ -97,6 +96,7 @@ export class RedeemService {
             })
             return result!
         } catch (err) {
+            if (err instanceof OutOfStockError) return { success: false, state: REDEEM.OUT_OF_STOCK }
             console.error('Redeem error:', err)
             return { success: false, state: REDEEM.SERVER_ERROR }
         }
@@ -173,3 +173,5 @@ export class RedeemService {
         return { success: true, data: order, state: REDEEM.UPDATE_SUCCESS }
     }
 }
+
+class OutOfStockError extends Error {}

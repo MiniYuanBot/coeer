@@ -9,7 +9,7 @@ export function AchievementCard({ achievement, unlocked }: { achievement: any; u
         <Card className="rounded-lg p-5">
             <div className="flex items-start gap-4">
                 <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-lg', unlocked ? 'bg-primary-soft text-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]')}>
-                    {item.iconUrl ? <img src={item.iconUrl} alt={item.name} className="h-10 w-10 rounded-lg object-contain" /> : <Icon name="award" className="h-5 w-5" />}
+                    {item.iconUrl ? <img src={item.iconUrl} alt={item.name} width={40} height={40} loading="lazy" decoding="async" className="h-10 w-10 rounded-lg object-contain" /> : <Icon name="award" className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

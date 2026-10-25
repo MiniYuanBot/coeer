@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { z } from "zod";
 import { DB } from "./db.js";
+import { OverloadedError } from "../utils/concurrency.js";
 import { AppError, BookingService } from "./service.js";
 import { MockAdapter, scenarios } from "./adapters/mock.js";
 import { DisabledOfficialAdapter } from "./adapters/official.js";
@@ -1020,6 +1021,9 @@ export async function createApp(options: AppOptions = {}) {
   }
   app.use(
     (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+      if (error instanceof OverloadedError)
+        return res.status(503).set({ "Retry-After": "1", "Cache-Control": "no-store" })
+          .json({ error: { code: error.code, message: error.message } });
       if (error instanceof AppError)
         return res
           .status(error.status)

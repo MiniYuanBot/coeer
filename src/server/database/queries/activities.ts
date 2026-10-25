@@ -1,6 +1,6 @@
 import { and, count, desc, eq, ilike, inArray, ne, or, sql, SQL } from 'drizzle-orm'
 import { db, type DbExecutor } from '../client'
-import { activities, activityParticipants, groups, NewActivity, NewActivityParticipant } from '../schemas'
+import { activities, activityParticipants, groups, NewActivity, NewActivityParticipant, type Activity } from '../schemas'
 import type {
     ActivityIdInput,
     ActivityParticipantIdInput,
@@ -10,6 +10,13 @@ import type {
     RegisterActivityInput,
     UpdateActivityInput,
 } from '@shared/contracts'
+
+// Derive time-based status on reads; listing a page must not UPDATE the whole table.
+const effectiveStatus = sql<Activity['status']>`case
+    when ${activities.status} in ('cancelled', 'completed') then ${activities.status}
+    when ${activities.endTime} <= now() then 'completed'::activity_status
+    when ${activities.startTime} <= now() then 'ongoing'::activity_status
+    else ${activities.status} end`
 
 function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
     const conditions: SQL[] = []
@@ -21,7 +28,7 @@ function buildActivityWhere(data: ListActivitiesInput): SQL | undefined {
     if (data.type) conditions.push(eq(activities.type, data.type))
     if (data.organizerType) conditions.push(eq(activities.organizerType, data.organizerType))
     if (data.organizerId) conditions.push(eq(activities.organizerId, data.organizerId))
-    if (data.status) conditions.push(eq(activities.status, data.status))
+    if (data.status) conditions.push(eq(effectiveStatus, data.status))
     if (data.search) {
         const searchCondition = or(
             ilike(activities.title, `%${data.search}%`),
@@ -58,12 +65,6 @@ export const activityQueries = {
         return db.select({ id: activityParticipants.id, activityId: activityParticipants.activityId, status: activityParticipants.status })
             .from(activityParticipants).where(and(inArray(activityParticipants.activityId, activityIds), eq(activityParticipants.userId, userId)))
     },
-    async synchronizeStatuses() {
-        await db.update(activities).set({
-            status: sql`case when ${activities.endTime} <= now() then 'completed'::activity_status else 'ongoing'::activity_status end`,
-            updatedAt: new Date(),
-        }).where(sql`(${activities.status} = 'upcoming' and ${activities.startTime} <= now()) or (${activities.status} = 'ongoing' and ${activities.endTime} <= now())`)
-    },
     async create(data: NewActivity) {
         const [activity] = await db.insert(activities).values(data).returning()
         if (!activity) throw new Error('Create activity failed')
@@ -71,13 +72,13 @@ export const activityQueries = {
     },
 
     async findById(data: ActivityIdInput) {
-        await activityQueries.synchronizeStatuses()
-        return db.query.activities.findFirst({ where: eq(activities.id, data.id) })
+        return db.query.activities.findFirst({ where: eq(activities.id, data.id),
+            columns: { status: false }, extras: { status: effectiveStatus.as('status') } })
     },
 
     async list(data: ListActivitiesInput) {
-        await activityQueries.synchronizeStatuses()
         return db.query.activities.findMany({
+            columns: { status: false }, extras: { status: effectiveStatus.as('status') },
             where: buildActivityWhere(data),
             orderBy: [desc(data.sort === 'latest' ? activities.createdAt : activities.startTime), desc(activities.id)],
             limit: data.limit,
@@ -99,7 +100,6 @@ export const activityQueries = {
     },
 
     async count(data: ListActivitiesInput): Promise<number> {
-        await activityQueries.synchronizeStatuses()
         const [result] = await db.select({ value: count() }).from(activities).where(buildActivityWhere(data))
         return result?.value ?? 0
     },

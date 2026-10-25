@@ -1,20 +1,23 @@
-import ReactMarkdown, { type Components } from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
-import { memo } from 'react'
+import { lazy, memo, Suspense } from 'react'
 import { cn } from '../lib/cn'
 
-/** Raw HTML stays disabled; KaTeX cannot create trusted HTML or external resources. */
-export const Markdown = memo(function Markdown({ content, className, disableLinks = false }: { content: string; className?: string; disableLinks?: boolean }) {
-    const components: Components = { img: ({ alt }) => <span>{alt}</span> }
-    if (disableLinks) components.a = ({ children, title }) => <span title={title}>{children}</span>
+export type MarkdownProps = { content: string; className?: string; disableLinks?: boolean }
+const RichMarkdown = lazy(() => import('./MarkdownRenderer'))
+const MathMarkdown = lazy(() => import('./MathMarkdown'))
+
+/** Conservative fast path: ambiguous syntax always uses the real Markdown parser. */
+export function isPlainMarkdown(content: string) {
+    return !content.trim() || (!/[\n\r\\`*_{}\[\]<>()#+.!|~>$&:@\-]/.test(content) && content.trim() === content)
+}
+
+/** Suspense streams complete Markdown during SSR and loads parsers only when needed. */
+export const Markdown = memo(function Markdown({ content, className, disableLinks = false }: MarkdownProps) {
+    const plain = content.trim() ? <p>{content}</p> : null
+    const Renderer = content.includes('$') ? MathMarkdown : RichMarkdown
     return <div className={cn('coeer-markdown min-w-0 text-base leading-[1.8] text-foreground', className)}>
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[[rehypeKatex, { trust: false, strict: 'ignore', maxExpand: 200, maxSize: 20, minRuleThickness: 0.06 }]]}
-            skipHtml components={components}>
-            {content}
-        </ReactMarkdown>
+        {isPlainMarkdown(content) ? plain : <Suspense fallback={plain}>
+            <Renderer content={content} disableLinks={disableLinks} />
+        </Suspense>}
     </div>
 })
 

@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "analyze": "node scripts/analyze-build.mjs",
+    "test:performance": "tsx tests/performance-smoke.ts",
     "preview": "vite preview",
     "start": "srvx --prod --host 127.0.0.1 -s ../client dist/server/server.js",
     "deploy": "node scripts/deploy.mjs",
@@ -44,6 +46,7 @@
     "check:env": "tsx src/server/config/env.ts",
     "test": "vitest run && node --test scripts/deploy.test.mjs scripts/database.test.mjs",
     "test:watch": "vitest",
+    "test:concurrency": "vitest run tests/concurrency.test.ts tests/integration/concurrency.test.ts tests/integration/spaces-concurrency.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "pnpm typecheck && pnpm test && pnpm build",
     "spaces:ops": "tsx scripts/open-space.ts ops",

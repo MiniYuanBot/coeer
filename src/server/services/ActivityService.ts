@@ -102,9 +102,14 @@ export class ActivityService {
 
     static async list(data: ListActivitiesInput): Promise<PaginatedActivityResponse<ActivityWithOrganizer>> {
         const current = await AuthService.getCurrentUser()
-        const items = await activityQueries.list(data)
-        const total = await activityQueries.count(data)
+        const [items, total] = await Promise.all([activityQueries.list(data), activityQueries.count(data)])
         return { success: true, data: { items: await this.withParticipation(items, current.success ? current.data?.id : undefined), total, limit: data.limit, offset: data.offset }, state: ACTIVITY.GET_SUCCESS }
+    }
+
+    static async listPublicFeed() {
+        const current = await AuthService.getCurrentUser()
+        const items = await activityQueries.list({ limit: 5, offset: 0, sort: 'latest', publicOnly: true })
+        return this.withParticipation(items, current.success ? current.data?.id : undefined)
     }
 
     static async getById(data: ActivityIdInput): Promise<ActivityResponse<ActivityWithOrganizer>> {

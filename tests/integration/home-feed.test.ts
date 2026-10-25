@@ -9,10 +9,16 @@ vi.mock('~/utils/session', () => ({ useAppSession: async () => session }))
 vi.mock('~/database/client', async () => ({ db: (await import('../support/database')).db }))
 
 import { client, db, initializeDatabase, resetDatabase } from '../support/database'
-import { activities, bulletins, groupMembers, groupPosts, groups, users } from '~/database/schemas'
+import { activities, bulletins, feedbacks, groupMembers, groupPosts, groups, users } from '~/database/schemas'
 import { GroupPostService } from '~/services/GroupPostService'
 import { BulletinService } from '~/services/BulletinService'
 import { ActivityService } from '~/services/ActivityService'
+import { HomeService } from '~/services/HomeService'
+import { userQueries } from '~/database/queries/users'
+import { activityQueries } from '~/database/queries/activities'
+import { FeedbackService } from '~/services/FeedbackService'
+import { GroupService } from '~/services/GroupService'
+import { PointService } from '~/services/PointService'
 
 const admin = '11111111-1111-4111-8111-111111111111'
 const student = '22222222-2222-4222-8222-222222222222'
@@ -27,6 +33,7 @@ async function group(slug: string, options: { isPublic?: boolean; status?: 'appr
 }
 beforeAll(initializeDatabase)
 beforeEach(async () => {
+    vi.restoreAllMocks()
     await resetDatabase()
     session.data = {}
     await db.insert(users).values([
@@ -35,6 +42,82 @@ beforeEach(async () => {
     ])
 })
 afterAll(() => client.close())
+
+describe('aggregate homepage reads', () => {
+    it('removes unused totals and group statistics while retaining the homepage content', async () => {
+        signIn()
+        const own = await group('query-budget')
+        await db.insert(groupPosts).values({ groupId: own.id, authorId: admin, title: 'Public', content: 'body' })
+        const queries = vi.spyOn(db.$client, 'query')
+        const find = vi.spyOn(userQueries, 'findById')
+        const old = await Promise.all([
+            GroupPostService.listRecentPublic(), BulletinService.list({ ...pagination, type: 'official' }),
+            ActivityService.list({ ...pagination, sort: 'latest', publicOnly: true }),
+            FeedbackService.list({ ...pagination, view: 'public' }), GroupService.listMyGroups({ limit: 8, offset: 0 }), PointService.getBalance(),
+        ])
+        const before = { sql: queries.mock.calls.length, auth: find.mock.calls.length }
+        queries.mockClear(); find.mockClear()
+        const next = await HomeService.load()
+        const after = { sql: queries.mock.calls.length, auth: find.mock.calls.length }
+        expect(after.auth).toBe(1)
+        expect(before.auth).toBe(5)
+        expect(after.sql).toBeLessThanOrEqual(before.sql - 10)
+        expect(next.data.posts).toEqual(old[0].data)
+        expect(next.data.myGroups.map(row => row.id)).toEqual(old[4].data?.items?.map(row => row.group.id))
+        console.info('Homepage query comparison (excluding root auth/daily reward):', { before, after })
+    })
+    it('validates a signed-in user once, retains feedback privacy, and does not cache across requests', async () => {
+        signIn(student)
+        await db.insert(feedbacks).values([
+            { authorId: admin, title: 'anonymous', content: 'public', isPublic: true, isAnonymous: true, targetType: 'general' },
+            { authorId: student, title: 'private', content: 'hidden', isPublic: false, targetType: 'general' },
+        ])
+        const find = vi.spyOn(userQueries, 'findById')
+        const home = await HomeService.load()
+        expect(find).toHaveBeenCalledTimes(1)
+        expect(home.data.user?.id).toBe(student)
+        expect(home.data.feedbacks).toHaveLength(1)
+        expect(home.data.feedbacks[0].author).toBeUndefined()
+        expect(home.timing).toMatch(/auth;dur=/)
+        signIn(admin)
+        const next = await HomeService.load()
+        expect(find).toHaveBeenCalledTimes(2)
+        expect(next.data.user?.id).toBe(admin)
+        expect(next.data.feedbacks[0].author?.id).toBe(admin)
+        session.data = {}
+        const guest = await HomeService.load()
+        expect(guest.data.user).toBeNull()
+        expect(guest.data.feedbacks).toEqual([])
+        expect(guest.data.myGroups).toEqual([])
+        expect(guest.data.balance).toBeNull()
+    })
+
+    it('retains partial results when one feed fails', async () => {
+        await db.insert(bulletins).values({ title: 'Available', content: 'notice', type: 'official' })
+        vi.spyOn(GroupPostService, 'listRecentPublic').mockRejectedValueOnce(new Error('unavailable'))
+        const result = await HomeService.load()
+        expect(result.data.feedErrors.updates).toBe(true)
+        expect(result.data.bulletins).toHaveLength(1)
+        expect(result.data.feedErrors.bulletins).toBe(false)
+    })
+
+    it('filters and counts effective activity statuses without writing during a read', async () => {
+        const now = Date.now()
+        await db.insert(activities).values([
+            { title: 'ended', description: 'test', type: 'official', organizerType: 'user', organizerId: admin, startTime: new Date(now - 7200000), endTime: new Date(now - 3600000) },
+            { title: 'ongoing', description: 'test', type: 'official', organizerType: 'user', organizerId: admin, startTime: new Date(now - 3600000), endTime: new Date(now + 3600000) },
+            { title: 'cancelled', description: 'test', type: 'official', organizerType: 'user', organizerId: admin, startTime: new Date(now - 7200000), endTime: new Date(now - 3600000), status: 'cancelled' },
+        ])
+        const update = vi.spyOn(db, 'update')
+        const result = await ActivityService.list({ ...pagination, status: 'completed' })
+        expect(result.data?.total).toBe(1)
+        expect(result.data?.items?.map(row => row.title)).toEqual(['ended'])
+        expect(result.data?.items?.[0].status).toBe('completed')
+        expect(await activityQueries.count({ ...pagination, status: 'ongoing' })).toBe(1)
+        expect(await activityQueries.count({ ...pagination, status: 'cancelled' })).toBe(1)
+        expect(update).not.toHaveBeenCalled()
+    })
+})
 
 describe('homepage public updates', () => {
     it('takes the latest five posts across every approved public group, regardless of pins or viewer membership', async () => {

@@ -1,6 +1,6 @@
 @import 'tailwindcss' source('../');
-@import 'katex/dist/katex.min.css';
 @import './tokens.css';
+@import './fonts.css';
 @custom-variant dark (&:where(.dark, .dark *));
 
 .coeer-markdown { overflow-wrap: anywhere; }

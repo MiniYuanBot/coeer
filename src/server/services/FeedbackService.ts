@@ -109,6 +109,13 @@ export class FeedbackService {
     }
 
     // List feedbacks with filters
+    static async listPublicFeed() {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) throw new Error('请先登录')
+        const items = await feedbackQueries.findVisibleToUser({ viewerId: current.data.id, isPublic: true, limit: 5, offset: 0 })
+        return items.map(item => this.hideAnonymousAuthor(item, current.data!.role === 'admin'))
+    }
+
     static async list(data: ListFeedbacksInput): Promise<PaginatedFeedbackResponse<FeedbackWithAuthor>> {
         try {
             const payload = await AuthService.getCurrentUser()

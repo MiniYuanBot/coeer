@@ -13,10 +13,10 @@ import type {
     UserAchievementWithAchievement,
 } from '@shared/contracts'
 import type { Achievement } from '../database/schemas'
-import { achievements, feedbacks, groups, groupMembers, pointTransactions, userCards } from '../database/schemas'
+import { achievements, feedbacks, groups, groupMembers, pointTransactions, userCards, userAchievements } from '../database/schemas'
 import { db, type DbTransaction } from '../database/client'
 import { pointQueries } from '../database/queries/points'
-import { and, count, countDistinct, eq, gt, ne, or, sql, sum } from 'drizzle-orm'
+import { and, count, countDistinct, eq, gt, ne, or, sql } from 'drizzle-orm'
 
 export class AchievementService {
     static async adminList(data: ListAchievementsInput): Promise<PaginatedAchievementResponse<Achievement>> {
@@ -49,20 +49,26 @@ export class AchievementService {
             .where(and(ne(groups.status, 'rejected'), or(eq(groups.creatorId, userId), eq(groupMembers.userId, userId))))
         const [cardCount] = await executor.select({ value: countDistinct(userCards.cardId) }).from(userCards)
             .where(and(eq(userCards.userId, userId), gt(userCards.count, 0)))
-        const [loginDays] = await executor.select({ value: countDistinct(sql`(${pointTransactions.createdAt} AT TIME ZONE 'Asia/Shanghai')::date`) })
-            .from(pointTransactions).where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.source, 'daily_login'), eq(pointTransactions.type, 'earn')))
-        const [earned] = await executor.select({ value: sum(pointTransactions.amount) }).from(pointTransactions)
-            .where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.type, 'earn'), gt(pointTransactions.amount, 0)))
+        const [ledger] = await executor.select({
+            loginDays: sql<number>`count(distinct (${pointTransactions.createdAt} AT TIME ZONE 'Asia/Shanghai')::date)
+                filter (where ${pointTransactions.source} = 'daily_login')`.mapWith(Number),
+            earned: sql<string>`sum(${pointTransactions.amount}) filter (where ${pointTransactions.amount} > 0)`,
+        }).from(pointTransactions).where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.type, 'earn')))
         const values: Record<string, number> = {
-            registration: 1, login_days: loginDays.value, points_earned: Number(earned.value ?? 0),
+            registration: 1, login_days: ledger.loginDays, points_earned: Number(ledger.earned ?? 0),
             feedback_count: feedbackCount.value, group_count: groupCount.value, card_count: cardCount.value,
         }
-        for (const achievement of definitions) {
+        const qualified = definitions.filter((achievement) => {
             const condition = resolveAchievementCondition(achievement.conditionType, achievement.code)
             const current = condition ? values[condition] : undefined
-            if (current !== undefined && current >= achievement.conditionValue) {
-                await achievementQueries.unlock(userId, achievement.id, executor)
-            }
+            return current !== undefined && current >= achievement.conditionValue
+        })
+        if (qualified.length) {
+            const owned = await executor.select({ id: userAchievements.achievementId }).from(userAchievements)
+                .where(eq(userAchievements.userId, userId))
+            const ownedIds = new Set(owned.map((item) => item.id))
+            const missing = qualified.filter((item) => !ownedIds.has(item.id))
+            await achievementQueries.unlockMany(userId, missing.map((item) => item.id), executor)
         }
         return values
     }

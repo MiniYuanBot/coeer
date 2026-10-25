@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, timestamp, boolean, uuid, json, pgEnum } from 'drizzle-orm/pg-core'
+import { index, pgTable, varchar, text, timestamp, boolean, uuid, json, pgEnum } from 'drizzle-orm/pg-core'
 import { users } from './users';
 import { FEEDBACK_TARGET_TYPE_ARRAY, FeedbackTargetType, FEEDBACK_STATUS_ARRAY, FeedbackStatus } from '@shared/constants'
 
@@ -28,7 +28,7 @@ export const feedbacks = pgTable('feedbacks', {
     resolvedAt: timestamp('resolved_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [index('feedbacks_author_created_idx').on(table.authorId, table.createdAt.desc(), table.id.desc())]);
 
 export const feedbackStatusLogs = pgTable('feedback_status_logs', {
     id: uuid('id').defaultRandom().primaryKey(),

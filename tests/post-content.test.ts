@@ -35,6 +35,7 @@ describe.skipIf(!executablePath)('post previews and mathematical layout in Chrom
         page = await browser.newPage({ viewport: { width: 1000, height: 900 } })
         await page.goto(new URL('/tests/fixtures/post-content.html', origin).href)
         await page.locator('#long-post button').waitFor()
+        await page.locator('#formula .katex').first().waitFor()
         await page.evaluate(() => document.fonts.ready)
     })
     afterEach(async () => { await page?.close() })

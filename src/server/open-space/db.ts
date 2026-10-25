@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Pool, types, type PoolClient } from 'pg';
 import { BOOKING_SCHEMA_VERSION, bookingMigrations } from './postgres-schema.js';
+import { ConcurrencyGate } from '../utils/concurrency.js';
 
 type SQLValue = string | number | bigint | boolean | null | Uint8Array;
 
@@ -21,6 +22,9 @@ function statement(source: string) {
 
 export class DB {
   private readonly transaction = new AsyncLocalStorage<PoolClient>();
+  // Only one writer can hold the database advisory lock. Queue locally before
+  // acquiring a connection, leaving the other connections available for reads.
+  private readonly writers = new ConcurrencyGate(1, 100, 10000);
   private constructor(readonly pool: Pool, readonly schema: string) {}
 
   static async open(connectionString = process.env.DATABASE_URL, schema = process.env.BOOKING_DB_SCHEMA ?? 'coeer_spaces') {
@@ -67,6 +71,9 @@ export class DB {
   }
   async tx<T>(fn: () => T | Promise<T>): Promise<T> {
     if (this.transaction.getStore()) return await fn();
+    return this.writers.run(() => this.writeTransaction(fn));
+  }
+  private async writeTransaction<T>(fn: () => T | Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');

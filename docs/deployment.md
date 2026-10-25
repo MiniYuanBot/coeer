@@ -22,6 +22,9 @@ PowerShell 可使用 `pnpm.cmd run ...`；pnpm 参数直接追加，不插入 np
 通过后切换 `current` 链接并重启服务；健康检查失败时恢复旧版本和启动配置。
 切换时可能短暂中断连接。发布不执行迁移、种子或数据库清空，应用回滚也不回滚数据库。
 
+静态资源模板由 Nginx 处理 gzip，并清空上游 Accept-Encoding，避免 srvx 每次请求实时进行高质量 Brotli 压缩；哈希资源缓存一年。发布目录权限为 0700，不能直接改 Nginx root 托管静态文件，需先设计限定公开产物的目录权限及回滚流程。
+发布脚本不会自动安装或重载 `deploy/nginx/coeer.conf`。
+
 ```sh
 pnpm run deploy:list
 pnpm run deploy --prepare
@@ -211,6 +214,15 @@ sudo certbot --nginx -d coeer.example.com
 ```
 
 ## 服务检查
+
+### 2026-10-26 发布记录（北京时间）
+
+- 当前发布版本：`20261025165601151-c6a3fae9ba`（版本 ID 使用 UTC 时间），包含用户确认的原始 PNG 删除及相关引用调整。直接回滚目标为首轮性能发布 `20261025164745856-c954a3cb84`；优化前版本 `20261025112305010-326a41a7c7` 也保留。`pnpm run deploy:rollback` 每次恢复当前版本记录的上一版本。
+- 使用现有 prepare/activate 流程完成安装、环境与表结构检查、类型检查、构建、隔离端口预检和上线健康检查。
+- COEER 的 Nginx 1.24.0 TLS 站点已启用 HTTP/2、gzip、上游 keepalive 和哈希资源 immutable 缓存，保留原证书及 HTTPS 跳转。配置备份：`/var/backups/coeer-nginx/coeer-20261025T165037Z.conf`。应用回滚不会回滚 Nginx；如需恢复配置，使用此备份并先执行 `nginx -t`，再重载 Nginx。
+- 未执行数据库迁移或修改业务数据。`20261025-concurrency-indexes.sql` 留待维护窗口执行，普通建索引会阻塞相关表写入，本次应用运行不依赖新增索引。
+- 服务器本机 HTTPS GET 观测：旧主 JS Brotli TTFB 约 3,299 ms；部署后同一文件协商 gzip/br 返回 gzip，TTFB 约 51–53 ms；新入口 gzip TTFB 约 47–52 ms。协议、编码及运行负载不同（基线采集时正在准备新版本），该结果不是严格单变量基准或并发吞吐承诺。
+- 线上健康检查、旧资源兼容、静态 404 缓存策略以及隔离浏览器登录页到公开首页导航通过；HTTP/2、本地字体/WebP 正常，无控制台错误。没有使用生产账号执行登录或积分写入测试。
 
 ```sh
 curl http://127.0.0.1:3000/healthz

@@ -202,7 +202,7 @@ describe('engagement rewards', () => {
         await definitions()
         signIn()
         vi.spyOn(console, 'error').mockImplementation(() => {})
-        vi.spyOn(achievementQueries, 'unlock').mockRejectedValueOnce(new Error('database failure'))
+        vi.spyOn(achievementQueries, 'unlockMany').mockRejectedValueOnce(new Error('database failure'))
         expect((await FeedbackService.create({ title: '回滚', content: '内容', targetType: FEEDBACK_TARGET_TYPE_ARRAY[0], isAnonymous: false })).success).toBe(false)
         expect(await db.select().from(feedbacks)).toHaveLength(0)
         expect(await db.select().from(feedbackStatusLogs)).toHaveLength(0)

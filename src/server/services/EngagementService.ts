@@ -41,6 +41,8 @@ export class EngagementService {
         const { day } = engagementDay(now)
         const [existing] = await db.select({ id: pointTransactions.id }).from(pointTransactions)
             .where(eq(pointTransactions.id, rewardId(userId, 'daily', day)))
-        if (!existing) await db.transaction((tx) => this.recordInTx(userId, 'daily', day, tx, now))
+        if (existing) return { day, awarded: false }
+        await db.transaction((tx) => this.recordInTx(userId, 'daily', day, tx, now))
+        return { day, awarded: true }
     }
 }

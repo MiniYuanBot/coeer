@@ -21,9 +21,7 @@ export const groupMembers = pgTable('group_members', {
 }, (table) => [
     // constraint
     unique('group_members_group_id_user_id_unique').on(table.groupId, table.userId),
-    // Use index to optimize query efficiency
-    // index('group_members_group_id_idx').on(table.groupId),
-    // index('group_members_user_id_idx').on(table.userId),
+    index('group_members_user_status_idx').on(table.userId, table.status, table.groupId),
 ])
 
 export type GroupMember = typeof groupMembers.$inferSelect & { role: GroupMemberRole, status: GroupMemberStatus }

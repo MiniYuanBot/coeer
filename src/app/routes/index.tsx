@@ -20,45 +20,12 @@ import {
   formatDate,
   groupCategoryLabels,
 } from '@/components/coeer'
-import { getBulletinFeedFn, getFeedbacksFn, getMyPointBalanceFn, getRecentPublicPostsFn, listActivitiesFn, listMyGroupsFn } from '~/functions'
+import { getHomeFn } from '~/functions/home'
 
 const HOME_LIMIT = 5
 
 export const Route = createFileRoute('/')({
-  loader: async ({ context }) => {
-    const user = context.user
-
-    const [postsResult, bulletinsResult, activitiesResult, feedbacksResult, myGroupsResult, pointsResult] =
-      await Promise.allSettled([
-        getRecentPublicPostsFn(),
-        getBulletinFeedFn({ data: { type: 'official', limit: HOME_LIMIT, offset: 0 } }),
-        listActivitiesFn({ data: { limit: HOME_LIMIT, offset: 0, sort: 'latest', publicOnly: true } }),
-        user ? getFeedbacksFn({ data: { view: 'public', limit: HOME_LIMIT, offset: 0 } }) : Promise.resolve(null),
-        // 登录用户：真实“我的群组”列表；游客不请求（该接口要求登录）
-        user ? listMyGroupsFn({ data: { limit: 8, offset: 0 } }) : Promise.resolve(null),
-        user ? getMyPointBalanceFn() : Promise.resolve(null),
-      ])
-
-    const myGroups =
-      myGroupsResult.status === 'fulfilled' && myGroupsResult.value?.items
-        ? myGroupsResult.value.items.map((member: any) => member.group).filter(Boolean)
-        : []
-    return {
-      myGroups,
-      posts: postsResult.status === 'fulfilled' ? postsResult.value ?? [] : [],
-      bulletins: bulletinsResult.status === 'fulfilled' ? bulletinsResult.value?.data?.items ?? [] : [],
-      activities: activitiesResult.status === 'fulfilled' ? activitiesResult.value?.data?.items ?? [] : [],
-      feedbacks: feedbacksResult.status === 'fulfilled' ? feedbacksResult.value?.items ?? [] : [],
-      balance: pointsResult.status === 'fulfilled' ? pointsResult.value?.data?.balance ?? null : null,
-      feedErrors: {
-        bulletins: bulletinsResult.status === 'rejected' || bulletinsResult.value?.success === false,
-        updates: postsResult.status === 'rejected' || activitiesResult.status === 'rejected' || activitiesResult.value?.success === false,
-        feedbacks: feedbacksResult.status === 'rejected',
-        groups: myGroupsResult.status === 'rejected',
-      },
-      user,
-    }
-  },
+  loader: () => getHomeFn(),
   component: Home,
 })
 

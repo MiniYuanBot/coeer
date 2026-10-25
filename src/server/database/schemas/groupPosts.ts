@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, timestamp, boolean, uuid, pgEnum } from 'drizzle-orm/pg-core'
+import { index, pgTable, varchar, text, timestamp, boolean, uuid, pgEnum } from 'drizzle-orm/pg-core'
 import { users } from './users';
 import { groups } from './groups';
 import { GROUP_POST_TYPE_ARRAY, GroupPostType } from '@shared/constants'
@@ -21,7 +21,10 @@ export const groupPosts = pgTable('group_posts', {
     
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+    index('group_posts_group_feed_idx').on(table.groupId, table.isPinned.desc(), table.createdAt.desc(), table.id.desc()),
+    index('group_posts_created_idx').on(table.createdAt.desc(), table.id.desc()),
+]);
 
 export type GroupPost = typeof groupPosts.$inferSelect & { type: GroupPostType };
 export type NewGroupPost = typeof groupPosts.$inferInsert & { type: GroupPostType };

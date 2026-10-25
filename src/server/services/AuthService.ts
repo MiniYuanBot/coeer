@@ -17,6 +17,7 @@ import type {
 import { signupSchema, updateProfileSchema, changePasswordSchema, STUDENT_EMAIL_PATTERN, studentIdForUser } from '@shared/contracts'
 import { AUTH } from '@shared/constants'
 import { EngagementService } from './EngagementService'
+import { readScopedUser } from '../utils/auth-read-scope'
 
 /**
  * Build the signed-in session payload for a DB user.
@@ -50,11 +51,16 @@ export class AuthService {
      * Returns the current session user, re-validated against the database.
      *
      * The cookie alone is not trusted for authorization: roles, names and
-     * the `isActive` flag are re-read from the users table on every call, so
+     * the `isActive` flag are re-read on every call (or once per explicitly
+     * scoped aggregate read), so
      * demotions/bans/deletions take effect immediately instead of waiting for
      * the 7-day cookie to expire.
      */
     static async getCurrentUser(): Promise<SessionUserResponse<SessionUser>> {
+        return readScopedUser(() => this.loadCurrentUser())
+    }
+
+    private static async loadCurrentUser(): Promise<SessionUserResponse<SessionUser>> {
         try {
             const session = await useAppSession()
             const id = session.data?.id

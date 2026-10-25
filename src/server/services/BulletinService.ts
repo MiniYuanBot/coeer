@@ -42,8 +42,7 @@ export class BulletinService {
     }
 
     static async list(data: ListBulletinsInput): Promise<PaginatedBulletinResponse<BulletinWithSource>> {
-        const items = await bulletinQueries.list(data)
-        const total = await bulletinQueries.count(data)
+        const [items, total] = await Promise.all([bulletinQueries.list(data), bulletinQueries.count(data)])
         return { success: true, data: { items, total, limit: data.limit, offset: data.offset }, state: BULLETIN.GET_SUCCESS }
     }
 

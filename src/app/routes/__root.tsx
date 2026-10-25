@@ -11,7 +11,7 @@ import { DefaultCatchBoundary, NotFound } from '@/components/basic'
 import { PageStatus, ToastProvider } from '@/components/coeer'
 import appCss from '@/styles/app.css?url'
 import { fetchUserFn } from '~/functions'
-import { recordDailyVisitFn } from '~/functions/points'
+import { DailyVisit } from '@/components/coeer/layout/DailyVisit'
 import { seo } from '~/utils/seo.js'
 
 /** 在首帧前设置明暗主题，避免深色模式用户看到闪烁的浅色页面。 */
@@ -28,7 +28,6 @@ export const Route = createRootRoute({
   // `_authed` 等布局路由负责（前端守卫只做 UX，服务端 Service 才是边界）。
   beforeLoad: async () => {
     const user = await fetchUserFn()
-    if (user) await recordDailyVisitFn().catch((error) => console.error('Daily activity reward failed:', error))
     return { user }
   },
   head: () => ({
@@ -42,12 +41,6 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
-      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
-      },
       { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
       { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
@@ -66,9 +59,11 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
+  const { user } = Route.useRouteContext()
   return (
     <RootDocument>
       <Outlet />
+      <DailyVisit userId={user?.id} />
     </RootDocument>
   )
 }

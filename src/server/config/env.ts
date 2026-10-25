@@ -15,12 +15,15 @@ const envSchema = z.object({
 
     SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters long'),
 
-    DB_POOL_MIN: z.coerce.number().min(1).default(2),
-    DB_POOL_MAX: z.coerce.number().min(1).default(10),
+    DB_POOL_MIN: z.coerce.number().int().min(1).default(2),
+    DB_POOL_MAX: z.coerce.number().int().min(1).default(10),
+    HTTP_MAX_CONCURRENCY: z.coerce.number().int().min(1).default(64),
 
     // Frontend variables without verify
     VITE_API_URL: z.string().optional(),
     VITE_APP_NAME: z.string().optional(),
+}).refine((value) => value.DB_POOL_MIN <= value.DB_POOL_MAX, {
+    path: ['DB_POOL_MIN'], message: 'DB_POOL_MIN must not exceed DB_POOL_MAX',
 });
 
 export type Env = z.infer<typeof envSchema>;

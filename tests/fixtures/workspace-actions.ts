@@ -83,6 +83,8 @@ export const adminCreateAchievementFn = action,
     updateProfileFn = action,
     updateReplyFn = action
 
+export const getHomeFn = action
+
 export async function updateFeedbackStatusFn({ data }: any) {
     if ((window as any).__feedbackFail) throw new Error('保存失败，请重试')
     const { feedbacks } = await import('./workspace-data')
