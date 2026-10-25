@@ -10,6 +10,17 @@ function cardFilter(data: ListCardsInput) {
 }
 
 export const cardQueries = {
+    async deleteUnowned(cardId: string): Promise<'deleted' | 'owned' | 'missing'> {
+        return db.transaction(async tx => {
+            // Serialize with draws and foreign-key inserts before checking ownership.
+            const [card] = await tx.select({ id: cards.id }).from(cards).where(eq(cards.id, cardId)).for('update')
+            if (!card) return 'missing'
+            const [owner] = await tx.select({ id: userCards.id }).from(userCards).where(eq(userCards.cardId, cardId)).limit(1)
+            if (owner) return 'owned'
+            await tx.delete(cards).where(eq(cards.id, cardId))
+            return 'deleted'
+        })
+    },
     async create(data: NewCard) {
         const [card] = await db.insert(cards).values(data).returning()
         if (!card) throw new Error('Create card failed')

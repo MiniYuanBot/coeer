@@ -1,3 +1,4 @@
+import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { PageLayout } from '@/components/coeer/ui/PageLayout'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -10,7 +11,6 @@ import {
     EmptyState,
     LoadingState,
     Modal,
-    SectionHeader,
 } from '@/components/coeer'
 import { spaceApi, useSpaces, useSpaceResource } from '@/hooks/useSpaces'
 import { bookingStatusTone, formatSpaceTime, spaceModuleLabels } from '@/components/coeer/lib/spaces'
@@ -40,16 +40,17 @@ function BookingDetailPage() {
     }
     if (!user)
         return (
+            <PageLayout><SpacesPageHeader title="预约进度" />
             <EmptyState
                 title="当前账号暂不能预约"
                 description="请使用学生或管理员账号，或联系管理员检查预约身份。"
-            />
+            /></PageLayout>
         )
-    if (resource.loading) return <LoadingState />
+    if (resource.loading) return <PageLayout><SpacesPageHeader title="预约进度" description="正在读取预约信息…" /><LoadingState /></PageLayout>
     const booking = resource.data
     if (!booking)
         return (
-            <EmptyState title="无法读取预约" description={resource.error || '预约不存在或你没有查看权限。'} />
+            <PageLayout><SpacesPageHeader title="预约进度" /><EmptyState title="无法读取预约" description={resource.error || '预约不存在或你没有查看权限。'} /></PageLayout>
         )
     return (
         <PageLayout>
@@ -59,7 +60,7 @@ function BookingDetailPage() {
             >
                 返回我的预约
             </Link>
-            <SectionHeader
+            <SpacesPageHeader
                 title="预约进度"
                 description="申请已保存，处理进度和预约结果会在这里自动更新。"
                 action={

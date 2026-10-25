@@ -64,6 +64,12 @@ function FeedbackDetailPage() {
                 }
             />
 
+            <div className="coeer-mobile-status" aria-label="当前反馈状态">
+                <FeedbackStatusBadge status={feedback.status} />
+                <Badge>{feedbackTargetLabels[feedback.targetType]}</Badge>
+                <span className="text-xs text-muted-foreground">{formatDateTime(feedback.createdAt)}</span>
+            </div>
+
             <DetailLayout asideLabel="反馈信息" aside={
                 <Card className="space-y-5 p-5">
                     <h2 className="text-sm font-semibold">反馈信息</h2>

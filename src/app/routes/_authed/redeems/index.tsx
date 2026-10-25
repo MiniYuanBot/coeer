@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
     Button,
@@ -34,12 +34,12 @@ export const Route = createFileRoute('/_authed/redeems/')({
                     offset: (search.page - 1) * pageSize,
                 },
             }),
-            getMyPointBalanceFn(),
+            getMyPointBalanceFn().catch(() => null),
         ])
         return {
             items: itemsResult.data?.items ?? [],
             total: itemsResult.data?.total ?? 0,
-            balance: balanceResult.data?.balance ?? 0,
+            balance: balanceResult?.data?.balance ?? null,
         }
     },
     component: RedeemsPage,
@@ -48,24 +48,25 @@ export const Route = createFileRoute('/_authed/redeems/')({
 function RedeemsPage() {
     const { items, total, balance } = Route.useLoaderData()
     const { type, search, page } = Route.useSearch()
-    const navigate = useNavigate()
+    const navigate = Route.useNavigate()
     const { loadingKey, run } = useAsyncAction()
 
     const go = (next: { type?: string; search?: string; page?: number }) => {
-        navigate({ to: '/redeems', search: { type, search, page: 1, ...next } })
+        navigate({ to: '/redeems', search: previous => ({ ...previous, page: 1, ...next }) })
     }
 
     return (
         <div className="space-y-6">
             <SectionHeader title="积分商城" description="用参与、反馈和贡献积累的积分兑换校园权益与周边。"
                 action={<Link to="/profile" className="coeer-focus inline-flex min-h-9 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground hover:bg-muted">
-                    <Icon name="coins" className="h-3.5 w-3.5" />可用积分<span className="text-sm font-semibold tabular-nums text-foreground">{balance.toLocaleString('zh-CN')}</span>
+                    <Icon name="coins" className="h-3.5 w-3.5" />{balance === null ? '暂时无法读取积分' : <>可用积分<span className="text-sm font-semibold tabular-nums text-foreground">{balance.toLocaleString('zh-CN')}</span></>}
                 </Link>} />
 
             <FilterPanel
                 searchValue={search}
                 searchPlaceholder="搜索商品名称或说明"
                 onSearch={(value) => go({ search: value || undefined })}
+                onClear={() => go({ search: undefined, type: undefined })}
                 groups={[
                     {
                         title: '类型',
@@ -88,7 +89,7 @@ function RedeemsPage() {
                         <RedeemItemCard
                             key={item.id}
                             item={item}
-                            action={
+                            action={<>
                                 <Button
                                     className="w-full"
                                     loading={loadingKey === item.id}
@@ -98,14 +99,15 @@ function RedeemsPage() {
                                         error: '兑换失败',
                                     })}
                                 >
-                                    <Icon name="gift" /> 兑换
+                                    <Icon name="gift" />{item.status !== 'active' || item.stock === 0 ? '暂不可兑换' : balance !== null && balance < item.pointsCost ? '兑换 · 积分不足' : '兑换'}
                                 </Button>
-                            }
+                                {item.status === 'active' && item.stock !== 0 && balance !== null && balance < item.pointsCost ? <p className="mt-2 text-xs text-muted-foreground">还需 {item.pointsCost - balance} 积分</p> : null}
+                            </>}
                         />
                     ))}
                 </div>
             ) : (
-                <EmptyState title="暂无商品" description="换个关键词或分类试试。" />
+                <EmptyState title={search || type ? '没有匹配的商品' : '暂无可兑换商品'} description={search || type ? '试试其他关键词，或清除筛选。' : '新的校园权益和周边上架后会出现在这里。'} action={search || type ? <Button variant="secondary" onClick={() => go({ search: undefined, type: undefined })}>清除筛选</Button> : undefined} />
             )}
             <Pagination total={total} page={page} size={9} onChange={(page) => go({ page })} />
         </div>

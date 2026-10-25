@@ -1,4 +1,5 @@
 import { Field } from '@/components/coeer/ui/Field'
+import { EditorSection } from '@/components/coeer/ui/EditorSection'
 import { MarkdownEditor } from '@/components/coeer/ui/MarkdownEditor'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -26,12 +27,15 @@ function AdminActivitiesPage() {
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
     const [error, setError] = useState('')
+    const [editorRevision, setEditorRevision] = useState(0)
+    const [pending, setPending] = useState(false)
     const [participants, setParticipants] = useState<{ activityId: string; page: number; total: number; items: any[] } | null>(null)
 
     const refresh = () => navigate({ to: '/admin/activities', search: { page } })
 
     const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        if (pending) return
         setError('')
         const element = e.currentTarget
         const form = new FormData(element)
@@ -44,6 +48,7 @@ function AdminActivitiesPage() {
             endTime: new Date(form.get('endTime') as string),
             maxParticipants: form.get('maxParticipants') ? Number(form.get('maxParticipants')) : undefined,
         }
+        setPending(true)
         try {
             const result = editing?.id
                 ? await updateActivityFn({ data: { id: editing.id, ...payload, status: form.get('status') as ActivityStatus } })
@@ -51,10 +56,11 @@ function AdminActivitiesPage() {
             if (!result.success) throw new Error(result.state.message || '保存活动失败')
             element.reset()
             setEditing(null)
+            setEditorRevision(value => value + 1)
             refresh()
         } catch (error) {
             setError(error instanceof Error ? error.message : '保存活动失败，请重试')
-        }
+        } finally { setPending(false) }
     }
 
     const remove = async (id: string) => {
@@ -71,9 +77,29 @@ function AdminActivitiesPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="活动管理" description="发布、编辑、删除活动，并查看报名情况。" />
-            <Card className="rounded-lg p-5">
+            <EditorSection title={editing ? '编辑活动' : '新建活动'} editKey={editing?.id} attention={!!error} listTitle="全部活动" resetKey={editorRevision} records={<>
+            {participants ? (
+                <Card className="rounded-lg p-5">
+                    <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">报名情况</h2><Button variant="outline" onClick={() => setParticipants(null)}>关闭</Button></div>
+                    {participants.items.length ? participants.items.map((item) => <p key={item.id} className="py-1 text-sm">{item.user?.name || '未知用户'} · {item.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无报名</p>}
+                    <Pagination total={participants.total} page={participants.page} onChange={(page) => void showParticipants(participants.activityId, page)} label="报名名单分页" />
+                </Card>
+            ) : null}
+            {activities.length ? (
+                <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">
+                    {activities.map((item: any) => (
+                        <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+                            <div><p className="text-[15px] font-medium">{item.title}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{activityTypeLabels[item.type]} · {activityStatusLabels[item.status]}</p></div>
+                            <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => showParticipants(item.id)}>报名情况</Button><Button variant="outline" disabled={pending} onClick={() => { setEditing(item); setError(''); setEditorRevision(value => value + 1) }}>编辑</Button><Button variant="danger" disabled={pending} onClick={() => remove(item.id)}>删除</Button></div>
+                        </div>
+                    ))}
+                </Card>
+            ) : <EmptyState title="暂无活动" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/activities', search: { page } })} />
+            </>}>
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={editing?.id || 'new'} onSubmit={submit} className="grid gap-4">
+                    <fieldset disabled={pending} className="grid min-w-0 gap-4">
                     <Field label="标题"><input name="title" required defaultValue={editing?.title} placeholder="活动标题" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     <MarkdownEditor label="说明" name="description" required maxLength={5000} defaultValue={editing?.description} placeholder="活动说明" rows={6} />
                     <div className="grid gap-3 md:grid-cols-2">
@@ -91,29 +117,12 @@ function AdminActivitiesPage() {
                         <Field label="结束时间"><input name="endTime" type="datetime-local" required defaultValue={toDateTimeInput(editing?.endTime)} className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" /></Field>
                     </div>
                     <div className="flex gap-2">
-                        <Button type="submit">{editing ? '保存活动' : '发布活动'}</Button>
-                        {editing ? <Button type="button" variant="outline" onClick={() => setEditing(null)}>取消编辑</Button> : null}
+                        <Button type="submit" loading={pending}>{editing ? '保存活动' : '发布活动'}</Button>
+                        {editing ? <Button type="button" variant="outline" onClick={() => { setEditing(null); setError('') }}>取消编辑</Button> : null}
                     </div>
+                    </fieldset>
                 </form>
-            </Card>
-            {participants ? (
-                <Card className="rounded-lg p-5">
-                    <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-medium">报名情况</h2><Button variant="outline" onClick={() => setParticipants(null)}>关闭</Button></div>
-                    {participants.items.length ? participants.items.map((item) => <p key={item.id} className="py-1 text-sm">{item.user?.name || '未知用户'} · {item.status}</p>) : <p className="text-sm text-[hsl(var(--muted-foreground))]">暂无报名</p>}
-                    <Pagination total={participants.total} page={participants.page} onChange={(page) => void showParticipants(participants.activityId, page)} label="报名名单分页" />
-                </Card>
-            ) : null}
-            {activities.length ? (
-                <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">
-                    {activities.map((item: any) => (
-                        <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-                            <div><p className="text-[15px] font-medium">{item.title}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{activityTypeLabels[item.type]} · {activityStatusLabels[item.status]}</p></div>
-                            <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => showParticipants(item.id)}>报名情况</Button><Button variant="outline" onClick={() => setEditing(item)}>编辑</Button><Button variant="danger" onClick={() => remove(item.id)}>删除</Button></div>
-                        </div>
-                    ))}
-                </Card>
-            ) : <EmptyState title="暂无活动" />}
-            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/activities', search: { page } })} />
+            </EditorSection>
         </div>
     )
 }

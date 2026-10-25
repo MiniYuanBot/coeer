@@ -1,5 +1,5 @@
-const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric' })
-const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', month: 'short', day: 'numeric' })
+const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export function formatDate(value?: string | Date | null) {
     if (!value) return '刚刚'

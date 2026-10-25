@@ -1,289 +1,127 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import * as React from 'react'
-import { z } from 'zod'
-import { confirmDormFn, computeDormFn, createDormCycleFn, getDormAdminOverviewFn, updateDormRoomFn } from '~/functions'
-import { Badge, Button, Card, EmptyState, Icon, Modal, SectionHeader, dormCycleStatusLabels, dormRoomStatusLabels, formatDateTime, useAsyncAction, useToast } from '@/components/coeer'
-import type { DormAdminOverview, DormQuestionnaireSummary, DormRoom, DormCycle } from '@shared/contracts'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useState, type FormEvent } from 'react'
+import { confirmDormFn, computeDormFn, updateDormRoomFn } from '~/functions'
+import { Badge, Button, Card, EmptyState, Field, Input, Modal, SectionHeader, dormRoomStatusLabels, formatDateTime, useToast } from '@/components/coeer'
+import type { DormRoom } from '@shared/contracts'
+import { Route as DormRoute } from './route'
 
-type DormAdminLoaderData = DormAdminOverview | undefined
+export const Route = createFileRoute('/_authed/admin/dorms/')({ component: DormAllocationPage })
 
-const searchSchema = z.object({
-    cycleId: z.string().uuid().optional(),
-})
+function DormAllocationPage() {
+    const overview = DormRoute.useLoaderData()
+    return <Allocation key={overview?.activeCycle?.id || 'empty'} />
+}
 
-export const Route = createFileRoute('/_authed/admin/dorms/')({
-    validateSearch: searchSchema,
-    loaderDeps: ({ search }) => ({ search }),
-    loader: async ({ deps: { search } }): Promise<DormAdminLoaderData> => {
-        return getDormAdminOverviewFn({ data: { cycleId: search.cycleId } })
-    },
-    component: AdminDormPage,
-})
-
-function AdminDormPage() {
-    const overview = Route.useLoaderData()
-    const { cycleId } = Route.useSearch()
-    const navigate = useNavigate()
+function Allocation() {
+    const overview = DormRoute.useLoaderData()
+    const router = useRouter()
     const { toast } = useToast()
-    const { loadingKey, run } = useAsyncAction()
-    const [editingRoom, setEditingRoom] = React.useState<DormRoom | null>(null)
-    const [creating, setCreating] = React.useState(false)
-
-    const activeCycle = overview?.activeCycle ?? null
+    const [working, setWorking] = useState<string | null>(null)
+    const [editingRoom, setEditingRoom] = useState<DormRoom | null>(null)
+    const [confirmation, setConfirmation] = useState<'compute' | 'publish' | null>(null)
+    const active = overview?.activeCycle
     const rooms = overview?.rooms ?? []
     const submissions = overview?.submissions ?? []
-    const cycles = overview?.cycles ?? []
-    const memberLookup = React.useMemo(() => {
-        return new Map(submissions.map((item) => [item.userId, item.user]))
-    }, [submissions])
+    const members = new Map(submissions.map(item => [item.userId, item.user]))
 
-    const refresh = () => navigate({ to: '/admin/dorms', search: { cycleId: cycleId || activeCycle?.id } })
-
-    const submitCycle = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const form = new FormData(e.currentTarget)
-        setCreating(true)
+    async function execute(key: string, action: () => Promise<unknown>, message: string) {
+        setWorking(key)
         try {
-            const cycle = await createDormCycleFn({
-                data: {
-                    code: String(form.get('code') || ''),
-                    label: String(form.get('label') || ''),
-                    cohortLabel: String(form.get('cohortLabel') || ''),
-                    questionnaireVersion: (form.get('questionnaireVersion') as string) || undefined,
-                },
-            })
-            toast({ title: '届次已创建', tone: 'success' })
-            if (cycle?.id) {
-                navigate({ to: '/admin/dorms', search: { cycleId: cycle.id } })
-            }
+            await action()
+            toast({ title: message, tone: 'success' })
+            setEditingRoom(null)
+            setConfirmation(null)
+            await router.invalidate()
         } catch (error) {
-            toast({ title: '创建失败', description: error instanceof Error ? error.message : undefined, tone: 'danger' })
-        } finally {
-            setCreating(false)
-        }
+            toast({ title: '操作失败', description: error instanceof Error ? error.message : '请稍后重试', tone: 'danger' })
+        } finally { setWorking(null) }
     }
-
-    const startCompute = async () => {
-        if (!activeCycle) return
-        await run(activeCycle.id, () => computeDormFn({ data: { cycleId: activeCycle.id } }), {
-            success: '已重新计算宿舍',
-            error: '计算失败',
-        })
-        refresh()
+    function submitRoom(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (!active || !editingRoom) return
+        const form = new FormData(event.currentTarget)
+        void execute('room', () => updateDormRoomFn({ data: {
+            cycleId: active.id, roomId: editingRoom.id,
+            roomCode: String(form.get('roomCode') || editingRoom.roomCode),
+            building: String(form.get('building') || '') || undefined,
+            floor: form.get('floor') ? Number(form.get('floor')) : undefined,
+            members: form.getAll('members').map(String),
+        } }), '宿舍调整已保存')
     }
+    if (!active) return <EmptyState title="还没有宿舍届次" description="先添加一份届次问卷，收集学生信息后即可执行分配。"
+        action={<Button asChild><Link to="/admin/dorms/new">添加问卷</Link></Button>} />
 
-    const confirmResult = async () => {
-        if (!activeCycle) return
-        await run(`${activeCycle.id}-confirm`, () => confirmDormFn({ data: { cycleId: activeCycle.id } }), {
-            success: '宿舍结果已下发',
-            error: '确认失败',
-        })
-        refresh()
-    }
-
-    const submitRoom = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        if (!editingRoom || !activeCycle) return
-        const form = new FormData(e.currentTarget)
-        const members = form.getAll('members').map(String)
-        await updateDormRoomFn({
-            data: {
-                cycleId: activeCycle.id,
-                roomId: editingRoom.id,
-                roomCode: String(form.get('roomCode') || editingRoom.roomCode),
-                building: (form.get('building') as string) || undefined,
-                floor: form.get('floor') ? Number(form.get('floor')) : undefined,
-                members,
-            },
-        })
-        setEditingRoom(null)
-        refresh()
-    }
-
-    return (
-        <div className="space-y-6">
-            <SectionHeader
-                title="宿舍管理"
-                description="按届次运行宿舍分配，手动调整房间后再确认下发。"
-            />
-
-            <Card className="grid gap-4 p-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="space-y-2">
-                    <div className="text-sm font-medium">当前届次</div>
-                    <div className="text-sm text-[hsl(var(--muted-foreground))]">选择或创建一个宿舍届次，再执行算法。</div>
-                    <select
-                        value={cycleId || activeCycle?.id || ''}
-                        onChange={(e) => navigate({ to: '/admin/dorms', search: { cycleId: e.target.value || undefined } })}
-                        className="coeer-field coeer-focus h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm"
-                    >
-                        <option value="">选择届次</option>
-                        {cycles.map((cycle: DormCycle) => (
-                            <option key={cycle.id} value={cycle.id}>
-                                {cycle.label} · {cycle.cohortLabel}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                    <HeaderMetric label="问卷" value={String(overview?.questionnaireCount ?? 0)} tone="primary" />
-                    <HeaderMetric label="未分配" value={String(overview?.unassignedCount ?? 0)} tone="warning" />
-                    <HeaderMetric label="状态" value={activeCycle ? dormCycleStatusLabels[activeCycle.status] || activeCycle.status : '无届次'} tone={activeCycle ? 'success' : 'default'} />
-                </div>
-            </Card>
-
-            <Card className="rounded-lg p-5">
-                <form onSubmit={submitCycle} className="grid gap-3 md:grid-cols-4">
-                    <input name="code" required placeholder="届次代码，例如 2026-freshman" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="label" required placeholder="届次名称，例如 2026 新生宿舍" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="cohortLabel" required placeholder="批次标签，例如 2026级" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                    <input name="questionnaireVersion" placeholder="问卷版本" className="coeer-field coeer-focus h-10 rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                    <div className="md:col-span-4 flex justify-end">
-                        <Button type="submit" loading={creating}>
-                            <Icon name="spark" /> 创建届次
-                        </Button>
-                    </div>
-                </form>
-            </Card>
-
-            {!activeCycle ? (
-                <EmptyState title="没有可操作的届次" description="先创建一个新届次，再运行宿舍算法。" />
-            ) : (
-                <>
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <Stat label="问卷版本" value={activeCycle.questionnaireVersion || '默认'} />
-                        <Stat label="创建时间" value={formatDateTime(activeCycle.createdAt)} />
-                        <Stat label="房间数" value={String(activeCycle.roomCount)} />
-                        <Stat label="确认状态" value={activeCycle.confirmedRoomCount > 0 ? '已确认部分房间' : '未确认'} />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <Button loading={loadingKey === activeCycle.id} onClick={startCompute}><Icon name="activity" /> 运行分配</Button>
-                        <Button variant="outline" onClick={confirmResult}><Icon name="check" /> 确认下发</Button>
-                        <Button variant="outline" onClick={refresh}><Icon name="spark" /> 刷新</Button>
-                    </div>
-
-                    <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                        <Card className="overflow-hidden rounded-lg">
-                            <div className="border-b border-[hsl(var(--border))] px-4 py-3 text-sm font-medium">分配结果</div>
-                            {rooms.length ? (
-                                <div className="divide-y divide-[hsl(var(--border))]">
-                                    {rooms.map((room) => (
-                                        <div key={room.id} className="p-4">
-                                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <div className="text-[15px] font-medium">{room.roomCode}</div>
-                                                        <Badge tone="primary">{room.poolTag}</Badge>
-                                                        <Badge>{dormRoomStatusLabels[room.status] || room.status}</Badge>
-                                                    </div>
-                                                    <div className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{room.building || '待定楼栋'} · {room.floor ?? '待定楼层'} · {room.members.length}/{room.capacity}</div>
-                                                </div>
-                                                <Button size="sm" variant="outline" onClick={() => setEditingRoom(room)}>调整</Button>
-                                            </div>
-                                            <div className="mt-3 flex flex-wrap gap-2 text-sm text-[hsl(var(--muted-foreground))]">
-                                                {room.members.map((memberId) => (
-                                                    <span key={memberId} className="inline-block rounded-full border border-[hsl(var(--border))] px-2 py-1 text-xs">
-                                                        {memberLookup.get(memberId)?.name || memberLookup.get(memberId)?.email || memberId}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-6"><EmptyState title="暂无分配结果" description="点击运行分配后，这里会展示房间结果。" /></div>
-                            )}
-                        </Card>
-
-                        <Card className="overflow-hidden rounded-lg">
-                            <div className="border-b border-[hsl(var(--border))] px-4 py-3 text-sm font-medium">提交名单</div>
-                            {submissions.length ? (
-                                <div className="divide-y divide-[hsl(var(--border))]">
-                                    {submissions.map((item) => (
-                                        <div key={item.id} className="p-4">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="text-sm font-medium">{item.user?.name || item.user?.email || item.userId}</div>
-                                                    <div className="text-xs text-[hsl(var(--muted-foreground))]">{item.cohortLabel} · {item.studentNo || '无学号'}</div>
-                                                </div>
-                                                <Badge>{item.gender}</Badge>
-                                            </div>
-                                            <div className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">{item.college || '未填学院'} · {item.major || '未填专业'}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-6"><EmptyState title="暂无提交" description="学生提交问卷后会出现在这里。" /></div>
-                            )}
-                        </Card>
-                    </div>
-                </>
-            )}
-
-            <Modal open={!!editingRoom} title="调整宿舍" onOpenChange={(open) => !open && setEditingRoom(null)}>
-                {editingRoom ? (
-                    <form onSubmit={submitRoom} className="space-y-4">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <label className="block text-sm font-medium">
-                                <span>房间号</span>
-                                <input name="roomCode" defaultValue={editingRoom.roomCode} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                            </label>
-                            <label className="block text-sm font-medium">
-                                <span>宿舍楼</span>
-                                <input name="building" defaultValue={editingRoom.building || ''} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                            </label>
-                            <label className="block text-sm font-medium">
-                                <span>楼层</span>
-                                <input name="floor" type="number" defaultValue={editingRoom.floor ?? ''} className="coeer-field coeer-focus mt-2 h-10 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 text-sm" />
-                            </label>
+    return <div className="space-y-6">
+        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+                ['已收问卷', overview?.questionnaireCount ?? 0], ['未分配人数', overview?.unassignedCount ?? 0],
+                ['分配房间', rooms.length], ['已确认房间', active.confirmedRoomCount],
+            ].map(([label, value]) => <div key={label} className="rounded-lg bg-card px-4 py-4">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="mt-2 text-xl font-semibold tabular-nums">{value}</dd>
+            </div>)}
+        </dl>
+        <section aria-label="分配操作" className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+                <h2 className="text-sm font-medium">生成结果，核对后下发</h2>
+                <p className="text-xs leading-6 text-muted-foreground">问卷版本 {active.questionnaireVersion || '默认'} · 创建于 {formatDateTime(active.createdAt)}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                <Button disabled={!!working || !submissions.length} onClick={() => setConfirmation('compute')}>执行分配</Button>
+                <Button variant="secondary" disabled={!!working || !rooms.length} onClick={() => setConfirmation('publish')}>确认下发</Button>
+                <Button variant="ghost" loading={working === 'refresh'} disabled={!!working} onClick={() => void execute('refresh', async () => {}, '已刷新')}>刷新</Button>
+            </div>
+        </section>
+        <section aria-label="分配结果" className="space-y-4">
+            <SectionHeader level="h2" title="分配结果" description="逐间核对房间与成员，需要时点击调整。" />
+            {rooms.length ? <div className="coeer-grid">
+                {rooms.map(room => <Card key={room.id} className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <h3 className="break-words text-[15px] font-medium">{room.roomCode}</h3>
+                            <p className="mt-1 text-xs leading-6 text-muted-foreground">{room.building || '楼栋待定'} · {room.floor == null ? '楼层待定' : `${room.floor} 层`}</p>
                         </div>
-                        <label className="block text-sm font-medium">
-                            <span>成员</span>
-                            <select
-                                multiple
-                                name="members"
-                                defaultValue={editingRoom.members}
-                                className="coeer-field coeer-focus mt-2 min-h-40 w-full rounded-lg border border-control-border bg-[hsl(var(--card))] px-3 py-2 text-sm"
-                            >
-                                {submissions.map((item: DormQuestionnaireSummary) => (
-                                    <option key={item.userId} value={item.userId}>
-                                        {item.user?.name || item.user?.email || item.userId} · {item.cohortLabel}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setEditingRoom(null)}>取消</Button>
-                            <Button type="submit">保存</Button>
-                        </div>
-                    </form>
-                ) : null}
-            </Modal>
-        </div>
-    )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-    return (
-        <Card className="p-4">
-            <div className="text-xs text-[hsl(var(--muted-foreground))]">{label}</div>
-            <div className="mt-1 text-sm font-medium">{value}</div>
-        </Card>
-    )
-}
-
-function HeaderMetric({ label, value, tone }: { label: string; value: string; tone: 'primary' | 'warning' | 'success' | 'default' }) {
-    const toneClass = {
-        primary: 'border-[hsl(var(--primary)/0.22)] bg-primary-soft text-[hsl(var(--primary))]',
-        warning: 'border-warning/25 bg-warning-soft text-warning',
-        success: 'border-success/25 bg-success-soft text-success',
-        default: 'border-[hsl(var(--border))] bg-muted text-[hsl(var(--foreground))]',
-    }[tone]
-
-    return (
-        <div className={`min-h-16 rounded-lg border px-3 py-2 ${toneClass}`}>
-            <div className="text-xs text-current">{label}</div>
-            <div className="mt-1 truncate text-sm font-medium tabular-nums" title={value}>{value}</div>
-        </div>
-    )
+                        <Badge>{dormRoomStatusLabels[room.status] || room.status}</Badge>
+                    </div>
+                    <p className="break-words text-xs text-muted-foreground">分配组别：{room.poolTag.split('-').map(tag => ({ male: '男生', female: '女生', other: '其他', normal: '普通', longbed: '加长床', lowfloor: '低楼层', barrierfree: '无障碍', medical: '医疗需求' }[tag] || tag)).join(' · ')}</p>
+                    <ul className="flex flex-wrap gap-2" aria-label="房间成员">
+                        {room.members.map(id => <li key={id} className="max-w-full break-words rounded-md bg-muted px-2 py-1 text-xs">{members.get(id)?.name || members.get(id)?.email || id}</li>)}
+                    </ul>
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                        <span className="text-xs text-muted-foreground">{room.members.length} / {room.capacity} 人</span>
+                        <Button size="sm" variant="secondary" disabled={!!working} onClick={() => setEditingRoom(room)}>调整</Button>
+                    </div>
+                </Card>)}
+            </div> : <EmptyState title="暂无分配结果" description={submissions.length ? '问卷已收集，执行分配后可在这里核对房间。' : '当前还没有学生提交问卷，收到问卷后可执行分配。'} />}
+        </section>
+        <Modal open={!!confirmation} title={confirmation === 'compute' ? '执行宿舍分配' : '确认下发结果'} onOpenChange={open => { if (!open && !working) setConfirmation(null) }}>
+            <p className="text-sm leading-7 text-muted-foreground">{confirmation === 'compute' ? '将根据当前问卷重新生成房间，已有分配结果及手动调整会被替换。' : '将当前房间分配确认为最终结果，学生可在宿舍服务中查看。请确认房间与成员已核对。'}</p>
+            <div className="mt-5 flex justify-end gap-2">
+                <Button variant="secondary" disabled={!!working} onClick={() => setConfirmation(null)}>取消</Button>
+                <Button loading={!!working} onClick={() => void execute(confirmation!, () => confirmation === 'compute' ? computeDormFn({ data: { cycleId: active.id } }) : confirmDormFn({ data: { cycleId: active.id } }), confirmation === 'compute' ? '宿舍分配已生成' : '宿舍结果已下发')}>确认</Button>
+            </div>
+        </Modal>
+        <Modal open={!!editingRoom} title="调整宿舍" onOpenChange={open => { if (!open && !working) setEditingRoom(null) }}>
+            {editingRoom && <form onSubmit={submitRoom} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="房间号"><Input name="roomCode" required maxLength={100} defaultValue={editingRoom.roomCode} /></Field>
+                    <Field label="宿舍楼"><Input name="building" maxLength={100} defaultValue={editingRoom.building || ''} /></Field>
+                    <Field label="楼层"><Input name="floor" type="number" step={1} defaultValue={editingRoom.floor ?? ''} /></Field>
+                </div>
+                <fieldset className="space-y-3">
+                    <legend className="text-xs font-medium">房间成员</legend>
+                    <div className="max-h-60 space-y-1 overflow-y-auto">
+                        {submissions.map(item => <label key={item.userId} className="flex min-h-11 items-center gap-3 rounded-md px-2 hover:bg-muted">
+                            <input type="checkbox" name="members" value={item.userId} defaultChecked={editingRoom.members.includes(item.userId)} className="coeer-focus h-4 w-4 accent-primary" />
+                            <span className="min-w-0 break-words text-sm">{item.user?.name || item.user?.email || item.userId}<span className="ml-2 text-xs text-muted-foreground">{item.studentNo || item.cohortLabel}</span></span>
+                        </label>)}
+                    </div>
+                </fieldset>
+                <div className="flex justify-end gap-2">
+                    <Button variant="secondary" disabled={!!working} onClick={() => setEditingRoom(null)}>取消</Button>
+                    <Button type="submit" loading={working === 'room'}>保存调整</Button>
+                </div>
+            </form>}
+        </Modal>
+    </div>
 }

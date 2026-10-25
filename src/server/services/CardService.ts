@@ -1,12 +1,13 @@
 import { cardQueries } from '../database/queries/cards'
 import { db } from '../database/client'
 import { CARD, CARD_DRAW_COST } from '@shared/constants'
-import { CreateCardSchema } from '@shared/contracts/cards'
+import { CardIdSchema, CreateCardSchema } from '@shared/contracts/cards'
 import { AuthService } from './AuthService'
 import { PointService } from './PointService'
 import { AchievementService } from './AchievementService'
 import type {
     CardResponse,
+    CardIdInput,
     CreateCardInput,
     DrawCardsInput,
     DrawResult,
@@ -37,6 +38,23 @@ function pickFromPool(pool: Card[]): Card | null {
 }
 
 export class CardService {
+    static async adminDelete(data: CardIdInput): Promise<CardResponse<null>> {
+        const current = await AuthService.getCurrentUser()
+        if (!current.success || !current.data) return { success: false, state: CARD.UNAUTHORIZED }
+        if (current.data.role !== 'admin') return { success: false, state: CARD.FORBIDDEN }
+        const parsed = CardIdSchema.safeParse(data)
+        if (!parsed.success) return { success: false, state: CARD.INVALID_INPUT }
+        try {
+            const result = await cardQueries.deleteUnowned(parsed.data.cardId)
+            if (result === 'missing') return { success: false, state: CARD.NOT_FOUND }
+            if (result === 'owned') return { success: false, state: CARD.IN_USE }
+            return { success: true, data: null, state: CARD.DELETE_SUCCESS }
+        } catch (error) {
+            console.error('Delete card error:', error)
+            return { success: false, state: CARD.SERVER_ERROR }
+        }
+    }
+
     static async draw(data: DrawCardsInput): Promise<CardResponse<DrawResult>> {
         const payload = await AuthService.getCurrentUser()
         const user = payload.data

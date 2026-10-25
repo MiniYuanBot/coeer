@@ -1,5 +1,6 @@
-import { createFileRoute, Link, Outlet, type SearchSchemaInput } from '@tanstack/react-router'
-import { Alert, Button, LoadingState, NavTabs, PageLayout, navTabClass, activeNavTabClass } from '@/components/coeer'
+import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
+import { createFileRoute, Outlet, type SearchSchemaInput } from '@tanstack/react-router'
+import { LoadingState, PageLayout } from '@/components/coeer'
 import { SpacesProvider, useSpaces } from '@/hooks/useSpaces'
 import { spaceSearchSchema } from '@shared/contracts/spaces'
 
@@ -15,51 +16,9 @@ export const Route = createFileRoute('/_authed/spaces')({
 })
 
 function SpacesLayout() {
-    const { config, loading, error, reload } = useSpaces()
-    const { user: communityUser } = Route.useRouteContext()
-    return (
-        <PageLayout>
-            <NavTabs label="空间预约">
-                <Link
-                    to="/spaces"
-                    search={{}}
-                    activeOptions={{ exact: true }}
-                    className={navTabClass}
-                    activeProps={{ className: activeNavTabClass }}
-                >
-                    空间目录
-                </Link>
-                <Link
-                    to="/spaces/bookings"
-                    className={navTabClass}
-                    activeProps={{ className: activeNavTabClass }}
-                >
-                    我的预约
-                </Link>
-                {communityUser?.role === 'admin' && (
-                    <Link
-                        to="/admin/spaces"
-                        className={navTabClass}
-                        activeProps={{ className: activeNavTabClass }}
-                    >
-                        预约管理
-                    </Link>
-                )}
-            </NavTabs>
-            {config?.demo && <Alert>演示环境：空间与预约使用模拟数据，不会提交至官方系统。</Alert>}
-            {config && !config.writesEnabled && <Alert>当前仅开放空间状态查询，预约提交尚未启用。</Alert>}
-            {config?.paused && config.writesEnabled && (
-                <Alert tone="warning">自动处理已暂停，提交的申请将在恢复后继续处理。</Alert>
-            )}
-            {error && (
-                <Alert tone="danger">
-                    {error}
-                    <Button variant="ghost" size="sm" onClick={reload}>
-                        重试
-                    </Button>
-                </Alert>
-            )}
-            {loading ? <LoadingState /> : config ? <Outlet /> : null}
-        </PageLayout>
-    )
+    const { config, loading } = useSpaces()
+    return <PageLayout>
+        {loading || !config ? <SpacesPageHeader title="空间预约" description={loading ? '正在读取空间与预约信息…' : '查看空间状态，跟进预约进度。'} /> : null}
+        {loading ? <LoadingState /> : config ? <Outlet /> : null}
+    </PageLayout>
 }

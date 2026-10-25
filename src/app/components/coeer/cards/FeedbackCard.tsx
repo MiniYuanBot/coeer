@@ -48,6 +48,7 @@ export function FeedbackCard({ feedback, variant = 'card' }: { feedback: any; va
                 </div>
                 <h3 className="mt-3 text-sm font-medium">{feedback.title}</h3>
                 <MarkdownSummary content={feedback.content} className="mt-2 text-muted-foreground" />
+                <p className="mt-3 text-xs text-muted-foreground">{feedbackTargetLabels[feedback.targetType] || '综合建议'}</p>
             </Card>
         </Link>
     )

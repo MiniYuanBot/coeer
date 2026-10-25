@@ -11,7 +11,7 @@ import {
     LoadingState,
     Modal,
     Pagination,
-    SearchInput,
+    FilterPanel,
     Select,
     paginate,
 } from '@/components/coeer'
@@ -89,17 +89,10 @@ function SpaceAllowlistPage() {
                     </Button>
                 </form>
             </Card>
-            <div className="max-w-sm">
-                <SearchInput
-                    aria-label="搜索白名单"
-                    placeholder="搜索昵称或学号"
-                    value={query}
-                    onChange={(event) => {
-                        setQuery(event.target.value)
-                        setPage(1)
-                    }}
-                />
-            </div>
+            <FilterPanel searchValue={query} searchPlaceholder="搜索昵称或学号" groups={[]}
+                onSearch={value => { setQuery(value); setPage(1) }}
+                onSearchChange={value => { setQuery(value); setPage(1) }}
+                onClear={() => { setQuery(''); setPage(1) }} />
             {loading ? (
                 <LoadingState />
             ) : rows.total ? (

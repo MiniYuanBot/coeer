@@ -55,6 +55,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
 
     async function open(kind: string) {
         await page.goto(new URL(`/tests/fixtures/markdown-pages.html?kind=${kind}`, origin).href)
+        if (kind === 'bulletins' || kind === 'activities') await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: /^新建/ }).click()
         await page.locator('textarea').waitFor()
     }
 
@@ -93,6 +94,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         if (announcement) expect(data.type).toBe('announcement')
         if (kind === 'bulletins' || kind === 'activities') {
             await page.waitForFunction(() => document.querySelector('textarea')?.value === '')
+            await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: /^新建/ }).click()
             expect(await preview.locator('.katex').count()).toBe(0)
             expect(await page.getByRole('textbox', { name: '标题', exact: true }).inputValue()).toBe('')
         }
@@ -103,7 +105,10 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         { kind: 'activities', first: '活动甲', second: '活动乙', save: '保存活动', action: 'updateActivity' },
     ])('replaces the draft and preview when editing different $kind, cancelling or saving', async ({ kind, first, second, save, action }) => {
         await open(kind)
-        const select = (title: string) => page.getByText(title, { exact: true }).locator('../..').getByRole('button', { name: '编辑', exact: true }).click()
+        const select = async (title: string) => {
+            await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
+            await page.getByText(title, { exact: true }).locator('../..').getByRole('button', { name: '编辑', exact: true }).click()
+        }
         const preview = page.getByRole('region')
         await select(first)
         await preview.locator('.katex-display').waitFor()
@@ -133,6 +138,7 @@ describe.skipIf(!executablePath)('Markdown authoring pages in Chromium', () => {
         { kind: 'activities', title: '活动甲', save: '保存活动' },
     ])('preserves the $kind draft and preview when the server rejects a save or the network fails', async ({ kind, title, save }) => {
         await open(kind)
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
         await page.getByText(title, { exact: true }).locator('../..').getByRole('button', { name: '编辑', exact: true }).click()
         await page.locator('textarea').fill(content)
         for (const mode of ['response', 'network']) {

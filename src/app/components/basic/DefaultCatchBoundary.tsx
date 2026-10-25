@@ -1,5 +1,4 @@
 import {
-  ErrorComponent,
   rootRouteId,
   useMatch,
   useRouter,
@@ -23,19 +22,17 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
       <div className="mx-auto max-w-md">
         <div className="mb-6 rounded-lg border border-border bg-card p-5 text-left">
-          <div className="text-sm font-medium text-foreground">页面出错了</div>
+          <h1 className="text-lg font-semibold text-foreground">暂时无法加载页面</h1>
           <div className="mt-2 text-sm leading-6 text-muted-foreground">
-            <ErrorComponent error={error} />
+            {error instanceof Error && /[\u3400-\u9fff]/.test(error.message) ? error.message : '请检查网络连接，或稍后重试。'}
           </div>
         </div>
 
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
           {isRoot ? (
-            <Link to="/">
-              <Button variant="outline" className="w-full sm:w-auto">
+              <Button asChild variant="outline" className="w-full sm:w-auto"><Link to="/">
                 返回首页
-              </Button>
-            </Link>
+              </Link></Button>
           ) : (
             <Button
               variant="outline"

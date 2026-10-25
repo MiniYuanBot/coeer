@@ -1,3 +1,4 @@
+import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
     Badge,
@@ -9,7 +10,6 @@ import {
     Input,
     LoadingState,
     Pagination,
-    SectionHeader,
     Alert,
     paginate,
 } from '@/components/coeer'
@@ -39,7 +39,7 @@ function SpacesPage() {
     const page = paginate(spaces, filters.page)
     return (
         <div className="space-y-6">
-            <SectionHeader
+            <SpacesPageHeader
                 title="空间预约"
                 description="查询空间空闲情况，选择连续时段提交预约。时间均采用北京时间。"
                 action={
@@ -58,6 +58,7 @@ function SpacesPage() {
                 searchValue={filters.q}
                 searchPlaceholder="搜索名称或位置"
                 onSearch={(q) => update({ q })}
+                onClear={() => update({ q: '', module: 'all', capacity: 0 })}
                 groups={[
                     {
                         title: '空间',
@@ -93,7 +94,7 @@ function SpacesPage() {
             )}
             {resource.loading ? (
                 <LoadingState />
-            ) : !page.total ? (
+            ) : resource.error && !resource.data ? null : !page.total ? (
                 <EmptyState title="暂无匹配的空间" description="调整搜索与筛选条件，或等待管理员开放空间。" />
             ) : (
                 <>

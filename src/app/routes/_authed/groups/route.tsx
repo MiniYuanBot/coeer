@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { z } from 'zod'
 import { listAllGroupsFn, listMyGroupsFn } from '~/functions'
 import { GroupFilterSchema } from '@shared/contracts'
@@ -68,13 +68,13 @@ function GroupsRouteComponent() {
 function GroupsHomePage() {
     const data = Route.useLoaderData()
     const { view, category, search, page } = Route.useSearch()
-    const navigate = useNavigate()
+    const navigate = Route.useNavigate()
     const groups = data?.groups ?? []
     const total = data?.total ?? 0
     const pageSize = data?.pageSize ?? 9
 
     const go = (next: Partial<GroupsSearch>) => {
-        navigate({ to: '/groups', search: { view, category, search, page: 1, ...next } })
+        navigate({ to: '/groups', search: previous => ({ ...previous, page: 1, ...next }) })
     }
 
     return (
@@ -82,23 +82,24 @@ function GroupsHomePage() {
             <SectionHeader
                 title="群组"
                 description="发现组织、兴趣、项目和课程群组，也可以快速查看自己的群组申请。"
-                action={<Link to="/groups/create"><Button><Icon name="group" /> 创建群组</Button></Link>}
+                action={<Button asChild><Link to="/groups/create"><Icon name="group" /> 创建群组</Link></Button>}
             />
 
             <FilterPanel
                 searchValue={search}
-                searchPlaceholder="搜索群组名称、slug 或描述"
+                searchPlaceholder="搜索群组名称或介绍"
                 onSearch={(value) => go({ search: value || undefined })}
-                groups={[
-                    {
-                        title: '查看',
+                onClear={() => go({ search: undefined, category: undefined })}
+                scope={{
+                        title: '群组范围',
                         items: [
                             { key: 'joined', label: '我加入的', active: view === 'joined', onClick: () => go({ view: 'joined' }) },
                             { key: 'managed', label: '我管理的', active: view === 'managed', onClick: () => go({ view: 'managed' }) },
                             { key: 'public', label: '公开的', active: view === 'public', onClick: () => go({ view: 'public' }) },
                             { key: 'pending', label: '申请中', active: view === 'pending', onClick: () => go({ view: 'pending' }) },
                         ],
-                    },
+                    }}
+                groups={[
                     {
                         title: '类型',
                         items: [

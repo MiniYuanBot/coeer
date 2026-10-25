@@ -1,3 +1,4 @@
+import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
@@ -8,7 +9,6 @@ import {
     LoadingState,
     Pagination,
     PageLayout,
-    SectionHeader,
     paginate,
 } from '@/components/coeer'
 import { useSpaces, useSpaceResource } from '@/hooks/useSpaces'
@@ -24,7 +24,7 @@ function MyBookingsPage() {
     const page = paginate(resource.data ?? [], requested)
     return (
         <PageLayout>
-            <SectionHeader
+            <SpacesPageHeader
                 title="我的预约"
                 description="查看申请、审批与取消结果，预约进度会自动更新。"
                 actionLayout="stack-on-mobile"

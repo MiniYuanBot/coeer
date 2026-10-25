@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { ENGAGEMENT_REWARDS } from '@shared/constants/engagement'
 import { changePasswordFn, getMyPointBalanceFn, getMyPointHistoryFn, updateProfileFn } from '~/functions'
 import { SettingsSection } from '@/components/coeer/ui/SettingsSection'
+import { pointSourceLabels } from '@/components/coeer/lib/labels'
 
 export const Route = createFileRoute('/_authed/profile/')({
     validateSearch: z.object({ page: z.number().int().min(1).default(1) }),
@@ -16,8 +17,9 @@ export const Route = createFileRoute('/_authed/profile/')({
         ])
         return {
             user: context.user!,
-            balance: balanceResult.status === 'fulfilled' ? balanceResult.value.data?.balance ?? 0 : 0,
+            balance: balanceResult.status === 'fulfilled' ? balanceResult.value.data?.balance ?? null : null,
             history: historyResult.status === 'fulfilled' ? historyResult.value.data?.items ?? [] : [],
+            historyFailed: historyResult.status === 'rejected' || historyResult.value.success === false,
             total: historyResult.status === 'fulfilled' ? historyResult.value.data?.total ?? 0 : 0,
         }
     },
@@ -25,7 +27,7 @@ export const Route = createFileRoute('/_authed/profile/')({
 })
 
 function ProfileIndexComponent() {
-    const { user, balance, history, total } = Route.useLoaderData()
+    const { user, balance, history, total, historyFailed } = Route.useLoaderData()
     const { page } = Route.useSearch()
     const navigate = useNavigate()
     const router = useRouter()
@@ -130,8 +132,8 @@ function ProfileIndexComponent() {
                             <div key={item.id} className="coeer-record-row">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="min-w-0 space-y-1">
-                                        <div className="text-sm font-medium">{item.description || item.source}</div>
-                                        <div className="text-xs text-muted-foreground">{item.source}</div>
+                                        <div className="text-sm font-medium">{item.description || pointSourceLabels[item.source] || '积分记录'}</div>
+                                        <div className="text-xs text-muted-foreground">{pointSourceLabels[item.source] || '其他记录'}</div>
                                     </div>
                                     <div className={item.amount > 0 ? 'shrink-0 font-medium tabular-nums text-success' : 'shrink-0 font-medium tabular-nums text-danger'}>
                                         {item.amount > 0 ? '+' : ''}{item.amount}
@@ -139,7 +141,7 @@ function ProfileIndexComponent() {
                                 </div>
                             </div>
                         ))}
-                        {!history.length ? <p className="py-6 text-sm text-[hsl(var(--muted-foreground))]">暂无积分流水</p> : null}
+                        {historyFailed ? <Alert tone="danger">暂时无法读取积分记录。<Button variant="ghost" size="sm" onClick={() => void router.invalidate()}>重试</Button></Alert> : !history.length ? <p className="py-6 text-sm text-[hsl(var(--muted-foreground))]">暂无积分流水</p> : null}
                     </div>
                     <Pagination total={total} page={page} size={8} onChange={(page) => void navigate({ to: '/profile', search: { page } })} />
                     <div className="mt-6 space-y-2 border-t border-border pt-4 text-xs leading-5 text-muted-foreground">

@@ -12,8 +12,7 @@ import {
     LoadingState,
     Modal,
     Pagination,
-    SearchInput,
-    Select,
+    FilterPanel,
     paginate,
 } from '@/components/coeer'
 import { useSpaceAdmin } from '@/hooks/useSpaceAdmin'
@@ -55,32 +54,15 @@ function SpaceBookingsAdminPage() {
         filters.page,
     )
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             {error && <Alert tone="danger">{error}</Alert>}
-            <div className="flex flex-wrap items-end gap-4">
-                <div className="min-w-0 flex-1">
-                    <SearchInput
-                        aria-label="搜索预约"
-                        placeholder="搜索空间、姓名、学号或申请号"
-                        value={filters.q}
-                        onChange={(event) => update({ q: event.target.value })}
-                    />
-                </div>
-                <Field label="预约状态">
-                    <Select
-                        value={filters.status}
-                        onChange={(event) => update({ status: event.target.value })}
-                    >
-                        <option value="all">全部申请</option>
-                        <option value="issues">需人工核对</option>
-                        {Object.entries(statusLabels).map(([key, label]) => (
-                            <option key={key} value={key}>
-                                {label}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
-            </div>
+            <FilterPanel searchValue={filters.q} searchPlaceholder="搜索空间、姓名、学号或申请号"
+                onSearch={q => update({ q })} onSearchChange={q => update({ q })}
+                onClear={() => update({ q: '', status: 'all' })}
+                groups={[{ title: '预约状态', items: [
+                    { key: 'all', label: '全部申请' }, { key: 'issues', label: '需人工核对' },
+                    ...Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
+                ].map(item => ({ ...item, active: filters.status === item.key, onClick: () => update({ status: item.key }) })) }]} />
             {loading ? (
                 <LoadingState />
             ) : rows.total ? (

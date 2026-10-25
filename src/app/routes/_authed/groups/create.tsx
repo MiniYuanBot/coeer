@@ -65,7 +65,7 @@ function CreateGroupComponent() {
                     />
                 </Field>
 
-                <Field label="URL 标识" description="只能包含小写字母、数字和连字符，将用于群组访问链接。">
+                <Field label="群组地址标识" description="只能包含小写字母、数字和连字符，将用于群组访问链接。">
                     <Input
                         name="slug"
                         required
@@ -96,7 +96,7 @@ function CreateGroupComponent() {
                 <div className="flex items-center gap-2">
                     <input type="checkbox" name="isPublic" id="isPublic" defaultChecked className="h-4 w-4 rounded border-[hsl(var(--border))] accent-[hsl(var(--primary))]" />
                     <label htmlFor="isPublic" className="text-sm">
-                        公开群组（任何人都可以加入）
+                        公开群组（在公开目录展示）
                     </label>
                 </div>
 

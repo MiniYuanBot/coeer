@@ -1,4 +1,4 @@
-import { and, count, desc, eq, getTableColumns, inArray, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, ilike, inArray, or, sql } from 'drizzle-orm'
 import { db } from '../client'
 import { bookmarks, groupMembers, groupPosts, groups, users } from '../schemas'
 import type { ListBookmarksInput, SetBookmarkInput } from '@shared/contracts/bookmarks'
@@ -25,7 +25,12 @@ export const bookmarkQueries = {
             sql`exists (select 1 from ${groupMembers} where ${groupMembers.groupId} = ${groups.id}
                 and ${groupMembers.userId} = ${user.id} and ${groupMembers.status} = 'approved')`,
         )
-        const where = and(eq(bookmarks.userId, user.id), visible)
+        const search = data.search?.trim()
+        const pattern = search ? `%${search.replace(/[\\%_]/g, '\\$&')}%` : undefined
+        const where = and(eq(bookmarks.userId, user.id), visible,
+            data.type ? eq(groupPosts.type, data.type) : undefined,
+            pattern ? or(ilike(groupPosts.title, pattern), ilike(groupPosts.content, pattern), ilike(groups.name, pattern)) : undefined,
+        )
         const items = await db.select({ savedAt: bookmarks.createdAt, post: getTableColumns(groupPosts),
             group: { id: groups.id, name: groups.name, slug: groups.slug },
             author: { id: users.id, name: users.name },

@@ -49,7 +49,7 @@ function SidebarBody({ user, onNavigate, onSearch }: {
                 {onNavigate ? <button type="button" aria-label="关闭导航" onClick={onNavigate} className="coeer-focus ml-auto grid h-11 w-11 place-items-center rounded text-muted-foreground"><Icon name="x" /></button> : null}
             </div>
             <div className="px-3">
-                <button type="button" data-command-trigger onClick={onSearch} aria-label="搜索页面" className="coeer-focus coeer-button flex min-h-9 w-full items-center gap-2 rounded-md border border-control-border bg-card px-2.5 text-xs text-muted-foreground hover:border-primary">
+                <button type="button" data-command-trigger onClick={onSearch} aria-label="搜索页面" className="coeer-focus coeer-button coeer-button-quiet flex min-h-9 w-full items-center gap-2 rounded-md border border-transparent px-2.5 text-xs text-foreground">
                     <Icon name="search" className="h-3.5 w-3.5" /><span>搜索页面</span><kbd className="coeer-kbd ml-auto">Ctrl K</kbd>
                 </button>
             </div>

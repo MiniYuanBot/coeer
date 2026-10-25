@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { z } from 'zod'
 import { ActivityCard, EmptyState, FilterPanel, Pagination, SectionHeader, activityStatusLabels, activityTypeLabels } from '@/components/coeer'
@@ -42,10 +42,10 @@ function ActivitiesPage() {
     const timeStatusChanged = activities.some((activity, index) => activity.status !== loadedActivities[index].status)
     useEffect(() => { if (timeStatusChanged) void router.invalidate() }, [timeStatusChanged, router])
     const { type, status, search, page } = Route.useSearch()
-    const navigate = useNavigate()
+    const navigate = Route.useNavigate()
 
     const go = (next: { type?: string; status?: string; search?: string; page?: number }) => {
-        navigate({ to: '/activities', search: { type, status, search, page: 1, ...next } })
+        navigate({ to: '/activities', search: previous => ({ ...previous, page: 1, ...next }) })
     }
 
     return (
@@ -55,6 +55,7 @@ function ActivitiesPage() {
                 searchValue={search}
                 searchPlaceholder="搜索活动标题、内容或地点"
                 onSearch={(value) => go({ search: value || undefined })}
+                onClear={() => go({ search: undefined, type: undefined, status: undefined })}
                 groups={[
                     {
                         title: '类型',

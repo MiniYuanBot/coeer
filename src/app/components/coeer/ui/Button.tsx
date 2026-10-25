@@ -11,15 +11,14 @@ export function Button({
     asChild?: boolean
 }) {
     const classes = cn(
-        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:border-control-border disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted',
+        'coeer-focus coeer-button inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground disabled:hover:bg-muted',
         size === 'xs' ? 'h-7 gap-1.5 px-1.5 text-xs' : 'gap-2 text-[13px]',
         size === 'sm' && 'h-8 px-2.5',
         size === 'md' && 'h-9 px-3.5',
         size === 'lg' && 'h-11 px-5',
         size === 'icon' && 'h-8 w-8',
         variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary-hover',
-        variant === 'secondary' && 'border border-control-border bg-card text-foreground hover:bg-muted',
-        variant === 'outline' && 'border border-control-border bg-transparent text-foreground hover:bg-muted',
+        (variant === 'secondary' || variant === 'outline') && 'coeer-button-quiet border border-transparent text-foreground',
         variant === 'ghost' && 'text-muted-foreground hover:bg-muted hover:text-foreground',
         variant === 'danger' && 'bg-danger text-danger-foreground hover:bg-danger-hover',
         className,

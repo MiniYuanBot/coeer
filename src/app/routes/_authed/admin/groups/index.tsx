@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import z from 'zod'
 import { useState } from 'react'
+import { ViewTabs } from '@/components/coeer/ui/NavTabs'
 import { GROUP_STATUS_ARRAY, GroupStatus } from '@shared/constants'
 import { deleteGroupFn, listAllGroupsFn, updateGroupStatusFn } from '~/functions'
 import { Badge, Button, Card, EmptyState, FilterPanel, Modal, Pagination, SectionHeader, groupStatusLabels } from '@/components/coeer'
@@ -60,13 +61,15 @@ function AdminGroupsPage() {
 
     return (
         <div className="space-y-6">
-            <SectionHeader title="群组审核" description="查看全部群组或仅查看待审核群组，并设置审核状态与备注。" />
-            <FilterPanel searchValue={search} searchPlaceholder="搜索群组名称、slug 或描述"
+            <SectionHeader title="群组管理" description="查看群组信息，维护审核状态与备注。" />
+            <ViewTabs label="群组管理范围" items={[
+                    { key: 'all', label: '所有群组', active: status !== 'pending', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'all', search, page: 1 } }) },
+                    { key: 'pending', label: '待审核', active: status === 'pending', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'pending', search, page: 1 } }) },
+                ]} />
+            <FilterPanel searchValue={search} searchPlaceholder="搜索群组名称或介绍"
                 onSearch={(search) => void navigate({ to: '/admin/groups', search: { status, search: search || undefined, page: 1 } })}
-                groups={[{ title: '状态', items: [
-                    { key: 'all', label: '全部群组', active: status === 'all', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'all', search, page: 1 } }) },
-                    { key: 'pending', label: '待审核群组', active: status === 'pending', onClick: () => void navigate({ to: '/admin/groups', search: { status: 'pending', search, page: 1 } }) },
-                ] }]} />
+                onClear={() => void navigate({ to: '/admin/groups', search: { status, search: undefined, page: 1 } })}
+                groups={[]} />
             {groups.length ? (
                 <Card className="divide-y divide-[hsl(var(--border))]">
                     {groups.map((group) => (
@@ -77,7 +80,7 @@ function AdminGroupsPage() {
                                     <Badge>{groupStatusLabels[group.status] || group.status}</Badge>
                                     <Badge tone={group.isPublic ? 'success' : 'default'}>{group.isPublic ? '公开' : '私密'}</Badge>
                                 </div>
-                                <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">slug: {group.slug}</p>
+                                <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">群组地址：{group.slug}</p>
                                 {group.reviewNote ? <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">备注：{group.reviewNote}</p> : null}
                             </div>
                             <div className="flex gap-2">

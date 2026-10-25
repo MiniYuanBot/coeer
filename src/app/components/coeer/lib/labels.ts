@@ -87,3 +87,11 @@ export const dormRoomStatusLabels: Record<string, string> = {
     committed: '已下发',
     adjusted: '已调整',
 }
+
+export const userRoleLabels: Record<string, string> = { student: '学生', moderator: '协管', admin: '管理员' }
+
+export const pointSourceLabels: Record<string, string> = {
+    daily_login: '每日活跃', daily_visit: '每日活跃', feedback: '提交反馈', group_post: '发布帖子',
+    group_reply: '参与回复', activity: '活动奖励', activity_checkin: '活动签到',
+    redeem: '权益兑换', draw: '抽卡', create_group: '创建群组', adjustment: '积分调整', admin: '管理调整', manual: '管理调整',
+}

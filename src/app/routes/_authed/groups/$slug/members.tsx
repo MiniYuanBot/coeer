@@ -96,8 +96,10 @@ function GroupMembersPage() {
             {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             <FilterPanel
+                onClear={() => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } })}
                 groups={[
                     {
+                        title: '成员状态',
                         items: [
                             { key: 'all', label: '全部', active: !status, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: undefined, page: 1 } }) },
                             { key: 'approved', label: '已通过', active: status === GROUP_MEMBER_STATUS.APPROVED, onClick: () => navigate({ to: '/groups/$slug/members', params: { slug }, search: { status: GROUP_MEMBER_STATUS.APPROVED, page: 1 } }) },

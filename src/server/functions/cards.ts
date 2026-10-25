@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { CreateCardSchema, DrawCardsSchema, ListCardsSchema, UpdateCardSchema } from '@shared/contracts'
+import { CardIdSchema, CreateCardSchema, DrawCardsSchema, ListCardsSchema, UpdateCardSchema } from '@shared/contracts'
 import { CardService } from '../services'
 
 export const drawCardsFn = createServerFn({ method: 'POST' })
@@ -27,4 +27,8 @@ export const adminCreateCardFn = createServerFn({ method: 'POST' })
 export const adminUpdateCardFn = createServerFn({ method: 'POST' })
     .inputValidator(UpdateCardSchema)
     .handler(async ({ data }) => CardService.adminUpdate(data))
+
+export const adminDeleteCardFn = createServerFn({ method: 'POST' })
+    .inputValidator(CardIdSchema)
+    .handler(async ({ data }) => CardService.adminDelete(data))
 

@@ -31,7 +31,7 @@ function GroupLayout() {
 
     return (
         <div className="space-y-6">
-            <section aria-label="群组信息" className="space-y-5">
+            <section aria-label="群组信息" className="space-y-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex min-w-0 items-start gap-3">
                             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted text-base font-medium">

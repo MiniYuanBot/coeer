@@ -52,6 +52,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
     afterAll(async () => { await browser?.close(); await server?.close() })
     async function open(kind: string) {
         await page.goto(new URL(`/tests/fixtures/admin-gamification.html?kind=${kind}`, origin).href)
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: /^新建/ }).click()
         await page.getByRole('button', { name: '选择本地文件', exact: true }).waitFor()
     }
     async function fill(kind: string) {
@@ -60,6 +61,28 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
         else if (kind === 'redeems') await page.locator('[name=pointsCost]').fill('100')
     }
     async function data() { return JSON.parse((await page.locator('#submitted-data').textContent())!) }
+    it('keeps card deletion explicit, retains failures in the dialog and sends the selected ID', async () => {
+        await open('cards')
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button', { name: '全部卡片', exact: true }).click()
+        await page.getByRole('button', { name: '删除', exact: true }).click()
+        let dialog = page.getByRole('dialog', { name: '删除卡片', exact: true })
+        await dialog.getByRole('button', { name: '取消', exact: true }).click()
+        expect(await page.locator('#submitted-action').textContent()).toBe('')
+        await page.getByLabel('模拟保存失败').selectOption('response')
+        await page.getByRole('button', { name: '删除', exact: true }).click()
+        dialog = page.getByRole('dialog', { name: '删除卡片', exact: true })
+        await dialog.getByRole('button', { name: '确认删除', exact: true }).click()
+        await dialog.getByRole('alert').waitFor()
+        expect(await dialog.getByRole('alert').textContent()).toContain('服务器拒绝')
+        await dialog.getByRole('button', { name: '取消', exact: true }).click()
+        await page.getByLabel('模拟保存失败').selectOption('')
+        await page.getByRole('button', { name: '删除', exact: true }).click()
+        await page.getByRole('dialog', { name: '删除卡片', exact: true }).getByRole('button', { name: '确认删除', exact: true }).click()
+        await page.waitForFunction(() => document.querySelector('#submitted-action')?.textContent === 'deleteCard')
+        expect(await data()).toEqual({ cardId: '33333333-3333-4333-8333-333333333333' })
+        expect(await page.getByRole('dialog', { name: '删除卡片', exact: true }).isVisible()).toBe(false)
+    })
+
     async function confirmCrop() {
         const dialog = page.getByRole('dialog', { name: /^裁剪/ })
         await dialog.waitFor()
@@ -130,6 +153,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
 
     it.each(allCases)('cancels a replacement crop without changing the existing $kind image or form', async ({ kind, field }) => {
         await open(kind)
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
         await page.getByRole('button', { name: '编辑', exact: true }).click()
         const previousUrl = await page.locator(`[name=${field}]`).inputValue()
         const previousName = await page.locator('[name=name]').inputValue()
@@ -232,6 +256,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
         await page.getByRole('button', { name: '添加卡片', exact: true }).click()
         await page.getByRole('alert').waitFor()
         expect(await page.getByRole('alert').textContent()).toContain('请选择卡面图片')
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
         await page.getByRole('button', { name: '编辑', exact: true }).click()
         await page.locator('[name=rarity]').selectOption('legendary')
         await page.locator('[name=series]').fill('校园新系列')
@@ -266,6 +291,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
 
     it.each(cases)('previews and removes existing $kind images and resets drafts on cancellation', async ({ kind, field, save, update }) => {
         await open(kind)
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
         await page.getByRole('button', { name: '编辑', exact: true }).click()
         await page.locator('img[alt$="预览"]').waitFor()
         await page.getByRole('button', { name: '移除图片' }).click()
@@ -274,6 +300,7 @@ describe.skipIf(!executablePath)('achievement and shop management in Chromium', 
         await page.waitForFunction(() => document.querySelector('#submitted-action')?.textContent !== '')
         expect(await page.locator('#submitted-action').textContent()).toBe(update)
         expect((await data())[field]).toBeNull()
+        await page.getByRole('group', { name: '管理视图', exact: true }).getByRole('button').first().click()
         await page.getByRole('button', { name: '编辑', exact: true }).click()
         await page.locator('[name=name]').fill('未保存草稿')
         await page.getByRole('button', { name: '取消编辑' }).click()

@@ -1,19 +1,20 @@
-/* coeer-glass-v1. Keep values synchronized with .impeccable/design.json. */
+/* coeer-experience-v2. Keep values synchronized with .impeccable/design.json. */
 :root {
   --chrome-muted-foreground: 252 10% 25%;
   --chrome-ring: 252 42% 38%;
   --chrome-control-border: 252 10% 34%;
-  --background: 260 18% 95%;
+  --background: 255 14% 97%;
   --foreground: 250 16% 18%;
-  --card: 255 20% 99%;
+  --card: 255 14% 99%;
   --card-foreground: 250 16% 18%;
-  --sidebar: 258 20% 96%;
-  --chrome: 258 20% 98%;
+  --sidebar: 255 14% 97%;
+  --chrome: 255 14% 99%;
   --overlay: 255 20% 99%;
-  --muted: 258 16% 93%;
+  --muted: 255 12% 95%;
   --muted-foreground: 252 10% 34%;
-  --border: 252 14% 84%;
-  --control-border: 252 10% 46%;
+  --border: 252 10% 90%;
+  --control-border: 252 8% 54%;
+  --field-border: var(--control-border);
   --ring: 252 42% 44%;
   --primary: 252 42% 44%;
   --primary-foreground: 0 0% 100%;
@@ -29,8 +30,8 @@
   --danger-soft: 0 36% 96%;
   --inverted: 250 16% 18%;
   --inverted-foreground: 0 0% 100%;
-  --canvas-tint-a: 260 22% 78%;
-  --canvas-tint-b: 238 18% 82%;
+  --canvas-tint-a: 260 18% 86%;
+  --canvas-tint-b: 238 14% 89%;
   --glass-highlight: 0 0% 100%;
   --sidebar-width: 224px;
   --topbar-height: 52px;
@@ -79,29 +80,30 @@
   --chrome-blur: 16px;
   --floating-blur: 20px;
   --chrome-alpha: 0.68;
-  --floating-alpha: 0.84;
-  --chrome-highlight-alpha: 0.76;
-  --floating-highlight-alpha: 0.8;
+  --floating-alpha: 0.80;
+  --chrome-highlight-alpha: 0.56;
+  --floating-highlight-alpha: 0.64;
   --scrim: hsl(252 20% 10% / .36);
-  --canvas-gradient: radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .72) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .64) 0%, transparent 78%);
-  --shadow-chrome: 0 4px 16px hsl(250 20% 20% / .07);
-  --shadow-floating: 0 12px 32px hsl(250 20% 20% / .12), 0 2px 6px hsl(250 20% 20% / .06);
+  --canvas-gradient: radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .20) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .16) 0%, transparent 80%);
+  --shadow-chrome: 0 2px 12px hsl(250 20% 20% / .04);
+  --shadow-floating: 0 16px 40px hsl(250 20% 20% / .10), 0 2px 8px hsl(250 20% 20% / .04);
 }
 .dark {
   --chrome-muted-foreground: 252 10% 90%;
   --chrome-ring: 252 62% 86%;
   --chrome-control-border: 252 10% 78%;
-  --background: 252 16% 10%;
+  --background: 252 12% 13%;
   --foreground: 252 12% 93%;
-  --card: 252 14% 14%;
+  --card: 252 11% 15.5%;
   --card-foreground: 252 12% 93%;
-  --sidebar: 252 16% 12%;
-  --chrome: 252 16% 14%;
-  --overlay: 252 16% 16%;
-  --muted: 252 14% 19%;
+  --sidebar: 252 12% 14%;
+  --chrome: 252 11% 16%;
+  --overlay: 252 12% 18%;
+  --muted: 252 10% 18%;
   --muted-foreground: 252 10% 76%;
-  --border: 252 12% 28%;
-  --control-border: 252 10% 62%;
+  --border: 252 9% 21%;
+  --control-border: 252 8% 52%;
+  --field-border: var(--control-border);
   --ring: 252 62% 76%;
   --primary: 252 62% 76%;
   --primary-foreground: 252 20% 12%;
@@ -117,17 +119,17 @@
   --danger-soft: 0 24% 19%;
   --inverted: 252 12% 93%;
   --inverted-foreground: 252 16% 10%;
-  --canvas-tint-a: 260 22% 44%;
-  --canvas-tint-b: 238 20% 36%;
+  --canvas-tint-a: 260 16% 31%;
+  --canvas-tint-b: 238 14% 28%;
   --glass-highlight: 252 30% 90%;
   --chrome-alpha: 0.72;
-  --floating-alpha: 0.86;
-  --chrome-highlight-alpha: 0.22;
-  --floating-highlight-alpha: 0.24;
+  --floating-alpha: 0.84;
+  --chrome-highlight-alpha: 0.16;
+  --floating-highlight-alpha: 0.20;
   --scrim: hsl(252 25% 3% / .60);
-  --canvas-gradient: radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .62) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .56) 0%, transparent 78%);
-  --shadow-chrome: 0 4px 16px hsl(252 35% 3% / .20);
-  --shadow-floating: 0 12px 32px hsl(252 35% 3% / .34), 0 2px 6px hsl(252 35% 3% / .20);
+  --canvas-gradient: radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .18) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .14) 0%, transparent 80%);
+  --shadow-chrome: 0 2px 12px hsl(252 35% 3% / .16);
+  --shadow-floating: 0 16px 40px hsl(252 35% 3% / .30), 0 2px 8px hsl(252 35% 3% / .16);
 }
 @theme inline {
   --color-chrome-muted-foreground: hsl(var(--chrome-muted-foreground));
@@ -175,6 +177,6 @@
   :root { --workspace-gutter: 16px; --workspace-padding-block: 24px 48px; }
 }
 @media (max-width: 639px), (pointer: coarse) {
-  :root { --chrome-alpha: .84; --floating-alpha: .92; --chrome-blur: 8px; --floating-blur: 8px; }
-  .dark { --chrome-alpha: .88; --floating-alpha: .94; }
+  :root { --chrome-alpha: .84; --floating-alpha: .88; --chrome-blur: 8px; --floating-blur: 8px; }
+  .dark { --chrome-alpha: .88; --floating-alpha: .90; }
 }

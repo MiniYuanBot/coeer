@@ -58,7 +58,7 @@ function SpaceHistoryPage() {
               ? { pending: '等待执行', running: '执行中', done: '已完成', failed: '执行失败' }
               : { success: '同步成功', running: '执行中', failed: '同步失败' }
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             <p className="text-[13px] leading-6 text-muted-foreground">
                 保留最近 24 小时的已结束记录，待处理和执行中的任务继续保留。凭据与官方原文不会写入审计记录。
             </p>
@@ -66,8 +66,9 @@ function SpaceHistoryPage() {
                 searchValue={filters.q}
                 searchPlaceholder="搜索操作、记录编号或错误分类"
                 onSearch={(q) => update({ q: q.slice(0, 80) })}
-                groups={[
-                    {
+                onClear={() => update({ q: '', state: '' })}
+                scope={{
+                        title: '记录类型',
                         items: [
                             ['sync-runs', '空间同步'],
                             ['jobs', '任务队列'],
@@ -78,8 +79,8 @@ function SpaceHistoryPage() {
                             active: filters.kind === key,
                             onClick: () => update({ kind: key as typeof filters.kind, state: '', q: '' }),
                         })),
-                    },
-                ]}
+                    }}
+                groups={[]}
             />
             <Field label="状态 / 操作" className="max-w-xs">
                 <Select value={filters.state} onChange={(event) => update({ state: event.target.value })}>
@@ -122,7 +123,7 @@ function SpaceHistoryPage() {
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {resource.data.items.map((entry) => (
-                                    <tr key={entry.id} className="align-top hover:bg-muted">
+                                    <tr key={entry.id} className="align-middle hover:bg-muted">
                                         <td className="px-4 py-4">
                                             <p className="font-medium">
                                                 {entry.action

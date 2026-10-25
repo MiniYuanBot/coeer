@@ -81,6 +81,8 @@ import { Route as AuthedAdminSpacesBookingsRouteImport } from './routes/_authed/
 import { Route as AuthedAdminSpacesAllowlistRouteImport } from './routes/_authed/admin/spaces/allowlist'
 import { Route as AuthedAdminGroupsPendingRouteImport } from './routes/_authed/admin/groups/pending'
 import { Route as AuthedAdminFeedbacksPendingRouteImport } from './routes/_authed/admin/feedbacks/pending'
+import { Route as AuthedAdminDormsQuestionnairesRouteImport } from './routes/_authed/admin/dorms/questionnaires'
+import { Route as AuthedAdminDormsNewRouteImport } from './routes/_authed/admin/dorms/new'
 import { Route as AuthedGroupsSlugPostsRouteRouteImport } from './routes/_authed/groups/$slug/posts/route'
 import { Route as AuthedGroupsSlugPostsIndexRouteImport } from './routes/_authed/groups/$slug/posts/index'
 import { Route as AuthedGroupsSlugPostsCreateRouteImport } from './routes/_authed/groups/$slug/posts/create'
@@ -465,6 +467,17 @@ const AuthedAdminFeedbacksPendingRoute =
     path: '/pending',
     getParentRoute: () => AuthedAdminFeedbacksRouteRoute,
   } as any)
+const AuthedAdminDormsQuestionnairesRoute =
+  AuthedAdminDormsQuestionnairesRouteImport.update({
+    id: '/questionnaires',
+    path: '/questionnaires',
+    getParentRoute: () => AuthedAdminDormsRouteRoute,
+  } as any)
+const AuthedAdminDormsNewRoute = AuthedAdminDormsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthedAdminDormsRouteRoute,
+} as any)
 const AuthedGroupsSlugPostsRouteRoute =
   AuthedGroupsSlugPostsRouteRouteImport.update({
     id: '/posts',
@@ -561,6 +574,8 @@ export interface FileRoutesByFullPath {
   '/spaces/': typeof AuthedSpacesIndexRoute
   '/api/images/': typeof ApiImagesIndexRoute
   '/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/admin/dorms/new': typeof AuthedAdminDormsNewRoute
+  '/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
   '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
@@ -624,6 +639,8 @@ export interface FileRoutesByTo {
   '/redeems': typeof AuthedRedeemsIndexRoute
   '/spaces': typeof AuthedSpacesIndexRoute
   '/api/images': typeof ApiImagesIndexRoute
+  '/admin/dorms/new': typeof AuthedAdminDormsNewRoute
+  '/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
   '/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
@@ -705,6 +722,8 @@ export interface FileRoutesById {
   '/_authed/spaces/': typeof AuthedSpacesIndexRoute
   '/api/images/': typeof ApiImagesIndexRoute
   '/_authed/groups/$slug/posts': typeof AuthedGroupsSlugPostsRouteRouteWithChildren
+  '/_authed/admin/dorms/new': typeof AuthedAdminDormsNewRoute
+  '/_authed/admin/dorms/questionnaires': typeof AuthedAdminDormsQuestionnairesRoute
   '/_authed/admin/feedbacks/pending': typeof AuthedAdminFeedbacksPendingRoute
   '/_authed/admin/groups/pending': typeof AuthedAdminGroupsPendingRoute
   '/_authed/admin/spaces/allowlist': typeof AuthedAdminSpacesAllowlistRoute
@@ -787,6 +806,8 @@ export interface FileRouteTypes {
     | '/spaces/'
     | '/api/images/'
     | '/groups/$slug/posts'
+    | '/admin/dorms/new'
+    | '/admin/dorms/questionnaires'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
     | '/admin/spaces/allowlist'
@@ -850,6 +871,8 @@ export interface FileRouteTypes {
     | '/redeems'
     | '/spaces'
     | '/api/images'
+    | '/admin/dorms/new'
+    | '/admin/dorms/questionnaires'
     | '/admin/feedbacks/pending'
     | '/admin/groups/pending'
     | '/admin/spaces/allowlist'
@@ -930,6 +953,8 @@ export interface FileRouteTypes {
     | '/_authed/spaces/'
     | '/api/images/'
     | '/_authed/groups/$slug/posts'
+    | '/_authed/admin/dorms/new'
+    | '/_authed/admin/dorms/questionnaires'
     | '/_authed/admin/feedbacks/pending'
     | '/_authed/admin/groups/pending'
     | '/_authed/admin/spaces/allowlist'
@@ -1478,6 +1503,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminFeedbacksPendingRouteImport
       parentRoute: typeof AuthedAdminFeedbacksRouteRoute
     }
+    '/_authed/admin/dorms/questionnaires': {
+      id: '/_authed/admin/dorms/questionnaires'
+      path: '/questionnaires'
+      fullPath: '/admin/dorms/questionnaires'
+      preLoaderRoute: typeof AuthedAdminDormsQuestionnairesRouteImport
+      parentRoute: typeof AuthedAdminDormsRouteRoute
+    }
+    '/_authed/admin/dorms/new': {
+      id: '/_authed/admin/dorms/new'
+      path: '/new'
+      fullPath: '/admin/dorms/new'
+      preLoaderRoute: typeof AuthedAdminDormsNewRouteImport
+      parentRoute: typeof AuthedAdminDormsRouteRoute
+    }
     '/_authed/groups/$slug/posts': {
       id: '/_authed/groups/$slug/posts'
       path: '/posts'
@@ -1560,10 +1599,14 @@ const AuthedActivitiesRouteRouteWithChildren =
   )
 
 interface AuthedAdminDormsRouteRouteChildren {
+  AuthedAdminDormsNewRoute: typeof AuthedAdminDormsNewRoute
+  AuthedAdminDormsQuestionnairesRoute: typeof AuthedAdminDormsQuestionnairesRoute
   AuthedAdminDormsIndexRoute: typeof AuthedAdminDormsIndexRoute
 }
 
 const AuthedAdminDormsRouteRouteChildren: AuthedAdminDormsRouteRouteChildren = {
+  AuthedAdminDormsNewRoute: AuthedAdminDormsNewRoute,
+  AuthedAdminDormsQuestionnairesRoute: AuthedAdminDormsQuestionnairesRoute,
   AuthedAdminDormsIndexRoute: AuthedAdminDormsIndexRoute,
 }
 

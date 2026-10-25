@@ -1,22 +1,22 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-24T14:51:59.537Z",
+  "generatedAt": "2026-10-25T04:50:27.122Z",
   "title": "Design System: COEER",
   "extensions": {
     "colorMeta": {
       "background": {
         "role": "neutral",
         "displayName": "内容画布",
-        "canonical": "hsl(260 18% 95%)",
+        "canonical": "hsl(255 14% 97%)",
         "tonalRamp": [
-          "oklch(15% 0.00630 301.39)",
-          "oklch(26% 0.00630 301.39)",
-          "oklch(38% 0.00630 301.39)",
-          "oklch(49% 0.00630 301.39)",
-          "oklch(61% 0.00630 301.39)",
-          "oklch(72% 0.00630 301.39)",
-          "oklch(84% 0.00630 301.39)",
-          "oklch(95% 0.00630 301.39)"
+          "oklch(15% 0.00288 297.77)",
+          "oklch(26% 0.00288 297.77)",
+          "oklch(38% 0.00288 297.77)",
+          "oklch(49% 0.00288 297.77)",
+          "oklch(61% 0.00288 297.77)",
+          "oklch(72% 0.00288 297.77)",
+          "oklch(84% 0.00288 297.77)",
+          "oklch(95% 0.00288 297.77)"
         ]
       },
       "foreground": {
@@ -37,16 +37,16 @@
       "card": {
         "role": "neutral",
         "displayName": "正文实底",
-        "canonical": "hsl(255 20% 99%)",
+        "canonical": "hsl(255 14% 99%)",
         "tonalRamp": [
-          "oklch(15% 0.00137 297.80)",
-          "oklch(26% 0.00137 297.80)",
-          "oklch(38% 0.00137 297.80)",
-          "oklch(49% 0.00137 297.80)",
-          "oklch(61% 0.00137 297.80)",
-          "oklch(72% 0.00137 297.80)",
-          "oklch(84% 0.00137 297.80)",
-          "oklch(95% 0.00137 297.80)"
+          "oklch(15% 0.00096 297.81)",
+          "oklch(26% 0.00096 297.81)",
+          "oklch(38% 0.00096 297.81)",
+          "oklch(49% 0.00096 297.81)",
+          "oklch(61% 0.00096 297.81)",
+          "oklch(72% 0.00096 297.81)",
+          "oklch(84% 0.00096 297.81)",
+          "oklch(95% 0.00096 297.81)"
         ]
       },
       "card-foreground": {
@@ -67,31 +67,31 @@
       "sidebar": {
         "role": "neutral",
         "displayName": "导航实底回退",
-        "canonical": "hsl(258 20% 96%)",
+        "canonical": "hsl(255 14% 97%)",
         "tonalRamp": [
-          "oklch(15% 0.00555 299.94)",
-          "oklch(26% 0.00555 299.94)",
-          "oklch(38% 0.00555 299.94)",
-          "oklch(49% 0.00555 299.94)",
-          "oklch(61% 0.00555 299.94)",
-          "oklch(72% 0.00555 299.94)",
-          "oklch(84% 0.00555 299.94)",
-          "oklch(95% 0.00555 299.94)"
+          "oklch(15% 0.00288 297.77)",
+          "oklch(26% 0.00288 297.77)",
+          "oklch(38% 0.00288 297.77)",
+          "oklch(49% 0.00288 297.77)",
+          "oklch(61% 0.00288 297.77)",
+          "oklch(72% 0.00288 297.77)",
+          "oklch(84% 0.00288 297.77)",
+          "oklch(95% 0.00288 297.77)"
         ]
       },
       "chrome": {
         "role": "neutral",
         "displayName": "玻璃导航底色",
-        "canonical": "hsl(258 20% 98%)",
+        "canonical": "hsl(255 14% 99%)",
         "tonalRamp": [
-          "oklch(15% 0.00276 299.99)",
-          "oklch(26% 0.00276 299.99)",
-          "oklch(38% 0.00276 299.99)",
-          "oklch(49% 0.00276 299.99)",
-          "oklch(61% 0.00276 299.99)",
-          "oklch(72% 0.00276 299.99)",
-          "oklch(84% 0.00276 299.99)",
-          "oklch(95% 0.00276 299.99)"
+          "oklch(15% 0.00096 297.81)",
+          "oklch(26% 0.00096 297.81)",
+          "oklch(38% 0.00096 297.81)",
+          "oklch(49% 0.00096 297.81)",
+          "oklch(61% 0.00096 297.81)",
+          "oklch(72% 0.00096 297.81)",
+          "oklch(84% 0.00096 297.81)",
+          "oklch(95% 0.00096 297.81)"
         ]
       },
       "overlay": {
@@ -112,16 +112,16 @@
       "muted": {
         "role": "neutral",
         "displayName": "辅助实底",
-        "canonical": "hsl(258 16% 93%)",
+        "canonical": "hsl(255 12% 95%)",
         "tonalRamp": [
-          "oklch(15% 0.00783 299.90)",
-          "oklch(26% 0.00783 299.90)",
-          "oklch(38% 0.00783 299.90)",
-          "oklch(49% 0.00783 299.90)",
-          "oklch(61% 0.00783 299.90)",
-          "oklch(72% 0.00783 299.90)",
-          "oklch(84% 0.00783 299.90)",
-          "oklch(95% 0.00783 299.90)"
+          "oklch(15% 0.00414 297.75)",
+          "oklch(26% 0.00414 297.75)",
+          "oklch(38% 0.00414 297.75)",
+          "oklch(49% 0.00414 297.75)",
+          "oklch(61% 0.00414 297.75)",
+          "oklch(72% 0.00414 297.75)",
+          "oklch(84% 0.00414 297.75)",
+          "oklch(95% 0.00414 297.75)"
         ]
       },
       "muted-foreground": {
@@ -142,31 +142,31 @@
       "border": {
         "role": "neutral",
         "displayName": "装饰分隔",
-        "canonical": "hsl(252 14% 84%)",
+        "canonical": "hsl(252 10% 90%)",
         "tonalRamp": [
-          "oklch(15% 0.01579 295.24)",
-          "oklch(26% 0.01579 295.24)",
-          "oklch(38% 0.01579 295.24)",
-          "oklch(49% 0.01579 295.24)",
-          "oklch(61% 0.01579 295.24)",
-          "oklch(72% 0.01579 295.24)",
-          "oklch(84% 0.01579 295.24)",
-          "oklch(95% 0.01579 295.24)"
+          "oklch(15% 0.00693 295.44)",
+          "oklch(26% 0.00693 295.44)",
+          "oklch(38% 0.00693 295.44)",
+          "oklch(49% 0.00693 295.44)",
+          "oklch(61% 0.00693 295.44)",
+          "oklch(72% 0.00693 295.44)",
+          "oklch(84% 0.00693 295.44)",
+          "oklch(95% 0.00693 295.44)"
         ]
       },
       "control-border": {
         "role": "neutral",
         "displayName": "控件边界",
-        "canonical": "hsl(252 10% 46%)",
+        "canonical": "hsl(252 8% 54%)",
         "tonalRamp": [
-          "oklch(15% 0.03667 294.30)",
-          "oklch(26% 0.03667 294.30)",
-          "oklch(38% 0.03667 294.30)",
-          "oklch(49% 0.03667 294.30)",
-          "oklch(61% 0.03667 294.30)",
-          "oklch(72% 0.03667 294.30)",
-          "oklch(84% 0.03667 294.30)",
-          "oklch(95% 0.03667 294.30)"
+          "oklch(15% 0.02837 294.72)",
+          "oklch(26% 0.02837 294.72)",
+          "oklch(38% 0.02837 294.72)",
+          "oklch(49% 0.02837 294.72)",
+          "oklch(61% 0.02837 294.72)",
+          "oklch(72% 0.02837 294.72)",
+          "oklch(84% 0.02837 294.72)",
+          "oklch(95% 0.02837 294.72)"
         ]
       },
       "ring": {
@@ -397,31 +397,31 @@
       "canvas-tint-a": {
         "role": "neutral",
         "displayName": "画布紫灰渐变",
-        "canonical": "hsl(260 22% 78%)",
+        "canonical": "hsl(260 18% 86%)",
         "tonalRamp": [
-          "oklch(15% 0.03546 300.78)",
-          "oklch(26% 0.03546 300.78)",
-          "oklch(38% 0.03546 300.78)",
-          "oklch(49% 0.03546 300.78)",
-          "oklch(61% 0.03546 300.78)",
-          "oklch(72% 0.03546 300.78)",
-          "oklch(84% 0.03546 300.78)",
-          "oklch(95% 0.03546 300.78)"
+          "oklch(15% 0.01804 301.16)",
+          "oklch(26% 0.01804 301.16)",
+          "oklch(38% 0.01804 301.16)",
+          "oklch(49% 0.01804 301.16)",
+          "oklch(61% 0.01804 301.16)",
+          "oklch(72% 0.01804 301.16)",
+          "oklch(84% 0.01804 301.16)",
+          "oklch(95% 0.01804 301.16)"
         ]
       },
       "canvas-tint-b": {
         "role": "neutral",
         "displayName": "画布冷灰渐变",
-        "canonical": "hsl(238 18% 82%)",
+        "canonical": "hsl(238 14% 89%)",
         "tonalRamp": [
-          "oklch(15% 0.02208 284.34)",
-          "oklch(26% 0.02208 284.34)",
-          "oklch(38% 0.02208 284.34)",
-          "oklch(49% 0.02208 284.34)",
-          "oklch(61% 0.02208 284.34)",
-          "oklch(72% 0.02208 284.34)",
-          "oklch(84% 0.02208 284.34)",
-          "oklch(95% 0.02208 284.34)"
+          "oklch(15% 0.01027 284.61)",
+          "oklch(26% 0.01027 284.61)",
+          "oklch(38% 0.01027 284.61)",
+          "oklch(49% 0.01027 284.61)",
+          "oklch(61% 0.01027 284.61)",
+          "oklch(72% 0.01027 284.61)",
+          "oklch(84% 0.01027 284.61)",
+          "oklch(95% 0.01027 284.61)"
         ]
       },
       "glass-highlight": {
@@ -442,16 +442,16 @@
       "dark-background": {
         "role": "neutral",
         "displayName": "深色 · 内容画布",
-        "canonical": "hsl(252 16% 10%)",
+        "canonical": "hsl(252 12% 13%)",
         "tonalRamp": [
-          "oklch(15% 0.01625 294.08)",
-          "oklch(26% 0.01625 294.08)",
-          "oklch(38% 0.01625 294.08)",
-          "oklch(49% 0.01625 294.08)",
-          "oklch(61% 0.01625 294.08)",
-          "oklch(72% 0.01625 294.08)",
-          "oklch(84% 0.01625 294.08)",
-          "oklch(95% 0.01625 294.08)"
+          "oklch(15% 0.01525 294.37)",
+          "oklch(26% 0.01525 294.37)",
+          "oklch(38% 0.01525 294.37)",
+          "oklch(49% 0.01525 294.37)",
+          "oklch(61% 0.01525 294.37)",
+          "oklch(72% 0.01525 294.37)",
+          "oklch(84% 0.01525 294.37)",
+          "oklch(95% 0.01525 294.37)"
         ]
       },
       "dark-foreground": {
@@ -472,16 +472,16 @@
       "dark-card": {
         "role": "neutral",
         "displayName": "深色 · 正文实底",
-        "canonical": "hsl(252 14% 14%)",
+        "canonical": "hsl(252 11% 15.5%)",
         "tonalRamp": [
-          "oklch(15% 0.01901 294.12)",
-          "oklch(26% 0.01901 294.12)",
-          "oklch(38% 0.01901 294.12)",
-          "oklch(49% 0.01901 294.12)",
-          "oklch(61% 0.01901 294.12)",
-          "oklch(72% 0.01901 294.12)",
-          "oklch(84% 0.01901 294.12)",
-          "oklch(95% 0.01901 294.12)"
+          "oklch(15% 0.01624 294.42)",
+          "oklch(26% 0.01624 294.42)",
+          "oklch(38% 0.01624 294.42)",
+          "oklch(49% 0.01624 294.42)",
+          "oklch(61% 0.01624 294.42)",
+          "oklch(72% 0.01624 294.42)",
+          "oklch(84% 0.01624 294.42)",
+          "oklch(95% 0.01624 294.42)"
         ]
       },
       "dark-card-foreground": {
@@ -502,61 +502,61 @@
       "dark-sidebar": {
         "role": "neutral",
         "displayName": "深色 · 导航实底回退",
-        "canonical": "hsl(252 16% 12%)",
+        "canonical": "hsl(252 12% 14%)",
         "tonalRamp": [
-          "oklch(15% 0.01905 293.97)",
-          "oklch(26% 0.01905 293.97)",
-          "oklch(38% 0.01905 293.97)",
-          "oklch(49% 0.01905 293.97)",
-          "oklch(61% 0.01905 293.97)",
-          "oklch(72% 0.01905 293.97)",
-          "oklch(84% 0.01905 293.97)",
-          "oklch(95% 0.01905 293.97)"
+          "oklch(15% 0.01626 294.35)",
+          "oklch(26% 0.01626 294.35)",
+          "oklch(38% 0.01626 294.35)",
+          "oklch(49% 0.01626 294.35)",
+          "oklch(61% 0.01626 294.35)",
+          "oklch(72% 0.01626 294.35)",
+          "oklch(84% 0.01626 294.35)",
+          "oklch(95% 0.01626 294.35)"
         ]
       },
       "dark-chrome": {
         "role": "neutral",
         "displayName": "深色 · 玻璃导航底色",
-        "canonical": "hsl(252 16% 14%)",
+        "canonical": "hsl(252 11% 16%)",
         "tonalRamp": [
-          "oklch(15% 0.02176 293.89)",
-          "oklch(26% 0.02176 293.89)",
-          "oklch(38% 0.02176 293.89)",
-          "oklch(49% 0.02176 293.89)",
-          "oklch(61% 0.02176 293.89)",
-          "oklch(72% 0.02176 293.89)",
-          "oklch(84% 0.02176 293.89)",
-          "oklch(95% 0.02176 293.89)"
+          "oklch(15% 0.01669 294.41)",
+          "oklch(26% 0.01669 294.41)",
+          "oklch(38% 0.01669 294.41)",
+          "oklch(49% 0.01669 294.41)",
+          "oklch(61% 0.01669 294.41)",
+          "oklch(72% 0.01669 294.41)",
+          "oklch(84% 0.01669 294.41)",
+          "oklch(95% 0.01669 294.41)"
         ]
       },
       "dark-overlay": {
         "role": "neutral",
         "displayName": "深色 · 玻璃浮层底色",
-        "canonical": "hsl(252 16% 16%)",
+        "canonical": "hsl(252 12% 18%)",
         "tonalRamp": [
-          "oklch(15% 0.02440 293.82)",
-          "oklch(26% 0.02440 293.82)",
-          "oklch(38% 0.02440 293.82)",
-          "oklch(49% 0.02440 293.82)",
-          "oklch(61% 0.02440 293.82)",
-          "oklch(72% 0.02440 293.82)",
-          "oklch(84% 0.02440 293.82)",
-          "oklch(95% 0.02440 293.82)"
+          "oklch(15% 0.02015 294.26)",
+          "oklch(26% 0.02015 294.26)",
+          "oklch(38% 0.02015 294.26)",
+          "oklch(49% 0.02015 294.26)",
+          "oklch(61% 0.02015 294.26)",
+          "oklch(72% 0.02015 294.26)",
+          "oklch(84% 0.02015 294.26)",
+          "oklch(95% 0.02015 294.26)"
         ]
       },
       "dark-muted": {
         "role": "neutral",
         "displayName": "深色 · 辅助实底",
-        "canonical": "hsl(252 14% 19%)",
+        "canonical": "hsl(252 10% 18%)",
         "tonalRamp": [
-          "oklch(15% 0.02467 293.99)",
-          "oklch(26% 0.02467 293.99)",
-          "oklch(38% 0.02467 293.99)",
-          "oklch(49% 0.02467 293.99)",
-          "oklch(61% 0.02467 293.99)",
-          "oklch(72% 0.02467 293.99)",
-          "oklch(84% 0.02467 293.99)",
-          "oklch(95% 0.02467 293.99)"
+          "oklch(15% 0.01675 294.49)",
+          "oklch(26% 0.01675 294.49)",
+          "oklch(38% 0.01675 294.49)",
+          "oklch(49% 0.01675 294.49)",
+          "oklch(61% 0.01675 294.49)",
+          "oklch(72% 0.01675 294.49)",
+          "oklch(84% 0.01675 294.49)",
+          "oklch(95% 0.01675 294.49)"
         ]
       },
       "dark-muted-foreground": {
@@ -577,31 +577,31 @@
       "dark-border": {
         "role": "neutral",
         "displayName": "深色 · 装饰分隔",
-        "canonical": "hsl(252 12% 28%)",
+        "canonical": "hsl(252 9% 21%)",
         "tonalRamp": [
-          "oklch(15% 0.02924 294.12)",
-          "oklch(26% 0.02924 294.12)",
-          "oklch(38% 0.02924 294.12)",
-          "oklch(49% 0.02924 294.12)",
-          "oklch(61% 0.02924 294.12)",
-          "oklch(72% 0.02924 294.12)",
-          "oklch(84% 0.02924 294.12)",
-          "oklch(95% 0.02924 294.12)"
+          "oklch(15% 0.01716 294.57)",
+          "oklch(26% 0.01716 294.57)",
+          "oklch(38% 0.01716 294.57)",
+          "oklch(49% 0.01716 294.57)",
+          "oklch(61% 0.01716 294.57)",
+          "oklch(72% 0.01716 294.57)",
+          "oklch(84% 0.01716 294.57)",
+          "oklch(95% 0.01716 294.57)"
         ]
       },
       "dark-control-border": {
         "role": "neutral",
         "displayName": "深色 · 控件边界",
-        "canonical": "hsl(252 10% 62%)",
+        "canonical": "hsl(252 8% 52%)",
         "tonalRamp": [
-          "oklch(15% 0.02853 294.80)",
-          "oklch(26% 0.02853 294.80)",
-          "oklch(38% 0.02853 294.80)",
-          "oklch(49% 0.02853 294.80)",
-          "oklch(61% 0.02853 294.80)",
-          "oklch(72% 0.02853 294.80)",
-          "oklch(84% 0.02853 294.80)",
-          "oklch(95% 0.02853 294.80)"
+          "oklch(15% 0.02983 294.64)",
+          "oklch(26% 0.02983 294.64)",
+          "oklch(38% 0.02983 294.64)",
+          "oklch(49% 0.02983 294.64)",
+          "oklch(61% 0.02983 294.64)",
+          "oklch(72% 0.02983 294.64)",
+          "oklch(84% 0.02983 294.64)",
+          "oklch(95% 0.02983 294.64)"
         ]
       },
       "dark-ring": {
@@ -832,31 +832,31 @@
       "dark-canvas-tint-a": {
         "role": "neutral",
         "displayName": "深色 · 画布紫灰渐变",
-        "canonical": "hsl(260 22% 44%)",
+        "canonical": "hsl(260 16% 31%)",
         "tonalRamp": [
-          "oklch(15% 0.07925 298.81)",
-          "oklch(26% 0.07925 298.81)",
-          "oklch(38% 0.07925 298.81)",
-          "oklch(49% 0.07925 298.81)",
-          "oklch(61% 0.07925 298.81)",
-          "oklch(72% 0.07925 298.81)",
-          "oklch(84% 0.07925 298.81)",
-          "oklch(95% 0.07925 298.81)"
+          "oklch(15% 0.04318 299.72)",
+          "oklch(26% 0.04318 299.72)",
+          "oklch(38% 0.04318 299.72)",
+          "oklch(49% 0.04318 299.72)",
+          "oklch(61% 0.04318 299.72)",
+          "oklch(72% 0.04318 299.72)",
+          "oklch(84% 0.04318 299.72)",
+          "oklch(95% 0.04318 299.72)"
         ]
       },
       "dark-canvas-tint-b": {
         "role": "neutral",
         "displayName": "深色 · 画布冷灰渐变",
-        "canonical": "hsl(238 20% 36%)",
+        "canonical": "hsl(238 14% 28%)",
         "tonalRamp": [
-          "oklch(15% 0.05863 282.08)",
-          "oklch(26% 0.05863 282.08)",
-          "oklch(38% 0.05863 282.08)",
-          "oklch(49% 0.05863 282.08)",
-          "oklch(61% 0.05863 282.08)",
-          "oklch(72% 0.05863 282.08)",
-          "oklch(84% 0.05863 282.08)",
-          "oklch(95% 0.05863 282.08)"
+          "oklch(15% 0.03302 283.12)",
+          "oklch(26% 0.03302 283.12)",
+          "oklch(38% 0.03302 283.12)",
+          "oklch(49% 0.03302 283.12)",
+          "oklch(61% 0.03302 283.12)",
+          "oklch(72% 0.03302 283.12)",
+          "oklch(84% 0.03302 283.12)",
+          "oklch(95% 0.03302 283.12)"
         ]
       },
       "dark-glass-highlight": {
@@ -1010,14 +1010,14 @@
     "shadows": [
       {
         "name": "shadow-chrome",
-        "value": "0 4px 16px hsl(250 20% 20% / .07)",
-        "darkValue": "0 4px 16px hsl(252 35% 3% / .20)",
+        "value": "0 2px 12px hsl(250 20% 20% / .04)",
+        "darkValue": "0 2px 12px hsl(252 35% 3% / .16)",
         "purpose": "导航与顶栏的轻遮挡；不用于普通 Card。"
       },
       {
         "name": "shadow-floating",
-        "value": "0 12px 32px hsl(250 20% 20% / .12), 0 2px 6px hsl(250 20% 20% / .06)",
-        "darkValue": "0 12px 32px hsl(252 35% 3% / .34), 0 2px 6px hsl(252 35% 3% / .20)",
+        "value": "0 16px 40px hsl(250 20% 20% / .10), 0 2px 8px hsl(250 20% 20% / .04)",
+        "darkValue": "0 16px 40px hsl(252 35% 3% / .30), 0 2px 8px hsl(252 35% 3% / .16)",
         "purpose": "浮层投影；无紫色外发光。"
       }
     ],
@@ -1061,36 +1061,293 @@
       }
     ],
     "contract": {
-      "id": "coeer-glass-v1",
-      "updatedOn": "2026-10-24",
+      "id": "coeer-experience-v2",
+      "updatedOn": "2026-10-25",
       "status": "implemented",
       "spec": "ui-layout.md",
-      "plan": "refactor-plan.md",
       "product": "../PRODUCT.md",
       "mirror": "../DESIGN.md",
       "codeChanged": true,
-      "browserEvidence": "Chromium 156.0.8078.47: isolated real React pages, responsive and interaction checks; production fixture solid/enhanced comparison. No backend writes.",
       "colorSource": "extensions.colorMeta[*].canonical",
       "tokenSource": "extensions.tokens; extensions.shadows; extensions.motion; extensions.breakpoints",
-      "tonalRampPolicy": "Derived preview ramps only; canonical semantic colors are normative. Do not choose production colors from exploratory ramps.",
-      "review": "implementation-review.md",
+      "browserEvidence": "Actual local application: dorm allocation/questionnaire records/creation, unified filter toolbar, desktop and mobile in both themes; isolated fixture workflow and access checks.",
       "validation": {
-        "representativeBrowserCases": 91,
-        "routeBehaviorAuditFiles": 29,
-        "vitestTests": 336,
+        "status": "locally-verified",
+        "actualPageGroups": 44,
+        "vitest": 344,
         "nodeTests": 14,
         "typecheck": "passed",
         "build": "passed",
-        "chromium": "passed",
-        "crossBrowser": "not-verified",
-        "physicalMobile": "not-verified",
-        "productionWebVitals": "not-measured",
         "deployment": "not-performed",
-        "visibilityRevision": "91 targeted browser cases, typecheck and build passed; actual localhost:3000 guest page checked in desktop/mobile and light/dark.",
-        "fullSuiteScope": "336 Vitest and 14 Node tests belong to the preceding full run; this CSS and guest-header visibility revision reruns the targeted browser suite, typecheck and build."
+        "physicalMobile": "not-verified",
+        "crossBrowser": "not-verified"
       },
-      "visualRevision": 2,
-      "visibilityEvidence": "Actual dark guest page had supported blur but a scrolled-off header and an almost uniform backdrop. Revision 2 adds a persistent viewport canvas, clearer material fill and a sticky guest header; verified in the real localhost:3000 page and in scrolled-page regression screenshots."
+      "visualRevision": 7
+    },
+    "experienceRevision": {
+      "id": "coeer-experience-v2",
+      "updatedOn": "2026-10-25",
+      "status": "implemented",
+      "codeChanged": true,
+      "implementationStatus": "implemented",
+      "spec": "ui-layout.md#11-欢迎区与工小成",
+      "scope": "Presentation refinements plus authorized bookmark search/type query parameters, sharing existing ownership and content visibility filters. Earlier card deletion capability remains. No deployment.",
+      "baseline": {
+        "workingTreeCommit": "3b77f07013053c05ec91eadfd1a45ef10747f45a",
+        "trackingRef": "origin/main matched the local HEAD; not fetched during this review",
+        "onlineURL": "https://coeer.miniyuan.site",
+        "onlineRelease": "20261023112626373-170f400fe5",
+        "localApplication": "localhost:3000 refused connection",
+        "localPreview": "http://127.0.0.1:4173/tests/fixtures/workspace.html",
+        "previewScope": "Existing real React components with isolated UI fixture data and router substitutes; no backend submission verification.",
+        "sourceHashComparison": {
+          "scope": "Online src, public, package.json, pnpm-lock.yaml and vite.config.ts against the initial local working tree",
+          "comparedFiles": 352,
+          "identicalFiles": 284,
+          "differentFiles": 68,
+          "localTrackedAdditions": [
+            "src/app/styles/tokens.css",
+            "src/app/components/coeer/hooks/useDialog.ts"
+          ],
+          "minigongOnProduction": false
+        }
+      },
+      "preserve": [
+        "Semantic color roles, selective Chrome/Floating versus opaque Reading responsibilities and fallback mechanisms; canvas, floating fill, highlights, shadows and modal continuity recalibrated this revision",
+        "Full-width PageLayout, container-based detail/settings columns and local reading measures",
+        "Feedback rows, homepage section order, five-item limits, pin rules and post/activity ordering",
+        "Activity detail asideFirstOnMobile, current booking result summary and real status semantics",
+        "Fixed media ratios, object-contain, local upload/crop/remove and legacy image handling",
+        "Existing theme, focus/dialog, touch targets, fallbacks, permissions and asynchronous booking contract"
+      ],
+      "materialCalibration": {
+        "status": "locally-verified",
+        "issueIds": [
+          "E15",
+          "E16",
+          "E17",
+          "E18"
+        ],
+        "spec": "ui-layout.md#17-背景与毛玻璃专项复核",
+        "baseTokensAreApprovedExperienceTargets": true,
+        "background": "Recalibrate gradient extent, position, lightness/chroma and alpha over a neutral purple-gray base; do not amplify large purple fields merely to emphasize glass",
+        "chrome": "Evaluate real tint and edge separation at rest, actual content blur during scroll, and text clarity; backdrop-filter presence alone is not acceptance",
+        "floating": "Review fill plus scrim plus opaque inner regions as a composite; retain solid fields and reading areas without automatically adding a full inner card",
+        "modalSwitch": "Only background backdrop sampling is disabled while a dialog is open; navigation fill is unchanged.",
+        "replacementAlphaValues": {
+          "chrome": {
+            "light": 0.68,
+            "dark": 0.72,
+            "touchLight": 0.84,
+            "touchDark": 0.88
+          },
+          "floating": {
+            "light": 0.8,
+            "dark": 0.84,
+            "touchLight": 0.88,
+            "touchDark": 0.9
+          }
+        },
+        "comparison": [
+          "Gradient on/off with other parameters fixed",
+          "Blur on/off with identical canvas and fill; compare full solid fallback separately",
+          "Static/scrolled guest and workspace pages in both themes",
+          "Modal, command menu and drawer open/close in desktop and mobile representative sizes"
+        ],
+        "evidenceLimit": "Representative actual-page screenshots and conservative browser contrast checks; physical devices, other browsers and production field metrics remain unverified.",
+        "evidence": "local validation report (not tracked)#材质与性能",
+        "readingSurfaces": "No decorative outer frame; light canvas/card L=97/99, dark L=13/15.5. Subtle separators, no header bands or stacked toolbar panels. Inputs and focus retain functional boundaries."
+      },
+      "welcome": {
+        "status": "implemented",
+        "asset": "/minigong.png",
+        "source": "public/minigong.png",
+        "intrinsicWidth": 1160,
+        "intrinsicHeight": 1355,
+        "transparent": true,
+        "presentation": "Independent static img in the content grid, object-fit:contain, original colors and complete silhouette; never a text-bearing background composite",
+        "guestDesktopGrid": "minmax(0,1fr) auto; character at upper right aligned with title top; width clamp(140px,18vw,220px)",
+        "guestMobileImageWidthPx": [
+          88,
+          88
+        ],
+        "guestMobileContentStartTarget": {
+          "viewport": "390x844",
+          "maxDocumentTopPx": 640,
+          "condition": "Default font size; allow natural growth with text zoom"
+        },
+        "authenticatedDesktopHeightTargetPx": [
+          96,
+          144
+        ],
+        "authenticatedImageWidthPx": [
+          56,
+          80
+        ],
+        "workspaceWidth": "none; no new page max-width",
+        "fallback": "Intrinsic size remains reserved; onError and a post-hydration complete/naturalWidth check hide failed images while copy and CTA remain usable.",
+        "guestMobileLayout": "Title left, character right on the same top row; description and CTA span both columns below; no centered or below-CTA mascot",
+        "guestMobileContentStartMeasured": {
+          "viewport": "390x844",
+          "titleAndCharacterTopPx": 97,
+          "firstContentTitleTopPx": 408.16,
+          "themes": [
+            "light",
+            "dark"
+          ]
+        },
+        "authenticatedShortcuts": [
+          "发现群组",
+          "参与活动",
+          "提交反馈",
+          "兑换权益"
+        ],
+        "authenticatedHeaderAction": "none; feedback entry is the third shortcut"
+      },
+      "filters": {
+        "status": "implemented",
+        "hierarchy": [
+          "unified underline view tabs",
+          "search and labeled conditions in coeer-filter-toolbar",
+          "results and pagination"
+        ],
+        "deduplicateParentNavigation": true,
+        "retainExistingRoutesAndQuerySemantics": true,
+        "mobileLongGroupThresholdItems": 6,
+        "mobileMaxExpandedRows": 2,
+        "mobileTouchTargetPx": 44,
+        "longGroupPresentation": "Labeled native Select for long groups and narrow containers; view navigation remains separate pressed buttons.",
+        "mobileAchievementConditionAreaTarget": {
+          "viewportWidthPx": 390,
+          "maxHeightPx": 160,
+          "includesSearch": true,
+          "excludes": [
+            "view navigation",
+            "24px section spacing before toolbar"
+          ],
+          "status": "verified-actual-application-at-390px"
+        },
+        "interaction": "Native selection applies the existing single condition immediately. Clear keeps the view; scoped navigation merges the latest URL state and resets page one.",
+        "label": "600 weight foreground label; divider on inline desktop groups; separate label above native select on narrow screens",
+        "summary": "Removed from all pages; active values remain in controls. Clear stays in the toolbar at a stable size and is disabled when no filters are active.",
+        "search": "Every list search uses FilterPanel; feedback admin, booking admin and allowlist migrated. Existing live/submitted search semantics retained.",
+        "sectionSpacing": {
+          "token": "--section-gap",
+          "value": "24px",
+          "internalScope": "Shared adjacent-sibling rule adds 24px between nested scope tabs and the toolbar",
+          "externalScope": "Page layout provides 24px; no additional toolbar margin",
+          "notificationTabs": "No extra wrapper margin",
+          "editorPanels": "Use the same section-gap token",
+          "density": "Card internals and form fields retain their own spacing",
+          "validation": {
+            "sourceFiles": 26,
+            "filterPanels": 17,
+            "managementEditors": 5,
+            "pageStates": 136,
+            "spacingMeasurements": 364,
+            "gapPx": 24,
+            "widths": [
+              1440,
+              390
+            ],
+            "themes": [
+              "light",
+              "dark"
+            ],
+            "typecheck": "passed",
+            "navigationTests": 15,
+            "build": "passed",
+            "deployment": "not-performed"
+          }
+        }
+      },
+      "modulePolicies": {
+        "community": "Continuous reading and restrained metadata; keep discovery/activity grids where useful; local 76ch reading measure, original feed/pin/reply rules",
+        "commerceAndAchievements": "Container grids, aligned actions, real cost/stock/progress; product 16:9, card 3:4, achievement 1:1; original colors and contain",
+        "servicesAndAdministration": "Feedback uses the group-page shell, independent status cards and pagination. Space views place the shared two-link navigation below each page title; no admin link in that navigation. Other opaque tables/forms and original workflows remain."
+      },
+      "copy": {
+        "language": "zh-CN",
+        "rules": [
+          "Use readable group/search labels, Chinese roles and point-source names; keep technical identifiers only where administrators need them",
+          "Distinguish empty data, filtered-out results, failed requests, unknown balance and insufficient points",
+          "Distinguish service unavailable, permission not yet loaded and known permission denial",
+          "Preserve user-authored content and supported search capabilities; never replace unknown statistics with zero"
+        ]
+      },
+      "acceptance": {
+        "status": "locally-verified",
+        "actualPageGroups": 44,
+        "vitest": 344,
+        "nodeTests": 14,
+        "typecheck": "passed",
+        "build": "passed",
+        "deployment": "not-performed",
+        "physicalMobile": "not-verified",
+        "crossBrowser": "not-verified"
+      },
+      "implementationRuntime": {
+        "origin": "http://127.0.0.1:3000",
+        "application": "complete TanStack SSR application; real routes, loaders and sessions",
+        "database": "dedicated local PostgreSQL coeer_ui_review_1792866168902",
+        "booking": "mock only; official connector writes disabled",
+        "browser": "Chrome 156.0.8078.47 headless on Windows",
+        "fonts": "application system fallback; Google font requests blocked consistently",
+        "primaryViewports": [
+          "1440x900",
+          "390x900",
+          "390x844"
+        ],
+        "supplementWidths": [
+          320,
+          640,
+          768,
+          1024
+        ],
+        "matrixScope": "Revision 7: 8 actual pages at 1440/390 in light/dark, stable toolbar height, combined search, cycle navigation, real create/compute/edit/confirm workflow in an isolated temporary cycle, and admin guards. Earlier revisions retain broader route coverage.",
+        "deployment": "not-performed"
+      },
+      "visualRevision": 7,
+      "managementEditor": {
+        "layout": "list / create-or-edit tabs, same as group views",
+        "mounting": "both panels stay mounted; hidden inactive panel",
+        "successAndCancel": "return to list",
+        "draft": "preserved when switching views",
+        "deleteCard": "admin-only; transaction locks definition; refuse owned cards; confirm and refresh current page"
+      },
+      "bookmarks": {
+        "scope": "existing saved group posts only",
+        "types": [
+          "announcement",
+          "discussion"
+        ],
+        "search": [
+          "post title",
+          "post content",
+          "group name"
+        ],
+        "matching": "server-side case-insensitive literal substring; visibility and ownership before pagination/count",
+        "pageSize": 9,
+        "url": [
+          "search",
+          "type",
+          "page"
+        ],
+        "outOfRange": "redirect to current last page retaining filters",
+        "presentation": "header, FilterPanel, separate PostCard bookmark summaries, pagination; group origin inside the card"
+      },
+      "dormAdministration": {
+        "routes": {
+          "allocation": "/admin/dorms",
+          "records": "/admin/dorms/questionnaires",
+          "create": "/admin/dorms/new"
+        },
+        "navigation": "Shared group-style underline tabs; cycleId retained across links and reload",
+        "creation": "Creates an existing dorm cycle; fixed questionnaire content retained",
+        "layout": "Full-width workspace, compact metrics and room cards; independent paginated questionnaire records; labeled creation form with adjacent explanation",
+        "permissions": "Existing admin route and server guards retained",
+        "workflow": "Existing compute/update/confirm APIs; operation feedback and refresh; no backend logic changes"
+      }
     },
     "tokens": {
       "typography": {
@@ -1099,7 +1356,9 @@
           "fontSize": "32px",
           "fontWeight": 600,
           "lineHeight": 1.35,
-          "letterSpacing": "0"
+          "letterSpacing": "0",
+          "mobileFontSize": "clamp(28px, 8.2vw, 32px)",
+          "desktopFontSize": "clamp(32px, 3.2vw, 44px)"
         },
         "headline": {
           "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif",
@@ -1234,12 +1493,12 @@
           "borderRole": "border",
           "light": {
             "opacity": 0.68,
-            "highlightOpacity": 0.76,
+            "highlightOpacity": 0.56,
             "background": "hsl(var(--chrome) / .68)"
           },
           "dark": {
             "opacity": 0.72,
-            "highlightOpacity": 0.22,
+            "highlightOpacity": 0.16,
             "background": "hsl(var(--chrome) / .72)"
           },
           "touch": {
@@ -1267,20 +1526,20 @@
           "shadow": "shadow-floating",
           "borderRole": "border",
           "light": {
-            "opacity": 0.84,
-            "highlightOpacity": 0.8,
-            "background": "hsl(var(--overlay) / .84)"
+            "opacity": 0.8,
+            "highlightOpacity": 0.64,
+            "background": "hsl(var(--overlay) / .80)"
           },
           "dark": {
-            "opacity": 0.86,
-            "highlightOpacity": 0.24,
-            "background": "hsl(var(--overlay) / .86)"
+            "opacity": 0.84,
+            "highlightOpacity": 0.2,
+            "background": "hsl(var(--overlay) / .84)"
           },
           "touch": {
             "condition": "(max-width: 639px), (pointer: coarse)",
             "blur": "8px",
-            "lightOpacity": 0.92,
-            "darkOpacity": 0.94
+            "lightOpacity": 0.88,
+            "darkOpacity": 0.9
           },
           "highlightShape": "inset 0 1px 0",
           "allowed": [
@@ -1289,14 +1548,22 @@
             "command-menu",
             "toast",
             "existing-popup"
-          ]
+          ],
+          "textRoles": {
+            "mutedForeground": "chrome-muted-foreground",
+            "ring": "chrome-ring",
+            "controlBorder": "chrome-control-border"
+          }
         },
         "reading": {
           "colorRole": "card",
           "opacity": 1,
           "blur": "0px",
           "shadow": "none",
-          "borderRole": "border"
+          "borderColor": "transparent",
+          "separatorRole": "border",
+          "highContrastBorderRole": "control-border",
+          "fieldBorderAlias": "--field-border resolves --control-border at the theme root; opaque fields do not inherit the stronger glass boundary"
         },
         "subtle": {
           "colorRole": "muted",
@@ -1313,8 +1580,8 @@
       "canvas": {
         "maxGradients": 2,
         "animated": false,
-        "light": "radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .72) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .64) 0%, transparent 78%)",
-        "dark": "radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .62) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .56) 0%, transparent 78%)",
+        "light": "radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .20) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .16) 0%, transparent 80%)",
+        "dark": "radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .18) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .14) 0%, transparent 80%)",
         "layer": "body::before; fixed viewport; pointer-events:none; no backdrop-filter"
       },
       "containerQueries": {
@@ -1342,11 +1609,7 @@
         "largeTextContrast": 3,
         "nonTextContrast": 3,
         "bodyContrastGoal": 7,
-        "chromeWorstCaseMutedContrast": {
-          "light": 4.79,
-          "dark": 5.08
-        },
-        "contrastEvidence": "单层 sRGB 颜色合成推算，非浏览器实测；实际合成结果必须重新验收。",
+        "contrastEvidence": "Visual revision 4: 28 actual-page/floating groups, 1500 visible text instances, no failures under conservative canvas/glass composites; actual opaque fields checked for >=3:1 boundary and >=4.5:1 text. See local validation report (not tracked).",
         "toastMinDurationMs": 5000,
         "toastPauseOnHoverOrFocus": true,
         "persistentErrorsInline": true
@@ -1368,13 +1631,13 @@
           "maxFrameP95RegressionPercent": 10,
           "maxAddedMainThreadTaskMs": 50
         },
-        "measurementStatus": "lab-production-fixture-measured",
+        "measurementStatus": "actual-application-development-lab; not-production-field-data",
         "fallbackOrder": [
           "opaque-fill-and-zero-blur",
           "remove-canvas-gradients",
           "remove-decorative-shadows"
         ],
-        "evidence": "implementation-review.md"
+        "evidence": "local validation report (not tracked)"
       },
       "fallback": {
         "default": "opaque",
@@ -1401,16 +1664,20 @@
           "height": "36px",
           "backgroundColor": "{colors.card}",
           "textColor": "{colors.foreground}",
-          "borderColor": "{colors.control-border}"
+          "borderColor": "transparent",
+          "hoverBackgroundColor": "{colors.muted}",
+          "highContrastBorderColor": "{colors.control-border}"
         },
         "button-outline": {
           "typography": "{typography.label}",
           "rounded": "{rounded.md}",
           "padding": "0 14px",
           "height": "36px",
-          "backgroundColor": "transparent",
+          "backgroundColor": "{colors.card}",
           "textColor": "{colors.foreground}",
-          "borderColor": "{colors.control-border}"
+          "borderColor": "transparent",
+          "hoverBackgroundColor": "{colors.muted}",
+          "highContrastBorderColor": "{colors.control-border}"
         },
         "button-ghost": {
           "typography": "{typography.label}",
@@ -1463,7 +1730,8 @@
           "textColor": "{colors.card-foreground}",
           "rounded": "{rounded.lg}",
           "shadow": "none",
-          "blur": "0px"
+          "blur": "0px",
+          "borderColor": "transparent"
         },
         "feedback-row": {
           "textColor": "{colors.foreground}",
@@ -1481,9 +1749,163 @@
           "rounded": "{rounded.dialog}",
           "blur": "20px",
           "shadow": "{shadows.shadow-floating.light}"
+        },
+        "view-tabs": {
+          "fontSize": "13px",
+          "paddingBlock": "12px",
+          "minHeight": "44px",
+          "gap": "24px",
+          "mobileGap": "20px",
+          "activeBorderWidth": "2px",
+          "activeBorderColor": "{colors.primary}",
+          "sharedBy": [
+            "NavTabs",
+            "ViewTabs",
+            "EditorSection"
+          ]
+        },
+        "filter-label": {
+          "fontSize": "12px",
+          "fontWeight": 600,
+          "textColor": "{colors.foreground}",
+          "inlineSeparator": "{colors.border}"
+        },
+        "select-option-hover": {
+          "backgroundColor": "{colors.primary}",
+          "textColor": "{colors.primary-foreground}",
+          "checkmarkColor": "currentColor",
+          "fallback": "native platform highlighting"
+        },
+        "table-cell": {
+          "verticalAlign": "middle"
+        },
+        "linked-card": {
+          "interaction": "native stretched detail anchor; interactive descendants above overlay",
+          "hoverBackgroundColor": "{colors.muted}",
+          "focus": "whole-card ring; keyboard and new-tab navigation retained"
         }
       }
-    }
+    },
+    "contractHistory": [
+      {
+        "id": "coeer-glass-v1",
+        "updatedOn": "2026-10-24",
+        "status": "implemented",
+        "spec": "ui-layout.md",
+        "product": "../PRODUCT.md",
+        "mirror": "../DESIGN.md",
+        "codeChanged": true,
+        "browserEvidence": "Chromium 156.0.8078.47: isolated real React pages, responsive and interaction checks; production fixture solid/enhanced comparison. No backend writes.",
+        "colorSource": "extensions.colorMeta[*].canonical",
+        "tokenSource": "extensions.tokens; extensions.shadows; extensions.motion; extensions.breakpoints",
+        "tonalRampPolicy": "Derived preview ramps only; canonical semantic colors are normative. Do not choose production colors from exploratory ramps.",
+        "validation": {
+          "representativeBrowserCases": 91,
+          "routeBehaviorAuditFiles": 29,
+          "vitestTests": 336,
+          "nodeTests": 14,
+          "typecheck": "passed",
+          "build": "passed",
+          "chromium": "passed",
+          "crossBrowser": "not-verified",
+          "physicalMobile": "not-verified",
+          "productionWebVitals": "not-measured",
+          "deployment": "not-performed",
+          "visibilityRevision": "91 targeted browser cases, typecheck and build passed; actual localhost:3000 guest page checked in desktop/mobile and light/dark.",
+          "fullSuiteScope": "336 Vitest and 14 Node tests belong to the preceding full run; this CSS and guest-header visibility revision reruns the targeted browser suite, typecheck and build."
+        },
+        "visualRevision": 2,
+        "visibilityEvidence": "Actual dark guest page had supported blur but a scrolled-off header and an almost uniform backdrop. Revision 2 adds a persistent viewport canvas, clearer material fill and a sticky guest header; verified in the real localhost:3000 page and in scrolled-page regression screenshots."
+      },
+      {
+        "id": "coeer-experience-v2",
+        "updatedOn": "2026-10-25",
+        "status": "implemented",
+        "spec": "ui-layout.md",
+        "product": "../PRODUCT.md",
+        "mirror": "../DESIGN.md",
+        "codeChanged": true,
+        "colorSource": "extensions.colorMeta[*].canonical",
+        "tokenSource": "extensions.tokens; extensions.shadows; extensions.motion; extensions.breakpoints",
+        "browserEvidence": "Actual TanStack application on dedicated local PostgreSQL; mock booking only. 1440/390, light/dark screenshot pairs; complete route, query, form and overlay review. Historical component tests are supplemental.",
+        "validation": {
+          "status": "passed-local-chromium",
+          "crossBrowser": "not-verified",
+          "physicalMobile": "not-verified",
+          "productionWebVitals": "not-measured",
+          "deployment": "not-performed",
+          "typecheck": "passed",
+          "vitest": {
+            "passed": 341,
+            "files": 29
+          },
+          "nodeTests": {
+            "passed": 14
+          },
+          "productionBuild": "passed-with-existing-chunk-warning",
+          "actualApplicationChecks": 143,
+          "supplementChecks": 73,
+          "contrastGroups": 28,
+          "zoom": "not-verified"
+        },
+        "visualRevision": 3
+      },
+      {
+        "id": "coeer-experience-v2",
+        "updatedOn": "2026-10-25",
+        "status": "implemented",
+        "spec": "ui-layout.md",
+        "product": "../PRODUCT.md",
+        "mirror": "../DESIGN.md",
+        "codeChanged": true,
+        "colorSource": "extensions.colorMeta[*].canonical",
+        "tokenSource": "extensions.tokens; extensions.shadows; extensions.motion; extensions.breakpoints",
+        "browserEvidence": "Visual revision 4: actual TanStack SSR application on isolated local PostgreSQL; 52 screenshots at 1440/390 light/dark, 32 focused checks, and 28 contrast groups. Earlier route and state checks remain historical evidence.",
+        "validation": {
+          "status": "locally-verified",
+          "actualPageChecks": 32,
+          "screenshotPairs": 52,
+          "contrastGroups": 28,
+          "visibleTextInstances": 1500,
+          "contrastFailures": 0,
+          "repositoryCheck": "pnpm check: exit 0",
+          "deployment": "not-performed",
+          "crossBrowser": "not-verified",
+          "physicalMobile": "not-verified",
+          "zoom": "not-verified",
+          "productionWebVitals": "not-measured",
+          "buttonFollowup": "Soft-filled secondary/outline actions; actual guest page checked at 1440/390 in light/dark, keyboard focus and high-contrast fallback verified; tsc passed. Full pnpm check above predates this follow-up."
+        },
+        "visualRevision": 4
+      },
+      {
+        "id": "coeer-experience-v2",
+        "updatedOn": "2026-10-25",
+        "status": "implemented",
+        "spec": "ui-layout.md",
+        "product": "../PRODUCT.md",
+        "mirror": "../DESIGN.md",
+        "codeChanged": true,
+        "colorSource": "extensions.colorMeta[*].canonical",
+        "tokenSource": "extensions.tokens; extensions.shadows; extensions.motion; extensions.breakpoints",
+        "browserEvidence": "Actual local TanStack SSR application: 42 layout/interaction groups plus 8 corrected query-tab groups. 1440/390, light/dark. Local temporary card created and deleted through UI; existing collections protected by service regression.",
+        "validation": {
+          "status": "locally-verified",
+          "actualPageGroups": 50,
+          "screenshots": 67,
+          "tests": {
+            "vitest": 343,
+            "node": 14,
+            "typecheck": "passed",
+            "build": "passed"
+          },
+          "deployment": "not-performed",
+          "crossBrowser": "not-verified",
+          "physicalMobile": "not-verified"
+        },
+        "visualRevision": 5
+      }
+    ]
   },
   "components": [
     {
@@ -1492,23 +1914,23 @@
       "refersTo": "button-primary",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。按钮采用实色前景和 hover；触屏命中区至少 44px。",
       "html": "<button class=\"ds-button-primary\" type=\"button\">提交反馈</button>",
-      "css": ".ds-button-primary{--ring:252 42% 44%;--control-border:252 10% 46%;--muted:258 16% 93%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--primary-foreground:0 0% 100%;--primary-hover:252 42% 39%;--primary:252 42% 44%}.dark .ds-button-primary,[data-theme=\"dark\"] .ds-button-primary{--ring:252 62% 76%;--control-border:252 10% 62%;--muted:252 14% 19%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--primary-foreground:252 20% 12%;--primary-hover:252 62% 80%;--primary:252 62% 76%}.ds-button-primary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-primary:hover{background:hsl(var(--primary-hover))}.ds-button-primary:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-primary:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-primary{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-primary{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-primary:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;animation:none}}"
+      "css": ".ds-button-primary{--ring:252 42% 44%;--control-border:252 8% 54%;--muted:255 12% 95%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--primary-foreground:0 0% 100%;--primary-hover:252 42% 39%;--primary:252 42% 44%}.dark .ds-button-primary,[data-theme=\"dark\"] .ds-button-primary{--ring:252 62% 76%;--control-border:252 8% 52%;--muted:252 10% 18%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--primary-foreground:252 20% 12%;--primary-hover:252 62% 80%;--primary:252 62% 76%}.ds-button-primary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-primary:hover{background:hsl(var(--primary-hover))}.ds-button-primary:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-primary:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-primary{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-primary{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-primary:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;animation:none}}"
     },
     {
       "name": "Secondary button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。按钮采用实色前景和 hover；触屏命中区至少 44px。",
+      "description": "Secondary action uses exactly the card fill with a transparent resting border; muted hover, visible keyboard focus and high-contrast fallback. Outline is a compatibility variant.",
       "html": "<button class=\"ds-button-secondary\" type=\"button\">取消</button>",
-      "css": ".ds-button-secondary{--ring:252 42% 44%;--control-border:252 10% 46%;--muted:258 16% 93%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--card:255 20% 99%}.dark .ds-button-secondary,[data-theme=\"dark\"] .ds-button-secondary{--ring:252 62% 76%;--control-border:252 10% 62%;--muted:252 14% 19%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--card:252 14% 14%}.ds-button-secondary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid hsl(var(--control-border));border-radius:8px;background:hsl(var(--card));color:hsl(var(--foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-secondary:hover{background:hsl(var(--muted))}.ds-button-secondary:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-secondary:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-secondary{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-secondary{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-secondary:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;animation:none}}"
+      "css": ".ds-button-secondary{--card:255 14% 99%;--primary-soft:252 32% 94%;--ring:252 42% 44%;--control-border:252 8% 54%;--muted:255 12% 95%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--card:255 14% 99%}.dark .ds-button-secondary,[data-theme=\"dark\"] .ds-button-secondary{--card:252 11% 15.5%;--primary-soft:252 26% 22%;--ring:252 62% 76%;--control-border:252 8% 52%;--muted:252 10% 18%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--card:252 11% 15.5%}.ds-button-secondary{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--card));color:hsl(var(--foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-secondary:hover{background:hsl(var(--muted))}.ds-button-secondary:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:transparent;pointer-events:none}.ds-button-secondary:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-secondary{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-secondary{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-secondary:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;animation:none}}@media(prefers-contrast:more){.ds-button-secondary{border-color:hsl(var(--control-border))}}"
     },
     {
       "name": "Outline button",
       "kind": "button",
       "refersTo": "button-outline",
-      "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。按钮采用实色前景和 hover；触屏命中区至少 44px。",
+      "description": "Secondary action uses exactly the card fill with a transparent resting border; muted hover, visible keyboard focus and high-contrast fallback. Outline is a compatibility variant.",
       "html": "<button class=\"ds-button-outline\" type=\"button\">查看详情</button>",
-      "css": ".ds-button-outline{--ring:252 42% 44%;--control-border:252 10% 46%;--muted:258 16% 93%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%}.dark .ds-button-outline,[data-theme=\"dark\"] .ds-button-outline{--ring:252 62% 76%;--control-border:252 10% 62%;--muted:252 14% 19%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%}.ds-button-outline{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid hsl(var(--control-border));border-radius:8px;background:transparent;color:hsl(var(--foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-outline:hover{background:hsl(var(--muted))}.ds-button-outline:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-outline:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-outline{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-outline{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-outline:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-outline{transition:none;animation:none}}"
+      "css": ".ds-button-outline{--card:255 14% 99%;--primary-soft:252 32% 94%;--ring:252 42% 44%;--control-border:252 8% 54%;--muted:255 12% 95%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%}.dark .ds-button-outline,[data-theme=\"dark\"] .ds-button-outline{--card:252 11% 15.5%;--primary-soft:252 26% 22%;--ring:252 62% 76%;--control-border:252 8% 52%;--muted:252 10% 18%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%}.ds-button-outline{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--card));color:hsl(var(--foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-outline:hover{background:hsl(var(--muted))}.ds-button-outline:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:transparent;pointer-events:none}.ds-button-outline:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-outline{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-outline{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-outline:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-outline{transition:none;animation:none}}@media(prefers-contrast:more){.ds-button-outline{border-color:hsl(var(--control-border))}}"
     },
     {
       "name": "Ghost button",
@@ -1516,7 +1938,7 @@
       "refersTo": "button-ghost",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。按钮采用实色前景和 hover；触屏命中区至少 44px。",
       "html": "<button class=\"ds-button-ghost\" type=\"button\">更多</button>",
-      "css": ".ds-button-ghost{--ring:252 42% 44%;--control-border:252 10% 46%;--muted:258 16% 93%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%}.dark .ds-button-ghost,[data-theme=\"dark\"] .ds-button-ghost{--ring:252 62% 76%;--control-border:252 10% 62%;--muted:252 14% 19%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%}.ds-button-ghost{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:transparent;color:hsl(var(--muted-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-ghost:hover{background:hsl(var(--muted))}.ds-button-ghost:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-ghost:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-ghost{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-ghost{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-ghost:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;animation:none}}"
+      "css": ".ds-button-ghost{--ring:252 42% 44%;--control-border:252 8% 54%;--muted:255 12% 95%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%}.dark .ds-button-ghost,[data-theme=\"dark\"] .ds-button-ghost{--ring:252 62% 76%;--control-border:252 8% 52%;--muted:252 10% 18%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%}.ds-button-ghost{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:transparent;color:hsl(var(--muted-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-ghost:hover{background:hsl(var(--muted))}.ds-button-ghost:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-ghost:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-ghost{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-ghost{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-ghost:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;animation:none}}"
     },
     {
       "name": "Danger button",
@@ -1524,7 +1946,7 @@
       "refersTo": "button-danger",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。按钮采用实色前景和 hover；触屏命中区至少 44px。",
       "html": "<button class=\"ds-button-danger\" type=\"button\">确认删除</button>",
-      "css": ".ds-button-danger{--ring:252 42% 44%;--control-border:252 10% 46%;--muted:258 16% 93%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--danger-foreground:0 0% 100%;--danger-hover:0 64% 37%;--danger:0 64% 42%}.dark .ds-button-danger,[data-theme=\"dark\"] .ds-button-danger{--ring:252 62% 76%;--control-border:252 10% 62%;--muted:252 14% 19%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--danger-foreground:252 20% 12%;--danger-hover:0 74% 79%;--danger:0 74% 74%}.ds-button-danger{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--danger));color:hsl(var(--danger-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-danger:hover{background:hsl(var(--danger-hover))}.ds-button-danger:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-danger:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-danger{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-danger{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-danger:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none;animation:none}}"
+      "css": ".ds-button-danger{--ring:252 42% 44%;--control-border:252 8% 54%;--muted:255 12% 95%;--muted-foreground:252 10% 34%;--foreground:250 16% 18%;--danger-foreground:0 0% 100%;--danger-hover:0 64% 37%;--danger:0 64% 42%}.dark .ds-button-danger,[data-theme=\"dark\"] .ds-button-danger{--ring:252 62% 76%;--control-border:252 8% 52%;--muted:252 10% 18%;--muted-foreground:252 10% 76%;--foreground:252 12% 93%;--danger-foreground:252 20% 12%;--danger-hover:0 74% 79%;--danger:0 74% 74%}.ds-button-danger{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:8px;background:hsl(var(--danger));color:hsl(var(--danger-foreground));font-size:13px;font-weight:500;line-height:1.5;cursor:pointer;transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out}.ds-button-danger:hover{background:hsl(var(--danger-hover))}.ds-button-danger:disabled{background:hsl(var(--muted));color:hsl(var(--muted-foreground));border-color:hsl(var(--control-border));pointer-events:none}.ds-button-danger:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-button-danger{min-width:44px;min-height:44px}}@media(forced-colors:active){.ds-button-danger{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}.ds-button-danger:focus-visible{outline-color:Highlight}}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none;animation:none}}"
     },
     {
       "name": "Search field",
@@ -1532,7 +1954,7 @@
       "refersTo": "search-input",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。持久标签、实底和控件边界；非内容索引。",
       "html": "<label class=\"ds-search\"><span>搜索页面</span><input placeholder=\"输入页面名称\" type=\"search\" /></label>",
-      "css": ".ds-search{--card:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--control-border:252 10% 46%;--ring:252 42% 44%}.dark .ds-search,[data-theme=\"dark\"] .ds-search{--card:252 14% 14%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--control-border:252 10% 62%;--ring:252 62% 76%}.ds-search{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;gap:8px;color:hsl(var(--foreground));font-size:13px}.ds-search input{box-sizing:border-box;width:100%;min-width:0;height:36px;padding:0 12px;border:1px solid hsl(var(--control-border));border-radius:8px;background:hsl(var(--card));color:hsl(var(--foreground));font:inherit}.ds-search input::placeholder{color:hsl(var(--muted-foreground));opacity:1}.ds-search input:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-search input{min-height:44px;font-size:16px}}"
+      "css": ".ds-search{--card:255 14% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--control-border:252 8% 54%;--ring:252 42% 44%}.dark .ds-search,[data-theme=\"dark\"] .ds-search{--card:252 11% 15.5%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--control-border:252 8% 52%;--ring:252 62% 76%}.ds-search{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;gap:8px;color:hsl(var(--foreground));font-size:13px}.ds-search input{box-sizing:border-box;width:100%;min-width:0;height:36px;padding:0 12px;border:1px solid hsl(var(--control-border));border-radius:8px;background:hsl(var(--card));color:hsl(var(--foreground));font:inherit}.ds-search input::placeholder{color:hsl(var(--muted-foreground));opacity:1}.ds-search input:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-search input{min-height:44px;font-size:16px}}"
     },
     {
       "name": "Sidebar navigation",
@@ -1540,7 +1962,7 @@
       "refersTo": "navigation-link",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。选中项实底浅紫，文字不直接叠加语义透明色。",
       "html": "<nav class=\"ds-nav\" aria-label=\"社区\"><a href=\"#home-example\" aria-current=\"page\">动态</a><a href=\"#groups-example\">群组</a></nav>",
-      "css": ".ds-nav{--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--muted:258 16% 93%;--primary-soft:252 32% 94%;--primary:252 42% 44%;--ring:252 42% 44%}.dark .ds-nav,[data-theme=\"dark\"] .ds-nav{--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--muted:252 14% 19%;--primary-soft:252 26% 22%;--primary:252 62% 76%;--ring:252 62% 76%}.ds-nav{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;gap:4px}.ds-nav a{display:flex;align-items:center;min-height:34px;padding:7px 10px;border-radius:8px;color:hsl(var(--muted-foreground));font-size:13px;text-decoration:none}.ds-nav a:hover{background:hsl(var(--muted));color:hsl(var(--foreground))}.ds-nav a[aria-current]{background:hsl(var(--primary-soft));color:hsl(var(--primary));font-weight:600}.ds-nav a:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-nav a{min-height:44px}}"
+      "css": ".ds-nav{--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--muted:255 12% 95%;--primary-soft:252 32% 94%;--primary:252 42% 44%;--ring:252 42% 44%}.dark .ds-nav,[data-theme=\"dark\"] .ds-nav{--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--muted:252 10% 18%;--primary-soft:252 26% 22%;--primary:252 62% 76%;--ring:252 62% 76%}.ds-nav{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;gap:4px}.ds-nav a{display:flex;align-items:center;min-height:34px;padding:7px 10px;border-radius:8px;color:hsl(var(--muted-foreground));font-size:13px;text-decoration:none}.ds-nav a:hover{background:hsl(var(--muted));color:hsl(var(--foreground))}.ds-nav a[aria-current]{background:hsl(var(--primary-soft));color:hsl(var(--primary));font-weight:600}.ds-nav a:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(max-width:639px),(pointer:coarse){.ds-nav a{min-height:44px}}"
     },
     {
       "name": "Primary status badge",
@@ -1554,9 +1976,9 @@
       "name": "Summary card",
       "kind": "card",
       "refersTo": "card",
-      "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。Card 默认实底无投影，未知积分使用占位，不预设统计。",
+      "description": "Opaque reading surface close to the canvas; no decorative frame or shadow. Contrast preference restores its boundary.",
       "html": "<section class=\"ds-card\"><h2>我的积分</h2><p class=\"ds-card-value\" aria-label=\"积分尚未加载\">—</p><p>参与活动、提交反馈，积累成长积分。</p></section>",
-      "css": ".ds-card{--card:255 20% 99%;--card-foreground:250 16% 18%;--border:252 14% 84%;--muted-foreground:252 10% 34%}.dark .ds-card,[data-theme=\"dark\"] .ds-card{--card:252 14% 14%;--card-foreground:252 12% 93%;--border:252 12% 28%;--muted-foreground:252 10% 76%}.ds-card{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;min-width:0;padding:16px;border:1px solid hsl(var(--border));border-radius:12px;background:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:none}.ds-card h2{margin:0;font-size:14px;font-weight:600;line-height:1.5}.ds-card p{margin:12px 0 0;color:hsl(var(--muted-foreground));font-size:13px;line-height:22px}.ds-card .ds-card-value{font-size:28px;line-height:1.2;font-weight:600;color:hsl(var(--card-foreground));font-variant-numeric:tabular-nums}"
+      "css": ".ds-card{--card:255 14% 99%;--card-foreground:250 16% 18%;--border:252 10% 90%;--muted-foreground:252 10% 34%}.dark .ds-card,[data-theme=\"dark\"] .ds-card{--card:252 11% 15.5%;--card-foreground:252 12% 93%;--border:252 9% 21%;--muted-foreground:252 10% 76%}.ds-card{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;min-width:0;padding:16px;border:1px solid transparent;border-radius:12px;background:hsl(var(--card));color:hsl(var(--card-foreground));box-shadow:none}.ds-card h2{margin:0;font-size:14px;font-weight:600;line-height:1.5}.ds-card p{margin:12px 0 0;color:hsl(var(--muted-foreground));font-size:13px;line-height:22px}.ds-card .ds-card-value{font-size:28px;line-height:1.2;font-weight:600;color:hsl(var(--card-foreground));font-variant-numeric:tabular-nums} @media(prefers-contrast:more){.ds-card{border-color:hsl(var(--control-border))}}"
     },
     {
       "name": "Feedback row",
@@ -1564,7 +1986,7 @@
       "refersTo": "feedback-row",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。实底列表行；状态和日期在手机进入元信息。",
       "html": "<a class=\"ds-feedback\" href=\"#feedback-example\"><span aria-hidden=\"true\">◐</span><span><strong>反馈标题（示例）</strong><span class=\"ds-feedback-copy\">清晰描述问题与处理进度。</span><span class=\"ds-feedback-mobile\">处理中 · 日期</span></span><span class=\"ds-feedback-status\">处理中</span><span class=\"ds-feedback-date\">日期</span></a>",
-      "css": ".ds-feedback{--card:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--muted:258 16% 93%;--border:252 14% 84%;--primary:252 42% 44%;--primary-soft:252 32% 94%;--ring:252 42% 44%}.dark .ds-feedback,[data-theme=\"dark\"] .ds-feedback{--card:252 14% 14%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--muted:252 14% 19%;--border:252 12% 28%;--primary:252 62% 76%;--primary-soft:252 26% 22%;--ring:252 62% 76%}.ds-feedback{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;padding:12px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));color:hsl(var(--foreground));text-decoration:none;font-size:14px;line-height:1.7}.ds-feedback:hover{background:hsl(var(--muted))}.ds-feedback strong{font-weight:500}.ds-feedback-copy{display:block;color:hsl(var(--muted-foreground));font-size:13px}.ds-feedback-mobile,.ds-feedback-date{font-size:12px;color:hsl(var(--muted-foreground))}.ds-feedback-status,.ds-feedback-date{display:none}.ds-feedback-mobile{display:block}.ds-feedback-status{padding:2px 6px;border-radius:4px;background:hsl(var(--primary-soft));color:hsl(var(--primary));white-space:nowrap;font-size:12px}.ds-feedback:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(min-width:640px){.ds-feedback{grid-template-columns:20px minmax(0,1fr) 84px 64px;align-items:center;padding-inline:16px}.ds-feedback-mobile{display:none}.ds-feedback-status,.ds-feedback-date{display:block}}"
+      "css": ".ds-feedback{--card:255 14% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--muted:255 12% 95%;--border:252 10% 90%;--primary:252 42% 44%;--primary-soft:252 32% 94%;--ring:252 42% 44%}.dark .ds-feedback,[data-theme=\"dark\"] .ds-feedback{--card:252 11% 15.5%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--muted:252 10% 18%;--border:252 9% 21%;--primary:252 62% 76%;--primary-soft:252 26% 22%;--ring:252 62% 76%}.ds-feedback{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;padding:12px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));color:hsl(var(--foreground));text-decoration:none;font-size:14px;line-height:1.7}.ds-feedback:hover{background:hsl(var(--muted))}.ds-feedback strong{font-weight:500}.ds-feedback-copy{display:block;color:hsl(var(--muted-foreground));font-size:13px}.ds-feedback-mobile,.ds-feedback-date{font-size:12px;color:hsl(var(--muted-foreground))}.ds-feedback-status,.ds-feedback-date{display:none}.ds-feedback-mobile{display:block}.ds-feedback-status{padding:2px 6px;border-radius:4px;background:hsl(var(--primary-soft));color:hsl(var(--primary));white-space:nowrap;font-size:12px}.ds-feedback:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}@media(min-width:640px){.ds-feedback{grid-template-columns:20px minmax(0,1fr) 84px 64px;align-items:center;padding-inline:16px}.ds-feedback-mobile{display:none}.ds-feedback-status,.ds-feedback-date{display:block}}"
     },
     {
       "name": "Workspace chrome",
@@ -1572,7 +1994,7 @@
       "refersTo": "surface-chrome",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。默认实底，能力检测后启用玻璃；支持深色、触屏和偏好降级。",
       "html": "<div class=\"ds-chrome-canvas\"><section class=\"ds-chrome\" aria-label=\"工作区导航材质示例\"><strong>COEER · 工作区导航</strong><p>静态设计示例；正文区域保持实底。</p></section></div>",
-      "css": ".ds-chrome-canvas{--background:260 18% 95%;--canvas-tint-a:260 22% 78%;--canvas-tint-b:238 18% 82%;--chrome:258 20% 98%;--sidebar:258 20% 96%;--overlay:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--glass-highlight:0 0% 100%;--border:252 14% 84%;--ring:252 42% 44%;--card:255 20% 99%}.dark .ds-chrome-canvas,[data-theme=\"dark\"] .ds-chrome-canvas{--background:252 16% 10%;--canvas-tint-a:260 22% 44%;--canvas-tint-b:238 20% 36%;--chrome:252 16% 14%;--sidebar:252 16% 12%;--overlay:252 16% 16%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--glass-highlight:252 30% 90%;--border:252 12% 28%;--ring:252 62% 76%;--card:252 14% 14%}.ds-chrome-canvas{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;padding:24px;background-color:hsl(var(--background));background-image:radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .72) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .64) 0%, transparent 78%)}.dark .ds-chrome-canvas,[data-theme=\"dark\"] .ds-chrome-canvas{background-image:radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .62) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .56) 0%, transparent 78%)}.ds-chrome{--sample-alpha:0.68;--sample-highlight:0.76;--sample-shadow:0 4px 16px hsl(250 20% 20% / .07);--sample-blur:16px;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;padding:20px;border:1px solid hsl(var(--border));border-radius:0px;background:hsl(var(--sidebar));color:hsl(var(--foreground));box-shadow:inset 0 1px 0 hsl(var(--glass-highlight) / var(--sample-highlight)),var(--sample-shadow);font-size:14px;line-height:1.7}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--sample-alpha:0.72;--sample-highlight:0.22;--sample-shadow:0 4px 16px hsl(252 35% 3% / .20);--sample-blur:16px}.ds-chrome p{margin:8px 0 0;color:hsl(var(--muted-foreground));font-size:13px}@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.ds-chrome{background:hsl(var(--chrome) / var(--sample-alpha));-webkit-backdrop-filter:blur(var(--sample-blur));backdrop-filter:blur(var(--sample-blur))}}@media(max-width:639px),(pointer:coarse){.ds-chrome{--sample-alpha:0.84;--sample-blur:8px}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--sample-alpha:0.88}}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.ds-chrome-canvas{background-image:none}.ds-chrome{background:hsl(var(--sidebar));-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}}@media(forced-colors:active){.ds-chrome-canvas{background:Canvas}.ds-chrome{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.ds-chrome p{color:CanvasText}}@media print{.ds-chrome-canvas{background:#fff}.ds-chrome{background:#fff;color:#111;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}}.ds-chrome{--muted-foreground:252 10% 25%;--ring:252 42% 38%;--control-border:252 10% 34%}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--muted-foreground:252 10% 90%;--ring:252 62% 86%;--control-border:252 10% 78%}"
+      "css": ".ds-chrome-canvas{--background:255 14% 97%;--canvas-tint-a:260 18% 86%;--canvas-tint-b:238 14% 89%;--chrome:255 14% 99%;--sidebar:255 14% 97%;--overlay:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--glass-highlight:0 0% 100%;--border:252 10% 90%;--ring:252 42% 44%;--card:255 14% 99%}.dark .ds-chrome-canvas,[data-theme=\"dark\"] .ds-chrome-canvas{--background:252 12% 13%;--canvas-tint-a:260 16% 31%;--canvas-tint-b:238 14% 28%;--chrome:252 11% 16%;--sidebar:252 12% 14%;--overlay:252 12% 18%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--glass-highlight:252 30% 90%;--border:252 9% 21%;--ring:252 62% 76%;--card:252 11% 15.5%}.ds-chrome-canvas{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;padding:24px;background-color:hsl(var(--background));background-image:radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .20) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .16) 0%, transparent 80%)}.dark .ds-chrome-canvas,[data-theme=\"dark\"] .ds-chrome-canvas{background-image:radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .18) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .14) 0%, transparent 80%)}.ds-chrome{--sample-alpha:0.68;--sample-highlight:0.56;--sample-shadow:0 2px 12px hsl(250 20% 20% / .04);--sample-blur:16px;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;padding:20px;border:1px solid hsl(var(--border));border-radius:0px;background:hsl(var(--sidebar));color:hsl(var(--foreground));box-shadow:inset 0 1px 0 hsl(var(--glass-highlight) / var(--sample-highlight)),var(--sample-shadow);font-size:14px;line-height:1.7}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--sample-alpha:0.72;--sample-highlight:0.16;--sample-shadow:0 2px 12px hsl(252 35% 3% / .16);--sample-blur:16px}.ds-chrome p{margin:8px 0 0;color:hsl(var(--muted-foreground));font-size:13px}@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.ds-chrome{background:hsl(var(--chrome) / var(--sample-alpha));-webkit-backdrop-filter:blur(var(--sample-blur));backdrop-filter:blur(var(--sample-blur))}}@media(max-width:639px),(pointer:coarse){.ds-chrome{--sample-alpha:0.84;--sample-blur:8px}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--sample-alpha:0.88}}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.ds-chrome-canvas{background-image:none}.ds-chrome{background:hsl(var(--sidebar));-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}}@media(forced-colors:active){.ds-chrome-canvas{background:Canvas}.ds-chrome{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.ds-chrome p{color:CanvasText}}@media print{.ds-chrome-canvas{background:#fff}.ds-chrome{background:#fff;color:#111;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}}.ds-chrome{--muted-foreground:252 10% 25%;--ring:252 42% 38%;--control-border:252 10% 34%}.dark .ds-chrome,[data-theme=\"dark\"] .ds-chrome{--muted-foreground:252 10% 90%;--ring:252 62% 86%;--control-border:252 10% 78%}"
     },
     {
       "name": "Floating panel",
@@ -1580,12 +2002,12 @@
       "refersTo": "surface-floating",
       "description": "已接入前端规范的静态预览，实际组件位于 src/app/components/coeer。默认实底，能力检测后启用玻璃；支持深色、触屏和偏好降级。",
       "html": "<div class=\"ds-floating-canvas\"><section class=\"ds-floating\" aria-label=\"浮层材质示例\"><strong>操作说明</strong><p>静态设计示例；正文区域保持实底。</p></section></div>",
-      "css": ".ds-floating-canvas{--background:260 18% 95%;--canvas-tint-a:260 22% 78%;--canvas-tint-b:238 18% 82%;--chrome:258 20% 98%;--sidebar:258 20% 96%;--overlay:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--glass-highlight:0 0% 100%;--border:252 14% 84%;--ring:252 42% 44%;--card:255 20% 99%}.dark .ds-floating-canvas,[data-theme=\"dark\"] .ds-floating-canvas{--background:252 16% 10%;--canvas-tint-a:260 22% 44%;--canvas-tint-b:238 20% 36%;--chrome:252 16% 14%;--sidebar:252 16% 12%;--overlay:252 16% 16%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--glass-highlight:252 30% 90%;--border:252 12% 28%;--ring:252 62% 76%;--card:252 14% 14%}.ds-floating-canvas{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;padding:24px;background-color:hsl(var(--background));background-image:radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .72) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .64) 0%, transparent 78%)}.dark .ds-floating-canvas,[data-theme=\"dark\"] .ds-floating-canvas{background-image:radial-gradient(ellipse 56vw 70vh at 0% 0%, hsl(var(--canvas-tint-a) / .62) 0%, transparent 78%), radial-gradient(ellipse 48vw 66vh at 100% 85%, hsl(var(--canvas-tint-b) / .56) 0%, transparent 78%)}.ds-floating{--sample-alpha:0.84;--sample-highlight:0.8;--sample-shadow:0 12px 32px hsl(250 20% 20% / .12), 0 2px 6px hsl(250 20% 20% / .06);--sample-blur:20px;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;padding:20px;border:1px solid hsl(var(--border));border-radius:16px;background:hsl(var(--overlay));color:hsl(var(--foreground));box-shadow:inset 0 1px 0 hsl(var(--glass-highlight) / var(--sample-highlight)),var(--sample-shadow);font-size:14px;line-height:1.7}.dark .ds-floating,[data-theme=\"dark\"] .ds-floating{--sample-alpha:0.86;--sample-highlight:0.24;--sample-shadow:0 12px 32px hsl(252 35% 3% / .34), 0 2px 6px hsl(252 35% 3% / .20);--sample-blur:20px}.ds-floating p{margin:8px 0 0;color:hsl(var(--muted-foreground));font-size:13px}@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.ds-floating{background:hsl(var(--overlay) / var(--sample-alpha));-webkit-backdrop-filter:blur(var(--sample-blur));backdrop-filter:blur(var(--sample-blur))}}@media(max-width:639px),(pointer:coarse){.ds-floating{--sample-alpha:0.92;--sample-blur:8px}.dark .ds-floating,[data-theme=\"dark\"] .ds-floating{--sample-alpha:0.94}}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.ds-floating-canvas{background-image:none}.ds-floating{background:hsl(var(--overlay));-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}}@media(forced-colors:active){.ds-floating-canvas{background:Canvas}.ds-floating{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.ds-floating p{color:CanvasText}}@media print{.ds-floating-canvas{background:#fff}.ds-floating{background:#fff;color:#111;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}}"
+      "css": ".ds-floating-canvas{--background:255 14% 97%;--canvas-tint-a:260 18% 86%;--canvas-tint-b:238 14% 89%;--chrome:255 14% 99%;--sidebar:255 14% 97%;--overlay:255 20% 99%;--foreground:250 16% 18%;--muted-foreground:252 10% 34%;--glass-highlight:0 0% 100%;--border:252 10% 90%;--ring:252 42% 44%;--card:255 14% 99%}.dark .ds-floating-canvas,[data-theme=\"dark\"] .ds-floating-canvas{--background:252 12% 13%;--canvas-tint-a:260 16% 31%;--canvas-tint-b:238 14% 28%;--chrome:252 11% 16%;--sidebar:252 12% 14%;--overlay:252 12% 18%;--foreground:252 12% 93%;--muted-foreground:252 10% 76%;--glass-highlight:252 30% 90%;--border:252 9% 21%;--ring:252 62% 76%;--card:252 11% 15.5%}.ds-floating-canvas{font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;width:100%;padding:24px;background-color:hsl(var(--background));background-image:radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .20) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .16) 0%, transparent 80%)}.dark .ds-floating-canvas,[data-theme=\"dark\"] .ds-floating-canvas{background-image:radial-gradient(ellipse 52vw 54vh at 5% 0%, hsl(var(--canvas-tint-a) / .18) 0%, transparent 80%), radial-gradient(ellipse 42vw 52vh at 100% 88%, hsl(var(--canvas-tint-b) / .14) 0%, transparent 80%)}.ds-floating{--sample-alpha:0.80;--sample-highlight:0.64;--sample-shadow:0 16px 40px hsl(250 20% 20% / .10), 0 2px 8px hsl(250 20% 20% / .04);--sample-blur:20px;font-family:Inter,-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",sans-serif;box-sizing:border-box;padding:20px;border:1px solid hsl(var(--border));border-radius:16px;background:hsl(var(--overlay));color:hsl(var(--foreground));box-shadow:inset 0 1px 0 hsl(var(--glass-highlight) / var(--sample-highlight)),var(--sample-shadow);font-size:14px;line-height:1.7}.dark .ds-floating,[data-theme=\"dark\"] .ds-floating{--sample-alpha:0.84;--sample-highlight:0.20;--sample-shadow:0 16px 40px hsl(252 35% 3% / .30), 0 2px 8px hsl(252 35% 3% / .16);--sample-blur:20px}.ds-floating p{margin:8px 0 0;color:hsl(var(--muted-foreground));font-size:13px}@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.ds-floating{background:hsl(var(--overlay) / var(--sample-alpha));-webkit-backdrop-filter:blur(var(--sample-blur));backdrop-filter:blur(var(--sample-blur))}}@media(max-width:639px),(pointer:coarse){.ds-floating{--sample-alpha:0.88;--sample-blur:8px}.dark .ds-floating,[data-theme=\"dark\"] .ds-floating{--sample-alpha:0.90}}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.ds-floating-canvas{background-image:none}.ds-floating{background:hsl(var(--overlay));-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}}@media(forced-colors:active){.ds-floating-canvas{background:Canvas}.ds-floating{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}.ds-floating p{color:CanvasText}}@media print{.ds-floating-canvas{background:#fff}.ds-floating{background:#fff;color:#111;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}} .ds-floating{--muted-foreground:252 10% 25%}.dark .ds-floating,[data-theme=\"dark\"] .ds-floating{--muted-foreground:252 10% 90%}"
     }
   ],
   "narrative": {
     "northStar": "清晰、全宽的学院社区玻璃工作区",
-    "overview": "低饱和紫灰背景与静态柔和渐变构成统一画布；侧栏、顶栏和浮层以半透明、背景模糊、细高光与轻阴影表达空间关系。正文、列表、表格和表单保持实底，保留清晰阅读与真实业务状态。\n\n全宽工作区不设整页最大宽度，阅读行宽只在内部限制。浅色默认、保留深色选择，触屏减少模糊；不支持效果、用户偏好或性能不达标时回退不透明表面。前端已接入本规范，并完成代表页面的 Chromium 自动验证；跨浏览器、实体手机与生产 Web Vitals 仍需后续验证。",
+    "overview": "中性紫灰画布与内容表面保持相近明度，普通卡片不画外框、不加阴影，使用留白和细分隔线组织层级。导航与浮层保留受控毛玻璃，字段、正文与图片清晰。\n\n欢迎页工小成位于右上，与标题顶部齐平；手机采用标题与角色同排，说明和操作在下一行。全宽工作区、模块结构和业务契约沿用。当前视觉修订为4，见 local validation report (not tracked)。",
     "keyCharacteristics": [
       "低饱和紫灰画布与最多两处静态渐变。",
       "导航与浮层受控玻璃，正文实底。",

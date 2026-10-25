@@ -22,7 +22,7 @@ function GroupAdminPage() {
     const stats = [
         { label: '成员数', value: String(group.memberCount), hint: '已通过审核的成员' },
         { label: '帖子数', value: String(group.postCount || 0), hint: '讨论与公告' },
-        { label: '创建时间', value: new Date(group.createdAt).toLocaleDateString(), hint: '' },
+        { label: '创建时间', value: new Date(group.createdAt).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }), hint: '' },
     ]
 
     return (
@@ -35,7 +35,7 @@ function GroupAdminPage() {
                             <p className="text-2xl font-medium tabular-nums">{item.value}</p>
                             <p className="text-[13px] text-muted-foreground">{item.label}</p>
                             {item.hint ? (
-                                <p className="mt-1 text-xs text-muted-foreground/70">{item.hint}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
                             ) : null}
                         </div>
                     ))}

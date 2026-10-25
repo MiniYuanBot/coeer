@@ -125,8 +125,9 @@ function DormHomePage() {
                 searchValue={search.search}
                 searchPlaceholder="搜索宿舍届次"
                 onSearch={(value) => navigate({ to: '/dorms', search: { ...search, search: value || undefined } })}
-                groups={[
-                    {
+                onClear={() => navigate({ to: '/dorms', search: { ...search, search: undefined } })}
+                scope={{
+                        title: '宿舍服务视图',
                         items: [
                             {
                                 key: 'status',
@@ -141,8 +142,8 @@ function DormHomePage() {
                                 onClick: () => navigate({ to: '/dorms', search: { ...search, mode: 'form' } }),
                             },
                         ],
-                    },
-                ]}
+                    }}
+                groups={[]}
             />
 
             {!current ? (

@@ -83,10 +83,10 @@ function SpaceAdminLayout() {
             )}
             {loading ? (
                 <LoadingState />
-            ) : user?.role !== 'admin' ? (
+            ) : error && !user ? null : user?.role !== 'admin' ? (
                 <EmptyState
-                    title="无法读取管理员权限"
-                    description="请刷新页面重试，预约管理直接使用 COEER 管理员权限。"
+                    title={user ? '需要管理员权限' : '暂时无法读取身份'}
+                    description={user ? '预约管理使用 COEER 管理员权限。' : '请刷新页面后重试。'}
                 />
             ) : (
                 <Outlet />

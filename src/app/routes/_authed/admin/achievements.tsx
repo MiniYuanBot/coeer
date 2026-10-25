@@ -1,4 +1,5 @@
 import { Field, Input, Select, Textarea } from '@/components/coeer/ui/Field'
+import { EditorSection } from '@/components/coeer/ui/EditorSection'
 import { ImageUploadField, uploadFormImage } from '@/components/coeer/ui/ImageUploadField'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -27,12 +28,14 @@ function AdminAchievementsPage() {
     const navigate = useNavigate()
     const [editing, setEditing] = useState<any | null>(null)
     const [condition, setCondition] = useState<ConfigurableAchievementCondition>('registration')
+    const [editorRevision, setEditorRevision] = useState(0)
     const [pending, setPending] = useState(false)
     const [error, setError] = useState('')
     const [revision, setRevision] = useState(0)
     const refresh = () => navigate({ to: '/admin/achievements', search: { page } })
     const edit = (item: any | null) => {
         setEditing(item)
+        setEditorRevision(value => value + 1)
         setCondition(item ? resolveAchievementCondition(item.conditionType, item.code) ?? 'registration' : 'registration')
         setError('')
         setRevision((value) => value + 1)
@@ -58,6 +61,7 @@ function AdminAchievementsPage() {
                 : await adminCreateAchievementFn({ data })
             if (!result.success) throw new Error(result.state.message || '保存成就失败')
             edit(null)
+            setEditorRevision(value => value + 1)
             await refresh()
         } catch (error) {
             setError(error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : '保存成就失败，请重试')
@@ -79,7 +83,10 @@ function AdminAchievementsPage() {
     return (
         <div className="space-y-6">
             <SectionHeader title="成就管理" description="选择解锁条件和目标数值，系统会自动发放成就，并为符合条件的老用户补发。" />
-            <Card className="coeer-admin-form rounded-lg p-5 sm:p-6">
+            <EditorSection title={editing ? '编辑成就' : '新建成就'} editKey={editing?.id} attention={!!error} listTitle="全部成就" resetKey={editorRevision} records={<>
+            {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div className="flex items-center gap-3">{item.iconUrl ? <img src={item.iconUrl} alt={item.name} className="h-12 w-12 rounded-lg object-contain" /> : null}<div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[resolveAchievementCondition(item.conditionType, item.code) ?? ''] ?? '请编辑并设置解锁条件'} · {item.conditionValue}</p></div></div><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={pending} onClick={() => edit(item)}>编辑</Button><Button variant="danger" disabled={pending} onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}
+            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/achievements', search: { page } })} />
+            </>}>
                 {error ? <p role="alert" className="mb-4 text-sm text-danger">{error}</p> : null}
                 <form key={`${editing?.id || 'new'}:${revision}`} onSubmit={submit}>
                     <fieldset disabled={pending} className="grid min-w-0 gap-5">
@@ -87,7 +94,7 @@ function AdminAchievementsPage() {
                             <Field label="名称">
                                 <Input name="name" required maxLength={100} defaultValue={editing?.name} placeholder="成就名称" className="h-10" />
                             </Field>
-                            <Field label="成就代码（选填）">
+                            <Field label="成就代码（选填）" description="留空自动生成，用于内部识别。">
                                 <Input name="code" maxLength={50} defaultValue={editing?.code} placeholder="留空自动生成" className="h-10" />
                             </Field>
                             <Field label="解锁条件" description={conditionDescriptions[condition]}>
@@ -111,9 +118,7 @@ function AdminAchievementsPage() {
                         </div>
                     </fieldset>
                 </form>
-            </Card>
-            {achievements.length ? <Card className="divide-y divide-[hsl(var(--border))] rounded-lg">{achievements.map((item: any) => <div key={item.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div className="flex items-center gap-3">{item.iconUrl ? <img src={item.iconUrl} alt={item.name} className="h-12 w-12 rounded-lg object-contain" /> : null}<div><p className="text-[15px] font-medium">{item.name}</p><p className="text-[13px] text-[hsl(var(--muted-foreground))]">{achievementConditionTypeLabels[resolveAchievementCondition(item.conditionType, item.code) ?? ''] ?? '请编辑并设置解锁条件'} · {item.conditionValue}</p></div></div><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={pending} onClick={() => edit(item)}>编辑</Button><Button variant="danger" disabled={pending} onClick={() => remove(item.id)}>删除</Button></div></div>)}</Card> : <EmptyState title="暂无成就" />}
-            <Pagination total={total} page={page} size={20} onChange={(page) => void navigate({ to: '/admin/achievements', search: { page } })} />
+            </EditorSection>
         </div>
     )
 }

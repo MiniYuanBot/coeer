@@ -87,6 +87,10 @@ export function getBreadcrumbs(pathname: string): Array<{ to: string; label: str
         let label = pageLabels[part] || (parts[i - 1] === 'bookings' ? '预约详情' : parts[0] === 'groups' && i === 1 ? '群组详情' : '详情')
         if (part === 'create') label = parts[0] === 'feedbacks' ? '提交反馈' : parts[i - 1] === 'posts' ? '发布帖子' : '创建群组'
         if (part === 'bookings' && parts[0] === 'admin') label = '预约与异常'
+        if (parts[0] === 'admin' && parts[1] === 'dorms') {
+            if (part === 'new') label = '添加问卷'
+            if (part === 'questionnaires') label = '问卷记录'
+        }
         crumbs.push({ to: '/' + parts.slice(0, i + 1).join('/'), label })
     }
     // Long group/post paths retain their module, immediate parent and current page.

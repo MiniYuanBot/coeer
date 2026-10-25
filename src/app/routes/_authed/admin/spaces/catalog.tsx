@@ -11,7 +11,7 @@ function SpaceCatalogPage() {
     const { data, loading, error, pending, mutate } = useSpaceAdmin()
     if (loading) return <LoadingState />
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             {error && <Alert tone="danger">{error}</Alert>}
             {data?.spaces.map((space) => (
                 <SpaceEditor

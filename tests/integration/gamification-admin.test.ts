@@ -52,6 +52,26 @@ afterAll(() => client.close())
 
 describe('card administration and drawable pool', () => {
     const input = { name: '校园纪念卡', imageUrl: '/demo/card-common.svg', rarity: 'common' as const, series: '校园', dropRate: .1 }
+    it('allows only administrators to delete unowned cards and preserves existing collections', async () => {
+        signIn()
+        const unused = (await CardService.adminCreate(input)).data!
+        const owned = (await CardService.adminCreate({ ...input, name: '已收藏卡片' })).data!
+        await db.insert(userCards).values({ userId: student, cardId: owned.id, count: 2 })
+        session.data = {}
+        expect((await CardService.adminDelete({ cardId: unused.id })).state.code).toBe('UNAUTHORIZED')
+        signIn(student)
+        expect((await CardService.adminDelete({ cardId: unused.id })).state.code).toBe('FORBIDDEN')
+        signIn()
+        expect((await CardService.adminDelete({ cardId: 'invalid' })).state.code).toBe('INVALID_INPUT')
+        expect((await CardService.adminDelete({ cardId: unused.id })).state.code).toBe('DELETE_SUCCESS')
+        expect(await cardQueries.findById(unused.id)).toBeUndefined()
+        expect((await CardService.adminDelete({ cardId: unused.id })).state.code).toBe('CARD_NOT_FOUND')
+        expect((await CardService.adminDelete({ cardId: owned.id })).state.code).toBe('CARD_IN_USE')
+        expect(await cardQueries.findById(owned.id)).toBeDefined()
+        expect(await db.select().from(userCards)).toMatchObject([{ cardId: owned.id, count: 2 }])
+        expect((await cardQueries.listPool()).map(card => card.id)).toEqual([owned.id])
+    })
+
     it('authorizes card changes and validates uploaded URLs and decimal weights', async () => {
         expect((await CardService.adminCreate(input)).state.code).toBe('UNAUTHORIZED')
         signIn(student)

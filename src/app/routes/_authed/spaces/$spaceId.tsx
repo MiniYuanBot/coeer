@@ -1,3 +1,4 @@
+import { SpacesPageHeader } from '@/components/coeer/layout/SpacesPageHeader'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
@@ -9,7 +10,6 @@ import {
     Field,
     Input,
     LoadingState,
-    SectionHeader,
     Textarea,
     cn,
 } from '@/components/coeer'
@@ -113,10 +113,11 @@ function SpaceDetailPage() {
             setBusy(false)
         }
     }
-    if (room.loading) return <LoadingState />
+    if (room.loading) return <div className="space-y-6"><SpacesPageHeader title="空间详情" description="正在读取空间与时段信息…" /><LoadingState /></div>
     const space = room.data
     if (!space)
         return (
+            <div className="space-y-6"><SpacesPageHeader title="空间详情" />
             <EmptyState
                 title="空间暂不可用"
                 description={room.error || '该空间不存在或尚未公开。'}
@@ -125,7 +126,7 @@ function SpaceDetailPage() {
                         <Link to="/spaces">返回目录</Link>
                     </Button>
                 }
-            />
+            /></div>
         )
     return (
         <div className="space-y-6">
@@ -135,7 +136,7 @@ function SpaceDetailPage() {
             >
                 返回空间目录
             </Link>
-            <SectionHeader
+            <SpacesPageHeader
                 title={space.name}
                 description={`${space.location} · ${space.capacity > 0 ? `最多 ${space.capacity} 人` : '人数待确认'}`}
                 action={<Badge>{spaceModuleLabels[space.module]}</Badge>}

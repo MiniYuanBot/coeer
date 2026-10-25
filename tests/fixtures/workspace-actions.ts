@@ -2,6 +2,7 @@
 const action = async (..._args: unknown[]): Promise<any> => ({ success: true, state: {}, data: { items: [], total: 0 } })
 export const adminCreateAchievementFn = action,
     adminCreateCardFn = action,
+    adminDeleteCardFn = action,
     adminCreateRedeemItemFn = action,
     adminDeleteAchievementFn = action,
     adminDeleteRedeemItemFn = action,

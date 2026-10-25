@@ -87,8 +87,10 @@ function PostsListPage() {
             {actionError ? <p role="alert" className="text-sm text-danger">{actionError}</p> : null}
 
             <FilterPanel
+                onClear={() => go({ type: undefined })}
                 groups={[
                     {
+                        title: '帖子类型',
                         items: [
                             { key: 'all', label: '全部', active: !type, onClick: () => go({ type: undefined }) },
                             { key: 'discussion', label: '讨论', active: type === 'discussion', onClick: () => go({ type: 'discussion' }) },

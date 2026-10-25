@@ -124,6 +124,33 @@ describe('COEER post interactions and author permissions', () => {
         await BookmarkService.set({ postId: post.id, bookmarked: false })
         expect(await db.select().from(bookmarks)).toHaveLength(1)
     })
+    it('searches and filters all visible bookmarks before counting and pagination', async () => {
+        const { group, post } = await postFixture()
+        const [announcement, discussion] = await db.insert(groupPosts).values([
+            { groupId: group.id, title: '选课通知', content: '学期选课时间', type: 'announcement' },
+            { groupId: group.id, title: '学习交流', content: '分享选课经验与100%完成记录', type: 'discussion' },
+        ]).returning()
+        signIn()
+        for (const item of [post, announcement, discussion]) await BookmarkService.set({ postId: item.id, bookmarked: true })
+        const input = { limit: 1, offset: 0, search: '选课' }
+        const first = await BookmarkService.list(input)
+        const second = await BookmarkService.list({ ...input, offset: 1 })
+        expect(first.total).toBe(2)
+        expect(second.total).toBe(2)
+        expect(new Set([...first.items, ...second.items].map(item => item.post.id))).toEqual(new Set([announcement.id, discussion.id]))
+        const typed = await BookmarkService.list({ ...input, type: 'announcement' })
+        expect(typed.total).toBe(1)
+        expect(typed.items[0].post.id).toBe(announcement.id)
+        expect((await BookmarkService.list({ limit: 10, offset: 0, search: group.name })).total).toBe(3)
+        expect((await BookmarkService.list({ limit: 10, offset: 0, search: '100%' })).total).toBe(1)
+        expect((await BookmarkService.list({ ...input, search: '不存在的关键词' })).total).toBe(0)
+        signIn(ids.other)
+        expect((await BookmarkService.list(input)).total).toBe(0)
+        signIn()
+        await db.update(groups).set({ isPublic: false }).where(eq(groups.id, group.id))
+        expect((await BookmarkService.list(input)).total).toBe(0)
+    })
+
     it('restricts all reply reads and writes to group members, and gives group admins moderation rights', async () => {
         const { group, post } = await postFixture()
         const target = { targetType: 'group_post' as const, targetId: post.id }

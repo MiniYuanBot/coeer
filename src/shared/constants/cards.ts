@@ -13,6 +13,8 @@ export const CARD = {
     GET_SUCCESS: { code: 'GET_SUCCESS', message: 'Get successful' } as const,
     CREATE_SUCCESS: { code: 'CREATE_SUCCESS', message: 'Create successful' } as const,
     UPDATE_SUCCESS: { code: 'UPDATE_SUCCESS', message: 'Update successful' } as const,
+    DELETE_SUCCESS: { code: 'DELETE_SUCCESS', message: '卡片已删除' } as const,
+    IN_USE: { code: 'CARD_IN_USE', message: '已有用户收藏这张卡片，不能删除。可编辑并将抽中权重设为0，移出奖池并保留收藏。' } as const,
     INVALID_INPUT: { code: 'INVALID_INPUT', message: '请检查卡片信息、图片地址和抽中权重' } as const,
     NOT_FOUND: { code: 'CARD_NOT_FOUND', message: 'Card not found' } as const,
     EMPTY_POOL: { code: 'EMPTY_POOL', message: '奖池暂时为空，请稍后再试' } as const,

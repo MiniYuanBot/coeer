@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { BulletinCard, EmptyState, FilterPanel, Pagination, SectionHeader, bulletinTypeLabels } from '@/components/coeer'
 import { getBulletinFeedFn } from '~/functions'
@@ -31,10 +31,10 @@ export const Route = createFileRoute('/_authed/bulletins/')({
 function BulletinsPage() {
     const { bulletins, total } = Route.useLoaderData()
     const { type, search, page } = Route.useSearch()
-    const navigate = useNavigate()
+    const navigate = Route.useNavigate()
 
     const go = (next: { type?: string; search?: string; page?: number }) => {
-        navigate({ to: '/bulletins', search: { type, search, page: 1, ...next } })
+        navigate({ to: '/bulletins', search: previous => ({ ...previous, page: 1, ...next }) })
     }
 
     return (
@@ -44,6 +44,7 @@ function BulletinsPage() {
                 searchValue={search}
                 searchPlaceholder="搜索公告标题或内容"
                 onSearch={(value) => go({ search: value || undefined })}
+                onClear={() => go({ search: undefined, type: undefined })}
                 groups={[
                     {
                         title: '类型',
@@ -60,7 +61,7 @@ function BulletinsPage() {
                 ]}
             />
             {bulletins.length ? (
-                <div className="coeer-grid">
+                <div className="coeer-bulletin-list">
                     {bulletins.map((bulletin: any) => <BulletinCard key={bulletin.id} bulletin={bulletin} />)}
                 </div>
             ) : (
